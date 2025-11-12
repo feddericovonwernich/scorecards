@@ -282,12 +282,16 @@ fi
 # Set Action Outputs
 # ============================================================================
 
+# Copy results file to workspace for artifact upload
+RESULTS_FILE_PATH="$GITHUB_WORKSPACE/scorecard-results.json"
+cp "$OUTPUT_DIR/final-results.json" "$RESULTS_FILE_PATH"
+
 # GitHub Actions set output syntax
 echo "score=$SCORE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 echo "rank=$RANK" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 echo "passed-checks=$PASSED_CHECKS" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 echo "total-checks=$TOTAL_CHECKS" >> "$GITHUB_OUTPUT" 2>/dev/null || true
-echo "results-file=$OUTPUT_DIR/final-results.json" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+echo "results-file=$RESULTS_FILE_PATH" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 
 # ============================================================================
 # Summary
