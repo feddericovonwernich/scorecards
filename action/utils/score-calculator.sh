@@ -12,19 +12,17 @@ if [ ! -f "$RESULTS_FILE" ]; then
 fi
 
 # Calculate weighted score
-calculation=$(jq '
-  {
-    total_weight: map(.weight) | add // 0,
-    passed_weight: map(select(.status == "pass") | .weight) | add // 0,
+calculation=$(jq '{
+    total_weight: ([map(.weight) | add] | if . == [null] then [0] else . end)[0],
+    passed_weight: ([map(select(.status == "pass") | .weight) | add] | if . == [null] then [0] else . end)[0],
     total_checks: length,
-    passed_checks: map(select(.status == "pass")) | length
+    passed_checks: [map(select(.status == "pass"))] | .[0] | length
   } |
   if .total_weight > 0 then
     .score = ((.passed_weight / .total_weight) * 100 | round)
   else
     .score = 0
-  end
-' "$RESULTS_FILE")
+  end' "$RESULTS_FILE")
 
 score=$(echo "$calculation" | jq -r '.score')
 total_checks=$(echo "$calculation" | jq -r '.total_checks')
