@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     bash \
     grep \
     sed \
-    awk \
+    gawk \
     findutils \
     coreutils \
     # Python runtime
