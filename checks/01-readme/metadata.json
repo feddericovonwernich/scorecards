@@ -1,0 +1,7 @@
+{
+  "name": "README Documentation",
+  "description": "Checks that the repository has a README file with meaningful content. A good README helps users understand what the project is and how to use it.",
+  "weight": 15,
+  "timeout": 10,
+  "category": "documentation"
+}

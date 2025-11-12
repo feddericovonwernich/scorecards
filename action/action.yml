@@ -1,0 +1,60 @@
+name: 'Scorecards'
+description: 'Run scorecard checks to measure service quality and best practices'
+author: 'Your Organization'
+
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access and committing results to central repo'
+    required: true
+
+  create-config-pr:
+    description: 'Create a PR with config template if .scorecard/config.yml is missing'
+    required: false
+    default: 'false'
+
+  scorecards-repo:
+    description: 'Central scorecards repository (format: owner/repo)'
+    required: false
+    default: ''
+
+  scorecards-branch:
+    description: 'Branch to commit results to in the central scorecards repo'
+    required: false
+    default: 'main'
+
+outputs:
+  score:
+    description: 'The calculated score (0-100)'
+
+  rank:
+    description: 'The rank (bronze, silver, gold, platinum)'
+
+  passed-checks:
+    description: 'Number of checks that passed'
+
+  total-checks:
+    description: 'Total number of checks run'
+
+  results-file:
+    description: 'Path to the results JSON file'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Scorecard Checks
+      shell: bash
+      run: ${{ github.action_path }}/entrypoint.sh
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_CREATE_CONFIG_PR: ${{ inputs.create-config-pr }}
+        INPUT_SCORECARDS_REPO: ${{ inputs.scorecards-repo }}
+        INPUT_SCORECARDS_BRANCH: ${{ inputs.scorecards-branch }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_SHA: ${{ github.sha }}
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_WORKSPACE: ${{ github.workspace }}

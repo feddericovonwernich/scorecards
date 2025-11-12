@@ -1,0 +1,7 @@
+{
+  "name": "CI Configuration",
+  "description": "Checks that the repository has continuous integration configured. CI helps catch bugs early and ensures code quality.",
+  "weight": 18,
+  "timeout": 15,
+  "category": "ci"
+}

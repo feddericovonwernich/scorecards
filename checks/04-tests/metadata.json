@@ -1,0 +1,7 @@
+{
+  "name": "Test Coverage",
+  "description": "Checks that the repository has test files. Tests ensure code reliability and help prevent regressions.",
+  "weight": 20,
+  "timeout": 20,
+  "category": "testing"
+}

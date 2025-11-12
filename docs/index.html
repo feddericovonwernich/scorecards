@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scorecards Catalog</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎯 Scorecards Catalog</h1>
+            <p class="subtitle">Service Quality and Best Practices Dashboard</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Stats Section -->
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-services">-</div>
+                <div class="stat-label">Total Services</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-score">-</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card rank-platinum">
+                <div class="stat-value" id="platinum-count">-</div>
+                <div class="stat-label">Platinum</div>
+            </div>
+            <div class="stat-card rank-gold">
+                <div class="stat-value" id="gold-count">-</div>
+                <div class="stat-label">Gold</div>
+            </div>
+            <div class="stat-card rank-silver">
+                <div class="stat-value" id="silver-count">-</div>
+                <div class="stat-label">Silver</div>
+            </div>
+            <div class="stat-card rank-bronze">
+                <div class="stat-value" id="bronze-count">-</div>
+                <div class="stat-label">Bronze</div>
+            </div>
+        </section>
+
+        <!-- Controls -->
+        <section class="controls">
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search services..."
+                class="search-box"
+            >
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-rank="all">All</button>
+                <button class="filter-btn" data-rank="platinum">Platinum</button>
+                <button class="filter-btn" data-rank="gold">Gold</button>
+                <button class="filter-btn" data-rank="silver">Silver</button>
+                <button class="filter-btn" data-rank="bronze">Bronze</button>
+            </div>
+            <select id="sort-select" class="sort-select">
+                <option value="score-desc">Score: High to Low</option>
+                <option value="score-asc">Score: Low to High</option>
+                <option value="name-asc">Name: A to Z</option>
+                <option value="name-desc">Name: Z to A</option>
+                <option value="updated-desc">Recently Updated</option>
+            </select>
+        </div>
+        </section>
+
+        <!-- Services Grid -->
+        <section id="services-grid" class="services-grid">
+            <div class="loading">Loading services...</div>
+        </section>
+
+        <!-- Service Detail Modal -->
+        <div id="service-modal" class="modal hidden">
+            <div class="modal-content">
+                <button class="modal-close">&times;</button>
+                <div id="service-detail"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Powered by Scorecards | <a href="https://github.com/your-org/scorecards">Documentation</a></p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

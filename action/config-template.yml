@@ -1,0 +1,28 @@
+# Scorecard Configuration
+# This file provides metadata about your service for the scorecard catalog
+
+service:
+  # Display name for your service (defaults to repository name if not provided)
+  name: "{{ SERVICE_NAME }}"
+
+  # Team or group that owns this service
+  team: "{{ TEAM_NAME }}"
+
+  # Brief description of what this service does
+  description: "{{ SERVICE_DESCRIPTION }}"
+
+  # Links to important resources
+  links:
+    - name: "Documentation"
+      url: "https://example.com/docs"
+    - name: "Runbook"
+      url: "https://example.com/runbook"
+    # Add more links as needed
+
+# Custom fields - add any metadata relevant to your organization
+custom:
+  # Examples:
+  # criticality: "high"  # low, medium, high, critical
+  # environment: "production"  # dev, staging, production
+  # language: "python"
+  # framework: "django"

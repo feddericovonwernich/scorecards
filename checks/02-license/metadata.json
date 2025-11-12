@@ -1,0 +1,7 @@
+{
+  "name": "License File",
+  "description": "Checks that the repository has a LICENSE file. Open source licenses clarify how others can use, modify, and distribute your code.",
+  "weight": 12,
+  "timeout": 10,
+  "category": "compliance"
+}
