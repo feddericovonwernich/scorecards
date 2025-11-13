@@ -241,6 +241,21 @@ Want to add a new check? See [docs/CHECKS.md](./docs/CHECKS.md) for the developm
 
 Visit the [Scorecards Catalog](https://feddericovonwernich.github.io/scorecards/) to see all services, their scores, and detailed check results.
 
+### Staleness Detection
+
+The catalog automatically detects when scorecards are outdated:
+
+- **STALE badges** appear on services that were scored with an older version of the check suite
+- A scorecard becomes stale when:
+  - New checks are added to the system
+  - Existing checks are modified (weights, code, metadata)
+  - Checks are removed
+- **Warning banners** in detail views explain the issue and recommend re-running workflows
+- Staleness is detected instantly at page load without background processes
+- Uses SHA256 hash of the entire check suite (IDs + metadata + implementation code)
+
+To update a stale scorecard, simply re-run the scorecard workflow on your service repository. The next run will use the latest check suite and clear the stale indicator.
+
 ## Action Inputs
 
 | Input | Required | Default | Description |

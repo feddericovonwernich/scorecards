@@ -41,6 +41,33 @@ score = (sum of passed weights / total weights) × 100
 rank = platinum (90+), gold (75+), silver (50+), bronze (0+)
 ```
 
+## Staleness Detection
+
+**Purpose:** Detect when scorecards are outdated due to check suite changes
+
+**Implementation:**
+- Action generates SHA256 hash of all checks (IDs + metadata.json + implementation files)
+- Hash stored in:
+  - `catalog/current-checks.json` - Latest check suite hash (single source of truth)
+  - Each scorecard's `results.json` - Hash at time of generation
+  - Registry entries - Fast access without loading full results
+- Browser fetches `current-checks.json` (10s cache) and compares
+- Mismatches show STALE badges and warning banners
+
+**Key Files:**
+- `action/entrypoint.sh:200-244` - Hash generation logic
+- `docs/app.js:28-69` - Hash fetch and staleness detection
+- `docs/app.js:320-328` - STALE badge rendering
+- `docs/app.js:363-378` - Warning banner in detail view
+
+**Triggers Staleness:**
+- New checks added
+- Check code modified
+- Check metadata changed (weights, descriptions)
+- Checks removed
+
+**Backwards Compatibility:** Scorecards without `checks_hash` field are automatically marked stale
+
 ## Tech Stack
 
-Docker (multi-runtime), Bash, jq, shields.io (badges), vanilla HTML/CSS/JS (catalog)
+Docker (multi-runtime), Bash, jq, shields.io (badges), vanilla HTML/CSS/JS (catalog), Web Crypto API (SHA256)
