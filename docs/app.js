@@ -119,8 +119,11 @@ function updateStats() {
         bronze: allServices.filter(s => s.rank === 'bronze').length
     };
 
+    const apiCount = allServices.filter(s => s.has_api).length;
+
     document.getElementById('total-services').textContent = total;
     document.getElementById('avg-score').textContent = avgScore;
+    document.getElementById('api-count').textContent = apiCount;
     document.getElementById('platinum-count').textContent = rankCounts.platinum;
     document.getElementById('gold-count').textContent = rankCounts.gold;
     document.getElementById('silver-count').textContent = rankCounts.silver;
@@ -132,7 +135,11 @@ function filterAndRenderServices() {
     // Filter
     filteredServices = allServices.filter(service => {
         // Rank filter
-        if (currentFilter !== 'all' && service.rank !== currentFilter) {
+        if (currentFilter === 'has-api') {
+            if (!service.has_api) {
+                return false;
+            }
+        } else if (currentFilter !== 'all' && service.rank !== currentFilter) {
             return false;
         }
 
@@ -181,7 +188,10 @@ function renderServices() {
         <div class="service-card rank-${service.rank}" onclick="showServiceDetail('${service.org}', '${service.repo}')">
             <div class="service-header">
                 <div>
-                    <div class="service-name">${escapeHtml(service.name)}</div>
+                    <div class="service-name">
+                        ${escapeHtml(service.name)}
+                        ${service.has_api ? '<span style="display: inline-block; background: #0366d6; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; font-weight: 500;">API</span>' : ''}
+                    </div>
                     <div class="service-org">${escapeHtml(service.org)}/${escapeHtml(service.repo)}</div>
                 </div>
                 <div class="score-badge">${service.score}</div>
@@ -242,6 +252,7 @@ async function showServiceDetail(org, repo) {
 
             <div class="tabs" style="margin-top: 30px;">
                 <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
+                ${data.service.openapi ? `<button class="tab-btn" onclick="switchTab(event, 'api')">API Specification</button>` : ''}
                 ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
                 <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
@@ -273,6 +284,44 @@ async function showServiceDetail(org, repo) {
                     `).join('')}
                 </div>
             </div>
+
+            ${data.service.openapi ? `
+                <div class="tab-content" id="api-tab">
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 10px;">OpenAPI Specification</h3>
+                        ${data.service.openapi.spec_file ? `<p><strong>Spec File:</strong> <code>${escapeHtml(data.service.openapi.spec_file)}</code></p>` : ''}
+
+                        ${data.service.openapi.environments ? `
+                            <h4 style="margin-top: 20px; margin-bottom: 10px;">Environments</h4>
+                            <div style="display: grid; gap: 12px;">
+                                ${Object.entries(data.service.openapi.environments).map(([envName, envConfig]) => `
+                                    <div style="border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px; background: #f6f8fa;">
+                                        <div style="font-weight: bold; margin-bottom: 5px; text-transform: capitalize;">${escapeHtml(envName)}</div>
+                                        <div style="font-family: monospace; font-size: 0.9rem; color: #0366d6; margin-bottom: 5px;">
+                                            ${escapeHtml(envConfig.base_url)}
+                                        </div>
+                                        ${envConfig.description ? `<div style="font-size: 0.85rem; color: #586069;">${escapeHtml(envConfig.description)}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <div style="margin-top: 20px;">
+                            <button
+                                onclick="openApiExplorer('${escapeHtml(org)}', '${escapeHtml(repo)}')"
+                                style="background: #0366d6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;"
+                                onmouseover="this.style.background='#0256c2'"
+                                onmouseout="this.style.background='#0366d6'"
+                            >
+                                🔍 Open API Explorer
+                            </button>
+                            <p style="margin-top: 10px; font-size: 0.85rem; color: #586069;">
+                                Explore and test the API with an interactive Swagger UI interface
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
 
             ${data.service.links && data.service.links.length > 0 ? `
                 <div class="tab-content" id="links-tab">
@@ -355,4 +404,11 @@ function formatDate(dateString) {
         month: 'short',
         day: 'numeric'
     });
+}
+
+// Open API Explorer
+function openApiExplorer(org, repo) {
+    // Open API explorer in a new window with the service org and repo as query params
+    const explorerUrl = `api-explorer.html?org=${encodeURIComponent(org)}&repo=${encodeURIComponent(repo)}`;
+    window.open(explorerUrl, '_blank');
 }
