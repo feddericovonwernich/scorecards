@@ -29,23 +29,29 @@ inputs:
 outputs:
   score:
     description: 'The calculated score (0-100)'
+    value: ${{ steps.run-scorecard.outputs.score }}
 
   rank:
     description: 'The rank (bronze, silver, gold, platinum)'
+    value: ${{ steps.run-scorecard.outputs.rank }}
 
   passed-checks:
     description: 'Number of checks that passed'
+    value: ${{ steps.run-scorecard.outputs.passed-checks }}
 
   total-checks:
     description: 'Total number of checks run'
+    value: ${{ steps.run-scorecard.outputs.total-checks }}
 
   results-file:
     description: 'Path to the results JSON file'
+    value: ${{ steps.run-scorecard.outputs.results-file }}
 
 runs:
   using: 'composite'
   steps:
     - name: Run Scorecard Checks
+      id: run-scorecard
       shell: bash
       run: ${{ github.action_path }}/entrypoint.sh
       env:
