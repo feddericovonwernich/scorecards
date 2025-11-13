@@ -18,6 +18,7 @@
     ],
     "openapi": {
       "spec_file": "openapi.yaml",
+      "branch": "master",
       "environments": {
         "production": {
           "base_url": "https://api.example.com/v1",
@@ -38,8 +39,8 @@
   "rank": "platinum",
   "passed_checks": 8,
   "total_checks": 8,
-  "commit_sha": "e009875891d91003df5f3f913047c4d179e94776",
-  "timestamp": "2025-11-13T17:16:57Z",
+  "commit_sha": "79b09b133320b5a0c89f26b76d42a082ab3f5af6",
+  "timestamp": "2025-11-13T17:30:58Z",
   "checks": [
     {
       "check_id": "01-readme",
@@ -98,7 +99,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (977 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (1040 bytes)\n",
       "stderr": ""
     },
     {
@@ -109,7 +110,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
