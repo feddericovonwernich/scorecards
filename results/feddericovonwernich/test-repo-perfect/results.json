@@ -40,7 +40,9 @@
   "passed_checks": 8,
   "total_checks": 8,
   "commit_sha": "79b09b133320b5a0c89f26b76d42a082ab3f5af6",
-  "timestamp": "2025-11-13T17:30:58Z",
+  "timestamp": "2025-11-13T18:08:37Z",
+  "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
+  "checks_count": 8,
   "checks": [
     {
       "check_id": "01-readme",
@@ -86,7 +88,7 @@
       "weight": 20,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "Found tests: 6 file(s) in directories: tests\n",
       "stderr": ""
     },
