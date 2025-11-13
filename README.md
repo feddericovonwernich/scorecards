@@ -172,6 +172,7 @@ service:
 # For services with OpenAPI/Swagger specifications
 openapi:
   spec_file: "openapi.yaml"  # Path to your OpenAPI spec file
+  branch: "main"  # Branch where the spec is located (optional, defaults to trying main/master)
   environments:
     production:
       base_url: "https://api.example.com/v1"
