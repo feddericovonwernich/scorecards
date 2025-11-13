@@ -7,12 +7,12 @@
     "links": [],
     "openapi": null
   },
-  "score": 71,
-  "rank": "silver",
-  "passed_checks": 5,
+  "score": 79,
+  "rank": "gold",
+  "passed_checks": 6,
   "total_checks": 8,
-  "commit_sha": "8fa23c18fb8cebd0113e471da81d477118c2c6f0",
-  "timestamp": "2025-11-13T20:14:00Z",
+  "commit_sha": "fe08238904a30443fc00956f1d507597facbb37c",
+  "timestamp": "2025-11-13T20:50:20Z",
   "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
   "checks_count": 8,
   "checks": [
@@ -49,7 +49,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -70,11 +70,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "documentation",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (83 bytes)\n",
+      "stderr": ""
     },
     {
       "check_id": "06-openapi-spec",
@@ -96,7 +96,7 @@
       "weight": 10,
       "status": "fail",
       "exit_code": 1,
-      "duration": 0,
+      "duration": 1,
       "stdout": "",
       "stderr": "No OpenAPI specification file found - cannot assess quality\nThis check requires a valid OpenAPI file (checked by 06-openapi-spec)\n"
     },
