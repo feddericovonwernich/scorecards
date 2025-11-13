@@ -75,9 +75,10 @@ async function loadServices() {
         }
 
         // Fetch all registry files in parallel
+        const timestamp = Date.now();
         const fetchPromises = registryFiles.map(async (path) => {
-            const fileUrl = `${RAW_BASE_URL}/${path}`;
-            const res = await fetch(fileUrl);
+            const fileUrl = `${RAW_BASE_URL}/${path}?t=${timestamp}`;
+            const res = await fetch(fileUrl, { cache: 'no-cache' });
             if (res.ok) {
                 return res.json();
             }
@@ -203,8 +204,8 @@ async function showServiceDetail(org, repo) {
     detailDiv.innerHTML = '<div class="loading">Loading service details...</div>';
 
     try {
-        const resultsUrl = `${RAW_BASE_URL}/results/${org}/${repo}/results.json`;
-        const response = await fetch(resultsUrl);
+        const resultsUrl = `${RAW_BASE_URL}/results/${org}/${repo}/results.json?t=${Date.now()}`;
+        const response = await fetch(resultsUrl, { cache: 'no-cache' });
 
         if (!response.ok) {
             throw new Error(`Failed to fetch results: ${response.status}`);
