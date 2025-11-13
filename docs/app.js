@@ -239,40 +239,64 @@ async function showServiceDetail(org, repo) {
             <p><strong>Last Run:</strong> ${formatDate(data.timestamp)}</p>
             <p><strong>Commit:</strong> <code>${data.commit_sha.substring(0, 7)}</code></p>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">Check Results</h3>
-
-            <div>
-                ${data.checks.map(check => `
-                    <div class="check-result ${check.status}">
-                        <div class="check-name">
-                            ${check.status === 'pass' ? '✓' : '✗'} ${escapeHtml(check.name)}
-                        </div>
-                        <div class="check-description">${escapeHtml(check.description)}</div>
-                        ${check.stdout.trim() ? `
-                            <div class="check-output">
-                                <strong>Output:</strong><br>
-                                ${escapeHtml(check.stdout.trim())}
-                            </div>
-                        ` : ''}
-                        ${check.stderr.trim() && check.status === 'fail' ? `
-                            <div class="check-output" style="color: #c62828;">
-                                <strong>Error:</strong><br>
-                                ${escapeHtml(check.stderr.trim())}
-                            </div>
-                        ` : ''}
-                        <div style="margin-top: 8px; font-size: 0.85rem; color: #999;">
-                            Weight: ${check.weight} | Duration: ${check.duration}s
-                        </div>
-                    </div>
-                `).join('')}
+            <div class="tabs" style="margin-top: 30px;">
+                <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
+                ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
+                <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">Badges</h3>
-            <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px;">
-                Add these to your README:
-            </p>
-            <pre style="background: #f5f7fa; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem;">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)
+            <div class="tab-content active" id="checks-tab">
+                <div>
+                    ${data.checks.map(check => `
+                        <div class="check-result ${check.status}">
+                            <div class="check-name">
+                                ${check.status === 'pass' ? '✓' : '✗'} ${escapeHtml(check.name)}
+                            </div>
+                            <div class="check-description">${escapeHtml(check.description)}</div>
+                            ${check.stdout.trim() ? `
+                                <div class="check-output">
+                                    <strong>Output:</strong><br>
+                                    ${escapeHtml(check.stdout.trim())}
+                                </div>
+                            ` : ''}
+                            ${check.stderr.trim() && check.status === 'fail' ? `
+                                <div class="check-output" style="color: #c62828;">
+                                    <strong>Error:</strong><br>
+                                    ${escapeHtml(check.stderr.trim())}
+                                </div>
+                            ` : ''}
+                            <div style="margin-top: 8px; font-size: 0.85rem; color: #999;">
+                                Weight: ${check.weight} | Duration: ${check.duration}s
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            ${data.service.links && data.service.links.length > 0 ? `
+                <div class="tab-content" id="links-tab">
+                    <ul class="link-list">
+                        ${data.service.links.map(link => `
+                            <li class="link-item">
+                                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: text-bottom; margin-right: 8px;">
+                                        <path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path>
+                                    </svg>
+                                    <strong>${escapeHtml(link.name)}</strong>
+                                </a>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+
+            <div class="tab-content" id="badges-tab">
+                <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px;">
+                    Add these to your README:
+                </p>
+                <pre style="background: #f5f7fa; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem;">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)
 ![Rank](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json)</pre>
+            </div>
         `;
     } catch (error) {
         console.error('Error loading service details:', error);
@@ -287,6 +311,17 @@ async function showServiceDetail(org, repo) {
 // Close Modal
 function closeModal() {
     document.getElementById('service-modal').classList.add('hidden');
+}
+
+// Switch Tab
+function switchTab(event, tabName) {
+    // Remove active class from all tab buttons and content
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    // Add active class to clicked button and corresponding content
+    event.target.classList.add('active');
+    document.getElementById(`${tabName}-tab`).classList.add('active');
 }
 
 // Utility Functions
