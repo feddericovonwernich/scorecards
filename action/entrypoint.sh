@@ -269,15 +269,12 @@ if [ -n "$SCORECARDS_REPO" ]; then
             cp "$SCORE_BADGE_FILE" "badges/$SERVICE_ORG/$SERVICE_REPO/score.json"
             cp "$RANK_BADGE_FILE" "badges/$SERVICE_ORG/$SERVICE_REPO/rank.json"
 
-            # Update or create registry entry
-            REGISTRY_FILE="registry/services.json"
+            # Create per-service registry entry (eliminates shared file conflicts)
+            mkdir -p "registry/$SERVICE_ORG"
+            REGISTRY_FILE="registry/$SERVICE_ORG/$SERVICE_REPO.json"
 
-            if [ ! -f "$REGISTRY_FILE" ]; then
-                echo "[]" > "$REGISTRY_FILE"
-            fi
-
-            # Add or update service in registry
-            REGISTRY_ENTRY=$(jq -n \
+            # Write this service's registry entry
+            jq -n \
                 --arg org "$SERVICE_ORG" \
                 --arg repo "$SERVICE_REPO" \
                 --arg name "$SERVICE_NAME" \
@@ -293,16 +290,7 @@ if [ -n "$SCORECARDS_REPO" ]; then
                     score: $score,
                     rank: $rank,
                     last_updated: $timestamp
-                }')
-
-            # Update registry (remove old entry if exists, add new entry)
-            jq --argjson entry "$REGISTRY_ENTRY" \
-                --arg org "$SERVICE_ORG" \
-                --arg repo "$SERVICE_REPO" \
-                'map(select(.org != $org or .repo != $repo)) + [$entry]' \
-                "$REGISTRY_FILE" > "$REGISTRY_FILE.tmp"
-
-            mv "$REGISTRY_FILE.tmp" "$REGISTRY_FILE"
+                }' > "$REGISTRY_FILE"
 
             # Commit and push
             git add results/ badges/ registry/
@@ -318,10 +306,65 @@ Checks: $PASSED_CHECKS/$TOTAL_CHECKS passed
 
 Commit: $GITHUB_SHA"
 
-                if git push origin "$SCORECARDS_BRANCH" > "$WORK_DIR/git-push.log" 2>&1; then
-                    echo -e "${GREEN}✓${NC} Results committed to central repository"
-                else
-                    echo -e "${YELLOW}⚠ Failed to push to central repository${NC}"
+                # Retry loop with exponential backoff to handle concurrent pushes
+                MAX_RETRIES=5
+                RETRY_COUNT=0
+                PUSH_SUCCESS=false
+
+                while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                    if git push origin "$SCORECARDS_BRANCH" > "$WORK_DIR/git-push.log" 2>&1; then
+                        echo -e "${GREEN}✓${NC} Results committed to central repository"
+                        PUSH_SUCCESS=true
+                        break
+                    else
+                        RETRY_COUNT=$((RETRY_COUNT + 1))
+
+                        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                            echo -e "${YELLOW}Push failed (attempt $RETRY_COUNT/$MAX_RETRIES)${NC}"
+
+                            # Fetch latest changes and rebase
+                            echo "Fetching latest changes and rebasing..."
+                            git fetch origin "$SCORECARDS_BRANCH"
+
+                            if git rebase "origin/$SCORECARDS_BRANCH" > "$WORK_DIR/git-rebase.log" 2>&1; then
+                                # Rebase successful - regenerate registry file to ensure we have latest data
+                                echo "Rebase successful, regenerating registry entry..."
+                                jq -n \
+                                    --arg org "$SERVICE_ORG" \
+                                    --arg repo "$SERVICE_REPO" \
+                                    --arg name "$SERVICE_NAME" \
+                                    --arg team "$TEAM_NAME" \
+                                    --argjson score "$SCORE" \
+                                    --arg rank "$RANK" \
+                                    --arg timestamp "$TIMESTAMP" \
+                                    '{
+                                        org: $org,
+                                        repo: $repo,
+                                        name: $name,
+                                        team: $team,
+                                        score: $score,
+                                        rank: $rank,
+                                        last_updated: $timestamp
+                                    }' > "$REGISTRY_FILE"
+
+                                git add "$REGISTRY_FILE"
+                                git commit --amend --no-edit
+
+                                # Exponential backoff with jitter (5-15 seconds)
+                                BACKOFF=$((5 + RETRY_COUNT * 2 + RANDOM % 5))
+                                echo "Retrying in ${BACKOFF}s..."
+                                sleep $BACKOFF
+                            else
+                                echo -e "${YELLOW}⚠ Rebase failed${NC}"
+                                cat "$WORK_DIR/git-rebase.log"
+                                break
+                            fi
+                        fi
+                    fi
+                done
+
+                if [ "$PUSH_SUCCESS" = "false" ]; then
+                    echo -e "${YELLOW}⚠ Failed to push after $MAX_RETRIES attempts${NC}"
                     cat "$WORK_DIR/git-push.log"
                 fi
             fi
