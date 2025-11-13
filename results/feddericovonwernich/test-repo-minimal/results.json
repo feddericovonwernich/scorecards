@@ -9,8 +9,8 @@
   "rank": "silver",
   "passed_checks": 2,
   "total_checks": 4,
-  "commit_sha": "b1db502dce0bbed76f3f50bc50a244b849630bb6",
-  "timestamp": "2025-11-13T03:31:50Z",
+  "commit_sha": "3b655ba0db3614a81e7c760887bbd886d11a1322",
+  "timestamp": "2025-11-13T12:12:25Z",
   "checks": [
     {
       "check_id": "01-readme",
@@ -32,7 +32,7 @@
       "weight": 12,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "No LICENSE file found\n"
     },
