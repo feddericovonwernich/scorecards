@@ -32,16 +32,20 @@ async function fetchCurrentChecksHash() {
 
     // Return cached value if still valid
     if (currentChecksHash && (now - checksHashTimestamp) < CACHE_TTL) {
+        console.log('Using cached checks hash:', currentChecksHash);
         return currentChecksHash;
     }
+
+    console.log('Fetching current checks from main branch...');
 
     try {
         // Fetch checks directory tree from main branch
         const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/main?recursive=1`;
+        console.log('API URL:', apiUrl);
         const response = await fetch(apiUrl);
 
         if (!response.ok) {
-            console.error('Failed to fetch checks from main branch');
+            console.error('Failed to fetch checks from main branch:', response.status);
             return null;
         }
 
