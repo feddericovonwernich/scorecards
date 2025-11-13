@@ -85,6 +85,13 @@ header h1 {
     background: #f1f5ff;
 }
 
+.stat-card.filterable.exclude {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+    border: 2px solid #e74c3c;
+    background: #ffe6e6;
+}
+
 .stat-card.rank-platinum { border-left: 3px solid var(--color-platinum); }
 .stat-card.rank-gold { border-left: 3px solid var(--color-gold); }
 .stat-card.rank-silver { border-left: 3px solid var(--color-silver); }
