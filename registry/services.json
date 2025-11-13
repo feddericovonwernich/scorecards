@@ -37,15 +37,6 @@
   },
   {
     "org": "feddericovonwernich",
-    "repo": "test-repo-no-docs",
-    "name": "test-repo-no-docs",
-    "team": "",
-    "score": 58,
-    "rank": "silver",
-    "last_updated": "2025-11-13T03:31:49Z"
-  },
-  {
-    "org": "feddericovonwernich",
     "repo": "test-repo-minimal",
     "name": "test-repo-minimal",
     "team": "",
@@ -61,5 +52,14 @@
     "score": 100,
     "rank": "platinum",
     "last_updated": "2025-11-13T12:12:11Z"
+  },
+  {
+    "org": "feddericovonwernich",
+    "repo": "test-repo-no-docs",
+    "name": "test-repo-no-docs",
+    "team": "",
+    "score": 58,
+    "rank": "silver",
+    "last_updated": "2025-11-13T12:12:19Z"
   }
 ]
