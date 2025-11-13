@@ -10,15 +10,6 @@
   },
   {
     "org": "feddericovonwernich",
-    "repo": "test-repo-edge-cases",
-    "name": "test-repo-edge-cases",
-    "team": "",
-    "score": 100,
-    "rank": "platinum",
-    "last_updated": "2025-11-13T03:31:35Z"
-  },
-  {
-    "org": "feddericovonwernich",
     "repo": "test-repo-empty",
     "name": "test-repo-empty",
     "team": "",
@@ -61,5 +52,14 @@
     "score": 51,
     "rank": "silver",
     "last_updated": "2025-11-13T03:31:50Z"
+  },
+  {
+    "org": "feddericovonwernich",
+    "repo": "test-repo-edge-cases",
+    "name": "test-repo-edge-cases",
+    "team": "",
+    "score": 100,
+    "rank": "platinum",
+    "last_updated": "2025-11-13T12:12:11Z"
   }
 ]
