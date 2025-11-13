@@ -34,12 +34,12 @@
       }
     }
   },
-  "score": 71,
-  "rank": "silver",
-  "passed_checks": 5,
+  "score": 100,
+  "rank": "platinum",
+  "passed_checks": 8,
   "total_checks": 8,
-  "commit_sha": "031203e40cc07d03b212619dbd8cb20f2de3459e",
-  "timestamp": "2025-11-13T17:06:40Z",
+  "commit_sha": "e009875891d91003df5f3f913047c4d179e94776",
+  "timestamp": "2025-11-13T17:16:57Z",
   "checks": [
     {
       "check_id": "01-readme",
@@ -107,11 +107,11 @@
       "description": "Checks that the repository has an OpenAPI/Swagger specification file and that it is valid. Validates syntax and structure of API documentation.",
       "category": "documentation",
       "weight": 12,
-      "status": "fail",
-      "exit_code": 1,
-      "duration": 0,
-      "stdout": "",
-      "stderr": "OpenAPI specification found but validation failed: openapi.yaml\nError: Cannot find module '@apidevtools/swagger-parser'\nRequire stack:\n- /checks/06-openapi-spec/check.js\n"
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 1,
+      "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
+      "stderr": ""
     },
     {
       "check_id": "07-openapi-quality",
@@ -119,11 +119,11 @@
       "description": "Evaluates the completeness and quality of the OpenAPI specification. Checks for descriptions, examples, schemas, and other documentation best practices.",
       "category": "documentation",
       "weight": 10,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "Error assessing OpenAPI quality: Cannot find module '@apidevtools/swagger-parser'\nRequire stack:\n- /checks/07-openapi-quality/check.js\n"
+      "stdout": "OpenAPI Quality Score: 98/100\n\nQuality Metrics:\n  Info: ✓ description, ✓ contact, ✓ license\n  Operations: 4 total\n    - 4/4 (100%) with descriptions\n    - 4/4 (100%) with tags\n    - 2/4 (50%) with examples\n  Parameters: 3/3 (100%) with descriptions\n  Responses: 9/9 (100%) with descriptions\n  Schemas: 4/4 (100%) with descriptions\n  Security: ✓ defined, ✓ applied\n\nQuality score meets threshold (60+)\n",
+      "stderr": ""
     },
     {
       "check_id": "08-api-environments",
@@ -131,11 +131,11 @@
       "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
       "category": "configuration",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "node:internal/modules/cjs/loader:1210\n  throw err;\n  ^\n\nError: Cannot find module 'yaml'\nRequire stack:\n- /checks/08-api-environments/check.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)\n    at Module._load (node:internal/modules/cjs/loader:1038:27)\n    at Module.require (node:internal/modules/cjs/loader:1289:19)\n    at require (node:internal/modules/helpers:182:18)\n    at Object.<anonymous> (/checks/08-api-environments/check.js:6:14)\n    at Module._compile (node:internal/modules/cjs/loader:1521:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)\n    at Module.load (node:internal/modules/cjs/loader:1266:32)\n    at Module._load (node:internal/modules/cjs/loader:1091:12)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/checks/08-api-environments/check.js' ]\n}\n\nNode.js v20.19.5\n"
+      "stdout": "API environment configuration found for OpenAPI spec: openapi.yaml\nConfigured environments: 3\n  • production: https://api.example.com/v1 - Production environment\n  • staging: https://staging-api.example.com/v1 - Staging environment for testing\n  • development: http://localhost:8000 - Local development server\nSpec file reference: openapi.yaml\n",
+      "stderr": ""
     }
   ]
 }
