@@ -103,12 +103,12 @@ scorecards-repo: 'your-org/scorecards'
 
 If not provided, the action will detect it from the action source.
 
-### `scorecards-branch` (optional, default: `main`)
+### `scorecards-branch` (optional, default: `catalog`)
 
 The branch to commit results to in the central repository.
 
 ```yaml
-scorecards-branch: 'main'
+scorecards-branch: 'catalog'
 ```
 
 ### `create-config-pr` (optional, default: `false`)
@@ -151,8 +151,8 @@ Add scorecard badges to your README to show your score and rank:
 ```markdown
 # My Service
 
-![Scorecard Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/your-org/scorecards/main/badges/your-org/your-repo/score.json)
-![Scorecard Rank](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/your-org/scorecards/main/badges/your-org/your-repo/rank.json)
+![Scorecard Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/your-org/scorecards/catalog/badges/your-org/your-repo/score.json)
+![Scorecard Rank](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/your-org/scorecards/catalog/badges/your-org/your-repo/rank.json)
 
 ...rest of your README...
 ```
