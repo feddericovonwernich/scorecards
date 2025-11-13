@@ -207,6 +207,12 @@ header h1 {
     margin-bottom: 16px;
 }
 
+.service-header > div:first-child {
+    flex: 1;
+    min-width: 0;
+    margin-right: 12px;
+}
+
 .service-title-wrapper {
     display: flex;
     flex-direction: column;
