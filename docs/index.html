@@ -17,31 +17,31 @@
     <main class="container">
         <!-- Stats Section -->
         <section class="stats">
-            <div class="stat-card">
+            <div class="stat-card non-filterable">
                 <div class="stat-value" id="total-services">-</div>
                 <div class="stat-label">Total Services</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card non-filterable">
                 <div class="stat-value" id="avg-score">-</div>
                 <div class="stat-label">Average Score</div>
             </div>
-            <div class="stat-card" style="background: #f1f8ff; border-left: 3px solid #0366d6;">
+            <div class="stat-card filterable" data-filter="has-api" style="border-left: 3px solid #0366d6;">
                 <div class="stat-value" id="api-count">-</div>
                 <div class="stat-label">With API</div>
             </div>
-            <div class="stat-card rank-platinum">
+            <div class="stat-card filterable rank-platinum" data-filter="platinum">
                 <div class="stat-value" id="platinum-count">-</div>
                 <div class="stat-label">Platinum</div>
             </div>
-            <div class="stat-card rank-gold">
+            <div class="stat-card filterable rank-gold" data-filter="gold">
                 <div class="stat-value" id="gold-count">-</div>
                 <div class="stat-label">Gold</div>
             </div>
-            <div class="stat-card rank-silver">
+            <div class="stat-card filterable rank-silver" data-filter="silver">
                 <div class="stat-value" id="silver-count">-</div>
                 <div class="stat-label">Silver</div>
             </div>
-            <div class="stat-card rank-bronze">
+            <div class="stat-card filterable rank-bronze" data-filter="bronze">
                 <div class="stat-value" id="bronze-count">-</div>
                 <div class="stat-label">Bronze</div>
             </div>
@@ -55,14 +55,6 @@
                 placeholder="Search services..."
                 class="search-box"
             >
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-rank="all">All</button>
-                <button class="filter-btn" data-rank="platinum">Platinum</button>
-                <button class="filter-btn" data-rank="gold">Gold</button>
-                <button class="filter-btn" data-rank="silver">Silver</button>
-                <button class="filter-btn" data-rank="bronze">Bronze</button>
-                <button class="filter-btn" data-rank="has-api" style="border-left: 2px solid #e1e4e8; margin-left: 8px;">Has API</button>
-            </div>
             <select id="sort-select" class="sort-select">
                 <option value="score-desc">Score: High to Low</option>
                 <option value="score-asc">Score: Low to High</option>
@@ -70,7 +62,6 @@
                 <option value="name-desc">Name: Z to A</option>
                 <option value="updated-desc">Recently Updated</option>
             </select>
-        </div>
         </section>
 
         <!-- Services Grid -->

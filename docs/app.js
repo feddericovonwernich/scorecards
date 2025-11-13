@@ -9,7 +9,7 @@ const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAM
 // State
 let allServices = [];
 let filteredServices = [];
-let currentFilter = 'all';
+let activeFilters = new Set(); // Multi-select filters (e.g., 'platinum', 'has-api')
 let currentSort = 'score-desc';
 let searchQuery = '';
 let currentChecksHash = null;
@@ -92,12 +92,20 @@ function setupEventListeners() {
         filterAndRenderServices();
     });
 
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentFilter = e.target.dataset.rank;
+    // Filterable stat cards (multi-select)
+    document.querySelectorAll('.stat-card.filterable').forEach(card => {
+        card.addEventListener('click', () => {
+            const filter = card.dataset.filter;
+
+            // Toggle filter
+            if (activeFilters.has(filter)) {
+                activeFilters.delete(filter);
+                card.classList.remove('active');
+            } else {
+                activeFilters.add(filter);
+                card.classList.add('active');
+            }
+
             filterAndRenderServices();
         });
     });
@@ -202,13 +210,21 @@ function updateStats() {
 function filterAndRenderServices() {
     // Filter
     filteredServices = allServices.filter(service => {
-        // Rank filter
-        if (currentFilter === 'has-api') {
-            if (!service.has_api) {
-                return false;
+        // Multi-select filters (AND logic)
+        // If any filters are active, check if service matches ALL of them
+        if (activeFilters.size > 0) {
+            for (const filter of activeFilters) {
+                if (filter === 'has-api') {
+                    if (!service.has_api) {
+                        return false;
+                    }
+                } else if (filter === 'platinum' || filter === 'gold' || filter === 'silver' || filter === 'bronze') {
+                    // Rank filter
+                    if (service.rank !== filter) {
+                        return false;
+                    }
+                }
             }
-        } else if (currentFilter !== 'all' && service.rank !== currentFilter) {
-            return false;
         }
 
         // Search filter
