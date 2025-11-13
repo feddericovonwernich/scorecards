@@ -7,11 +7,13 @@
     "links": [
       {
         "name": "Documentation",
-        "url": "https://github.com/feddericovonwernich/test-repo-perfect"
+        "url": "https://github.com/feddericovonwernich/test-repo-perfect",
+        "description": "Complete guide with examples and best practices"
       },
       {
         "name": "API Reference",
-        "url": "https://github.com/feddericovonwernich/test-repo-perfect/wiki"
+        "url": "https://github.com/feddericovonwernich/test-repo-perfect/wiki",
+        "description": "Technical documentation and API specifications"
       }
     ]
   },
@@ -19,8 +21,8 @@
   "rank": "platinum",
   "passed_checks": 5,
   "total_checks": 5,
-  "commit_sha": "e50d7daf458b117204720b3bf53b34074e80fc57",
-  "timestamp": "2025-11-13T15:58:37Z",
+  "commit_sha": "e4ba032abc61580d0bbe69a21195bf40eca52319",
+  "timestamp": "2025-11-13T16:13:35Z",
   "checks": [
     {
       "check_id": "01-readme",
@@ -79,7 +81,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (459 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (596 bytes)\n",
       "stderr": ""
     }
   ]
