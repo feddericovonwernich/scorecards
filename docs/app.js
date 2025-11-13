@@ -274,10 +274,12 @@ function renderServices() {
         <div class="service-card rank-${service.rank}" onclick="showServiceDetail('${service.org}', '${service.repo}')">
             <div class="service-header">
                 <div>
-                    <div class="service-name">
-                        ${escapeHtml(service.name)}
-                        ${service.has_api ? '<span style="display: inline-block; background: #0366d6; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; font-weight: 500;">API</span>' : ''}
-                        ${isStale ? '<span style="display: inline-block; background: #f39c12; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; font-weight: 500;">STALE</span>' : ''}
+                    <div class="service-title-wrapper">
+                        <div class="service-name">${escapeHtml(service.name)}</div>
+                        <div class="service-badges">
+                            ${service.has_api ? '<span class="badge-api">API</span>' : ''}
+                            ${isStale ? '<span class="badge-stale">STALE</span>' : ''}
+                        </div>
                     </div>
                     <div class="service-org">${escapeHtml(service.org)}/${escapeHtml(service.repo)}</div>
                 </div>
