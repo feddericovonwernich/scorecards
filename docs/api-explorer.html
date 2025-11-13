@@ -196,12 +196,13 @@
                     setupEnvironmentSelector(serviceData.service.openapi.environments);
                 }
 
-                // Find the OpenAPI spec file path
+                // Find the OpenAPI spec file path and branch
                 const specPath = serviceData.service.openapi.spec_file || 'openapi.yaml';
+                const configuredBranch = serviceData.service.openapi.branch;
 
                 // Load the OpenAPI spec from the service repository
-                // Try multiple common branch names (main, master)
-                const branches = ['main', 'master'];
+                // Use configured branch if available, otherwise try common branch names
+                const branches = configuredBranch ? [configuredBranch] : ['main', 'master'];
                 let specUrl = null;
                 let lastError = null;
 
@@ -219,7 +220,10 @@
                 }
 
                 if (!specUrl) {
-                    throw new Error(`OpenAPI specification file not found. Tried branches: ${branches.join(', ')}`);
+                    const branchInfo = configuredBranch
+                        ? `configured branch: ${configuredBranch}`
+                        : `tried branches: ${branches.join(', ')}`;
+                    throw new Error(`OpenAPI specification file not found at ${specPath} (${branchInfo})`);
                 }
 
                 // Initialize Swagger UI
