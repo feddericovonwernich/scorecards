@@ -196,10 +196,12 @@ function updateStats() {
     };
 
     const apiCount = allServices.filter(s => s.has_api).length;
+    const staleCount = allServices.filter(s => isServiceStale(s, currentChecksHash)).length;
 
     document.getElementById('total-services').textContent = total;
     document.getElementById('avg-score').textContent = avgScore;
     document.getElementById('api-count').textContent = apiCount;
+    document.getElementById('stale-count').textContent = staleCount;
     document.getElementById('platinum-count').textContent = rankCounts.platinum;
     document.getElementById('gold-count').textContent = rankCounts.gold;
     document.getElementById('silver-count').textContent = rankCounts.silver;
@@ -216,6 +218,10 @@ function filterAndRenderServices() {
             for (const filter of activeFilters) {
                 if (filter === 'has-api') {
                     if (!service.has_api) {
+                        return false;
+                    }
+                } else if (filter === 'stale') {
+                    if (!isServiceStale(service, currentChecksHash)) {
                         return false;
                     }
                 } else if (filter === 'platinum' || filter === 'gold' || filter === 'silver' || filter === 'bronze') {
