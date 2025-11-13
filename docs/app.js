@@ -3,7 +3,7 @@
 // Configuration
 const REPO_OWNER = window.location.hostname.split('.')[0] || 'your-org';
 const REPO_NAME = 'scorecards';
-const BRANCH = 'main';
+const BRANCH = 'catalog';
 const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
 
 // State
