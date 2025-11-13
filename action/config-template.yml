@@ -15,8 +15,10 @@ service:
   links:
     - name: "Documentation"
       url: "https://example.com/docs"
+      description: "API reference and implementation guides"
     - name: "Runbook"
       url: "https://example.com/runbook"
+      # description is optional
     # Add more links as needed
 
 # Custom fields - add any metadata relevant to your organization
