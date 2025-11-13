@@ -501,12 +501,12 @@ Commit: $GITHUB_SHA"
             fi
         fi
 
-        # Always commit current-checks files (even if service results didn't change)
-        # This ensures the check suite hash is always up-to-date
+        # Commit current-checks files only if they changed
+        # This happens when checks are added, modified, or removed
         git add current-checks.json current-checks-hash.txt
 
         if ! git diff --staged --quiet; then
-            echo -e "${BLUE}Committing check suite metadata...${NC}"
+            echo -e "${BLUE}Check suite changed - committing metadata...${NC}"
             git commit -m "Update check suite metadata
 
 Checks hash: $CHECKS_HASH
@@ -518,6 +518,8 @@ Checks count: $CHECKS_COUNT"
                 echo -e "${YELLOW}⚠ Failed to push check suite metadata${NC}"
                 cat "$WORK_DIR/git-push-checks.log"
             fi
+        else
+            echo "Check suite unchanged - no metadata commit needed"
         fi
     fi
 
