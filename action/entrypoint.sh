@@ -71,13 +71,34 @@ if [ "$HAS_CONFIG" = "true" ]; then
     # Parse config file (requires yq or similar - for now use simple defaults)
     SERVICE_NAME=$(grep -A 1 "service:" "$CONFIG_FILE" | grep "name:" | sed 's/.*name: *"\?\([^"]*\)"\?.*/\1/' || echo "$SERVICE_REPO")
     TEAM_NAME=$(grep "team:" "$CONFIG_FILE" | sed 's/.*team: *"\?\([^"]*\)"\?.*/\1/' || echo "")
+
+    # Parse links array from config (if exists)
+    # Extract links section and convert to JSON array
+    LINKS_JSON="[]"
+    if grep -q "links:" "$CONFIG_FILE"; then
+        # Use python to parse YAML links section properly
+        if command -v python3 &> /dev/null; then
+            LINKS_JSON=$(python3 -c "
+import yaml, json, sys
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        config = yaml.safe_load(f)
+        links = config.get('service', {}).get('links', [])
+        print(json.dumps(links))
+except:
+    print('[]')
+" 2>/dev/null || echo "[]")
+        fi
+    fi
 else
     SERVICE_NAME="$SERVICE_REPO"
     TEAM_NAME=""
+    LINKS_JSON="[]"
 fi
 
 echo "Service Name: $SERVICE_NAME"
 echo "Team: ${TEAM_NAME:-<not set>}"
+echo "Links: $(echo "$LINKS_JSON" | jq length) link(s)"
 echo
 
 # ============================================================================
@@ -160,6 +181,7 @@ FINAL_RESULTS=$(jq -n \
     --arg service_repo "$SERVICE_REPO" \
     --arg service_name "$SERVICE_NAME" \
     --arg team "$TEAM_NAME" \
+    --argjson links "$LINKS_JSON" \
     --arg commit_sha "$GITHUB_SHA" \
     --arg timestamp "$TIMESTAMP" \
     --argjson score "$SCORE" \
@@ -172,7 +194,8 @@ FINAL_RESULTS=$(jq -n \
             org: $service_org,
             repo: $service_repo,
             name: $service_name,
-            team: $team
+            team: $team,
+            links: $links
         },
         score: $score,
         rank: $rank,
