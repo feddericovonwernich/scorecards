@@ -200,11 +200,30 @@
                 const specPath = serviceData.service.openapi.spec_file || 'openapi.yaml';
 
                 // Load the OpenAPI spec from the service repository
-                // We need to get the spec from the actual service repo, not the scorecards repo
-                const serviceSpecUrl = `https://raw.githubusercontent.com/${org}/${repo}/main/${specPath}`;
+                // Try multiple common branch names (main, master)
+                const branches = ['main', 'master'];
+                let specUrl = null;
+                let lastError = null;
+
+                for (const branch of branches) {
+                    const url = `https://raw.githubusercontent.com/${org}/${repo}/${branch}/${specPath}`;
+                    try {
+                        const response = await fetch(url, { method: 'HEAD' });
+                        if (response.ok) {
+                            specUrl = url;
+                            break;
+                        }
+                    } catch (e) {
+                        lastError = e;
+                    }
+                }
+
+                if (!specUrl) {
+                    throw new Error(`OpenAPI specification file not found. Tried branches: ${branches.join(', ')}`);
+                }
 
                 // Initialize Swagger UI
-                await loadSwaggerUI(serviceSpecUrl);
+                await loadSwaggerUI(specUrl);
 
                 // Hide loading, show UI
                 document.getElementById('loading').style.display = 'none';
