@@ -3,14 +3,24 @@
     "org": "feddericovonwernich",
     "repo": "test-repo-perfect",
     "name": "Perfect Example Service",
-    "team": "Platform Engineering"
+    "team": "Platform Engineering",
+    "links": [
+      {
+        "name": "Documentation",
+        "url": "https://github.com/feddericovonwernich/test-repo-perfect"
+      },
+      {
+        "name": "API Reference",
+        "url": "https://github.com/feddericovonwernich/test-repo-perfect/wiki"
+      }
+    ]
   },
   "score": 100,
   "rank": "platinum",
   "passed_checks": 5,
   "total_checks": 5,
   "commit_sha": "e50d7daf458b117204720b3bf53b34074e80fc57",
-  "timestamp": "2025-11-13T15:35:14Z",
+  "timestamp": "2025-11-13T15:58:37Z",
   "checks": [
     {
       "check_id": "01-readme",
