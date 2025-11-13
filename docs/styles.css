@@ -85,6 +85,11 @@ header h1 {
     background: #f1f5ff;
 }
 
+.stat-card.rank-platinum { border-left: 3px solid var(--color-platinum); }
+.stat-card.rank-gold { border-left: 3px solid var(--color-gold); }
+.stat-card.rank-silver { border-left: 3px solid var(--color-silver); }
+.stat-card.rank-bronze { border-left: 3px solid var(--color-bronze); }
+
 .stat-value {
     font-size: 2rem;
     font-weight: bold;
@@ -202,11 +207,40 @@ header h1 {
     margin-bottom: 16px;
 }
 
+.service-title-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .service-name {
     font-size: 1.3rem;
     font-weight: 600;
     color: var(--color-text);
-    margin-bottom: 4px;
+}
+
+.service-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.badge-api,
+.badge-stale {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+    color: white;
+}
+
+.badge-api {
+    background: #0366d6;
+}
+
+.badge-stale {
+    background: #f39c12;
 }
 
 .service-org {
