@@ -16,5 +16,14 @@
     "score": 100,
     "rank": "platinum",
     "last_updated": "2025-11-13T03:31:35Z"
+  },
+  {
+    "org": "feddericovonwernich",
+    "repo": "test-repo-empty",
+    "name": "test-repo-empty",
+    "team": "",
+    "score": 28,
+    "rank": "bronze",
+    "last_updated": "2025-11-13T03:31:36Z"
   }
 ]
