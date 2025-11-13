@@ -1,0 +1,74 @@
+# Example: How to use the Scorecards Installation Workflow in your service repository
+#
+# This workflow can be added to any service repository to:
+# 1. Automatically run scorecards daily
+# 2. Create an installation PR if not already installed
+# 3. Display results in GitHub Actions UI
+# 4. Cache results for 24 hours
+#
+# Save this file as: .github/workflows/scorecards-check.yml
+
+name: Scorecards Check
+
+on:
+  # Run daily at midnight UTC
+  schedule:
+    - cron: '0 0 * * *'
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+  # Optional: Also run on pushes to main (for faster feedback)
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  scorecards:
+    name: Run Scorecards
+    # Call the reusable installation workflow from the scorecards repository
+    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+    with:
+      # Optional: Override the default scorecards repository
+      scorecards-repo: 'feddericovonwernich/scorecards'
+
+      # Optional: Override the default branch for results (default: 'catalog')
+      scorecards-branch: 'catalog'
+    secrets:
+      # Required: GitHub token with repo permissions
+      # For installation phase (before PR is merged): Use GITHUB_TOKEN
+      # After installation (once PR is merged): Use SCORECARDS_PAT with permissions to push to central repo
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Optional: PAT for pushing results to central scorecards repository
+      # Only needed after the installation PR is merged
+      # This should be a PAT with 'repo' scope
+      scorecards-pat: ${{ secrets.SCORECARDS_PAT }}
+
+# What happens when this runs:
+#
+# 1. First Run (not installed):
+#    - Checks if .github/workflows/scorecards.yml exists (not found)
+#    - Checks for existing installation PR (none found)
+#    - Runs scorecards and displays results
+#    - Caches results for 24 hours
+#    - Creates a PR with scorecards workflow and config
+#
+# 2. Subsequent Runs (still not installed):
+#    - Checks if .github/workflows/scorecards.yml exists (not found)
+#    - Checks for existing installation PR (found!)
+#    - Runs scorecards and displays results
+#    - Caches results for 24 hours
+#    - Does NOT create another PR (respects existing PR)
+#
+# 3. After PR is merged:
+#    - Checks if .github/workflows/scorecards.yml exists (found!)
+#    - Runs scorecards and displays results
+#    - Pushes results to central catalog repository
+#    - No longer creates PRs (already installed)
+#
+# 4. If PR is closed without merging:
+#    - Continues running scorecards daily
+#    - Shows results in Actions UI
+#    - Does NOT create new PRs (respects closure)
+#    - Provides ongoing quality insights without requiring installation

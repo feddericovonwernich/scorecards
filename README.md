@@ -120,7 +120,39 @@ After installation, you can:
 
 ### For Service Teams
 
-Once your platform team has installed the central scorecards repository, add this workflow to your service:
+Once your platform team has installed the central scorecards repository, you can add scorecards to your service in two ways:
+
+#### Automated Installation (Recommended)
+
+The easiest way to get started! This "try before you buy" approach lets you see your scorecard results before committing to installation:
+
+```yaml
+# .github/workflows/scorecards-check.yml
+name: Scorecards Check
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  scorecards:
+    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+What happens:
+1. 🔍 Calculates your scorecard score daily
+2. 📝 Creates an automated PR with scorecards workflow and config
+3. 📊 Shows results in Actions tab (even before merging)
+4. ✅ Respects your decision if you close the PR (won't spam you)
+
+See [detailed guide](./docs/USAGE.md#automated-installation-recommended) for more information.
+
+#### Manual Installation
+
+If you prefer direct control, add this workflow to your service:
 
 ```yaml
 # .github/workflows/scorecards.yml
@@ -144,7 +176,7 @@ jobs:
           scorecards-branch: 'catalog'  # optional, this is the default
 ```
 
-#### Setting up the Token
+**Setting up the Token:**
 
 Create a GitHub Personal Access Token with `repo` permissions and add it as a secret:
 

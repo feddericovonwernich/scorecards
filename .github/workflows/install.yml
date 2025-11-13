@@ -1,0 +1,268 @@
+name: Scorecards Installation Workflow
+
+on:
+  workflow_call:
+    inputs:
+      scorecards-repo:
+        description: 'Central scorecards repository (owner/repo)'
+        required: false
+        type: string
+        default: 'feddericovonwernich/scorecards'
+      scorecards-branch:
+        description: 'Branch to commit results to in central repo'
+        required: false
+        type: string
+        default: 'catalog'
+    secrets:
+      github-token:
+        description: 'GitHub token with repo and contents permissions'
+        required: true
+      scorecards-pat:
+        description: 'PAT for pushing to scorecards central repo (optional, only needed if installed)'
+        required: false
+
+jobs:
+  check-status:
+    name: Check Installation Status
+    runs-on: ubuntu-latest
+    outputs:
+      installed: ${{ steps.check.outputs.installed }}
+      pr-exists: ${{ steps.check-pr.outputs.exists }}
+      pr-number: ${{ steps.check-pr.outputs.number }}
+      pr-state: ${{ steps.check-pr.outputs.state }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if scorecards is installed
+        id: check
+        run: |
+          if [ -f ".github/workflows/scorecards.yml" ]; then
+            echo "installed=true" >> $GITHUB_OUTPUT
+            echo "✅ Scorecards workflow is installed"
+          else
+            echo "installed=false" >> $GITHUB_OUTPUT
+            echo "❌ Scorecards workflow not found"
+          fi
+
+      - name: Check for existing installation PR
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.github-token }}
+        run: |
+          # Search for PRs with the scorecards-install label
+          pr_data=$(gh pr list --label "scorecards-install" --json number,state,title --limit 1)
+
+          if [ "$pr_data" = "[]" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "number=" >> $GITHUB_OUTPUT
+            echo "state=" >> $GITHUB_OUTPUT
+            echo "ℹ️  No existing installation PR found"
+          else
+            pr_number=$(echo "$pr_data" | jq -r '.[0].number')
+            pr_state=$(echo "$pr_data" | jq -r '.[0].state')
+            pr_title=$(echo "$pr_data" | jq -r '.[0].title')
+
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "number=$pr_number" >> $GITHUB_OUTPUT
+            echo "state=$pr_state" >> $GITHUB_OUTPUT
+            echo "ℹ️  Found PR #$pr_number ($pr_state): $pr_title"
+          fi
+
+  run-scorecards:
+    name: Calculate Scorecards
+    runs-on: ubuntu-latest
+    needs: check-status
+    outputs:
+      score: ${{ steps.scorecards.outputs.score }}
+      rank: ${{ steps.scorecards.outputs.rank }}
+      passed-checks: ${{ steps.scorecards.outputs.passed-checks }}
+      total-checks: ${{ steps.scorecards.outputs.total-checks }}
+      results-file: ${{ steps.scorecards.outputs.results-file }}
+    steps:
+      - name: Checkout service repository
+        uses: actions/checkout@v4
+
+      - name: Run Scorecards Action
+        id: scorecards
+        uses: feddericovonwernich/scorecards/action@main
+        with:
+          github-token: ${{ secrets.scorecards-pat || secrets.github-token }}
+          scorecards-repo: ${{ needs.check-status.outputs.installed == 'true' && inputs.scorecards-repo || '' }}
+          scorecards-branch: ${{ inputs.scorecards-branch }}
+
+      - name: Display Results
+        run: |
+          echo "## 🎯 Scorecards Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Score**: ${{ steps.scorecards.outputs.score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "**Rank**: ${{ steps.scorecards.outputs.rank }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Checks**: ${{ steps.scorecards.outputs.passed-checks }}/${{ steps.scorecards.outputs.total-checks }} passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.check-status.outputs.installed }}" = "false" ]; then
+            echo "> ℹ️  **Note**: Scorecards is not yet installed in this repository." >> $GITHUB_STEP_SUMMARY
+            echo "> These results are calculated on-demand and cached for 24 hours." >> $GITHUB_STEP_SUMMARY
+            echo "> An installation PR will be created automatically." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Display detailed results if available
+          if [ -f "${{ steps.scorecards.outputs.results-file }}" ]; then
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>📊 Detailed Check Results</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            cat "${{ steps.scorecards.outputs.results-file }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Cache results
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.scorecards.outputs.results-file }}
+          key: scorecards-results-${{ github.repository }}-${{ github.run_number }}
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scorecards-results
+          path: ${{ steps.scorecards.outputs.results-file }}
+          retention-days: 1
+
+  create-installation-pr:
+    name: Create Installation PR
+    runs-on: ubuntu-latest
+    needs: [check-status, run-scorecards]
+    if: needs.check-status.outputs.installed == 'false' && needs.check-status.outputs.pr-exists == 'false'
+    steps:
+      - name: Checkout service repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.github-token }}
+
+      - name: Checkout scorecards repository for templates
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.scorecards-repo }}
+          path: .scorecards-tmp
+          ref: main
+
+      - name: Create branch for installation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b scorecards-install
+
+      - name: Copy workflow template
+        run: |
+          mkdir -p .github/workflows
+
+          # Copy template and customize it
+          sed -e "s|feddericovonwernich/scorecards|${{ inputs.scorecards-repo }}|g" \
+              -e "s|scorecards-branch: 'catalog'|scorecards-branch: '${{ inputs.scorecards-branch }}'|g" \
+              .scorecards-tmp/scorecard-workflow-template.yml > .github/workflows/scorecards.yml
+
+          echo "✅ Created .github/workflows/scorecards.yml"
+
+      - name: Create config template
+        run: |
+          mkdir -p .scorecard
+
+          # Extract repo name and org
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          ORG_NAME="${GITHUB_REPOSITORY%/*}"
+
+          # Create config with basic info
+          cat > .scorecard/config.yml << EOF
+          service:
+            name: "$REPO_NAME"
+            team: ""
+            description: ""
+            links: []
+          EOF
+
+          echo "✅ Created .scorecard/config.yml"
+
+      - name: Commit changes
+        run: |
+          git add .github/workflows/scorecards.yml .scorecard/config.yml
+          git commit -m "chore: Add Scorecards quality monitoring
+
+          - Add scorecards workflow (runs daily)
+          - Add scorecards config template
+
+          Current score: ${{ needs.run-scorecards.outputs.score }}/100 (${{ needs.run-scorecards.outputs.rank }})"
+
+      - name: Push branch
+        run: |
+          git push origin scorecards-install
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.github-token }}
+        run: |
+          # Download results to include in PR body
+          RESULTS_FILE="${{ needs.run-scorecards.outputs.results-file }}"
+
+          # Create PR body
+          cat > pr-body.md << 'EOF'
+          ## 🎯 Scorecards Quality Monitoring
+
+          This PR adds automated quality monitoring using Scorecards.
+
+          ### What's Included
+
+          - **Workflow file**: `.github/workflows/scorecards.yml` - Runs daily to calculate quality scores
+          - **Config file**: `.scorecard/config.yml` - Service metadata and configuration
+
+          ### Current Score
+
+          **Score**: ${{ needs.run-scorecards.outputs.score }}/100
+          **Rank**: ${{ needs.run-scorecards.outputs.rank }}
+          **Checks Passed**: ${{ needs.run-scorecards.outputs.passed-checks }}/${{ needs.run-scorecards.outputs.total-checks }}
+
+          ### What Happens After Merge
+
+          Once merged, scorecards will:
+          - ✅ Run daily via cron schedule (configurable)
+          - ✅ Post results to the central catalog
+          - ✅ Generate quality badges for your README
+          - ✅ Track score trends over time
+
+          ### Customize Your Config
+
+          Edit `.scorecard/config.yml` to add:
+          - Team name
+          - Service description
+          - Links to documentation
+          - OpenAPI spec location (if applicable)
+
+          ### Learn More
+
+          - [Scorecards Documentation](https://github.com/${{ inputs.scorecards-repo }})
+          - [View Catalog](https://github.com/${{ inputs.scorecards-repo }}/tree/${{ inputs.scorecards-branch }})
+
+          ---
+
+          🤖 This PR was automatically created by the Scorecards installation workflow.
+          If you close this PR without merging, we'll respect your decision and won't create another one.
+          However, scorecards will continue to run daily and results will be available in the Actions tab.
+          EOF
+
+          # Create the PR
+          gh pr create \
+            --title "chore: Add Scorecards quality monitoring" \
+            --body-file pr-body.md \
+            --label "scorecards-install" \
+            --head scorecards-install \
+            --base "${GITHUB_REF#refs/heads/}"
+
+          echo "✅ Created installation PR"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf .scorecards-tmp
+          rm -f pr-body.md
