@@ -90,14 +90,17 @@ Links to important resources related to this service.
 Each link has:
 - `name` (string): Display text for the link
 - `url` (string): URL to the resource
+- `description` (string, optional): Brief description of what the link provides
 
 ```yaml
 service:
   links:
     - name: "Documentation"
       url: "https://docs.example.com/my-service"
+      description: "API reference and implementation guides"
     - name: "Runbook"
       url: "https://wiki.example.com/runbook"
+      description: "Incident response and troubleshooting procedures"
     - name: "Metrics Dashboard"
       url: "https://grafana.example.com/dashboard"
 ```
