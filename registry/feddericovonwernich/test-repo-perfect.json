@@ -3,7 +3,8 @@
   "repo": "test-repo-perfect",
   "name": "Perfect Example Service",
   "team": "Platform Engineering",
-  "score": 100,
-  "rank": "platinum",
-  "last_updated": "2025-11-13T16:13:35Z"
+  "score": 71,
+  "rank": "silver",
+  "last_updated": "2025-11-13T17:06:40Z",
+  "has_api": true
 }
