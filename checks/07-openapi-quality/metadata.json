@@ -1,0 +1,7 @@
+{
+  "name": "OpenAPI Quality",
+  "description": "Evaluates the completeness and quality of the OpenAPI specification. Checks for descriptions, examples, schemas, and other documentation best practices.",
+  "weight": 10,
+  "timeout": 30,
+  "category": "documentation"
+}

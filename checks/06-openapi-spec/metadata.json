@@ -1,0 +1,7 @@
+{
+  "name": "OpenAPI Specification",
+  "description": "Checks that the repository has an OpenAPI/Swagger specification file and that it is valid. Validates syntax and structure of API documentation.",
+  "weight": 12,
+  "timeout": 30,
+  "category": "documentation"
+}

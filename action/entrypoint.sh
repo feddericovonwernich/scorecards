@@ -90,15 +90,42 @@ except:
 " 2>/dev/null || echo "[]")
         fi
     fi
+
+    # Parse OpenAPI configuration (if exists)
+    OPENAPI_JSON="null"
+    HAS_API="false"
+    if grep -q "openapi:" "$CONFIG_FILE"; then
+        if command -v python3 &> /dev/null; then
+            OPENAPI_JSON=$(python3 -c "
+import yaml, json, sys
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        config = yaml.safe_load(f)
+        openapi = config.get('openapi', None)
+        if openapi:
+            print(json.dumps(openapi))
+        else:
+            print('null')
+except:
+    print('null')
+" 2>/dev/null || echo "null")
+            if [ "$OPENAPI_JSON" != "null" ]; then
+                HAS_API="true"
+            fi
+        fi
+    fi
 else
     SERVICE_NAME="$SERVICE_REPO"
     TEAM_NAME=""
     LINKS_JSON="[]"
+    OPENAPI_JSON="null"
+    HAS_API="false"
 fi
 
 echo "Service Name: $SERVICE_NAME"
 echo "Team: ${TEAM_NAME:-<not set>}"
 echo "Links: $(echo "$LINKS_JSON" | jq length) link(s)"
+echo "Has API: $HAS_API"
 echo
 
 # ============================================================================
@@ -182,6 +209,7 @@ FINAL_RESULTS=$(jq -n \
     --arg service_name "$SERVICE_NAME" \
     --arg team "$TEAM_NAME" \
     --argjson links "$LINKS_JSON" \
+    --argjson openapi "$OPENAPI_JSON" \
     --arg commit_sha "$GITHUB_SHA" \
     --arg timestamp "$TIMESTAMP" \
     --argjson score "$SCORE" \
@@ -195,7 +223,8 @@ FINAL_RESULTS=$(jq -n \
             repo: $service_repo,
             name: $service_name,
             team: $team,
-            links: $links
+            links: $links,
+            openapi: (if $openapi != null then $openapi else null end)
         },
         score: $score,
         rank: $rank,
@@ -254,7 +283,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 service: {
                     name: .service.name,
                     team: .service.team,
-                    links: .service.links
+                    links: .service.links,
+                    openapi: .service.openapi
                 },
                 checks: [.checks[] | {
                     check_id: .check_id,
@@ -271,7 +301,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 service: {
                     name: .service.name,
                     team: .service.team,
-                    links: .service.links
+                    links: .service.links,
+                    openapi: .service.openapi
                 },
                 checks: [.checks[] | {
                     check_id: .check_id,
@@ -312,6 +343,7 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 --argjson score "$SCORE" \
                 --arg rank "$RANK" \
                 --arg timestamp "$TIMESTAMP" \
+                --argjson has_api "$HAS_API" \
                 '{
                     org: $org,
                     repo: $repo,
@@ -319,7 +351,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                     team: $team,
                     score: $score,
                     rank: $rank,
-                    last_updated: $timestamp
+                    last_updated: $timestamp,
+                    has_api: $has_api
                 }' > "$REGISTRY_FILE"
 
             # Commit and push

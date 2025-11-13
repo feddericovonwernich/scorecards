@@ -169,6 +169,20 @@ service:
     - name: "Runbook"
       url: "https://wiki.example.com/runbook"
 
+# For services with OpenAPI/Swagger specifications
+openapi:
+  spec_file: "openapi.yaml"  # Path to your OpenAPI spec file
+  environments:
+    production:
+      base_url: "https://api.example.com/v1"
+      description: "Production environment"
+    staging:
+      base_url: "https://staging-api.example.com/v1"
+      description: "Staging environment"
+    development:
+      base_url: "http://localhost:8000"
+      description: "Local development"
+
 custom:
   criticality: "high"
   environment: "production"
@@ -214,6 +228,9 @@ Current checks:
 - CI configuration
 - Test coverage
 - Documentation
+- OpenAPI specification (detection and validation)
+- OpenAPI quality metrics
+- API environment configuration
 
 ## For Check Authors
 

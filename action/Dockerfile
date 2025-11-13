@@ -36,6 +36,13 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Create symlinks for common aliases
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
+# Install global npm packages for checks
+RUN npm install -g \
+    @apidevtools/swagger-parser@10.1.0 \
+    @apidevtools/swagger-cli@4.0.4 \
+    yaml@2.3.4 \
+    && npm cache clean --force
+
 # Set working directory
 WORKDIR /scorecard
 

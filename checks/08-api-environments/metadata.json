@@ -1,0 +1,7 @@
+{
+  "name": "API Environment Configuration",
+  "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
+  "weight": 8,
+  "timeout": 15,
+  "category": "configuration"
+}
