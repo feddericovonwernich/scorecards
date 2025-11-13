@@ -12,12 +12,141 @@ let filteredServices = [];
 let currentFilter = 'all';
 let currentSort = 'score-desc';
 let searchQuery = '';
+let currentChecksHash = null;
+let checksHashTimestamp = 0;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadServices();
     setupEventListeners();
 });
+
+// ============================================================================
+// Staleness Detection Functions
+// ============================================================================
+
+// Fetch current checks from main branch and generate hash
+async function fetchCurrentChecksHash() {
+    const now = Date.now();
+    const CACHE_TTL = 10 * 1000; // 10 seconds
+
+    // Return cached value if still valid
+    if (currentChecksHash && (now - checksHashTimestamp) < CACHE_TTL) {
+        return currentChecksHash;
+    }
+
+    try {
+        // Fetch checks directory tree from main branch
+        const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/main?recursive=1`;
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+            console.error('Failed to fetch checks from main branch');
+            return null;
+        }
+
+        const treeData = await response.json();
+
+        // Find all check directories
+        const checkPaths = treeData.tree
+            .filter(item => item.type === 'tree' && item.path.startsWith('checks/'))
+            .filter(item => item.path.split('/').length === 2) // Only direct subdirectories
+            .map(item => item.path)
+            .sort();
+
+        if (checkPaths.length === 0) {
+            console.error('No checks found in main branch');
+            return null;
+        }
+
+        // For each check, fetch metadata.json and check implementation
+        const checkDataPromises = checkPaths.map(async (checkPath) => {
+            const checkId = checkPath.split('/')[1];
+
+            // Fetch metadata.json
+            let metadataContent = '';
+            try {
+                const metadataUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${checkPath}/metadata.json`;
+                const metadataRes = await fetch(metadataUrl);
+                if (metadataRes.ok) {
+                    metadataContent = await metadataRes.text();
+                }
+            } catch (e) {
+                console.error(`Failed to fetch metadata for ${checkId}:`, e);
+            }
+
+            // Fetch check implementation (try .sh, .py, .js)
+            let implContent = '';
+            for (const ext of ['sh', 'py', 'js']) {
+                try {
+                    const implUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${checkPath}/check.${ext}`;
+                    const implRes = await fetch(implUrl);
+                    if (implRes.ok) {
+                        implContent = await implRes.text();
+                        break;
+                    }
+                } catch (e) {
+                    // Continue to next extension
+                }
+            }
+
+            return {
+                checkId,
+                metadataContent,
+                implContent
+            };
+        });
+
+        const checkData = await Promise.all(checkDataPromises);
+
+        // Generate hash for each check (mimicking bash logic)
+        const checkHashes = await Promise.all(checkData.map(async (check) => {
+            const metadataHash = await sha256(check.metadataContent);
+            const implHash = await sha256(check.implContent);
+            return `${check.checkId}:${metadataHash}:${implHash}`;
+        }));
+
+        // Combine all check hashes and generate final hash
+        const combinedHashes = checkHashes.join('\n');
+        const finalHash = await sha256(combinedHashes);
+
+        // Update cache
+        currentChecksHash = finalHash;
+        checksHashTimestamp = now;
+
+        console.log('Current checks hash:', finalHash);
+        return finalHash;
+
+    } catch (error) {
+        console.error('Error fetching current checks hash:', error);
+        return null;
+    }
+}
+
+// SHA256 hash function using Web Crypto API
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+// Check if a service is stale (missing newer checks)
+function isServiceStale(service, currentHash) {
+    // If no current hash available, can't determine staleness
+    if (!currentHash) {
+        return false;
+    }
+
+    // Backwards compatibility: if service has no checks_hash, assume it's stale
+    if (!service.checks_hash) {
+        return true;
+    }
+
+    // Compare hashes
+    return service.checks_hash !== currentHash;
+}
 
 // Setup Event Listeners
 function setupEventListeners() {
@@ -88,6 +217,9 @@ async function loadServices() {
         const results = await Promise.all(fetchPromises);
         allServices = results.filter(service => service !== null);
         filteredServices = [...allServices];
+
+        // Fetch current checks hash for staleness detection
+        await fetchCurrentChecksHash();
 
         updateStats();
         filterAndRenderServices();
@@ -184,13 +316,16 @@ function renderServices() {
         return;
     }
 
-    grid.innerHTML = filteredServices.map(service => `
+    grid.innerHTML = filteredServices.map(service => {
+        const isStale = isServiceStale(service, currentChecksHash);
+        return `
         <div class="service-card rank-${service.rank}" onclick="showServiceDetail('${service.org}', '${service.repo}')">
             <div class="service-header">
                 <div>
                     <div class="service-name">
                         ${escapeHtml(service.name)}
                         ${service.has_api ? '<span style="display: inline-block; background: #0366d6; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; font-weight: 500;">API</span>' : ''}
+                        ${isStale ? '<span style="display: inline-block; background: #f39c12; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; font-weight: 500;">STALE</span>' : ''}
                     </div>
                     <div class="service-org">${escapeHtml(service.org)}/${escapeHtml(service.repo)}</div>
                 </div>
@@ -202,7 +337,8 @@ function renderServices() {
                 Last updated: ${formatDate(service.last_updated)}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 // Show Service Detail Modal
@@ -223,11 +359,31 @@ async function showServiceDetail(org, repo) {
 
         const data = await response.json();
 
+        // Check staleness
+        const isStale = isServiceStale(data, currentChecksHash);
+        const stalenessWarning = isStale ? `
+            <div style="background: #fff3cd; border: 1px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <div>
+                        <strong style="color: #856404;">Scorecard is Stale</strong>
+                        <p style="margin: 5px 0 0 0; color: #856404;">
+                            This scorecard was generated with an older version of the check suite.
+                            New checks may have been added or existing checks may have been modified.
+                            Re-run the scorecard workflow to get up-to-date results.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        ` : '';
+
         detailDiv.innerHTML = `
             <h2>${escapeHtml(data.service.name)}</h2>
             <p style="color: #7f8c8d; margin-bottom: 20px;">
                 ${escapeHtml(data.service.org)}/${escapeHtml(data.service.repo)}
             </p>
+
+            ${stalenessWarning}
 
             <div style="display: flex; gap: 20px; margin-bottom: 30px;">
                 <div>
