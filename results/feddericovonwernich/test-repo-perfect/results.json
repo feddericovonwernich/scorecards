@@ -2,15 +2,15 @@
   "service": {
     "org": "feddericovonwernich",
     "repo": "test-repo-perfect",
-    "name": "test-repo-perfect",
-    "team": ""
+    "name": "Perfect Example Service",
+    "team": "Platform Engineering"
   },
-  "score": 89,
-  "rank": "gold",
-  "passed_checks": 4,
+  "score": 100,
+  "rank": "platinum",
+  "passed_checks": 5,
   "total_checks": 5,
-  "commit_sha": "bc2efccb14bdb8693fe6963a70b33ef41feb3228",
-  "timestamp": "2025-11-13T15:28:10Z",
+  "commit_sha": "e50d7daf458b117204720b3bf53b34074e80fc57",
+  "timestamp": "2025-11-13T15:35:14Z",
   "checks": [
     {
       "check_id": "01-readme",
@@ -66,11 +66,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "documentation",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (459 bytes)\n",
+      "stderr": ""
     }
   ]
 }
