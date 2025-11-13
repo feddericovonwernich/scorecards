@@ -9,7 +9,7 @@ const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAM
 // State
 let allServices = [];
 let filteredServices = [];
-let activeFilters = new Set(); // Multi-select filters (e.g., 'platinum', 'has-api')
+let activeFilters = new Map(); // Multi-select filters: filter -> 'include' | 'exclude'
 let currentSort = 'score-desc';
 let searchQuery = '';
 let currentChecksHash = null;
@@ -92,18 +92,28 @@ function setupEventListeners() {
         filterAndRenderServices();
     });
 
-    // Filterable stat cards (multi-select)
+    // Filterable stat cards (multi-select with include/exclude)
     document.querySelectorAll('.stat-card.filterable').forEach(card => {
         card.addEventListener('click', () => {
             const filter = card.dataset.filter;
 
-            // Toggle filter
-            if (activeFilters.has(filter)) {
-                activeFilters.delete(filter);
-                card.classList.remove('active');
-            } else {
-                activeFilters.add(filter);
+            // Cycle through states: null -> include -> exclude -> null
+            const currentState = activeFilters.get(filter);
+
+            // Remove existing classes
+            card.classList.remove('active', 'exclude');
+
+            if (!currentState) {
+                // Null -> Include
+                activeFilters.set(filter, 'include');
                 card.classList.add('active');
+            } else if (currentState === 'include') {
+                // Include -> Exclude
+                activeFilters.set(filter, 'exclude');
+                card.classList.add('exclude');
+            } else {
+                // Exclude -> Null
+                activeFilters.delete(filter);
             }
 
             filterAndRenderServices();
@@ -212,21 +222,29 @@ function updateStats() {
 function filterAndRenderServices() {
     // Filter
     filteredServices = allServices.filter(service => {
-        // Multi-select filters (AND logic)
-        // If any filters are active, check if service matches ALL of them
+        // Multi-select filters with include/exclude (AND logic)
         if (activeFilters.size > 0) {
-            for (const filter of activeFilters) {
-                if (filter === 'has-api') {
-                    if (!service.has_api) {
+            for (const [filterName, filterState] of activeFilters) {
+                // Determine if service matches this filter
+                let matches = false;
+
+                if (filterName === 'has-api') {
+                    matches = service.has_api;
+                } else if (filterName === 'stale') {
+                    matches = isServiceStale(service, currentChecksHash);
+                } else if (filterName === 'platinum' || filterName === 'gold' || filterName === 'silver' || filterName === 'bronze') {
+                    matches = service.rank === filterName;
+                }
+
+                // Apply include/exclude logic
+                if (filterState === 'include') {
+                    // Include: service must match
+                    if (!matches) {
                         return false;
                     }
-                } else if (filter === 'stale') {
-                    if (!isServiceStale(service, currentChecksHash)) {
-                        return false;
-                    }
-                } else if (filter === 'platinum' || filter === 'gold' || filter === 'silver' || filter === 'bronze') {
-                    // Rank filter
-                    if (service.rank !== filter) {
+                } else if (filterState === 'exclude') {
+                    // Exclude: service must NOT match
+                    if (matches) {
                         return false;
                     }
                 }
