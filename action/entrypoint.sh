@@ -135,7 +135,7 @@ echo
 echo -e "${BLUE}Building check runner Docker image...${NC}"
 
 cd "$ACTION_DIR"
-if ! docker build -t scorecards-runner:latest -f Dockerfile . > "$WORK_DIR/docker-build.log" 2>&1; then
+if ! docker build --no-cache -t scorecards-runner:latest -f Dockerfile . > "$WORK_DIR/docker-build.log" 2>&1; then
     echo -e "${RED}✗ Docker build failed${NC}"
     cat "$WORK_DIR/docker-build.log"
     exit 1
