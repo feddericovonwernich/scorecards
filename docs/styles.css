@@ -234,6 +234,22 @@ header h1 {
     border-top: 1px solid var(--color-border);
 }
 
+/* GitHub Icon Link on Service Cards */
+.github-icon-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+}
+
+.github-icon-link:hover {
+    opacity: 1;
+    color: #24292e;
+}
+
 .loading {
     text-align: center;
     padding: 60px 20px;
@@ -295,6 +311,30 @@ header h1 {
 
 #service-detail {
     padding: 20px 40px 40px;
+}
+
+/* GitHub Button in Modal */
+.github-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #24292e;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.github-button:hover {
+    background: #1a1e22;
+    transform: translateY(-1px);
+}
+
+.github-button:active {
+    transform: translateY(0);
 }
 
 .check-result {
