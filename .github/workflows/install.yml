@@ -91,7 +91,7 @@ jobs:
         uses: feddericovonwernich/scorecards/action@main
         with:
           github-token: ${{ secrets.scorecards-pat || secrets.github-token }}
-          scorecards-repo: ${{ needs.check-status.outputs.installed == 'true' && inputs.scorecards-repo || '' }}
+          scorecards-repo: ${{ inputs.scorecards-repo }}
           scorecards-branch: ${{ inputs.scorecards-branch }}
 
       - name: Display Results
@@ -102,11 +102,13 @@ jobs:
           echo "**Rank**: ${{ steps.scorecards.outputs.rank }}" >> $GITHUB_STEP_SUMMARY
           echo "**Checks**: ${{ steps.scorecards.outputs.passed-checks }}/${{ steps.scorecards.outputs.total-checks }} passed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Results committed to catalog** ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ needs.check-status.outputs.installed }}" = "false" ]; then
-            echo "> ℹ️  **Note**: Scorecards is not yet installed in this repository." >> $GITHUB_STEP_SUMMARY
-            echo "> These results are calculated on-demand and cached for 24 hours." >> $GITHUB_STEP_SUMMARY
-            echo "> An installation PR will be created automatically." >> $GITHUB_STEP_SUMMARY
+            echo "> ℹ️  **Note**: Scorecards workflow is not yet installed in this repository." >> $GITHUB_STEP_SUMMARY
+            echo "> An installation PR will be created automatically to add the workflow file." >> $GITHUB_STEP_SUMMARY
+            echo "> Your scores are already being tracked in the [central catalog](https://github.com/${{ inputs.scorecards-repo }}/tree/${{ inputs.scorecards-branch }})!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
