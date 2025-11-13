@@ -96,6 +96,8 @@ header h1 {
 .stat-card.rank-gold { border-left: 3px solid var(--color-gold); }
 .stat-card.rank-silver { border-left: 3px solid var(--color-silver); }
 .stat-card.rank-bronze { border-left: 3px solid var(--color-bronze); }
+.stat-card.filter-api { border-left: 3px solid #0366d6; }
+.stat-card.filter-stale { border-left: 3px solid #f39c12; }
 
 .stat-value {
     font-size: 2rem;
