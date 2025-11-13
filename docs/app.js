@@ -111,7 +111,8 @@ async function fetchCurrentChecksHash() {
         }));
 
         // Combine all check hashes and generate final hash
-        const combinedHashes = checkHashes.join('\n');
+        // Note: Add trailing newline to match bash behavior
+        const combinedHashes = checkHashes.join('\n') + '\n';
         const finalHash = await sha256(combinedHashes);
 
         // Update cache
