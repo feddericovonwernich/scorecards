@@ -198,6 +198,52 @@ bash "$ACTION_DIR/utils/badge-generator.sh" "$SCORE_FILE" "$SCORE_BADGE_FILE" "$
 echo
 
 # ============================================================================
+# Generate Check Suite Hash
+# ============================================================================
+
+echo -e "${BLUE}Generating check suite hash...${NC}"
+
+# Find all checks in sorted order
+CHECK_DIRS=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+
+# Generate hash for each check (metadata + implementation)
+CHECK_HASHES=""
+CHECKS_COUNT=0
+
+for check_dir in $CHECK_DIRS; do
+    check_id=$(basename "$check_dir")
+
+    # Hash metadata.json
+    metadata_hash=""
+    if [ -f "$check_dir/metadata.json" ]; then
+        metadata_hash=$(sha256sum "$check_dir/metadata.json" | awk '{print $1}')
+    fi
+
+    # Hash check implementation (sh, py, or js)
+    impl_hash=""
+    if [ -f "$check_dir/check.sh" ]; then
+        impl_hash=$(sha256sum "$check_dir/check.sh" | awk '{print $1}')
+    elif [ -f "$check_dir/check.py" ]; then
+        impl_hash=$(sha256sum "$check_dir/check.py" | awk '{print $1}')
+    elif [ -f "$check_dir/check.js" ]; then
+        impl_hash=$(sha256sum "$check_dir/check.js" | awk '{print $1}')
+    fi
+
+    # Combine check_id, metadata hash, and implementation hash
+    check_combined="${check_id}:${metadata_hash}:${impl_hash}"
+    CHECK_HASHES="${CHECK_HASHES}${check_combined}"$'\n'
+
+    CHECKS_COUNT=$((CHECKS_COUNT + 1))
+done
+
+# Generate final hash from all check hashes
+CHECKS_HASH=$(echo -n "$CHECK_HASHES" | sha256sum | awk '{print $1}')
+
+echo "Checks count: $CHECKS_COUNT"
+echo "Checks hash: $CHECKS_HASH"
+echo
+
+# ============================================================================
 # Create Final Results JSON
 # ============================================================================
 
@@ -216,6 +262,8 @@ FINAL_RESULTS=$(jq -n \
     --arg rank "$RANK" \
     --argjson passed_checks "$PASSED_CHECKS" \
     --argjson total_checks "$TOTAL_CHECKS" \
+    --arg checks_hash "$CHECKS_HASH" \
+    --argjson checks_count "$CHECKS_COUNT" \
     --argjson checks "$(cat "$RESULTS_FILE")" \
     '{
         service: {
@@ -232,6 +280,8 @@ FINAL_RESULTS=$(jq -n \
         total_checks: $total_checks,
         commit_sha: $commit_sha,
         timestamp: $timestamp,
+        checks_hash: $checks_hash,
+        checks_count: $checks_count,
         checks: $checks
     }')
 
@@ -344,6 +394,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 --arg rank "$RANK" \
                 --arg timestamp "$TIMESTAMP" \
                 --argjson has_api "$HAS_API" \
+                --arg checks_hash "$CHECKS_HASH" \
+                --argjson checks_count "$CHECKS_COUNT" \
                 '{
                     org: $org,
                     repo: $repo,
@@ -352,7 +404,9 @@ if [ -n "$SCORECARDS_REPO" ]; then
                     score: $score,
                     rank: $rank,
                     last_updated: $timestamp,
-                    has_api: $has_api
+                    has_api: $has_api,
+                    checks_hash: $checks_hash,
+                    checks_count: $checks_count
                 }' > "$REGISTRY_FILE"
 
             # Commit and push
