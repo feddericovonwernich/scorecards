@@ -136,6 +136,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-status, run-scorecards]
     if: needs.check-status.outputs.installed == 'false' && needs.check-status.outputs.pr-exists == 'false'
+    permissions:
+      contents: write
+      pull-requests: write
+      workflows: write
     steps:
       - name: Checkout service repository
         uses: actions/checkout@v4
