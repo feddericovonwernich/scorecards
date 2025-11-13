@@ -52,17 +52,40 @@ function setupEventListeners() {
     });
 }
 
-// Load Services from Registry
+// Load Services from Registry (split into per-service files)
 async function loadServices() {
     try {
-        const registryUrl = `${RAW_BASE_URL}/registry/services.json`;
-        const response = await fetch(registryUrl);
+        // Use GitHub API to get all registry files
+        const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
+        const response = await fetch(apiUrl);
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch registry: ${response.status}`);
+            throw new Error(`Failed to fetch repository tree: ${response.status}`);
         }
 
-        allServices = await response.json();
+        const treeData = await response.json();
+
+        // Find all registry JSON files (registry/$org/$repo.json)
+        const registryFiles = treeData.tree
+            .filter(item => item.path.startsWith('registry/') && item.path.endsWith('.json'))
+            .map(item => item.path);
+
+        if (registryFiles.length === 0) {
+            throw new Error('No services registered yet');
+        }
+
+        // Fetch all registry files in parallel
+        const fetchPromises = registryFiles.map(async (path) => {
+            const fileUrl = `${RAW_BASE_URL}/${path}`;
+            const res = await fetch(fileUrl);
+            if (res.ok) {
+                return res.json();
+            }
+            return null;
+        });
+
+        const results = await Promise.all(fetchPromises);
+        allServices = results.filter(service => service !== null);
         filteredServices = [...allServices];
 
         updateStats();
