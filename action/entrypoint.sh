@@ -253,7 +253,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 total_checks: .total_checks,
                 service: {
                     name: .service.name,
-                    team: .service.team
+                    team: .service.team,
+                    links: .service.links
                 },
                 checks: [.checks[] | {
                     check_id: .check_id,
@@ -269,7 +270,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 total_checks: .total_checks,
                 service: {
                     name: .service.name,
-                    team: .service.team
+                    team: .service.team,
+                    links: .service.links
                 },
                 checks: [.checks[] | {
                     check_id: .check_id,
