@@ -213,8 +213,13 @@ if [ -n "$SCORECARDS_REPO" ]; then
         # Check if results have meaningfully changed
         SKIP_COMMIT=false
         OLD_RESULTS_FILE="results/$SERVICE_ORG/$SERVICE_REPO/results.json"
+        OLD_REGISTRY_FILE="registry/$SERVICE_ORG/$SERVICE_REPO.json"
 
-        if [ -f "$OLD_RESULTS_FILE" ]; then
+        # Always commit if registry file doesn't exist in new format (migration case)
+        if [ ! -f "$OLD_REGISTRY_FILE" ]; then
+            echo "Registry file doesn't exist in new format - will create it"
+            SKIP_COMMIT=false
+        elif [ -f "$OLD_RESULTS_FILE" ]; then
             echo "Comparing with previous results..."
 
             # Extract meaningful fields (excluding timestamp, commit_sha, stdout, stderr, duration)
