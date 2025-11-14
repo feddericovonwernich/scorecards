@@ -374,6 +374,33 @@ header h1 {
     padding: 20px 40px 40px;
 }
 
+/* Modal Stats Section */
+.modal-stats-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    align-items: flex-start;
+}
+
+.modal-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-stat-value {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.modal-stat-badge {
+    font-size: 1.5rem;
+    padding: 10px 20px;
+}
+
+.modal-stat-label {
+    color: #7f8c8d;
+}
+
 /* GitHub Button in Modal */
 .github-button {
     display: inline-flex;
