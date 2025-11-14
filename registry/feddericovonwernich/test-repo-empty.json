@@ -5,5 +5,9 @@
   "team": "",
   "score": 25,
   "rank": "bronze",
-  "last_updated": "2025-11-13T15:28:05Z"
+  "last_updated": "2025-11-14T03:29:26Z",
+  "has_api": false,
+  "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
+  "checks_count": 8,
+  "installed": true
 }
