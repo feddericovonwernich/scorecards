@@ -413,19 +413,49 @@ if [ -n "$SCORECARDS_REPO" ]; then
             REGISTRY_FILE="registry/$SERVICE_ORG/$SERVICE_REPO.json"
 
             # Write this service's registry entry
-            jq -n \
-                --arg org "$SERVICE_ORG" \
-                --arg repo "$SERVICE_REPO" \
-                --arg name "$SERVICE_NAME" \
-                --arg team "$TEAM_NAME" \
-                --argjson score "$SCORE" \
-                --arg rank "$RANK" \
-                --arg timestamp "$TIMESTAMP" \
-                --argjson has_api "$HAS_API" \
-                --arg checks_hash "$CHECKS_HASH" \
-                --argjson checks_count "$CHECKS_COUNT" \
-                --argjson installed "$INSTALLED" \
-                '{
+            # Build jq command with optional PR info
+            JQ_ARGS=(
+                -n
+                --arg org "$SERVICE_ORG"
+                --arg repo "$SERVICE_REPO"
+                --arg name "$SERVICE_NAME"
+                --arg team "$TEAM_NAME"
+                --argjson score "$SCORE"
+                --arg rank "$RANK"
+                --arg timestamp "$TIMESTAMP"
+                --argjson has_api "$HAS_API"
+                --arg checks_hash "$CHECKS_HASH"
+                --argjson checks_count "$CHECKS_COUNT"
+                --argjson installed "$INSTALLED"
+            )
+
+            # Add PR info if available
+            if [ -n "$PR_NUMBER" ] && [ -n "$PR_STATE" ] && [ -n "$PR_URL" ]; then
+                JQ_ARGS+=(
+                    --argjson pr_number "$PR_NUMBER"
+                    --arg pr_state "$PR_STATE"
+                    --arg pr_url "$PR_URL"
+                )
+                JQ_FILTER='{
+                    org: $org,
+                    repo: $repo,
+                    name: $name,
+                    team: $team,
+                    score: $score,
+                    rank: $rank,
+                    last_updated: $timestamp,
+                    has_api: $has_api,
+                    checks_hash: $checks_hash,
+                    checks_count: $checks_count,
+                    installed: $installed,
+                    installation_pr: {
+                        number: $pr_number,
+                        state: $pr_state,
+                        url: $pr_url
+                    }
+                }'
+            else
+                JQ_FILTER='{
                     org: $org,
                     repo: $repo,
                     name: $name,
@@ -437,7 +467,10 @@ if [ -n "$SCORECARDS_REPO" ]; then
                     checks_hash: $checks_hash,
                     checks_count: $checks_count,
                     installed: $installed
-                }' > "$REGISTRY_FILE"
+                }'
+            fi
+
+            jq "${JQ_ARGS[@]}" "$JQ_FILTER" > "$REGISTRY_FILE"
 
             # Commit and push service results
             git add results/ badges/ registry/
