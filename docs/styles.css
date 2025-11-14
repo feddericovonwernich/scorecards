@@ -374,6 +374,7 @@ header h1 {
 #service-detail {
     position: relative;
     padding: 20px 40px 40px;
+    z-index: 1;
 }
 
 /* Modal Stats Section */
