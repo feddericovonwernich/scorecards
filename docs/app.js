@@ -298,6 +298,7 @@ function renderServices() {
 
     grid.innerHTML = filteredServices.map(service => {
         const isStale = isServiceStale(service, currentChecksHash);
+        const canTrigger = isStale && service.installed;
         return `
         <div class="service-card rank-${service.rank}" onclick="showServiceDetail('${service.org}', '${service.repo}')">
             <div class="service-header">
@@ -313,6 +314,16 @@ function renderServices() {
                     <div class="service-org">${escapeHtml(service.org)}/${escapeHtml(service.repo)}</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
+                    ${canTrigger ? `
+                    <button
+                        class="trigger-btn trigger-btn-icon"
+                        onclick="event.stopPropagation(); triggerServiceWorkflow('${escapeHtml(service.org)}', '${escapeHtml(service.repo)}', this)"
+                        title="Re-run scorecard workflow">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                        </svg>
+                    </button>
+                    ` : ''}
                     <a href="https://github.com/${escapeHtml(service.org)}/${escapeHtml(service.repo)}"
                        target="_blank"
                        rel="noopener noreferrer"
@@ -368,18 +379,31 @@ async function showServiceDetail(org, repo) {
 
         // Check staleness
         const isStale = isServiceStale(data, currentChecksHash);
+        const canTrigger = isStale && data.installed;
         const stalenessWarning = isStale ? `
             <div style="background: #fff3cd; border: 1px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.5rem;">⚠️</span>
-                    <div>
+                    <div style="flex: 1;">
                         <strong style="color: #856404;">Scorecard is Stale</strong>
                         <p style="margin: 5px 0 0 0; color: #856404;">
                             This scorecard was generated with an older version of the check suite.
                             New checks may have been added or existing checks may have been modified.
-                            Re-run the scorecard workflow to get up-to-date results.
+                            ${canTrigger ? 'Click the "Re-run Scorecard" button to get up-to-date results.' : 'Re-run the scorecard workflow to get up-to-date results.'}
                         </p>
                     </div>
+                    ${canTrigger ? `
+                    <button
+                        id="modal-trigger-btn"
+                        class="trigger-btn"
+                        onclick="triggerServiceWorkflow('${escapeHtml(org)}', '${escapeHtml(repo)}', this)"
+                        style="margin-left: auto;">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                            <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                        </svg>
+                        Re-run Scorecard
+                    </button>
+                    ` : ''}
                 </div>
             </div>
         ` : '';
@@ -393,7 +417,7 @@ async function showServiceDetail(org, repo) {
             <p style="color: #7f8c8d; margin-bottom: 10px;">
                 ${escapeHtml(data.service.org)}/${escapeHtml(data.service.repo)}
             </p>
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                 <a href="https://github.com/${escapeHtml(data.service.org)}/${escapeHtml(data.service.repo)}"
                    target="_blank"
                    rel="noopener noreferrer"
@@ -899,4 +923,304 @@ async function copyBadgeCode(elementId, event) {
 
         alert(message);
     }
+}
+
+// ============================================================================
+// Workflow Trigger Functions
+// ============================================================================
+
+// Get GitHub token from config or prompt user
+function getGitHubToken() {
+    // Try to get token from localStorage
+    let token = localStorage.getItem('github_token');
+
+    if (!token) {
+        // Prompt user for token if not stored
+        token = prompt(
+            'Enter GitHub Personal Access Token (PAT) with workflow permissions:\n\n' +
+            'This token is needed to trigger scorecard workflows.\n' +
+            'It will be stored in your browser\'s localStorage.\n\n' +
+            'To create a token:\n' +
+            '1. Go to GitHub Settings > Developer settings > Personal access tokens\n' +
+            '2. Generate new token (classic)\n' +
+            '3. Select "workflow" scope\n' +
+            '4. Copy the token and paste it here'
+        );
+
+        if (token) {
+            localStorage.setItem('github_token', token.trim());
+        }
+    }
+
+    return token;
+}
+
+// Clear stored GitHub token
+function clearGitHubToken() {
+    localStorage.removeItem('github_token');
+    showToast('GitHub token cleared. You will be prompted for a new token on next trigger.', 'success');
+}
+
+// Trigger scorecard workflow for a single service
+async function triggerServiceWorkflow(org, repo, buttonElement) {
+    const token = getGitHubToken();
+
+    if (!token) {
+        showToast('GitHub token is required to trigger workflows', 'error');
+        return false;
+    }
+
+    // Disable button and show loading state
+    if (buttonElement) {
+        buttonElement.disabled = true;
+        buttonElement.dataset.originalText = buttonElement.textContent;
+        buttonElement.innerHTML = '<span class="spinner"></span> Triggering...';
+    }
+
+    try {
+        // Trigger the proxy workflow in the scorecards repository
+        const response = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/trigger-service-workflow.yml/dispatches`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'main',
+                    inputs: {
+                        org: org,
+                        repo: repo
+                    }
+                })
+            }
+        );
+
+        if (response.status === 204) {
+            // Success - workflow was triggered
+            showToast(`Scorecard workflow triggered for ${org}/${repo}`, 'success');
+
+            // Update button state
+            if (buttonElement) {
+                buttonElement.innerHTML = '✓ Triggered';
+                setTimeout(() => {
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                }, 3000);
+            }
+
+            return true;
+        } else if (response.status === 401) {
+            // Invalid token
+            localStorage.removeItem('github_token');
+            showToast('Invalid GitHub token. Please enter a valid token.', 'error');
+
+            // Restore button
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+            }
+
+            return false;
+        } else {
+            // Other error
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to trigger workflow:', response.status, errorData);
+            showToast(`Failed to trigger workflow: ${errorData.message || response.statusText}`, 'error');
+
+            // Restore button
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+            }
+
+            return false;
+        }
+    } catch (error) {
+        console.error('Error triggering workflow:', error);
+        showToast(`Error triggering workflow: ${error.message}`, 'error');
+
+        // Restore button
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+        }
+
+        return false;
+    }
+}
+
+// Trigger workflows for multiple services (bulk operation)
+async function triggerBulkWorkflows(services, buttonElement) {
+    const token = getGitHubToken();
+
+    if (!token) {
+        showToast('GitHub token is required to trigger workflows', 'error');
+        return false;
+    }
+
+    // Disable button and show loading state
+    if (buttonElement) {
+        buttonElement.disabled = true;
+        buttonElement.dataset.originalText = buttonElement.textContent;
+        buttonElement.innerHTML = '<span class="spinner"></span> Triggering...';
+    }
+
+    try {
+        // Prepare services array
+        const servicesArray = services.map(s => ({ org: s.org, repo: s.repo }));
+
+        // Trigger the proxy workflow with bulk services
+        const response = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/trigger-service-workflow.yml/dispatches`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'main',
+                    inputs: {
+                        services: JSON.stringify(servicesArray)
+                    }
+                })
+            }
+        );
+
+        if (response.status === 204) {
+            // Success
+            showToast(`Triggered workflows for ${services.length} service${services.length !== 1 ? 's' : ''}`, 'success');
+
+            // Update button state
+            if (buttonElement) {
+                buttonElement.innerHTML = `✓ Triggered ${services.length} service${services.length !== 1 ? 's' : ''}`;
+                setTimeout(() => {
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run All Stale';
+                }, 3000);
+            }
+
+            return true;
+        } else if (response.status === 401) {
+            // Invalid token
+            localStorage.removeItem('github_token');
+            showToast('Invalid GitHub token. Please enter a valid token.', 'error');
+
+            // Restore button
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run All Stale';
+            }
+
+            return false;
+        } else {
+            // Other error
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to trigger bulk workflows:', response.status, errorData);
+            showToast(`Failed to trigger workflows: ${errorData.message || response.statusText}`, 'error');
+
+            // Restore button
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run All Stale';
+            }
+
+            return false;
+        }
+    } catch (error) {
+        console.error('Error triggering bulk workflows:', error);
+        showToast(`Error triggering workflows: ${error.message}`, 'error');
+
+        // Restore button
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run All Stale';
+        }
+
+        return false;
+    }
+}
+
+// Handle bulk trigger button click
+function handleBulkTrigger(event) {
+    event.preventDefault();
+
+    // Get all stale and installed services
+    const staleServices = allServices.filter(s =>
+        isServiceStale(s, currentChecksHash) && s.installed
+    );
+
+    if (staleServices.length === 0) {
+        showToast('No stale services to trigger', 'info');
+        return;
+    }
+
+    // Confirm with user
+    if (confirm(`This will trigger scorecard workflows for ${staleServices.length} stale service${staleServices.length !== 1 ? 's' : ''}.\n\nContinue?`)) {
+        triggerBulkWorkflows(staleServices, event.currentTarget);
+    }
+}
+
+// ============================================================================
+// Toast Notification System
+// ============================================================================
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    // Add icon based on type
+    let icon = '';
+    switch (type) {
+        case 'success':
+            icon = '✓';
+            break;
+        case 'error':
+            icon = '✗';
+            break;
+        case 'warning':
+            icon = '⚠';
+            break;
+        case 'info':
+        default:
+            icon = 'ℹ';
+            break;
+    }
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${escapeHtml(message)}</span>
+    `;
+
+    // Add to container
+    container.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    // Remove after delay
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            container.removeChild(toast);
+        }, 300);
+    }, 5000);
 }
