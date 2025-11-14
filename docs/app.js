@@ -498,11 +498,26 @@ async function showServiceDetail(org, repo) {
             ` : ''}
 
             <div class="tab-content" id="badges-tab">
+                <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 1rem; color: #2c3e50;">Badge Preview</h4>
+                <div style="background: #f5f7fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <img src="https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json" alt="Score Badge" style="height: 20px;">
+                    <img src="https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json" alt="Rank Badge" style="height: 20px;">
+                </div>
+
+                <h4 style="margin-bottom: 10px; font-size: 1rem; color: #2c3e50;">Add to Your README</h4>
                 <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px;">
-                    Add these to your README:
+                    Copy the markdown below:
                 </p>
-                <pre style="background: #f5f7fa; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem;">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)
-![Rank](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json)</pre>
+
+                <div style="position: relative; margin-bottom: 15px;">
+                    <button onclick="copyBadgeCode('score-badge-${org}-${repo}')" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
+                    <pre id="score-badge-${org}-${repo}" style="background: #f5f7fa; padding: 15px; padding-right: 80px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 0;">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)</pre>
+                </div>
+
+                <div style="position: relative;">
+                    <button onclick="copyBadgeCode('rank-badge-${org}-${repo}')" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
+                    <pre id="rank-badge-${org}-${repo}" style="background: #f5f7fa; padding: 15px; padding-right: 80px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 0;">![Rank](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json)</pre>
+                </div>
             </div>
         `;
     } catch (error) {
@@ -565,4 +580,26 @@ function openApiExplorer(org, repo) {
     // Open API explorer in a new window with the service org and repo as query params
     const explorerUrl = `api-explorer.html?org=${encodeURIComponent(org)}&repo=${encodeURIComponent(repo)}`;
     window.open(explorerUrl, '_blank');
+}
+
+// Copy badge code to clipboard
+function copyBadgeCode(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+
+    navigator.clipboard.writeText(text).then(() => {
+        // Show feedback
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#27ae60';
+
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '#3498db';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy to clipboard');
+    });
 }
