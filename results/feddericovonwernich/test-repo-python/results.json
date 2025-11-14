@@ -12,7 +12,7 @@
   "passed_checks": 5,
   "total_checks": 8,
   "commit_sha": "b6e67f36eca1b22a0888df3710636db59500c2ef",
-  "timestamp": "2025-11-14T04:59:22Z",
+  "timestamp": "2025-11-14T05:15:56Z",
   "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
   "checks_count": 8,
   "installed": false,
@@ -109,7 +109,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
       "stderr": ""
     }
