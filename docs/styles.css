@@ -364,6 +364,7 @@ header h1 {
     cursor: pointer;
     padding: 20px;
     color: var(--color-text-muted);
+    z-index: 10;
 }
 
 .modal-close:hover {
