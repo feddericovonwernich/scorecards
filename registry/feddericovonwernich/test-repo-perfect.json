@@ -1,0 +1,18 @@
+{
+  "org": "feddericovonwernich",
+  "repo": "test-repo-perfect",
+  "name": "test-repo-perfect",
+  "team": "",
+  "score": 84,
+  "rank": "gold",
+  "last_updated": "2025-11-14T22:44:13Z",
+  "has_api": false,
+  "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
+  "checks_count": 8,
+  "installed": false,
+  "installation_pr": {
+    "number": 2,
+    "state": "MERGED",
+    "url": "https://github.com/feddericovonwernich/test-repo-perfect/pull/2"
+  }
+}
