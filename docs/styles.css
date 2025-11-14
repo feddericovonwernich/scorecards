@@ -371,6 +371,7 @@ header h1 {
 }
 
 #service-detail {
+    position: relative;
     padding: 20px 40px 40px;
 }
 
@@ -395,6 +396,14 @@ header h1 {
 .modal-stat-badge {
     font-size: 1.5rem;
     padding: 10px 20px;
+}
+
+.modal-header-badge {
+    position: absolute;
+    top: 20px;
+    right: 60px;
+    font-size: 1.1rem;
+    padding: 8px 16px;
 }
 
 .modal-stat-label {

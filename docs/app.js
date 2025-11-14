@@ -368,6 +368,10 @@ async function showServiceDetail(org, repo) {
         ` : '';
 
         detailDiv.innerHTML = `
+            <div class="rank-badge modal-header-badge ${data.rank}">
+                ${capitalize(data.rank)}
+            </div>
+
             <h2>${escapeHtml(data.service.name)}</h2>
             <p style="color: #7f8c8d; margin-bottom: 10px;">
                 ${escapeHtml(data.service.org)}/${escapeHtml(data.service.repo)}
@@ -389,12 +393,6 @@ async function showServiceDetail(org, repo) {
                 <div class="modal-stat-item">
                     <div class="modal-stat-value">${data.score}</div>
                     <div class="modal-stat-label">Score</div>
-                </div>
-                <div class="modal-stat-item">
-                    <div class="rank-badge modal-stat-badge ${data.rank}">
-                        ${capitalize(data.rank)}
-                    </div>
-                    <div class="modal-stat-label">Rank</div>
                 </div>
                 <div class="modal-stat-item">
                     <div class="modal-stat-value">${data.passed_checks}/${data.total_checks}</div>
