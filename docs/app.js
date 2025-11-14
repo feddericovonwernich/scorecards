@@ -539,12 +539,12 @@ async function showServiceDetail(org, repo) {
                 </p>
 
                 <div style="position: relative; margin-bottom: 15px;">
-                    <button onclick="copyBadgeCode('score-badge-${org}-${repo}')" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
+                    <button onclick="copyBadgeCode('score-badge-${org}-${repo}', event)" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
                     <pre id="score-badge-${org}-${repo}" style="background: #f5f7fa; padding: 15px; padding-right: 80px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 0;">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)</pre>
                 </div>
 
                 <div style="position: relative;">
-                    <button onclick="copyBadgeCode('rank-badge-${org}-${repo}')" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
+                    <button onclick="copyBadgeCode('rank-badge-${org}-${repo}', event)" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
                     <pre id="rank-badge-${org}-${repo}" style="background: #f5f7fa; padding: 15px; padding-right: 80px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 0;">![Rank](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json)</pre>
                 </div>
             </div>
@@ -611,24 +611,69 @@ function openApiExplorer(org, repo) {
     window.open(explorerUrl, '_blank');
 }
 
+// Fallback clipboard copy for non-HTTPS contexts or older browsers
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        return successful;
+    } catch (err) {
+        document.body.removeChild(textArea);
+        return false;
+    }
+}
+
 // Copy badge code to clipboard
-function copyBadgeCode(elementId) {
+async function copyBadgeCode(elementId, event) {
     const element = document.getElementById(elementId);
     const text = element.textContent;
+    const button = event?.currentTarget || event?.target;
 
-    navigator.clipboard.writeText(text).then(() => {
-        // Show feedback
-        const button = event.target;
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        button.style.background = '#27ae60';
+    try {
+        // Try modern Clipboard API first (requires HTTPS or localhost)
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            // Fallback for non-HTTPS or older browsers
+            const success = fallbackCopyToClipboard(text);
+            if (!success) {
+                throw new Error('Fallback copy failed');
+            }
+        }
 
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.style.background = '#3498db';
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy text: ', err);
-        alert('Failed to copy to clipboard');
-    });
+        // Success feedback
+        if (button) {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            button.style.background = '#27ae60';
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '#3498db';
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Failed to copy:', err);
+
+        // Provide specific error messages
+        let message = 'Failed to copy to clipboard. ';
+        if (!window.isSecureContext) {
+            message += 'This page must be served over HTTPS.';
+        } else if (err.name === 'NotAllowedError') {
+            message += 'Please allow clipboard access in your browser.';
+        } else {
+            message += 'Please select and copy the text manually.';
+        }
+
+        alert(message);
+    }
 }
