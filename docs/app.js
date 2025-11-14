@@ -427,16 +427,29 @@ async function showServiceDetail(org, repo) {
                     </svg>
                     View on GitHub
                 </a>
-                ${!data.installed && data.installation_pr ? `
+                ${!data.installed && data.installation_pr && data.installation_pr.state === 'OPEN' ? `
                 <a href="${escapeHtml(data.installation_pr.url)}"
                    target="_blank"
                    rel="noopener noreferrer"
-                   class="pr-button pr-button-${data.installation_pr.state.toLowerCase()}">
+                   class="pr-button pr-button-open">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"/>
                     </svg>
-                    ${data.installation_pr.state === 'OPEN' ? 'Open' : 'Closed'} Installation PR #${data.installation_pr.number}
+                    Open Installation PR #${data.installation_pr.number}
                 </a>
+                ` : ''}
+                ${!data.installed && (!data.installation_pr || data.installation_pr.state === 'MERGED' || data.installation_pr.state === 'CLOSED') ? `
+                <button
+                    id="install-btn"
+                    class="install-button"
+                    onclick="installService('${escapeHtml(org)}', '${escapeHtml(repo)}', this)"
+                    title="${data.installation_pr ? `Previous PR #${data.installation_pr.number} was ${data.installation_pr.state.toLowerCase()}` : 'Create installation PR'}">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                        <path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z"></path>
+                        <path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"></path>
+                    </svg>
+                    Install Scorecards
+                </button>
                 ` : ''}
             </div>
 
@@ -1047,6 +1060,117 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
         if (buttonElement) {
             buttonElement.disabled = false;
             buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+        }
+
+        return false;
+    }
+}
+
+// Install scorecards by creating an installation PR
+async function installService(org, repo, buttonElement) {
+    const token = getGitHubToken();
+
+    if (!token) {
+        showToast('GitHub token is required to create installation PRs', 'error');
+        return false;
+    }
+
+    // Disable button and show loading state
+    if (buttonElement) {
+        buttonElement.disabled = true;
+        buttonElement.dataset.originalText = buttonElement.textContent;
+        buttonElement.innerHTML = '<span class="spinner"></span> Creating PR...';
+    }
+
+    try {
+        // Trigger the create-installation-pr workflow in the scorecards repository
+        const response = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/create-installation-pr.yml/dispatches`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'main',
+                    inputs: {
+                        org: org,
+                        repo: repo
+                    }
+                })
+            }
+        );
+
+        if (response.status === 204) {
+            // Success - workflow was triggered
+            showToast(`Installation PR creation started for ${org}/${repo}`, 'success');
+
+            // Update button to show pending state
+            if (buttonElement) {
+                buttonElement.innerHTML = '⏳ PR Creating...';
+
+                // Poll for workflow completion and get PR URL
+                setTimeout(async () => {
+                    try {
+                        // Wait a bit for the workflow to complete
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+
+                        // Refresh the service details to get the new PR info
+                        // The registry will be updated by the workflow
+                        showToast('Installation PR created! Refreshing...', 'success');
+
+                        // Close and reopen modal to refresh data
+                        const modal = document.getElementById('service-modal');
+                        modal.classList.add('hidden');
+                        setTimeout(() => showServiceDetail(org, repo), 500);
+                    } catch (error) {
+                        console.error('Error checking PR status:', error);
+                        if (buttonElement) {
+                            buttonElement.disabled = false;
+                            buttonElement.textContent = buttonElement.dataset.originalText || 'Install Scorecards';
+                        }
+                    }
+                }, 1000);
+            }
+
+            return true;
+        } else if (response.status === 401) {
+            // Invalid token
+            localStorage.removeItem('github_token');
+            showToast('Invalid GitHub token. Please enter a valid token with workflow permissions.', 'error');
+
+            // Restore button
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Install Scorecards';
+            }
+
+            return false;
+        } else {
+            // Other error
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to create installation PR:', response.status, errorData);
+            showToast(`Failed to create installation PR: ${errorData.message || response.statusText}`, 'error');
+
+            // Restore button
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Install Scorecards';
+            }
+
+            return false;
+        }
+    } catch (error) {
+        console.error('Error creating installation PR:', error);
+        showToast(`Error creating installation PR: ${error.message}`, 'error');
+
+        // Restore button
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.textContent = buttonElement.dataset.originalText || 'Install Scorecards';
         }
 
         return false;
