@@ -358,6 +358,7 @@ header h1 {
     text-align: center;
     padding: 60px 20px;
     color: var(--color-text-muted);
+    grid-column: 1 / -1;
 }
 
 /* Modal */
