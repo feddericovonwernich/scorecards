@@ -2,55 +2,27 @@
   "service": {
     "org": "feddericovonwernich",
     "repo": "test-repo-perfect",
-    "name": "Perfect Example Service",
-    "team": "Platform Engineering",
-    "links": [
-      {
-        "name": "Documentation",
-        "url": "https://github.com/feddericovonwernich/test-repo-perfect",
-        "description": "Complete guide with examples and best practices"
-      },
-      {
-        "name": "API Reference",
-        "url": "https://github.com/feddericovonwernich/test-repo-perfect/wiki",
-        "description": "Technical documentation and API specifications"
-      }
-    ],
-    "openapi": {
-      "spec_file": "openapi.yaml",
-      "branch": "master",
-      "environments": {
-        "production": {
-          "base_url": "https://api.example.com/v1",
-          "description": "Production environment"
-        },
-        "staging": {
-          "base_url": "https://staging-api.example.com/v1",
-          "description": "Staging environment for testing"
-        },
-        "development": {
-          "base_url": "http://localhost:8000",
-          "description": "Local development server"
-        }
-      }
-    }
+    "name": "test-repo-perfect",
+    "team": "",
+    "links": [],
+    "openapi": null
   },
-  "score": 100,
+  "score": 92,
   "rank": "platinum",
-  "passed_checks": 8,
+  "passed_checks": 7,
   "total_checks": 8,
-  "commit_sha": "6e6ca19573a86e0feb006d6e87d1bce1f819ed41",
-  "timestamp": "2025-11-14T21:41:10Z",
+  "commit_sha": "10da00db7ba1156cb80ab8f59ef9616268c9cecb",
+  "timestamp": "2025-11-14T21:45:47Z",
   "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
   "checks_count": 8,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
-      "email": "feddericokz @gmail.com",
+      "name": "feddericovonwernich",
+      "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-14T00:48:37Z",
-      "last_commit_hash": "6e6ca19"
+      "last_commit_date": "2025-11-14T18:44:52Z",
+      "last_commit_hash": "10da00d"
     }
   ],
   "checks": [
@@ -87,7 +59,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -111,7 +83,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (1040 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
       "stderr": ""
     },
     {
@@ -144,11 +116,11 @@
       "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
       "category": "configuration",
       "weight": 8,
-      "status": "pass",
-      "exit_code": 0,
+      "status": "fail",
+      "exit_code": 1,
       "duration": 0,
-      "stdout": "API environment configuration found for OpenAPI spec: openapi.yaml\nConfigured environments: 3\n  • production: https://api.example.com/v1 - Production environment\n  • staging: https://staging-api.example.com/v1 - Staging environment for testing\n  • development: http://localhost:8000 - Local development server\nSpec file reference: openapi.yaml\n",
-      "stderr": ""
+      "stdout": "",
+      "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
     }
   ]
 }
