@@ -53,8 +53,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.github-token }}
         run: |
-          # Search for PRs with the scorecards-install label
-          pr_data=$(gh pr list --label "scorecards-install" --json number,state,title --limit 1)
+          # Search for PRs with the scorecards-install label (including closed ones)
+          # By default, gh pr list sorts by creation date descending (newest first)
+          pr_data=$(gh pr list --label "scorecards-install" --state all --json number,state,title --limit 1)
 
           if [ "$pr_data" = "[]" ]; then
             echo "exists=false" >> $GITHUB_OUTPUT
