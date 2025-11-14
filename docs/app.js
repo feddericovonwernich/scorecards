@@ -385,20 +385,20 @@ async function showServiceDetail(org, repo) {
 
             ${stalenessWarning}
 
-            <div style="display: flex; gap: 20px; margin-bottom: 30px;">
-                <div>
-                    <div style="font-size: 3rem; font-weight: bold;">${data.score}</div>
-                    <div style="color: #7f8c8d;">Score</div>
+            <div class="modal-stats-container">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-value">${data.score}</div>
+                    <div class="modal-stat-label">Score</div>
                 </div>
-                <div>
-                    <div class="rank-badge ${data.rank}" style="font-size: 1.2rem; padding: 10px 20px;">
+                <div class="modal-stat-item">
+                    <div class="rank-badge modal-stat-badge ${data.rank}">
                         ${capitalize(data.rank)}
                     </div>
-                    <div style="color: #7f8c8d; margin-top: 8px;">Rank</div>
+                    <div class="modal-stat-label">Rank</div>
                 </div>
-                <div>
-                    <div style="font-size: 2rem; font-weight: bold;">${data.passed_checks}/${data.total_checks}</div>
-                    <div style="color: #7f8c8d;">Checks Passed</div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-value">${data.passed_checks}/${data.total_checks}</div>
+                    <div class="modal-stat-label">Checks Passed</div>
                 </div>
             </div>
 
