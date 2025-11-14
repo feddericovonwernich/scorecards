@@ -12,10 +12,19 @@
   "passed_checks": 3,
   "total_checks": 8,
   "commit_sha": "475a5f62fa3d016fd42ff19b2b509434b28e2134",
-  "timestamp": "2025-11-14T03:49:58Z",
+  "timestamp": "2025-11-14T21:41:16Z",
   "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
   "checks_count": 8,
   "installed": false,
+  "recent_contributors": [
+    {
+      "name": "Federico von Wernich",
+      "email": "feddericokz @gmail.com",
+      "commit_count": 1,
+      "last_commit_date": "2025-11-14T00:48:37Z",
+      "last_commit_hash": "475a5f6"
+    }
+  ],
   "checks": [
     {
       "check_id": "01-readme",
