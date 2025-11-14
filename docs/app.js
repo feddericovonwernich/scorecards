@@ -207,11 +207,13 @@ function updateStats() {
 
     const apiCount = allServices.filter(s => s.has_api).length;
     const staleCount = allServices.filter(s => isServiceStale(s, currentChecksHash)).length;
+    const installedCount = allServices.filter(s => s.installed).length;
 
     document.getElementById('total-services').textContent = total;
     document.getElementById('avg-score').textContent = avgScore;
     document.getElementById('api-count').textContent = apiCount;
     document.getElementById('stale-count').textContent = staleCount;
+    document.getElementById('installed-count').textContent = installedCount;
     document.getElementById('platinum-count').textContent = rankCounts.platinum;
     document.getElementById('gold-count').textContent = rankCounts.gold;
     document.getElementById('silver-count').textContent = rankCounts.silver;
@@ -232,6 +234,8 @@ function filterAndRenderServices() {
                     matches = service.has_api;
                 } else if (filterName === 'stale') {
                     matches = isServiceStale(service, currentChecksHash);
+                } else if (filterName === 'installed') {
+                    matches = service.installed;
                 } else if (filterName === 'platinum' || filterName === 'gold' || filterName === 'silver' || filterName === 'bronze') {
                     matches = service.rank === filterName;
                 }
@@ -303,6 +307,7 @@ function renderServices() {
                         <div class="service-badges">
                             ${service.has_api ? '<span class="badge-api">API</span>' : ''}
                             ${isStale ? '<span class="badge-stale">STALE</span>' : ''}
+                            ${service.installed ? '<span class="badge-installed">INSTALLED</span>' : ''}
                         </div>
                     </div>
                     <div class="service-org">${escapeHtml(service.org)}/${escapeHtml(service.repo)}</div>

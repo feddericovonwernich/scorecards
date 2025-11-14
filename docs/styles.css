@@ -98,6 +98,7 @@ header h1 {
 .stat-card.rank-bronze { border-left: 3px solid var(--color-bronze); }
 .stat-card.filter-api { border-left: 3px solid #0366d6; }
 .stat-card.filter-stale { border-left: 3px solid #f39c12; }
+.stat-card.filter-installed { border-left: 3px solid #9b59b6; }
 
 .stat-value {
     font-size: 2rem;
@@ -241,7 +242,8 @@ header h1 {
 }
 
 .badge-api,
-.badge-stale {
+.badge-stale,
+.badge-installed {
     display: inline-block;
     font-size: 0.7rem;
     padding: 2px 6px;
@@ -256,6 +258,10 @@ header h1 {
 
 .badge-stale {
     background: #f39c12;
+}
+
+.badge-installed {
+    background: #9b59b6;
 }
 
 .service-org {

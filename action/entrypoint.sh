@@ -126,6 +126,16 @@ echo "Service Name: $SERVICE_NAME"
 echo "Team: ${TEAM_NAME:-<not set>}"
 echo "Links: $(echo "$LINKS_JSON" | jq length) link(s)"
 echo "Has API: $HAS_API"
+
+# Check if scorecards workflow is installed
+INSTALLED="false"
+WORKFLOW_FILE="$GITHUB_WORKSPACE/.github/workflows/scorecards.yml"
+if [ -f "$WORKFLOW_FILE" ]; then
+    echo "Installed: true (workflow detected)"
+    INSTALLED="true"
+else
+    echo "Installed: false (no workflow detected)"
+fi
 echo
 
 # ============================================================================
@@ -264,6 +274,7 @@ FINAL_RESULTS=$(jq -n \
     --argjson total_checks "$TOTAL_CHECKS" \
     --arg checks_hash "$CHECKS_HASH" \
     --argjson checks_count "$CHECKS_COUNT" \
+    --argjson installed "$INSTALLED" \
     --argjson checks "$(cat "$RESULTS_FILE")" \
     '{
         service: {
@@ -282,6 +293,7 @@ FINAL_RESULTS=$(jq -n \
         timestamp: $timestamp,
         checks_hash: $checks_hash,
         checks_count: $checks_count,
+        installed: $installed,
         checks: $checks
     }')
 
@@ -410,6 +422,7 @@ if [ -n "$SCORECARDS_REPO" ]; then
                 --argjson has_api "$HAS_API" \
                 --arg checks_hash "$CHECKS_HASH" \
                 --argjson checks_count "$CHECKS_COUNT" \
+                --argjson installed "$INSTALLED" \
                 '{
                     org: $org,
                     repo: $repo,
@@ -420,7 +433,8 @@ if [ -n "$SCORECARDS_REPO" ]; then
                     last_updated: $timestamp,
                     has_api: $has_api,
                     checks_hash: $checks_hash,
-                    checks_count: $checks_count
+                    checks_count: $checks_count,
+                    installed: $installed
                 }' > "$REGISTRY_FILE"
 
             # Commit and push service results
@@ -468,6 +482,10 @@ Commit: $GITHUB_SHA"
                                     --argjson score "$SCORE" \
                                     --arg rank "$RANK" \
                                     --arg timestamp "$TIMESTAMP" \
+                                    --argjson has_api "$HAS_API" \
+                                    --arg checks_hash "$CHECKS_HASH" \
+                                    --argjson checks_count "$CHECKS_COUNT" \
+                                    --argjson installed "$INSTALLED" \
                                     '{
                                         org: $org,
                                         repo: $repo,
@@ -475,7 +493,11 @@ Commit: $GITHUB_SHA"
                                         team: $team,
                                         score: $score,
                                         rank: $rank,
-                                        last_updated: $timestamp
+                                        last_updated: $timestamp,
+                                        has_api: $has_api,
+                                        checks_hash: $checks_hash,
+                                        checks_count: $checks_count,
+                                        installed: $installed
                                     }' > "$REGISTRY_FILE"
 
                                 git add "$REGISTRY_FILE"
