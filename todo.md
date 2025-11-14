@@ -1,0 +1,8 @@
+- For those that are stale and installed, when opening the modal we should have a button to re-run the scorecard
+- Button to clear all filters
+- Button to run scorecard workflow on all installed and staled repositories.
+- There's a lot of commits with "Update check suite metadata" que solo cambian una hora. Eso tiene que volar.
+- Test that one day cache is working.
+- Add a check that fails if badges are not in README.md
+- We should have a link in the pages that takes back to the scoreboards repository.
+- org/repo on card still drops.
