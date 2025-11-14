@@ -1,0 +1,18 @@
+{
+  "org": "feddericovonwernich",
+  "repo": "test-repo-python",
+  "name": "test-repo-python",
+  "team": "",
+  "score": 71,
+  "rank": "silver",
+  "last_updated": "2025-11-14T22:25:49Z",
+  "has_api": false,
+  "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
+  "checks_count": 8,
+  "installed": false,
+  "installation_pr": {
+    "number": 2,
+    "state": "MERGED",
+    "url": "https://github.com/feddericovonwernich/test-repo-python/pull/2"
+  }
+}
