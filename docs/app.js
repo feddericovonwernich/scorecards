@@ -437,6 +437,7 @@ async function showServiceDetail(org, repo) {
                 <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
                 ${data.service.openapi ? `<button class="tab-btn" onclick="switchTab(event, 'api')">API Specification</button>` : ''}
                 ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
+                ${data.recent_contributors && data.recent_contributors.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'contributors')">Contributors (${data.recent_contributors.length})</button>` : ''}
                 <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
 
@@ -523,6 +524,69 @@ async function showServiceDetail(org, repo) {
                             </li>
                         `).join('')}
                     </ul>
+                </div>
+            ` : ''}
+
+            ${data.recent_contributors && data.recent_contributors.length > 0 ? `
+                <div class="tab-content" id="contributors-tab">
+                    <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 1rem; color: #2c3e50;">
+                        Recent Contributors (Last 20 Commits)
+                    </h4>
+                    <p style="margin-bottom: 20px; color: #7f8c8d; font-size: 0.9rem;">
+                        Contributors who have committed to this repository recently, ordered by commit count.
+                    </p>
+                    <div class="contributors-list">
+                        ${data.recent_contributors.map(contributor => {
+                            // Generate MD5 hash of email for Gravatar
+                            const emailHash = md5(contributor.email.toLowerCase().trim());
+                            const avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=48`;
+
+                            // Extract potential GitHub username from email
+                            const githubUsername = contributor.email.split('@')[0].replace(/[^a-zA-Z0-9-]/g, '');
+                            const isGithubEmail = contributor.email.includes('github') || contributor.email.includes('users.noreply.github.com');
+
+                            return `
+                                <div class="contributor-item">
+                                    <img src="${avatarUrl}"
+                                         alt="${escapeHtml(contributor.name)}"
+                                         class="contributor-avatar"
+                                         onerror="this.src='https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&s=48'"
+                                    >
+                                    <div class="contributor-info">
+                                        <div class="contributor-name">
+                                            <strong>${escapeHtml(contributor.name)}</strong>
+                                            ${isGithubEmail ?
+                                                `<a href="https://github.com/${githubUsername}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="contributor-github-link"
+                                                    title="View GitHub profile">
+                                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                                                    </svg>
+                                                </a>`
+                                                : ''}
+                                        </div>
+                                        <div class="contributor-email">${escapeHtml(contributor.email)}</div>
+                                        <div class="contributor-meta">
+                                            <span class="contributor-commits" title="${contributor.commit_count} commit${contributor.commit_count !== 1 ? 's' : ''}">
+                                                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
+                                                    <path d="M1.643 3.143.427 1.927A.25.25 0 0 1 .604 1.5h6.792a.25.25 0 0 1 .177.427L6.357 3.143a.25.25 0 0 1-.177.073H1.82a.25.25 0 0 1-.177-.073ZM2.976 7.5A2.5 2.5 0 0 1 0 7.5v-2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v2a2.5 2.5 0 0 1-2.024 0Zm1.524-.5h-3v.25a1.5 1.5 0 0 0 3 0V7ZM8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path>
+                                                </svg>
+                                                ${contributor.commit_count} commit${contributor.commit_count !== 1 ? 's' : ''}
+                                            </span>
+                                            <span class="contributor-date" title="${new Date(contributor.last_commit_date).toLocaleString()}">
+                                                Last commit: ${formatDate(contributor.last_commit_date)}
+                                            </span>
+                                            <span class="contributor-hash">
+                                                <code>${contributor.last_commit_hash}</code>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             ` : ''}
 
@@ -630,6 +694,165 @@ function fallbackCopyToClipboard(text) {
         document.body.removeChild(textArea);
         return false;
     }
+}
+
+// MD5 hash function for Gravatar support
+function md5(string) {
+    function rotateLeft(lValue, iShiftBits) {
+        return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
+    }
+
+    function addUnsigned(lX, lY) {
+        const lX8 = (lX & 0x80000000);
+        const lY8 = (lY & 0x80000000);
+        const lX4 = (lX & 0x40000000);
+        const lY4 = (lY & 0x40000000);
+        const lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+        if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+        if (lX4 | lY4) {
+            if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
+            else return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
+        } else return (lResult ^ lX8 ^ lY8);
+    }
+
+    function F(x, y, z) { return (x & y) | ((~x) & z); }
+    function G(x, y, z) { return (x & z) | (y & (~z)); }
+    function H(x, y, z) { return (x ^ y ^ z); }
+    function I(x, y, z) { return (y ^ (x | (~z))); }
+
+    function FF(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    }
+
+    function GG(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    }
+
+    function HH(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    }
+
+    function II(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    }
+
+    function convertToWordArray(string) {
+        const lMessageLength = string.length;
+        const lNumberOfWords_temp1 = lMessageLength + 8;
+        const lNumberOfWords_temp2 = (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64;
+        const lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16;
+        const lWordArray = new Array(lNumberOfWords - 1);
+        let lBytePosition = 0;
+        let lByteCount = 0;
+        while (lByteCount < lMessageLength) {
+            const lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+            lBytePosition = (lByteCount % 4) * 8;
+            lWordArray[lWordCount] = (lWordArray[lWordCount] | (string.charCodeAt(lByteCount) << lBytePosition));
+            lByteCount++;
+        }
+        const lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+        lBytePosition = (lByteCount % 4) * 8;
+        lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
+        lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
+        lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
+        return lWordArray;
+    }
+
+    function wordToHex(lValue) {
+        let wordToHexValue = "";
+        for (let lCount = 0; lCount <= 3; lCount++) {
+            const lByte = (lValue >>> (lCount * 8)) & 255;
+            const wordToHexValue_temp = "0" + lByte.toString(16);
+            wordToHexValue = wordToHexValue + wordToHexValue_temp.substr(wordToHexValue_temp.length - 2, 2);
+        }
+        return wordToHexValue;
+    }
+
+    const x = convertToWordArray(string);
+    const S11 = 7, S12 = 12, S13 = 17, S14 = 22;
+    const S21 = 5, S22 = 9, S23 = 14, S24 = 20;
+    const S31 = 4, S32 = 11, S33 = 16, S34 = 23;
+    const S41 = 6, S42 = 10, S43 = 15, S44 = 21;
+
+    let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+
+    for (let k = 0; k < x.length; k += 16) {
+        const AA = a, BB = b, CC = c, DD = d;
+        a = FF(a, b, c, d, x[k + 0], S11, 0xD76AA478);
+        d = FF(d, a, b, c, x[k + 1], S12, 0xE8C7B756);
+        c = FF(c, d, a, b, x[k + 2], S13, 0x242070DB);
+        b = FF(b, c, d, a, x[k + 3], S14, 0xC1BDCEEE);
+        a = FF(a, b, c, d, x[k + 4], S11, 0xF57C0FAF);
+        d = FF(d, a, b, c, x[k + 5], S12, 0x4787C62A);
+        c = FF(c, d, a, b, x[k + 6], S13, 0xA8304613);
+        b = FF(b, c, d, a, x[k + 7], S14, 0xFD469501);
+        a = FF(a, b, c, d, x[k + 8], S11, 0x698098D8);
+        d = FF(d, a, b, c, x[k + 9], S12, 0x8B44F7AF);
+        c = FF(c, d, a, b, x[k + 10], S13, 0xFFFF5BB1);
+        b = FF(b, c, d, a, x[k + 11], S14, 0x895CD7BE);
+        a = FF(a, b, c, d, x[k + 12], S11, 0x6B901122);
+        d = FF(d, a, b, c, x[k + 13], S12, 0xFD987193);
+        c = FF(c, d, a, b, x[k + 14], S13, 0xA679438E);
+        b = FF(b, c, d, a, x[k + 15], S14, 0x49B40821);
+        a = GG(a, b, c, d, x[k + 1], S21, 0xF61E2562);
+        d = GG(d, a, b, c, x[k + 6], S22, 0xC040B340);
+        c = GG(c, d, a, b, x[k + 11], S23, 0x265E5A51);
+        b = GG(b, c, d, a, x[k + 0], S24, 0xE9B6C7AA);
+        a = GG(a, b, c, d, x[k + 5], S21, 0xD62F105D);
+        d = GG(d, a, b, c, x[k + 10], S22, 0x2441453);
+        c = GG(c, d, a, b, x[k + 15], S23, 0xD8A1E681);
+        b = GG(b, c, d, a, x[k + 4], S24, 0xE7D3FBC8);
+        a = GG(a, b, c, d, x[k + 9], S21, 0x21E1CDE6);
+        d = GG(d, a, b, c, x[k + 14], S22, 0xC33707D6);
+        c = GG(c, d, a, b, x[k + 3], S23, 0xF4D50D87);
+        b = GG(b, c, d, a, x[k + 8], S24, 0x455A14ED);
+        a = GG(a, b, c, d, x[k + 13], S21, 0xA9E3E905);
+        d = GG(d, a, b, c, x[k + 2], S22, 0xFCEFA3F8);
+        c = GG(c, d, a, b, x[k + 7], S23, 0x676F02D9);
+        b = GG(b, c, d, a, x[k + 12], S24, 0x8D2A4C8A);
+        a = HH(a, b, c, d, x[k + 5], S31, 0xFFFA3942);
+        d = HH(d, a, b, c, x[k + 8], S32, 0x8771F681);
+        c = HH(c, d, a, b, x[k + 11], S33, 0x6D9D6122);
+        b = HH(b, c, d, a, x[k + 14], S34, 0xFDE5380C);
+        a = HH(a, b, c, d, x[k + 1], S31, 0xA4BEEA44);
+        d = HH(d, a, b, c, x[k + 4], S32, 0x4BDECFA9);
+        c = HH(c, d, a, b, x[k + 7], S33, 0xF6BB4B60);
+        b = HH(b, c, d, a, x[k + 10], S34, 0xBEBFBC70);
+        a = HH(a, b, c, d, x[k + 13], S31, 0x289B7EC6);
+        d = HH(d, a, b, c, x[k + 0], S32, 0xEAA127FA);
+        c = HH(c, d, a, b, x[k + 3], S33, 0xD4EF3085);
+        b = HH(b, c, d, a, x[k + 6], S34, 0x4881D05);
+        a = HH(a, b, c, d, x[k + 9], S31, 0xD9D4D039);
+        d = HH(d, a, b, c, x[k + 12], S32, 0xE6DB99E5);
+        c = HH(c, d, a, b, x[k + 15], S33, 0x1FA27CF8);
+        b = HH(b, c, d, a, x[k + 2], S34, 0xC4AC5665);
+        a = II(a, b, c, d, x[k + 0], S41, 0xF4292244);
+        d = II(d, a, b, c, x[k + 7], S42, 0x432AFF97);
+        c = II(c, d, a, b, x[k + 14], S43, 0xAB9423A7);
+        b = II(b, c, d, a, x[k + 5], S44, 0xFC93A039);
+        a = II(a, b, c, d, x[k + 12], S41, 0x655B59C3);
+        d = II(d, a, b, c, x[k + 3], S42, 0x8F0CCC92);
+        c = II(c, d, a, b, x[k + 10], S43, 0xFFEFF47D);
+        b = II(b, c, d, a, x[k + 1], S44, 0x85845DD1);
+        a = II(a, b, c, d, x[k + 8], S41, 0x6FA87E4F);
+        d = II(d, a, b, c, x[k + 15], S42, 0xFE2CE6E0);
+        c = II(c, d, a, b, x[k + 6], S43, 0xA3014314);
+        b = II(b, c, d, a, x[k + 13], S44, 0x4E0811A1);
+        a = II(a, b, c, d, x[k + 4], S41, 0xF7537E82);
+        d = II(d, a, b, c, x[k + 11], S42, 0xBD3AF235);
+        c = II(c, d, a, b, x[k + 2], S43, 0x2AD7D2BB);
+        b = II(b, c, d, a, x[k + 9], S44, 0xEB86D391);
+        a = addUnsigned(a, AA);
+        b = addUnsigned(b, BB);
+        c = addUnsigned(c, CC);
+        d = addUnsigned(d, DD);
+    }
+
+    return (wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d)).toLowerCase();
 }
 
 // Copy badge code to clipboard
