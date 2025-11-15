@@ -1693,6 +1693,7 @@ let widgetWorkflowRuns = [];
 let widgetFilterStatus = 'all';
 let widgetPollInterval = null;
 let widgetLastFetch = 0;
+let currentPollingInterval = 30000; // Default 30s, configurable
 const WIDGET_POLL_INTERVAL_ACTIVE = 30000; // 30 seconds when activity detected
 const WIDGET_POLL_INTERVAL_IDLE = 60000; // 60 seconds when idle
 const WIDGET_CACHE_TTL = 15000; // 15 seconds cache
@@ -1704,6 +1705,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize the widget
 function initializeActionsWidget() {
+    // Load saved interval preference
+    const savedInterval = localStorage.getItem('widget_poll_interval');
+    if (savedInterval !== null) {
+        currentPollingInterval = parseInt(savedInterval);
+        // Update dropdown to reflect saved value
+        const select = document.getElementById('widget-interval-select');
+        if (select) {
+            select.value = savedInterval;
+        }
+    }
+
+    // Set GitHub Actions link URL
+    const actionsLink = document.getElementById('widget-actions-link');
+    if (actionsLink) {
+        actionsLink.href = `https://github.com/${REPO_OWNER}/${REPO_NAME}/actions`;
+    }
+
     // Start polling if PAT is available
     if (githubPAT) {
         startWidgetPolling();
@@ -1735,16 +1753,24 @@ function startWidgetPolling() {
     // Clear existing interval
     if (widgetPollInterval) {
         clearInterval(widgetPollInterval);
+        widgetPollInterval = null;
     }
 
     // Initial fetch
     fetchWorkflowRuns();
 
-    // Set up polling
+    // If interval is 0 (disabled), don't start polling
+    if (currentPollingInterval === 0) {
+        console.log('Widget auto-refresh disabled by user preference');
+        return;
+    }
+
+    // Set up polling with current interval
     widgetPollInterval = setInterval(() => {
-        // Only poll if widget is open or we need to update the badge
         fetchWorkflowRuns();
-    }, WIDGET_POLL_INTERVAL_ACTIVE);
+    }, currentPollingInterval);
+
+    console.log(`Widget polling started with ${currentPollingInterval}ms interval`);
 }
 
 // Stop polling
@@ -1772,12 +1798,13 @@ async function fetchWorkflowRuns() {
     try {
         // Fetch workflow runs from the scorecards repository
         const response = await fetch(
-            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=25`,
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=25&_t=${Date.now()}`,
             {
                 headers: {
                     'Authorization': `token ${githubPAT}`,
                     'Accept': 'application/vnd.github.v3+json'
-                }
+                },
+                cache: 'no-cache'
             }
         );
 
@@ -1862,7 +1889,7 @@ function renderWorkflowRun(run) {
         : run.status;
 
     const statusIcon = getStatusIcon(run.status, run.conclusion);
-    const duration = calculateDuration(run);
+    const durationInfo = calculateDuration(run);
 
     return `
         <div class="widget-run-item" data-run-id="${run.id}">
@@ -1874,8 +1901,8 @@ function renderWorkflowRun(run) {
                 </div>
             </div>
             <div class="widget-run-meta">
-                <span class="widget-run-duration" data-started="${run.run_started_at || run.created_at}">
-                    ${duration}
+                <span class="widget-run-duration" data-started="${run.run_started_at || run.created_at}" data-status="${run.status}">
+                    ${durationInfo.label} ${durationInfo.time}
                 </span>
                 <a href="${run.html_url}" target="_blank" rel="noopener noreferrer" class="widget-run-link" onclick="event.stopPropagation()">
                     View
@@ -1903,22 +1930,49 @@ function getStatusIcon(status, conclusion) {
     return '●';
 }
 
-// Calculate duration for a workflow run
-function calculateDuration(run) {
-    const start = new Date(run.run_started_at || run.created_at);
-    const end = run.status === 'completed' ? new Date(run.updated_at) : new Date();
-    const durationMs = end - start;
-
+// Helper function to format duration in milliseconds
+function formatDuration(durationMs) {
     const seconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
 
     if (hours > 0) {
-        return `${hours}h ${minutes % 60}m`;
+        return `${hours}h ${minutes % 60}m ago`;
     } else if (minutes > 0) {
-        return `${minutes}m ${seconds % 60}s`;
+        return `${minutes}m ago`;
     } else {
-        return `${seconds}s`;
+        return `${seconds}s ago`;
+    }
+}
+
+// Calculate duration for a workflow run
+function calculateDuration(run) {
+    const now = new Date();
+
+    if (run.status === 'completed') {
+        // Show time since completion
+        const completedAt = new Date(run.updated_at);
+        const timeSince = now - completedAt;
+        return {
+            label: 'Completed',
+            time: formatDuration(timeSince)
+        };
+    } else if (run.status === 'in_progress') {
+        // Show running time
+        const startedAt = new Date(run.run_started_at);
+        const elapsed = now - startedAt;
+        return {
+            label: 'Running for',
+            time: formatDuration(elapsed)
+        };
+    } else {
+        // Queued - show time since creation
+        const createdAt = new Date(run.created_at);
+        const waiting = now - createdAt;
+        return {
+            label: 'Queued',
+            time: formatDuration(waiting)
+        };
     }
 }
 
@@ -1929,22 +1983,20 @@ function startLiveDurationUpdates() {
         const durationElements = document.querySelectorAll('.widget-run-duration');
         durationElements.forEach(el => {
             const startedAt = el.dataset.started;
+            const status = el.dataset.status;
+
             if (startedAt) {
                 const start = new Date(startedAt);
                 const now = new Date();
                 const durationMs = now - start;
 
-                const seconds = Math.floor(durationMs / 1000);
-                const minutes = Math.floor(seconds / 60);
-                const hours = Math.floor(minutes / 60);
+                const timeStr = formatDuration(durationMs);
 
-                if (hours > 0) {
-                    el.textContent = `${hours}h ${minutes % 60}m`;
-                } else if (minutes > 0) {
-                    el.textContent = `${minutes}m ${seconds % 60}s`;
-                } else {
-                    el.textContent = `${seconds}s`;
-                }
+                // Add appropriate label based on status
+                const label = status === 'in_progress' ? 'Running for' :
+                             status === 'queued' ? 'Queued' : 'Completed';
+
+                el.textContent = `${label} ${timeStr}`;
             }
         });
     }, 1000);
@@ -1994,6 +2046,41 @@ async function refreshActionsWidget() {
     }, 500);
 
     showToast('GitHub Actions refreshed', 'success');
+}
+
+// Helper function to format interval for display
+function formatInterval(ms) {
+    if (ms === 0) {
+        return 'Off';
+    } else if (ms < 60000) {
+        return `${ms / 1000} second${ms !== 1000 ? 's' : ''}`;
+    } else {
+        const minutes = ms / 60000;
+        return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    }
+}
+
+// Change polling interval
+function changePollingInterval() {
+    const select = document.getElementById('widget-interval-select');
+    const newInterval = parseInt(select.value);
+
+    // Save preference
+    localStorage.setItem('widget_poll_interval', newInterval);
+    currentPollingInterval = newInterval;
+
+    // Restart polling with new interval (if PAT is available)
+    if (githubPAT) {
+        startWidgetPolling();
+    }
+
+    // Provide user feedback
+    if (newInterval === 0) {
+        showToast('Auto-refresh disabled. Use refresh button for manual updates.', 'info');
+    } else {
+        const intervalText = formatInterval(newInterval);
+        showToast(`Auto-refresh set to ${intervalText}`, 'success');
+    }
 }
 
 // Render empty state
