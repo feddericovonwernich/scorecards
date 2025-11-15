@@ -621,9 +621,9 @@ async function showServiceDetail(org, repo) {
 
             <div class="tabs" style="margin-top: 30px;">
                 <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
-                ${data.service.openapi ? `<button class="tab-btn" onclick="switchTab(event, 'api')">API Specification</button>` : ''}
+                ${data.service.openapi ? '<button class="tab-btn" onclick="switchTab(event, \'api\')">API Specification</button>' : ''}
                 ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
-                ${data.recent_contributors && data.recent_contributors.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'contributors')">Contributors</button>` : ''}
+                ${data.recent_contributors && data.recent_contributors.length > 0 ? '<button class="tab-btn" onclick="switchTab(event, \'contributors\')">Contributors</button>' : ''}
                 <button class="tab-btn" onclick="switchTab(event, 'workflows')">Workflow Runs</button>
                 <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
@@ -1028,9 +1028,9 @@ async function refreshServiceData(org, repo) {
 
             <div class="tabs" style="margin-top: 30px;">
                 <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
-                ${data.service.openapi ? `<button class="tab-btn" onclick="switchTab(event, 'api')">API Specification</button>` : ''}
+                ${data.service.openapi ? '<button class="tab-btn" onclick="switchTab(event, \'api\')">API Specification</button>' : ''}
                 ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
-                ${data.recent_contributors && data.recent_contributors.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'contributors')">Contributors</button>` : ''}
+                ${data.recent_contributors && data.recent_contributors.length > 0 ? '<button class="tab-btn" onclick="switchTab(event, \'contributors\')">Contributors</button>' : ''}
                 <button class="tab-btn" onclick="switchTab(event, 'workflows')">Workflow Runs</button>
                 <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
@@ -1697,10 +1697,10 @@ function md5(string) {
     }
 
     function wordToHex(lValue) {
-        let wordToHexValue = "";
+        let wordToHexValue = '';
         for (let lCount = 0; lCount <= 3; lCount++) {
             const lByte = (lValue >>> (lCount * 8)) & 255;
-            const wordToHexValue_temp = "0" + lByte.toString(16);
+            const wordToHexValue_temp = '0' + lByte.toString(16);
             wordToHexValue = wordToHexValue + wordToHexValue_temp.substr(wordToHexValue_temp.length - 2, 2);
         }
         return wordToHexValue;
