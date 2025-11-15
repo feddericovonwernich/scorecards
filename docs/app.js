@@ -769,19 +769,38 @@ async function showServiceDetail(org, repo) {
 
             <div class="tab-content" id="workflows-tab">
                 <div style="margin-bottom: 20px;">
-                    <div class="widget-filters">
-                        <button class="widget-filter-btn active" data-status="all" onclick="filterServiceWorkflows('all')">
-                            All <span class="filter-count" id="service-filter-count-all">0</span>
-                        </button>
-                        <button class="widget-filter-btn" data-status="in_progress" onclick="filterServiceWorkflows('in_progress')">
-                            In Progress <span class="filter-count" id="service-filter-count-in_progress">0</span>
-                        </button>
-                        <button class="widget-filter-btn" data-status="queued" onclick="filterServiceWorkflows('queued')">
-                            Queued <span class="filter-count" id="service-filter-count-queued">0</span>
-                        </button>
-                        <button class="widget-filter-btn" data-status="completed" onclick="filterServiceWorkflows('completed')">
-                            Completed <span class="filter-count" id="service-filter-count-completed">0</span>
-                        </button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="widget-filters" style="margin: 0;">
+                            <button class="widget-filter-btn active" data-status="all" onclick="filterServiceWorkflows('all')">
+                                All <span class="filter-count" id="service-filter-count-all">0</span>
+                            </button>
+                            <button class="widget-filter-btn" data-status="in_progress" onclick="filterServiceWorkflows('in_progress')">
+                                In Progress <span class="filter-count" id="service-filter-count-in_progress">0</span>
+                            </button>
+                            <button class="widget-filter-btn" data-status="queued" onclick="filterServiceWorkflows('queued')">
+                                Queued <span class="filter-count" id="service-filter-count-queued">0</span>
+                            </button>
+                            <button class="widget-filter-btn" data-status="completed" onclick="filterServiceWorkflows('completed')">
+                                Completed <span class="filter-count" id="service-filter-count-completed">0</span>
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <select id="service-workflow-interval-select" class="widget-interval-select" onchange="changeServicePollingInterval()" title="Auto-refresh interval">
+                                <option value="5000">5s</option>
+                                <option value="10000">10s</option>
+                                <option value="15000">15s</option>
+                                <option value="30000" selected>30s</option>
+                                <option value="60000">1m</option>
+                                <option value="120000">2m</option>
+                                <option value="300000">5m</option>
+                                <option value="0">Off</option>
+                            </select>
+                            <button id="service-workflow-refresh" class="widget-refresh-btn" onclick="refreshServiceWorkflowRuns()" title="Refresh" style="padding: 6px 10px;">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div id="service-workflows-content">
@@ -812,6 +831,17 @@ async function showServiceDetail(org, repo) {
                 </div>
             </div>
         `;
+
+        // Initialize service workflow polling interval dropdown with saved preference
+        const savedInterval = localStorage.getItem('service_workflow_poll_interval');
+        if (savedInterval !== null) {
+            serviceWorkflowPollIntervalTime = parseInt(savedInterval);
+            const select = document.getElementById('service-workflow-interval-select');
+            if (select) {
+                select.value = savedInterval;
+            }
+        }
+
     } catch (error) {
         console.error('Error loading service details:', error);
         detailDiv.innerHTML = `
@@ -878,7 +908,7 @@ async function loadWorkflowRunsForService() {
             <div class="widget-empty">
                 <p style="margin-bottom: 15px;">GitHub Personal Access Token required to view workflow runs.</p>
                 <button
-                    onclick="promptForGitHubPAT()"
+                    onclick="openSettings()"
                     style="background: #0969da; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500;"
                     onmouseover="this.style.background='#0860ca'"
                     onmouseout="this.style.background='#0969da'">
@@ -925,13 +955,8 @@ async function loadWorkflowRunsForService() {
         // Update UI
         renderServiceWorkflowRuns();
 
-        // Start polling for updates every 30 seconds
-        if (serviceWorkflowPollInterval) {
-            clearInterval(serviceWorkflowPollInterval);
-        }
-        serviceWorkflowPollInterval = setInterval(() => {
-            loadWorkflowRunsForService();
-        }, 30000);
+        // Start polling for updates with configured interval
+        startServiceWorkflowPolling();
 
     } catch (error) {
         console.error('Error fetching service workflow runs:', error);
@@ -941,6 +966,70 @@ async function loadWorkflowRunsForService() {
                 <p style="font-size: 0.9rem; color: #586069;">${escapeHtml(error.message)}</p>
             </div>
         `;
+    }
+}
+
+// Start or restart polling for service workflow runs
+function startServiceWorkflowPolling() {
+    // Clear existing interval
+    if (serviceWorkflowPollInterval) {
+        clearInterval(serviceWorkflowPollInterval);
+        serviceWorkflowPollInterval = null;
+    }
+
+    // Only start polling if interval is not 0 (disabled) and PAT is available
+    if (serviceWorkflowPollIntervalTime > 0 && githubPAT) {
+        serviceWorkflowPollInterval = setInterval(() => {
+            loadWorkflowRunsForService();
+        }, serviceWorkflowPollIntervalTime);
+    }
+}
+
+// Change service workflow polling interval
+function changeServicePollingInterval() {
+    const select = document.getElementById('service-workflow-interval-select');
+    const newInterval = parseInt(select.value);
+
+    // Save preference
+    localStorage.setItem('service_workflow_poll_interval', newInterval);
+    serviceWorkflowPollIntervalTime = newInterval;
+
+    // Restart polling with new interval
+    startServiceWorkflowPolling();
+
+    // Provide user feedback
+    if (newInterval === 0) {
+        showToast('Auto-refresh disabled. Use refresh button for manual updates.', 'info');
+    } else {
+        const intervalText = formatInterval(newInterval);
+        showToast(`Auto-refresh set to ${intervalText}`, 'success');
+    }
+}
+
+// Refresh service workflow runs manually
+async function refreshServiceWorkflowRuns() {
+    const button = document.getElementById('service-workflow-refresh');
+    if (!button) return;
+
+    // Add spinning animation
+    const svg = button.querySelector('svg');
+    if (svg) {
+        svg.style.animation = 'spin 1s linear infinite';
+    }
+
+    // Clear loaded flag to force fresh fetch
+    serviceWorkflowLoaded = false;
+
+    try {
+        await loadWorkflowRunsForService();
+        showToast('Workflow runs refreshed', 'success');
+    } catch (error) {
+        showToast('Failed to refresh workflow runs', 'error');
+    } finally {
+        // Remove spinning animation
+        if (svg) {
+            svg.style.animation = '';
+        }
     }
 }
 
@@ -1377,10 +1466,20 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
 
             // Update button state
             if (buttonElement) {
-                buttonElement.innerHTML = '✓ Triggered';
+                // Save original styles
+                buttonElement.dataset.originalBackground = buttonElement.style.background || '';
+                buttonElement.dataset.originalColor = buttonElement.style.color || '';
+
+                // Show success state
+                buttonElement.innerHTML = '✓ Triggered Successfully';
+                buttonElement.style.background = '#10b981';
+                buttonElement.style.color = 'white';
+
                 setTimeout(() => {
                     buttonElement.disabled = false;
                     buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                    buttonElement.style.background = buttonElement.dataset.originalBackground;
+                    buttonElement.style.color = buttonElement.dataset.originalColor;
                 }, 3000);
             }
 
@@ -1390,10 +1489,22 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
             clearPAT();
             showToast('Invalid GitHub token. Please enter a valid token in Settings.', 'error');
 
-            // Restore button
+            // Show error state
             if (buttonElement) {
-                buttonElement.disabled = false;
-                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                // Save original styles
+                buttonElement.dataset.originalBackground = buttonElement.style.background || '';
+                buttonElement.dataset.originalColor = buttonElement.style.color || '';
+
+                buttonElement.innerHTML = '✗ Trigger Failed';
+                buttonElement.style.background = '#ef4444';
+                buttonElement.style.color = 'white';
+
+                setTimeout(() => {
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                    buttonElement.style.background = buttonElement.dataset.originalBackground;
+                    buttonElement.style.color = buttonElement.dataset.originalColor;
+                }, 3000);
             }
 
             return false;
@@ -1403,10 +1514,22 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
             console.error('Failed to trigger workflow:', response.status, errorData);
             showToast(`Failed to trigger workflow: ${errorData.message || response.statusText}`, 'error');
 
-            // Restore button
+            // Show error state
             if (buttonElement) {
-                buttonElement.disabled = false;
-                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                // Save original styles
+                buttonElement.dataset.originalBackground = buttonElement.style.background || '';
+                buttonElement.dataset.originalColor = buttonElement.style.color || '';
+
+                buttonElement.innerHTML = '✗ Trigger Failed';
+                buttonElement.style.background = '#ef4444';
+                buttonElement.style.color = 'white';
+
+                setTimeout(() => {
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                    buttonElement.style.background = buttonElement.dataset.originalBackground;
+                    buttonElement.style.color = buttonElement.dataset.originalColor;
+                }, 3000);
             }
 
             return false;
@@ -1415,10 +1538,22 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
         console.error('Error triggering workflow:', error);
         showToast(`Error triggering workflow: ${error.message}`, 'error');
 
-        // Restore button
+        // Show error state
         if (buttonElement) {
-            buttonElement.disabled = false;
-            buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+            // Save original styles
+            buttonElement.dataset.originalBackground = buttonElement.style.background || '';
+            buttonElement.dataset.originalColor = buttonElement.style.color || '';
+
+            buttonElement.innerHTML = '✗ Trigger Failed';
+            buttonElement.style.background = '#ef4444';
+            buttonElement.style.color = 'white';
+
+            setTimeout(() => {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Re-run Scorecard';
+                buttonElement.style.background = buttonElement.dataset.originalBackground;
+                buttonElement.style.color = buttonElement.dataset.originalColor;
+            }, 3000);
         }
 
         return false;
@@ -1945,6 +2080,7 @@ let currentServiceRepo = null;
 let serviceWorkflowRuns = [];
 let serviceWorkflowFilterStatus = 'all';
 let serviceWorkflowPollInterval = null;
+let serviceWorkflowPollIntervalTime = 30000; // Default 30 seconds
 let serviceWorkflowLoaded = false;
 let serviceDurationUpdateInterval = null;
 
