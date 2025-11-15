@@ -11,8 +11,8 @@
   "checks_count": 8,
   "installed": false,
   "installation_pr": {
-    "number": 1,
-    "state": "MERGED",
-    "url": "https://github.com/feddericovonwernich/test-repo-empty/pull/1"
+    "number": 2,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-empty/pull/2"
   }
 }
