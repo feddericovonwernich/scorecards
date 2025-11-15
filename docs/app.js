@@ -15,6 +15,9 @@ let searchQuery = '';
 let currentChecksHash = null;
 let checksHashTimestamp = 0;
 
+// GitHub PAT State (in-memory only)
+let githubPAT = null;
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadServices();
@@ -183,17 +186,11 @@ async function loadServices() {
             throw new Error('No services registered yet');
         }
 
-        // Fetch all registry files in parallel using GitHub API (bypasses CDN cache)
+        // Fetch all registry files in parallel using hybrid approach
         const fetchPromises = registryFiles.map(async (path) => {
-            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`;
-            const res = await fetch(apiUrl, {
-                cache: 'no-cache',
-                headers: {
-                    'Accept': 'application/vnd.github.raw' // Get raw content directly
-                }
-            });
-            if (res.ok) {
-                return res.json();
+            const { response } = await fetchWithHybridAuth(path);
+            if (response.ok) {
+                return response.json();
             }
             return null;
         });
@@ -438,20 +435,17 @@ async function showServiceDetail(org, repo) {
     detailDiv.innerHTML = '<div class="loading">Loading service details...</div>';
 
     try {
-        // Fetch both results and registry in parallel using GitHub API (bypasses CDN cache)
-        const resultsUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/results/${org}/${repo}/results.json?ref=${BRANCH}`;
-        const registryUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/registry/${org}/${repo}.json?ref=${BRANCH}`;
+        // Fetch both results and registry in parallel using hybrid approach
+        const resultsPath = `results/${org}/${repo}/results.json`;
+        const registryPath = `registry/${org}/${repo}.json`;
 
-        const [resultsRes, registryRes] = await Promise.all([
-            fetch(resultsUrl, {
-                cache: 'no-cache',
-                headers: { 'Accept': 'application/vnd.github.raw' }
-            }),
-            fetch(registryUrl, {
-                cache: 'no-cache',
-                headers: { 'Accept': 'application/vnd.github.raw' }
-            })
+        const [resultsData, registryData] = await Promise.all([
+            fetchWithHybridAuth(resultsPath),
+            fetchWithHybridAuth(registryPath)
         ]);
+
+        const resultsRes = resultsData.response;
+        const registryRes = registryData.response;
 
         if (!resultsRes.ok) {
             throw new Error(`Failed to fetch results: ${resultsRes.status}`);
@@ -1037,36 +1031,20 @@ async function copyBadgeCode(elementId, event) {
 // Workflow Trigger Functions
 // ============================================================================
 
-// Get GitHub token from config or prompt user
+// Get GitHub token - uses unified in-memory PAT
 function getGitHubToken() {
-    // Try to get token from localStorage
-    let token = localStorage.getItem('github_token');
-
-    if (!token) {
-        // Prompt user for token if not stored
-        token = prompt(
-            'Enter GitHub Personal Access Token (PAT) with workflow permissions:\n\n' +
-            'This token is needed to trigger scorecard workflows.\n' +
-            'It will be stored in your browser\'s localStorage.\n\n' +
-            'To create a token:\n' +
-            '1. Go to GitHub Settings > Developer settings > Personal access tokens\n' +
-            '2. Generate new token (classic)\n' +
-            '3. Select "workflow" scope\n' +
-            '4. Copy the token and paste it here'
-        );
-
-        if (token) {
-            localStorage.setItem('github_token', token.trim());
-        }
+    if (!githubPAT) {
+        // Open settings modal to prompt user for PAT
+        showToast('Please configure a GitHub PAT in Settings to trigger workflows', 'warning');
+        openSettings();
+        return null;
     }
-
-    return token;
+    return githubPAT;
 }
 
-// Clear stored GitHub token
+// Clear stored GitHub token - now clears in-memory PAT
 function clearGitHubToken() {
-    localStorage.removeItem('github_token');
-    showToast('GitHub token cleared. You will be prompted for a new token on next trigger.', 'success');
+    clearPAT();
 }
 
 // Trigger scorecard workflow for a single service
@@ -1123,8 +1101,8 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
             return true;
         } else if (response.status === 401) {
             // Invalid token
-            localStorage.removeItem('github_token');
-            showToast('Invalid GitHub token. Please enter a valid token.', 'error');
+            clearPAT();
+            showToast('Invalid GitHub token. Please enter a valid token in Settings.', 'error');
 
             // Restore button
             if (buttonElement) {
@@ -1333,8 +1311,8 @@ async function triggerBulkWorkflows(services, buttonElement) {
             return true;
         } else if (response.status === 401) {
             // Invalid token
-            localStorage.removeItem('github_token');
-            showToast('Invalid GitHub token. Please enter a valid token.', 'error');
+            clearPAT();
+            showToast('Invalid GitHub token. Please enter a valid token in Settings.', 'error');
 
             // Restore button
             if (buttonElement) {
@@ -1447,4 +1425,215 @@ function showToast(message, type = 'info') {
             container.removeChild(toast);
         }, 300);
     }, 5000);
+}
+
+// ============================================================================
+// Hybrid Fetch Functions (GitHub API with PAT or raw.githubusercontent.com)
+// ============================================================================
+
+// Hybrid fetch wrapper - uses GitHub API with PAT if available, otherwise raw URLs
+async function fetchWithHybridAuth(path, options = {}) {
+    let response;
+    let usedAPI = false;
+
+    if (githubPAT) {
+        // Try GitHub API first with PAT
+        try {
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`;
+            response = await fetch(apiUrl, {
+                ...options,
+                cache: 'no-cache',
+                headers: {
+                    ...options.headers,
+                    'Accept': 'application/vnd.github.raw',
+                    'Authorization': `token ${githubPAT}`
+                }
+            });
+
+            usedAPI = true;
+
+            // Check rate limit headers
+            const remaining = response.headers.get('X-RateLimit-Remaining');
+            if (remaining && parseInt(remaining) < 5) {
+                showToast(`Warning: Only ${remaining} API requests remaining`, 'warning');
+            }
+
+            // Handle rate limit errors
+            if (response.status === 403 || response.status === 429) {
+                const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+                const resetTime = rateLimitReset
+                    ? new Date(parseInt(rateLimitReset) * 1000).toLocaleTimeString()
+                    : 'unknown';
+
+                showToast(
+                    `GitHub API rate limit exceeded. Resets at ${resetTime}. Falling back to CDN mode.`,
+                    'warning'
+                );
+
+                // Fall back to raw URL
+                usedAPI = false;
+            } else if (response.status === 401) {
+                // Invalid token - clear it
+                showToast('Invalid GitHub PAT detected. Clearing token and falling back to CDN mode.', 'error');
+                clearPAT();
+                usedAPI = false;
+            } else if (!response.ok) {
+                // Other error - fall back to raw URL
+                console.warn(`API fetch failed with status ${response.status}, falling back to CDN`);
+                usedAPI = false;
+            }
+        } catch (error) {
+            console.error('Error with API fetch, falling back to CDN:', error);
+            usedAPI = false;
+        }
+    }
+
+    // If no PAT or API failed, use raw.githubusercontent.com
+    if (!usedAPI) {
+        const rawUrl = `${RAW_BASE_URL}/${path}?t=${Date.now()}`;
+        response = await fetch(rawUrl, {
+            ...options,
+            cache: 'no-cache'
+        });
+    }
+
+    return {
+        response,
+        usedAPI
+    };
+}
+
+// ============================================================================
+// Settings Modal and PAT Management Functions
+// ============================================================================
+
+// Open settings modal
+function openSettings() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.remove('hidden');
+
+    // Update UI to reflect current PAT state
+    updateModeIndicator();
+
+    // Auto-check rate limit when opening settings
+    checkRateLimit();
+}
+
+// Close settings modal
+function closeSettings() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('hidden');
+}
+
+// Test if a PAT is valid
+async function testPAT(pat) {
+    try {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${pat}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Error testing PAT:', error);
+        return false;
+    }
+}
+
+// Save PAT to in-memory storage
+async function savePAT() {
+    const input = document.getElementById('github-pat-input');
+    const pat = input.value.trim();
+
+    if (!pat) {
+        showToast('Please enter a valid PAT', 'error');
+        return;
+    }
+
+    // Test the PAT first
+    showToast('Validating token...', 'info');
+    const isValid = await testPAT(pat);
+
+    if (isValid) {
+        githubPAT = pat;
+        updateWidgetState();
+        updateModeIndicator();
+        showToast('PAT saved successfully! Using GitHub API mode.', 'success');
+        checkRateLimit(); // Update rate limit display
+    } else {
+        showToast('Invalid PAT. Please check and try again.', 'error');
+    }
+}
+
+// Clear PAT from in-memory storage
+function clearPAT() {
+    githubPAT = null;
+    const input = document.getElementById('github-pat-input');
+    input.value = '';
+    updateWidgetState();
+    updateModeIndicator();
+    showToast('PAT cleared. Using public CDN mode.', 'info');
+    checkRateLimit(); // Update rate limit display
+}
+
+// Update the widget visual state based on PAT presence
+function updateWidgetState() {
+    const settingsBtn = document.getElementById('settings-btn');
+    const unlockedIcon = document.querySelector('.unlocked-icon');
+    const lockedIcon = document.querySelector('.locked-icon');
+
+    if (githubPAT) {
+        // PAT loaded - show locked icon
+        settingsBtn.classList.add('has-token');
+        unlockedIcon.style.display = 'none';
+        lockedIcon.style.display = 'block';
+        settingsBtn.title = 'Settings (PAT loaded)';
+    } else {
+        // No PAT - show unlocked icon
+        settingsBtn.classList.remove('has-token');
+        unlockedIcon.style.display = 'block';
+        lockedIcon.style.display = 'none';
+        settingsBtn.title = 'Settings';
+    }
+}
+
+// Update mode indicator in settings modal
+function updateModeIndicator() {
+    const indicator = document.getElementById('mode-indicator');
+    const currentMode = document.querySelector('.current-mode');
+
+    if (githubPAT) {
+        indicator.textContent = 'GitHub API (fast, authenticated)';
+        currentMode.classList.add('api-mode');
+    } else {
+        indicator.textContent = 'Public CDN (slower, no rate limits)';
+        currentMode.classList.remove('api-mode');
+    }
+}
+
+// Check and display GitHub API rate limit status
+async function checkRateLimit() {
+    try {
+        const headers = githubPAT
+            ? { 'Authorization': `token ${githubPAT}` }
+            : {};
+
+        const response = await fetch('https://api.github.com/rate_limit', { headers });
+        const data = await response.json();
+
+        document.getElementById('rate-limit-remaining').textContent = data.rate.remaining;
+        document.getElementById('rate-limit-limit').textContent = data.rate.limit;
+        document.getElementById('rate-limit-reset').textContent =
+            new Date(data.rate.reset * 1000).toLocaleTimeString();
+
+        if (data.rate.remaining < 10) {
+            showToast('Warning: Low rate limit remaining!', 'warning');
+        }
+    } catch (error) {
+        console.error('Error checking rate limit:', error);
+        document.getElementById('rate-limit-remaining').textContent = 'Error';
+        document.getElementById('rate-limit-limit').textContent = '-';
+        document.getElementById('rate-limit-reset').textContent = '-';
+    }
 }
