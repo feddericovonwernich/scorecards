@@ -1007,7 +1007,7 @@ async function refreshServiceData(org, repo) {
                     <div class="score-label">Score</div>
                 </div>
                 <div class="score-display">
-                    <div class="score-value">${data.checks_passed}/${data.total_checks}</div>
+                    <div class="score-value">${data.passed_checks}/${data.total_checks}</div>
                     <div class="score-label">Checks Passed</div>
                 </div>
             </div>
