@@ -1384,10 +1384,54 @@ footer a:hover {
     font-weight: 600;
 }
 
+.widget-title-link {
+    color: #2c3e50;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+.widget-title-link:hover {
+    color: #0969da;
+}
+
+.widget-title-link svg {
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.widget-title-link:hover svg {
+    opacity: 1;
+}
+
 .widget-header-actions {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+.widget-interval-select {
+    padding: 6px 10px;
+    border: 1px solid #d1d5da;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: white;
+    color: #586069;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.widget-interval-select:hover {
+    background: #f6f8fa;
+    border-color: #959da5;
+}
+
+.widget-interval-select:focus {
+    outline: none;
+    border-color: #0969da;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
 }
 
 .widget-refresh-btn {
