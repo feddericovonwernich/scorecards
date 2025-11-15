@@ -6,6 +6,12 @@ const REPO_NAME = 'scorecards';
 const BRANCH = 'catalog';
 const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
 
+// OAuth Configuration
+const OAUTH_CLIENT_ID = 'Ov23liP8sqOu08GvMIY7'; // GitHub OAuth App Client ID
+const OAUTH_DEVICE_CODE_URL = 'https://github.com/login/device/code';
+const OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token';
+const OAUTH_SCOPES = 'workflow public_repo'; // Required scopes for triggering workflows
+
 // State
 let allServices = [];
 let filteredServices = [];
@@ -19,6 +25,7 @@ let checksHashTimestamp = 0;
 document.addEventListener('DOMContentLoaded', () => {
     loadServices();
     setupEventListeners();
+    updateConnectionStatus(); // Initialize OAuth connection status
 });
 
 // ============================================================================
@@ -953,10 +960,256 @@ async function copyBadgeCode(elementId, event) {
 }
 
 // ============================================================================
-// Workflow Trigger Functions
+// GitHub OAuth Device Flow Functions
 // ============================================================================
 
-// Get GitHub token from config or prompt user
+// Initiate GitHub OAuth Device Flow
+async function initiateDeviceFlow() {
+    try {
+        const response = await fetch(OAUTH_DEVICE_CODE_URL, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                client_id: OAUTH_CLIENT_ID,
+                scope: OAUTH_SCOPES
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to initiate device flow: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+            device_code: data.device_code,
+            user_code: data.user_code,
+            verification_uri: data.verification_uri,
+            expires_in: data.expires_in,
+            interval: data.interval || 5 // Default to 5 seconds
+        };
+    } catch (error) {
+        console.error('Error initiating device flow:', error);
+        throw error;
+    }
+}
+
+// Poll for OAuth authorization
+async function pollForAuthorization(deviceCode, interval, expiresIn) {
+    const startTime = Date.now();
+    const expirationTime = startTime + (expiresIn * 1000);
+
+    return new Promise((resolve, reject) => {
+        const pollInterval = setInterval(async () => {
+            // Check if expired
+            if (Date.now() >= expirationTime) {
+                clearInterval(pollInterval);
+                reject(new Error('Device code expired. Please try again.'));
+                return;
+            }
+
+            try {
+                const response = await fetch(OAUTH_TOKEN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: OAUTH_CLIENT_ID,
+                        device_code: deviceCode,
+                        grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.access_token) {
+                    // Success!
+                    clearInterval(pollInterval);
+
+                    // Store token with expiration
+                    const tokenData = {
+                        access_token: data.access_token,
+                        token_type: data.token_type,
+                        scope: data.scope,
+                        created_at: Date.now(),
+                        // GitHub tokens don't expire, but we'll track when it was created
+                        expires_in: data.expires_in || null
+                    };
+
+                    localStorage.setItem('github_oauth_token', JSON.stringify(tokenData));
+                    localStorage.removeItem('github_token'); // Remove old PAT if exists
+
+                    resolve(tokenData);
+                } else if (data.error === 'authorization_pending') {
+                    // Still waiting for user authorization
+                    console.log('Waiting for authorization...');
+                } else if (data.error === 'slow_down') {
+                    // Requested to slow down polling
+                    clearInterval(pollInterval);
+                    setTimeout(() => {
+                        pollForAuthorization(deviceCode, interval + 5, (expirationTime - Date.now()) / 1000)
+                            .then(resolve)
+                            .catch(reject);
+                    }, (interval + 5) * 1000);
+                } else if (data.error === 'expired_token') {
+                    clearInterval(pollInterval);
+                    reject(new Error('Device code expired. Please try again.'));
+                } else if (data.error === 'access_denied') {
+                    clearInterval(pollInterval);
+                    reject(new Error('Authorization denied by user.'));
+                } else {
+                    clearInterval(pollInterval);
+                    reject(new Error(data.error_description || data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                clearInterval(pollInterval);
+                reject(error);
+            }
+        }, interval * 1000);
+    });
+}
+
+// Get OAuth token (or initiate flow if not authenticated)
+async function getOAuthToken() {
+    const storedData = localStorage.getItem('github_oauth_token');
+
+    if (storedData) {
+        try {
+            const tokenData = JSON.parse(storedData);
+            return tokenData.access_token;
+        } catch (error) {
+            console.error('Error parsing stored token:', error);
+            localStorage.removeItem('github_oauth_token');
+        }
+    }
+
+    return null;
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+    const token = localStorage.getItem('github_oauth_token');
+    const oldToken = localStorage.getItem('github_token'); // Check for old PAT
+    return !!(token || oldToken);
+}
+
+// Disconnect and clear authentication
+function disconnectGitHub() {
+    localStorage.removeItem('github_oauth_token');
+    localStorage.removeItem('github_token');
+    updateConnectionStatus();
+    showToast('Disconnected from GitHub. You will need to reconnect to trigger workflows.', 'info');
+}
+
+// Update connection status in UI
+function updateConnectionStatus() {
+    const connectBtn = document.getElementById('connect-github-btn');
+    const statusBadge = document.getElementById('connection-status');
+
+    if (!connectBtn || !statusBadge) return;
+
+    if (isAuthenticated()) {
+        connectBtn.textContent = 'Disconnect';
+        connectBtn.classList.add('connected');
+        statusBadge.textContent = 'Connected';
+        statusBadge.className = 'connection-status connected';
+    } else {
+        connectBtn.textContent = 'Connect GitHub';
+        connectBtn.classList.remove('connected');
+        statusBadge.textContent = 'Not Connected';
+        statusBadge.className = 'connection-status disconnected';
+    }
+}
+
+// Show OAuth device flow modal
+async function showOAuthModal() {
+    try {
+        // Show loading state
+        showToast('Initiating GitHub authentication...', 'info');
+
+        // Initiate device flow
+        const flowData = await initiateDeviceFlow();
+
+        // Create and show modal
+        const modal = document.getElementById('oauth-modal');
+        const userCodeEl = document.getElementById('oauth-user-code');
+        const verifyUrlEl = document.getElementById('oauth-verify-url');
+        const copyCodeBtn = document.getElementById('copy-code-btn');
+
+        if (!modal || !userCodeEl || !verifyUrlEl) {
+            throw new Error('OAuth modal elements not found');
+        }
+
+        userCodeEl.textContent = flowData.user_code;
+        verifyUrlEl.href = flowData.verification_uri;
+        verifyUrlEl.textContent = flowData.verification_uri;
+
+        // Copy code button functionality
+        copyCodeBtn.onclick = () => {
+            navigator.clipboard.writeText(flowData.user_code);
+            const originalText = copyCodeBtn.textContent;
+            copyCodeBtn.textContent = '✓ Copied!';
+            setTimeout(() => {
+                copyCodeBtn.textContent = originalText;
+            }, 2000);
+        };
+
+        modal.style.display = 'flex';
+
+        // Start polling for authorization
+        const statusEl = document.getElementById('oauth-status');
+        statusEl.textContent = 'Waiting for authorization...';
+        statusEl.className = 'oauth-status pending';
+
+        try {
+            await pollForAuthorization(flowData.device_code, flowData.interval, flowData.expires_in);
+
+            // Success!
+            statusEl.textContent = '✓ Authorization successful!';
+            statusEl.className = 'oauth-status success';
+
+            showToast('Successfully connected to GitHub!', 'success');
+            updateConnectionStatus();
+
+            // Close modal after a short delay
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 2000);
+
+        } catch (error) {
+            statusEl.textContent = `✗ ${error.message}`;
+            statusEl.className = 'oauth-status error';
+            showToast(error.message, 'error');
+        }
+
+    } catch (error) {
+        console.error('Error in OAuth flow:', error);
+        showToast('Failed to initiate GitHub authentication. Please try again.', 'error');
+    }
+}
+
+// Handle connect/disconnect button click
+function handleConnectClick() {
+    if (isAuthenticated()) {
+        // Disconnect
+        if (confirm('Are you sure you want to disconnect from GitHub? You will need to reconnect to trigger workflows.')) {
+            disconnectGitHub();
+        }
+    } else {
+        // Connect
+        showOAuthModal();
+    }
+}
+
+// ============================================================================
+// Workflow Trigger Functions (Legacy PAT Support)
+// ============================================================================
+
+// Get GitHub token from config or prompt user (Legacy PAT support)
 function getGitHubToken() {
     // Try to get token from localStorage
     let token = localStorage.getItem('github_token');
@@ -988,12 +1241,36 @@ function clearGitHubToken() {
     showToast('GitHub token cleared. You will be prompted for a new token on next trigger.', 'success');
 }
 
+// Get authentication token (OAuth or legacy PAT)
+async function getAuthToken() {
+    // Try OAuth token first
+    const oauthToken = await getOAuthToken();
+    if (oauthToken) {
+        return oauthToken;
+    }
+
+    // Fall back to legacy PAT
+    const patToken = getGitHubToken();
+    if (patToken) {
+        // Show migration message to PAT users
+        if (!localStorage.getItem('pat_migration_shown')) {
+            showToast('You are using a Personal Access Token. Consider upgrading to OAuth for better security.', 'info');
+            localStorage.setItem('pat_migration_shown', 'true');
+        }
+        return patToken;
+    }
+
+    // No authentication available - prompt user to connect
+    showToast('Please connect to GitHub to trigger workflows', 'warning');
+    return null;
+}
+
 // Trigger scorecard workflow for a single service
 async function triggerServiceWorkflow(org, repo, buttonElement) {
-    const token = getGitHubToken();
+    const token = await getAuthToken();
 
     if (!token) {
-        showToast('GitHub token is required to trigger workflows', 'error');
+        showToast('Please connect to GitHub to trigger workflows', 'error');
         return false;
     }
 
@@ -1082,10 +1359,10 @@ async function triggerServiceWorkflow(org, repo, buttonElement) {
 
 // Install scorecards by creating an installation PR
 async function installService(org, repo, buttonElement) {
-    const token = getGitHubToken();
+    const token = await getAuthToken();
 
     if (!token) {
-        showToast('GitHub token is required to create installation PRs', 'error');
+        showToast('Please connect to GitHub to create installation PRs', 'error');
         return false;
     }
 
@@ -1193,10 +1470,10 @@ async function installService(org, repo, buttonElement) {
 
 // Trigger workflows for multiple services (bulk operation)
 async function triggerBulkWorkflows(services, buttonElement) {
-    const token = getGitHubToken();
+    const token = await getAuthToken();
 
     if (!token) {
-        showToast('GitHub token is required to trigger workflows', 'error');
+        showToast('Please connect to GitHub to trigger workflows', 'error');
         return false;
     }
 
