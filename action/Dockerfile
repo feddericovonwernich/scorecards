@@ -36,12 +36,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Create symlinks for common aliases
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# Install global npm packages for checks
-RUN npm install -g \
-    @apidevtools/swagger-parser@10.1.0 \
-    @apidevtools/swagger-cli@4.0.4 \
-    yaml@2.3.4 \
-    && npm cache clean --force
+# Copy package.json to install Node.js dependencies
+COPY package.json /tmp/package.json
+
+# Install global npm packages from package.json
+RUN cd /tmp && \
+    npm install -g $(node -e "const pkg = require('/tmp/package.json'); console.log(Object.keys(pkg.dependencies).map(dep => dep + '@' + pkg.dependencies[dep].replace('^', '')).join(' '))") && \
+    npm cache clean --force && \
+    rm /tmp/package.json
 
 # Set NODE_PATH so Node can find globally installed modules
 ENV NODE_PATH=/usr/lib/node_modules

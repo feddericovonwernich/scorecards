@@ -2,16 +2,13 @@
 # Check: README existence and quality
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../action/lib/file-finder.sh"
+
 REPO_PATH="${SCORECARD_REPO_PATH:-.}"
 
 # Check if README exists (case-insensitive)
-readme_file=""
-for name in README.md readme.md README README.txt readme.txt; do
-    if [ -f "$REPO_PATH/$name" ]; then
-        readme_file="$name"
-        break
-    fi
-done
+readme_file=$(find_readme "$REPO_PATH")
 
 if [ -z "$readme_file" ]; then
     echo "No README file found" >&2

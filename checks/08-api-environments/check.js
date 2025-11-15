@@ -4,42 +4,15 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('yaml');
+const commonPaths = require('../lib/common-paths.js');
 
 const repoPath = process.env.SCORECARD_REPO_PATH || '.';
-
-// Common OpenAPI file locations (same as previous checks)
-const commonPaths = [
-    'openapi.yaml',
-    'openapi.yml',
-    'openapi.json',
-    'swagger.yaml',
-    'swagger.yml',
-    'swagger.json',
-    'api/openapi.yaml',
-    'api/openapi.yml',
-    'api/openapi.json',
-    'api/swagger.yaml',
-    'api/swagger.yml',
-    'api/swagger.json',
-    'docs/openapi.yaml',
-    'docs/openapi.yml',
-    'docs/openapi.json',
-    'docs/swagger.yaml',
-    'docs/swagger.yml',
-    'docs/swagger.json',
-    'spec/openapi.yaml',
-    'spec/openapi.yml',
-    'spec/openapi.json',
-    '.openapi/openapi.yaml',
-    '.openapi/openapi.yml',
-    '.openapi/openapi.json'
-];
 
 // Check if OpenAPI file exists
 let hasOpenAPI = false;
 let openAPIPath = null;
 
-for (const relativePath of commonPaths) {
+for (const relativePath of commonPaths.openapi) {
     const fullPath = path.join(repoPath, relativePath);
     if (fs.existsSync(fullPath)) {
         hasOpenAPI = true;
