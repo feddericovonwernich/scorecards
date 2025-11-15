@@ -3,16 +3,16 @@
   "repo": "test-repo-empty",
   "name": "test-repo-empty",
   "team": "",
-  "score": 25,
+  "score": 31,
   "rank": "bronze",
-  "last_updated": "2025-11-15T17:43:00Z",
+  "last_updated": "2025-11-15T19:56:18Z",
   "has_api": false,
-  "checks_hash": "4a5dd7d2fecb0da9decbc4692d6bb708b20ece42119e7886e5dbb33dd6e465ce",
-  "checks_count": 8,
-  "installed": false,
+  "checks_hash": "b9cedc7a9af65d4c1f84bee81605f74cd79f0b881b17499211d9b71e04aed582",
+  "checks_count": 9,
+  "installed": true,
   "installation_pr": {
     "number": 3,
-    "state": "OPEN",
+    "state": "MERGED",
     "url": "https://github.com/feddericovonwernich/test-repo-empty/pull/3"
   }
 }
