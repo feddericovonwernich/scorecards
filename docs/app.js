@@ -84,6 +84,32 @@ function isServiceStale(service, currentHash) {
     return service.checks_hash !== currentHash;
 }
 
+// Format timestamp as relative time (e.g., "2 minutes ago")
+function formatRelativeTime(timestamp) {
+    if (!timestamp) return 'Unknown';
+
+    const now = new Date();
+    const date = new Date(timestamp);
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) {
+        const minutes = Math.floor(seconds / 60);
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    }
+    if (seconds < 86400) {
+        const hours = Math.floor(seconds / 3600);
+        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    }
+    if (seconds < 604800) {
+        const days = Math.floor(seconds / 86400);
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+
+    // For older dates, show the actual date
+    return date.toLocaleDateString();
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
     // Search
@@ -157,11 +183,15 @@ async function loadServices() {
             throw new Error('No services registered yet');
         }
 
-        // Fetch all registry files in parallel
-        const timestamp = Date.now();
+        // Fetch all registry files in parallel using GitHub API (bypasses CDN cache)
         const fetchPromises = registryFiles.map(async (path) => {
-            const fileUrl = `${RAW_BASE_URL}/${path}?t=${timestamp}`;
-            const res = await fetch(fileUrl, { cache: 'no-cache' });
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`;
+            const res = await fetch(apiUrl, {
+                cache: 'no-cache',
+                headers: {
+                    'Accept': 'application/vnd.github.raw' // Get raw content directly
+                }
+            });
             if (res.ok) {
                 return res.json();
             }
@@ -188,6 +218,41 @@ async function loadServices() {
                 </p>
             </div>
         `;
+    }
+}
+
+// Refresh data (force reload from GitHub API, bypassing all caches)
+async function refreshData() {
+    const refreshBtn = document.getElementById('refresh-btn');
+
+    if (!refreshBtn) return;
+
+    // Disable button and show loading state
+    const originalText = refreshBtn.innerHTML;
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<span class="spinner"></span> Refreshing...';
+
+    try {
+        // Show toast notification
+        showToast('Refreshing service data...', 'info');
+
+        // Clear checks hash cache to force refetch
+        currentChecksHash = null;
+        checksHashTimestamp = 0;
+
+        // Reload all services
+        await loadServices();
+
+        showToast('Data refreshed successfully! PR statuses are now up to date.', 'success');
+    } catch (error) {
+        console.error('Error refreshing data:', error);
+        showToast(`Failed to refresh data: ${error.message}`, 'error');
+    } finally {
+        // Restore button state
+        setTimeout(() => {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = originalText;
+        }, 1000);
     }
 }
 
@@ -352,7 +417,12 @@ function renderServices() {
             <div class="rank-badge ${service.rank}">${capitalize(service.rank)}</div>
             ${service.team ? `<div>Team: ${escapeHtml(service.team)}</div>` : ''}
             <div class="service-meta">
-                Last updated: ${formatDate(service.last_updated)}
+                <div>Last updated: ${formatDate(service.last_updated)}</div>
+                ${service.installation_pr && service.installation_pr.updated_at ? `
+                <div class="pr-status-timestamp" title="PR status last fetched at ${new Date(service.installation_pr.updated_at).toLocaleString()}">
+                    PR status: ${formatRelativeTime(service.installation_pr.updated_at)}
+                </div>
+                ` : ''}
             </div>
         </div>
     `;
@@ -368,13 +438,19 @@ async function showServiceDetail(org, repo) {
     detailDiv.innerHTML = '<div class="loading">Loading service details...</div>';
 
     try {
-        // Fetch both results and registry in parallel
-        const resultsUrl = `${RAW_BASE_URL}/results/${org}/${repo}/results.json?t=${Date.now()}`;
-        const registryUrl = `${RAW_BASE_URL}/registry/${org}/${repo}.json?t=${Date.now()}`;
+        // Fetch both results and registry in parallel using GitHub API (bypasses CDN cache)
+        const resultsUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/results/${org}/${repo}/results.json?ref=${BRANCH}`;
+        const registryUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/registry/${org}/${repo}.json?ref=${BRANCH}`;
 
         const [resultsRes, registryRes] = await Promise.all([
-            fetch(resultsUrl, { cache: 'no-cache' }),
-            fetch(registryUrl, { cache: 'no-cache' })
+            fetch(resultsUrl, {
+                cache: 'no-cache',
+                headers: { 'Accept': 'application/vnd.github.raw' }
+            }),
+            fetch(registryUrl, {
+                cache: 'no-cache',
+                headers: { 'Accept': 'application/vnd.github.raw' }
+            })
         ]);
 
         if (!resultsRes.ok) {
@@ -483,6 +559,11 @@ async function showServiceDetail(org, repo) {
             ${data.service.team ? `<p><strong>Team:</strong> ${escapeHtml(data.service.team)}</p>` : ''}
             <p><strong>Last Run:</strong> ${formatDate(data.timestamp)}</p>
             <p><strong>Commit:</strong> <code>${data.commit_sha.substring(0, 7)}</code></p>
+            ${data.installation_pr && data.installation_pr.updated_at ? `
+            <p><strong>PR Status Updated:</strong> ${formatRelativeTime(data.installation_pr.updated_at)}
+                <span style="color: #999; font-size: 0.9em;" title="${new Date(data.installation_pr.updated_at).toLocaleString()}">(${new Date(data.installation_pr.updated_at).toLocaleString()})</span>
+            </p>
+            ` : ''}
 
             <div class="tabs" style="margin-top: 30px;">
                 <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
@@ -1121,6 +1202,11 @@ async function installService(org, repo, buttonElement) {
         if (response.status === 204) {
             // Success - workflow was triggered
             showToast(`Installation PR creation started for ${org}/${repo}`, 'success');
+
+            // Inform user about expected delay
+            setTimeout(() => {
+                showToast('Note: PR status will appear in the catalog in 3-5 minutes due to GitHub Pages deployment.', 'info');
+            }, 2000);
 
             // Update button to show pending state
             if (buttonElement) {
