@@ -1,0 +1,44 @@
+name: Update Checks Hash
+
+on:
+  # Trigger when checks are modified on main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'checks/**'
+
+  # Allow manual trigger for testing or force updates
+  workflow_dispatch:
+
+jobs:
+  update-hash:
+    name: Update Catalog Checks Hash
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for catalog branch
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Update checks hash on catalog branch
+        run: |
+          echo "Running checks hash update script..."
+          bash action/utils/update-checks-hash.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "✅ Checks hash updated successfully"
+          echo "Services with outdated scorecards will now be marked as STALE in the catalog."
