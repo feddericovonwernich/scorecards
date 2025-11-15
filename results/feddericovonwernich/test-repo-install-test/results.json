@@ -7,22 +7,22 @@
     "links": [],
     "openapi": null
   },
-  "score": 70,
+  "score": 63,
   "rank": "silver",
-  "passed_checks": 6,
+  "passed_checks": 5,
   "total_checks": 10,
-  "commit_sha": "829deb095b33d9c665b31c6e4d48cb6b83a44dae",
-  "timestamp": "2025-11-15T21:45:40Z",
+  "commit_sha": "6e42ca8fa181132229b21e57a292ed8de86b8b51",
+  "timestamp": "2025-11-15T23:07:00Z",
   "checks_hash": "48cc21e86e1b8daf9e4a5cf9b8d60bb0a34e716ed5b1e1c0a762912bcc9ab04f",
   "checks_count": 10,
-  "installed": true,
+  "installed": false,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
-      "email": "feddericovonwernich@gmail.com",
+      "name": "Test User",
+      "email": "test@example.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-15T15:15:57Z",
-      "last_commit_hash": "829deb0"
+      "last_commit_date": "2025-11-15T20:05:52Z",
+      "last_commit_hash": "6e42ca8"
     }
   ],
   "checks": [
@@ -59,7 +59,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
+      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
       "stderr": ""
     },
     {
@@ -80,11 +80,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "documentation",
       "weight": 8,
-      "status": "pass",
-      "exit_code": 0,
+      "status": "fail",
+      "exit_code": 1,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (83 bytes)\n",
-      "stderr": ""
+      "stdout": "",
+      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
     },
     {
       "check_id": "06-openapi-spec",
@@ -144,7 +144,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
+      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
     }
   ]
 }
