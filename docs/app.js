@@ -171,11 +171,13 @@ function setupEventListeners() {
 async function loadServices() {
     try {
         let loadedFromConsolidated = false;
+        let usedAPI = false;
 
         // Try to load consolidated registry first (no API rate limits via CDN)
         try {
             console.log('Attempting to load consolidated registry...');
-            const { response } = await fetchWithHybridAuth('registry/all-services.json');
+            const { response, usedAPI: fetchUsedAPI } = await fetchWithHybridAuth('registry/all-services.json');
+            usedAPI = fetchUsedAPI;
 
             if (response.ok) {
                 const registryData = await response.json();
@@ -217,7 +219,8 @@ async function loadServices() {
 
             // Fetch all registry files in parallel using hybrid approach
             const fetchPromises = registryFiles.map(async (path) => {
-                const { response } = await fetchWithHybridAuth(path);
+                const { response, usedAPI: fetchUsedAPI } = await fetchWithHybridAuth(path);
+                if (fetchUsedAPI) usedAPI = true; // Track if any fetch used API
                 if (response.ok) {
                     return response.json();
                 }
@@ -235,6 +238,9 @@ async function loadServices() {
 
         updateStats();
         filterAndRenderServices();
+
+        // Return whether API was used for data freshness indication
+        return { usedAPI };
     } catch (error) {
         console.error('Error loading services:', error);
         document.getElementById('services-grid').innerHTML = `
@@ -251,7 +257,7 @@ async function loadServices() {
     }
 }
 
-// Refresh data (force reload from GitHub API, bypassing all caches)
+// Refresh data (re-fetch from catalog; uses GitHub API with PAT, otherwise CDN)
 async function refreshData() {
     const refreshBtn = document.getElementById('refresh-btn');
 
@@ -271,9 +277,15 @@ async function refreshData() {
         checksHashTimestamp = 0;
 
         // Reload all services
-        await loadServices();
+        const { usedAPI } = await loadServices();
 
-        showToast('Data refreshed successfully! PR statuses are now up to date.', 'success');
+        // Show appropriate success message based on data source
+        const timestamp = new Date().toLocaleTimeString();
+        if (usedAPI) {
+            showToast(`Data refreshed successfully from GitHub API at ${timestamp}. (Fresh data, bypassed cache)`, 'success');
+        } else {
+            showToast(`Data refreshed from CDN at ${timestamp}. (Note: CDN cache may be up to 5 minutes old. Use GitHub PAT in settings for real-time data)`, 'success');
+        }
     } catch (error) {
         console.error('Error refreshing data:', error);
         showToast(`Failed to refresh data: ${error.message}`, 'error');
