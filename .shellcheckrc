@@ -1,0 +1,7 @@
+# Exclude some checks
+disable=SC2034  # Unused variable (often used in sourced files)
+disable=SC1090  # Can't follow non-constant source
+disable=SC1091  # Not following sourced files
+
+# Enable all optional checks
+enable=all
