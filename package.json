@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "description": "Automated quality scoring for service repositories",
   "main": "catalog/src/main.js",
+  "type": "module",
   "scripts": {
-    "test": "jest",
+    "test": "npm run test:js && npm run test:bash && npm run test:python",
+    "test:js": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:bash": "bats tests/unit/bash/",
+    "test:python": "pytest tests/unit/python/",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint catalog/src checks/**/*.js",
     "format": "prettier --write '**/*.{js,json,md,yml,yaml}'"
   },
@@ -17,6 +23,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
     "eslint": "^8.56.0",
     "prettier": "^3.1.1"
   },
