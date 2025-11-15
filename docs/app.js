@@ -608,7 +608,7 @@ async function showServiceDetail(org, repo) {
                 <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
                 ${data.service.openapi ? `<button class="tab-btn" onclick="switchTab(event, 'api')">API Specification</button>` : ''}
                 ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
-                ${data.recent_contributors && data.recent_contributors.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'contributors')">Contributors (${data.recent_contributors.length})</button>` : ''}
+                ${data.recent_contributors && data.recent_contributors.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'contributors')">Contributors</button>` : ''}
                 <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
 
