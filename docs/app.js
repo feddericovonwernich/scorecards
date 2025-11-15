@@ -1002,19 +1002,20 @@ async function refreshServiceData(org, repo) {
                     ${data.installation_pr ? 'Re-create' : 'Install'} Scorecards
                 </button>
                 ` : ''}
-                <div class="modal-stats-container">
-                    <div class="modal-stat-item">
-                        <div class="modal-stat-value">${data.score}</div>
-                        <div class="modal-stat-label">Score</div>
-                    </div>
-                    <div class="modal-stat-item">
-                        <div class="modal-stat-value">${data.passed_checks}/${data.total_checks}</div>
-                        <div class="modal-stat-label">Checks Passed</div>
-                    </div>
-                </div>
             </div>
 
             ${stalenessWarning}
+
+            <div class="modal-stats-container">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-value">${data.score}</div>
+                    <div class="modal-stat-label">Score</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-value">${data.passed_checks}/${data.total_checks}</div>
+                    <div class="modal-stat-label">Checks Passed</div>
+                </div>
+            </div>
 
             ${data.service.team ? `<p><strong>Team:</strong> ${escapeHtml(data.service.team)}</p>` : ''}
             <p><strong>Last Run:</strong> ${formatDate(data.timestamp)}</p>
