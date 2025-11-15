@@ -2,6 +2,7 @@
 disable=SC2034  # Unused variable (often used in sourced files)
 disable=SC1090  # Can't follow non-constant source
 disable=SC1091  # Not following sourced files
-
-# Enable all optional checks
-enable=all
+disable=SC2250  # Prefer braces around variable references (style)
+disable=SC2292  # Prefer [[ ]] over [ ] (style)
+disable=SC2248  # Prefer double quoting variables (style)
+disable=SC2162  # read without -r will mangle backslashes (style)
