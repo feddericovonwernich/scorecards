@@ -20,7 +20,10 @@ let githubPAT = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    loadServices();
+    // Load services on page load (errors are handled and displayed by loadServices)
+    loadServices().catch(() => {
+        // Error already handled and displayed by loadServices()
+    });
     setupEventListeners();
 });
 
@@ -243,6 +246,8 @@ async function loadServices() {
                 </p>
             </div>
         `;
+        // Re-throw to allow callers (like refreshData) to detect failure
+        throw error;
     }
 }
 
