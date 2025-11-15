@@ -476,6 +476,11 @@ async function showServiceDetail(org, repo) {
     const modal = document.getElementById('service-modal');
     const detailDiv = document.getElementById('service-detail');
 
+    // Store current service context for workflow runs
+    currentServiceOrg = org;
+    currentServiceRepo = repo;
+    serviceWorkflowLoaded = false;
+
     modal.classList.remove('hidden');
     detailDiv.innerHTML = '<div class="loading">Loading service details...</div>';
 
@@ -609,6 +614,7 @@ async function showServiceDetail(org, repo) {
                 ${data.service.openapi ? `<button class="tab-btn" onclick="switchTab(event, 'api')">API Specification</button>` : ''}
                 ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links (${data.service.links.length})</button>` : ''}
                 ${data.recent_contributors && data.recent_contributors.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'contributors')">Contributors</button>` : ''}
+                <button class="tab-btn" onclick="switchTab(event, 'workflows')">Workflow Runs</button>
                 <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
             </div>
 
@@ -761,6 +767,28 @@ async function showServiceDetail(org, repo) {
                 </div>
             ` : ''}
 
+            <div class="tab-content" id="workflows-tab">
+                <div style="margin-bottom: 20px;">
+                    <div class="widget-filters">
+                        <button class="widget-filter-btn active" data-status="all" onclick="filterServiceWorkflows('all')">
+                            All <span class="filter-count" id="service-filter-count-all">0</span>
+                        </button>
+                        <button class="widget-filter-btn" data-status="in_progress" onclick="filterServiceWorkflows('in_progress')">
+                            In Progress <span class="filter-count" id="service-filter-count-in_progress">0</span>
+                        </button>
+                        <button class="widget-filter-btn" data-status="queued" onclick="filterServiceWorkflows('queued')">
+                            Queued <span class="filter-count" id="service-filter-count-queued">0</span>
+                        </button>
+                        <button class="widget-filter-btn" data-status="completed" onclick="filterServiceWorkflows('completed')">
+                            Completed <span class="filter-count" id="service-filter-count-completed">0</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="service-workflows-content">
+                    <div class="loading">Click to load workflow runs...</div>
+                </div>
+            </div>
+
             <div class="tab-content" id="badges-tab">
                 <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 1rem; color: #2c3e50;">Badge Preview</h4>
                 <div style="background: #f5f7fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -797,6 +825,25 @@ async function showServiceDetail(org, repo) {
 // Close Modal
 function closeModal() {
     document.getElementById('service-modal').classList.add('hidden');
+
+    // Clean up service workflow polling
+    if (serviceWorkflowPollInterval) {
+        clearInterval(serviceWorkflowPollInterval);
+        serviceWorkflowPollInterval = null;
+    }
+
+    // Clean up service duration updates
+    if (serviceDurationUpdateInterval) {
+        clearInterval(serviceDurationUpdateInterval);
+        serviceDurationUpdateInterval = null;
+    }
+
+    // Reset service workflow state
+    currentServiceOrg = null;
+    currentServiceRepo = null;
+    serviceWorkflowRuns = [];
+    serviceWorkflowLoaded = false;
+    serviceWorkflowFilterStatus = 'all';
 }
 
 // Switch Tab
@@ -808,6 +855,200 @@ function switchTab(event, tabName) {
     // Add active class to clicked button and corresponding content
     event.target.classList.add('active');
     document.getElementById(`${tabName}-tab`).classList.add('active');
+
+    // Lazy load workflow runs when workflows tab is opened
+    if (tabName === 'workflows' && !serviceWorkflowLoaded) {
+        loadWorkflowRunsForService();
+    }
+}
+
+// ============================================================================
+// Service Modal Workflow Runs Functions
+// ============================================================================
+
+// Load workflow runs for the current service
+async function loadWorkflowRunsForService() {
+    if (!currentServiceOrg || !currentServiceRepo) {
+        return;
+    }
+
+    if (!githubPAT) {
+        const content = document.getElementById('service-workflows-content');
+        content.innerHTML = `
+            <div class="widget-empty">
+                <p style="margin-bottom: 15px;">GitHub Personal Access Token required to view workflow runs.</p>
+                <button
+                    onclick="promptForGitHubPAT()"
+                    style="background: #0969da; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500;"
+                    onmouseover="this.style.background='#0860ca'"
+                    onmouseout="this.style.background='#0969da'">
+                    Set GitHub PAT
+                </button>
+                <p style="margin-top: 10px; font-size: 0.85rem; color: #586069;">
+                    Need a PAT with <code>workflow</code> scope to view workflow runs.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    const content = document.getElementById('service-workflows-content');
+    content.innerHTML = '<div class="loading">Loading workflow runs...</div>';
+
+    try {
+        const response = await fetch(
+            `https://api.github.com/repos/${currentServiceOrg}/${currentServiceRepo}/actions/runs?per_page=25&_t=${Date.now()}`,
+            {
+                headers: {
+                    'Authorization': `token ${githubPAT}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                cache: 'no-cache'
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch workflow runs: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Add org/repo metadata to each run
+        serviceWorkflowRuns = data.workflow_runs.map(run => ({
+            ...run,
+            org: currentServiceOrg,
+            repo: currentServiceRepo
+        }));
+
+        serviceWorkflowLoaded = true;
+
+        // Update UI
+        renderServiceWorkflowRuns();
+
+        // Start polling for updates every 30 seconds
+        if (serviceWorkflowPollInterval) {
+            clearInterval(serviceWorkflowPollInterval);
+        }
+        serviceWorkflowPollInterval = setInterval(() => {
+            loadWorkflowRunsForService();
+        }, 30000);
+
+    } catch (error) {
+        console.error('Error fetching service workflow runs:', error);
+        content.innerHTML = `
+            <div class="widget-empty">
+                <p style="color: #d73a49; margin-bottom: 10px;">Error loading workflow runs</p>
+                <p style="font-size: 0.9rem; color: #586069;">${escapeHtml(error.message)}</p>
+            </div>
+        `;
+    }
+}
+
+// Render service workflow runs with current filter
+function renderServiceWorkflowRuns() {
+    const content = document.getElementById('service-workflows-content');
+
+    // Filter runs based on selected status
+    let filteredRuns = serviceWorkflowRuns;
+    if (serviceWorkflowFilterStatus !== 'all') {
+        filteredRuns = serviceWorkflowRuns.filter(run => run.status === serviceWorkflowFilterStatus);
+    }
+
+    // Update filter counts
+    updateServiceFilterCounts();
+
+    if (filteredRuns.length === 0) {
+        const statusText = serviceWorkflowFilterStatus === 'all' ? '' : serviceWorkflowFilterStatus.replace('_', ' ');
+        content.innerHTML = `
+            <div class="widget-empty">
+                <p>No ${statusText} workflow runs found</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Render workflow runs using existing renderWorkflowRun function
+    content.innerHTML = filteredRuns.map(run => renderWorkflowRun(run)).join('');
+
+    // Start live duration updates for running workflows
+    if (serviceWorkflowFilterStatus === 'all' || serviceWorkflowFilterStatus === 'in_progress') {
+        startServiceLiveDurationUpdates();
+    }
+}
+
+// Update service filter counts
+function updateServiceFilterCounts() {
+    const all = serviceWorkflowRuns.length;
+    const running = serviceWorkflowRuns.filter(r => r.status === 'in_progress').length;
+    const queued = serviceWorkflowRuns.filter(r => r.status === 'queued').length;
+    const completed = serviceWorkflowRuns.filter(r => r.status === 'completed').length;
+
+    const allEl = document.getElementById('service-filter-count-all');
+    const runningEl = document.getElementById('service-filter-count-in_progress');
+    const queuedEl = document.getElementById('service-filter-count-queued');
+    const completedEl = document.getElementById('service-filter-count-completed');
+
+    if (allEl) allEl.textContent = all;
+    if (runningEl) runningEl.textContent = running;
+    if (queuedEl) queuedEl.textContent = queued;
+    if (completedEl) completedEl.textContent = completed;
+}
+
+// Filter service workflows by status
+function filterServiceWorkflows(status) {
+    serviceWorkflowFilterStatus = status;
+
+    // Update active button in the workflows tab
+    const workflowsTab = document.getElementById('workflows-tab');
+    if (workflowsTab) {
+        workflowsTab.querySelectorAll('.widget-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const activeBtn = workflowsTab.querySelector(`[data-status="${status}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+    }
+
+    // Re-render content
+    renderServiceWorkflowRuns();
+}
+
+// Start live duration updates for service workflows
+function startServiceLiveDurationUpdates() {
+    // Clear any existing interval
+    if (serviceDurationUpdateInterval) {
+        clearInterval(serviceDurationUpdateInterval);
+    }
+
+    // Update every second
+    serviceDurationUpdateInterval = setInterval(() => {
+        const serviceContent = document.getElementById('service-workflows-content');
+        if (!serviceContent) {
+            clearInterval(serviceDurationUpdateInterval);
+            return;
+        }
+
+        const durationElements = serviceContent.querySelectorAll('.widget-run-duration');
+        durationElements.forEach(el => {
+            const startedAt = el.dataset.started;
+            const status = el.dataset.status;
+
+            if (startedAt) {
+                const start = new Date(startedAt);
+                const now = new Date();
+                const durationMs = now - start;
+
+                const timeStr = formatDuration(durationMs);
+
+                // Add appropriate label based on status
+                const label = status === 'in_progress' ? 'Running for' :
+                             status === 'queued' ? 'Queued' : 'Completed';
+
+                el.textContent = `${label} ${timeStr}`;
+            }
+        });
+    }, 1000);
 }
 
 // Utility Functions
@@ -1697,6 +1938,15 @@ let currentPollingInterval = 30000; // Default 30s, configurable
 const WIDGET_POLL_INTERVAL_ACTIVE = 30000; // 30 seconds when activity detected
 const WIDGET_POLL_INTERVAL_IDLE = 60000; // 60 seconds when idle
 const WIDGET_CACHE_TTL = 15000; // 15 seconds cache
+
+// Service Modal Workflow State
+let currentServiceOrg = null;
+let currentServiceRepo = null;
+let serviceWorkflowRuns = [];
+let serviceWorkflowFilterStatus = 'all';
+let serviceWorkflowPollInterval = null;
+let serviceWorkflowLoaded = false;
+let serviceDurationUpdateInterval = null;
 
 // Initialize widget on page load
 document.addEventListener('DOMContentLoaded', () => {
