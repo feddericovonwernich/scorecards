@@ -3,6 +3,9 @@
 load helpers
 
 setup() {
+    # Create temporary directory for test
+    export TEST_TEMP_DIR="$(mktemp -d)"
+
     source "$ACTION_LIB/common.sh"
     source "$ACTION_LIB/file-finder.sh"
     export TEST_REPO="$TEST_TEMP_DIR/test-repo"

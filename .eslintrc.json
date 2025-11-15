@@ -11,11 +11,12 @@
     "sourceType": "module"
   },
   "rules": {
-    "indent": ["error", 2],
+    "indent": "off",
     "linebreak-style": ["error", "unix"],
     "quotes": ["error", "single"],
     "semi": ["error", "always"],
     "no-unused-vars": ["warn"],
-    "no-console": "off"
+    "no-console": "off",
+    "no-func-assign": "off"
   }
 }
