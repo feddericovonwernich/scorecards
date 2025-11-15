@@ -1770,43 +1770,30 @@ async function fetchWorkflowRuns() {
     }
 
     try {
-        // Fetch workflow runs for all services in the registry
-        const runs = [];
-
-        // Limit to first 10 services to avoid rate limiting
-        const servicesToCheck = allServices.slice(0, 10);
-
-        // Fetch runs for each service in parallel
-        const fetchPromises = servicesToCheck.map(async (service) => {
-            try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${service.org}/${service.repo}/actions/runs?per_page=5`,
-                    {
-                        headers: {
-                            'Authorization': `token ${githubPAT}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.workflow_runs.map(run => ({
-                        ...run,
-                        org: service.org,
-                        repo: service.repo,
-                        service_name: service.name
-                    }));
+        // Fetch workflow runs from the scorecards repository
+        const response = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=25`,
+            {
+                headers: {
+                    'Authorization': `token ${githubPAT}`,
+                    'Accept': 'application/vnd.github.v3+json'
                 }
-                return [];
-            } catch (error) {
-                console.error(`Error fetching runs for ${service.org}/${service.repo}:`, error);
-                return [];
             }
-        });
+        );
 
-        const results = await Promise.all(fetchPromises);
-        const allRuns = results.flat();
+        if (!response.ok) {
+            throw new Error(`Failed to fetch workflow runs: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Add org/repo metadata to each run
+        const allRuns = data.workflow_runs.map(run => ({
+            ...run,
+            org: REPO_OWNER,
+            repo: REPO_NAME,
+            service_name: 'Scorecards'
+        }));
 
         // Filter to recent runs (last 24 hours) and sort by created_at
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
