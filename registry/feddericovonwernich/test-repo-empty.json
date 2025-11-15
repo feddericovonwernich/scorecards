@@ -11,8 +11,8 @@
   "checks_count": 8,
   "installed": false,
   "installation_pr": {
-    "number": 2,
-    "state": "CLOSED",
-    "url": "https://github.com/feddericovonwernich/test-repo-empty/pull/2"
+    "number": 3,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-empty/pull/3"
   }
 }
