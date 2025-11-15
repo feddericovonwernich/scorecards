@@ -164,40 +164,68 @@ function setupEventListeners() {
     });
 }
 
-// Load Services from Registry (split into per-service files)
+// Load Services from Registry
 async function loadServices() {
     try {
-        // Use GitHub API to get all registry files
-        const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
-        const response = await fetch(apiUrl);
+        let loadedFromConsolidated = false;
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch repository tree: ${response.status}`);
-        }
+        // Try to load consolidated registry first (no API rate limits via CDN)
+        try {
+            console.log('Attempting to load consolidated registry...');
+            const { response } = await fetchWithHybridAuth('registry/all-services.json');
 
-        const treeData = await response.json();
-
-        // Find all registry JSON files (registry/$org/$repo.json)
-        const registryFiles = treeData.tree
-            .filter(item => item.path.startsWith('registry/') && item.path.endsWith('.json'))
-            .map(item => item.path);
-
-        if (registryFiles.length === 0) {
-            throw new Error('No services registered yet');
-        }
-
-        // Fetch all registry files in parallel using hybrid approach
-        const fetchPromises = registryFiles.map(async (path) => {
-            const { response } = await fetchWithHybridAuth(path);
             if (response.ok) {
-                return response.json();
+                const registryData = await response.json();
+                if (registryData.services && Array.isArray(registryData.services)) {
+                    allServices = registryData.services;
+                    filteredServices = [...allServices];
+                    loadedFromConsolidated = true;
+                    console.log(`Loaded ${allServices.length} services from consolidated registry (generated at ${registryData.generated_at})`);
+                }
             }
-            return null;
-        });
+        } catch (error) {
+            console.warn('Failed to load consolidated registry, falling back to tree API:', error);
+        }
 
-        const results = await Promise.all(fetchPromises);
-        allServices = results.filter(service => service !== null);
-        filteredServices = [...allServices];
+        // Fallback: Use tree API to discover individual files (backward compatibility)
+        if (!loadedFromConsolidated) {
+            console.log('Loading services via tree API...');
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch repository tree: ${response.status}`);
+            }
+
+            const treeData = await response.json();
+
+            // Find all registry JSON files (registry/$org/$repo.json), excluding all-services.json
+            const registryFiles = treeData.tree
+                .filter(item =>
+                    item.path.startsWith('registry/') &&
+                    item.path.endsWith('.json') &&
+                    item.path !== 'registry/all-services.json'
+                )
+                .map(item => item.path);
+
+            if (registryFiles.length === 0) {
+                throw new Error('No services registered yet');
+            }
+
+            // Fetch all registry files in parallel using hybrid approach
+            const fetchPromises = registryFiles.map(async (path) => {
+                const { response } = await fetchWithHybridAuth(path);
+                if (response.ok) {
+                    return response.json();
+                }
+                return null;
+            });
+
+            const results = await Promise.all(fetchPromises);
+            allServices = results.filter(service => service !== null);
+            filteredServices = [...allServices];
+            console.log(`Loaded ${allServices.length} services via tree API`);
+        }
 
         // Fetch current checks hash for staleness detection
         await fetchCurrentChecksHash();
