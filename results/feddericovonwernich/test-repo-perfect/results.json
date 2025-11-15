@@ -7,14 +7,14 @@
     "links": [],
     "openapi": null
   },
-  "score": 88,
+  "score": 83,
   "rank": "gold",
   "passed_checks": 7,
-  "total_checks": 9,
+  "total_checks": 10,
   "commit_sha": "d09e3762de639e4c51bde924dc4d4af2e28e83e8",
-  "timestamp": "2025-11-15T19:42:55Z",
-  "checks_hash": "b9cedc7a9af65d4c1f84bee81605f74cd79f0b881b17499211d9b71e04aed582",
-  "checks_count": 9,
+  "timestamp": "2025-11-15T21:56:58Z",
+  "checks_hash": "48cc21e86e1b8daf9e4a5cf9b8d60bb0a34e716ed5b1e1c0a762912bcc9ab04f",
+  "checks_count": 10,
   "installed": true,
   "recent_contributors": [
     {
@@ -118,7 +118,7 @@
       "weight": 8,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
     },
@@ -133,6 +133,18 @@
       "duration": 0,
       "stdout": "",
       "stderr": "No scorecard badges found in README.md\nExpected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)\n"
+    },
+    {
+      "check_id": "10-scorecard-config-quality",
+      "name": "Scorecard Config Quality",
+      "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
+      "category": "documentation",
+      "weight": 7,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     }
   ]
 }
