@@ -2,8 +2,18 @@
 # Update current checks hash on catalog branch
 # This script is run when checks are modified on main branch to ensure
 # the catalog branch reflects the current check suite for staleness detection
+#
+# Usage:
+#   update-checks-hash.sh           - Full workflow (generate + commit to catalog)
+#   update-checks-hash.sh --hash-only - Just output the hash to stdout
 
 set -e
+
+# Parse arguments
+HASH_ONLY=0
+if [ "$1" = "--hash-only" ]; then
+    HASH_ONLY=1
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,8 +28,10 @@ ACTION_DIR="$(dirname "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname "$ACTION_DIR")"
 CHECKS_DIR="$REPO_ROOT/checks"
 
-echo -e "${BLUE}Updating checks hash on catalog branch...${NC}"
-echo
+if [ $HASH_ONLY -eq 0 ]; then
+    echo -e "${BLUE}Updating checks hash on catalog branch...${NC}"
+    echo
+fi
 
 # ============================================================================
 # Validate Environment
@@ -34,7 +46,9 @@ fi
 # Generate Checks Hash
 # ============================================================================
 
-echo "Generating hash from checks directory: $CHECKS_DIR"
+if [ $HASH_ONLY -eq 0 ]; then
+    echo "Generating hash from checks directory: $CHECKS_DIR"
+fi
 
 # Find all checks in sorted order
 CHECK_DIRS=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
@@ -71,6 +85,12 @@ done
 
 # Generate final hash from all check hashes
 CHECKS_HASH=$(echo -n "$CHECK_HASHES" | sha256sum | awk '{print $1}')
+
+# If hash-only mode, just output the hash and exit
+if [ $HASH_ONLY -eq 1 ]; then
+    echo "$CHECKS_HASH"
+    exit 0
+fi
 
 echo "Checks count: $CHECKS_COUNT"
 echo "Checks hash: $CHECKS_HASH"

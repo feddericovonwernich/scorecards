@@ -250,43 +250,9 @@ echo
 
 echo -e "${BLUE}Generating check suite hash...${NC}"
 
-# Find all checks in sorted order
-CHECK_DIRS=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+# Use update-checks-hash.sh to generate the hash (single source of truth)
+CHECKS_HASH=$(bash "$ACTION_DIR/utils/update-checks-hash.sh" --hash-only)
 
-# Generate hash for each check (metadata + implementation)
-CHECK_HASHES=""
-CHECKS_COUNT=0
-
-for check_dir in $CHECK_DIRS; do
-    check_id=$(basename "$check_dir")
-
-    # Hash metadata.json
-    metadata_hash=""
-    if [ -f "$check_dir/metadata.json" ]; then
-        metadata_hash=$(sha256sum "$check_dir/metadata.json" | awk '{print $1}')
-    fi
-
-    # Hash check implementation (sh, py, or js)
-    impl_hash=""
-    if [ -f "$check_dir/check.sh" ]; then
-        impl_hash=$(sha256sum "$check_dir/check.sh" | awk '{print $1}')
-    elif [ -f "$check_dir/check.py" ]; then
-        impl_hash=$(sha256sum "$check_dir/check.py" | awk '{print $1}')
-    elif [ -f "$check_dir/check.js" ]; then
-        impl_hash=$(sha256sum "$check_dir/check.js" | awk '{print $1}')
-    fi
-
-    # Combine check_id, metadata hash, and implementation hash
-    check_combined="${check_id}:${metadata_hash}:${impl_hash}"
-    CHECK_HASHES="${CHECK_HASHES}${check_combined}"$'\n'
-
-    CHECKS_COUNT=$((CHECKS_COUNT + 1))
-done
-
-# Generate final hash from all check hashes
-CHECKS_HASH=$(echo -n "$CHECK_HASHES" | sha256sum | awk '{print $1}')
-
-echo "Checks count: $CHECKS_COUNT"
 echo "Checks hash: $CHECKS_HASH"
 echo
 
