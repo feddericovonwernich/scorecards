@@ -368,14 +368,28 @@ async function showServiceDetail(org, repo) {
     detailDiv.innerHTML = '<div class="loading">Loading service details...</div>';
 
     try {
+        // Fetch both results and registry in parallel
         const resultsUrl = `${RAW_BASE_URL}/results/${org}/${repo}/results.json?t=${Date.now()}`;
-        const response = await fetch(resultsUrl, { cache: 'no-cache' });
+        const registryUrl = `${RAW_BASE_URL}/registry/${org}/${repo}.json?t=${Date.now()}`;
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch results: ${response.status}`);
+        const [resultsRes, registryRes] = await Promise.all([
+            fetch(resultsUrl, { cache: 'no-cache' }),
+            fetch(registryUrl, { cache: 'no-cache' })
+        ]);
+
+        if (!resultsRes.ok) {
+            throw new Error(`Failed to fetch results: ${resultsRes.status}`);
         }
 
-        const data = await response.json();
+        const data = await resultsRes.json();
+
+        // Merge installation_pr from registry if available
+        if (registryRes.ok) {
+            const registry = await registryRes.json();
+            if (registry.installation_pr) {
+                data.installation_pr = registry.installation_pr;
+            }
+        }
 
         // Check staleness
         const isStale = isServiceStale(data, currentChecksHash);
