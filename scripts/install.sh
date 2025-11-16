@@ -219,9 +219,9 @@ git checkout --orphan catalog
 # Remove all files from staging
 git rm -rf . > /dev/null 2>&1
 
-# Copy documentation from main
+# Copy catalog UI from main
 git checkout main -- docs/ 2>/dev/null || {
-    print_error "Failed to checkout docs from main branch"
+    print_error "Failed to checkout catalog UI from main branch"
     exit 1
 }
 

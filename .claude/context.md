@@ -1,7 +1,7 @@
 # Scorecards - AI Context
 
 > **Note**: This file provides context for AI assistants working on the Scorecards project.
-> For human-readable documentation, see `/docs/`
+> For human-readable documentation, see `/documentation/`
 
 ## What This Is
 
@@ -31,7 +31,7 @@ A distributed scorecard system that measures service quality across an organizat
 - `action/entrypoint.sh` - Main action logic
 - `action/utils/run-checks.sh` - Check execution in Docker
 - `checks/*/check.{sh,py,js}` - Individual checks (weighted)
-- `catalog/index.html` - Catalog UI (client-side JS)
+- `docs/index.html` - Catalog UI (client-side JS)
 - `registry/services.json` - Auto-maintained service list
 
 ## Adding Checks
@@ -55,7 +55,7 @@ rank = platinum (90+), gold (75+), silver (50+), bronze (0+)
 **Implementation:**
 - Action generates SHA256 hash of all checks (IDs + metadata.json + implementation files)
 - Hash stored in:
-  - `catalog/current-checks.json` - Latest check suite hash (single source of truth)
+  - `docs/current-checks.json` - Latest check suite hash (single source of truth)
   - Each scorecard's `results.json` - Hash at time of generation
   - Registry entries - Fast access without loading full results
 - Browser fetches `current-checks.json` (10s cache) and compares
@@ -63,9 +63,9 @@ rank = platinum (90+), gold (75+), silver (50+), bronze (0+)
 
 **Key Files:**
 - `action/entrypoint.sh:200-244` - Hash generation logic
-- `catalog/app.js:28-69` - Hash fetch and staleness detection
-- `catalog/app.js:320-328` - STALE badge rendering
-- `catalog/app.js:363-378` - Warning banner in detail view
+- `docs/app.js:28-69` - Hash fetch and staleness detection
+- `docs/app.js:320-328` - STALE badge rendering
+- `docs/app.js:363-378` - Warning banner in detail view
 
 **Triggers Staleness:**
 - New checks added
@@ -106,11 +106,11 @@ rank = platinum (90+), gold (75+), silver (50+), bronze (0+)
 
 **Key Files:**
 - `.github/workflows/trigger-service-workflow.yml` - Proxy workflow for triggering services
-- `catalog/app.js:908-1202` - Trigger functions and token management
-- `catalog/app.js:300-360` - Service card trigger button
-- `catalog/app.js:380-443` - Detail modal trigger button
-- `catalog/index.html:73-78` - Bulk trigger button
-- `catalog/styles.css:813-978` - Trigger button and toast notification styles
+- `docs/app.js:908-1202` - Trigger functions and token management
+- `docs/app.js:300-360` - Service card trigger button
+- `docs/app.js:380-443` - Detail modal trigger button
+- `docs/index.html:73-78` - Bulk trigger button
+- `docs/styles.css:813-978` - Trigger button and toast notification styles
 
 **User Setup:**
 1. Create GitHub PAT with `workflow` scope

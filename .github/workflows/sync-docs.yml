@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'catalog/**'
+      - 'docs/**'
   workflow_dispatch:
 
 jobs:
@@ -32,11 +32,11 @@ jobs:
       - name: Sync catalog UI files
         run: |
           # Copy catalog UI files from main to catalog branch root
-          # The catalog branch serves these files via GitHub Pages
-          cp -f main-repo/catalog/index.html catalog-repo/
-          cp -f main-repo/catalog/api-explorer.html catalog-repo/
-          cp -f main-repo/catalog/app.js catalog-repo/
-          cp -f main-repo/catalog/styles.css catalog-repo/
+          # The catalog branch serves these files via GitHub Pages from /docs directory
+          cp -f main-repo/docs/index.html catalog-repo/
+          cp -f main-repo/docs/api-explorer.html catalog-repo/
+          cp -f main-repo/docs/app.js catalog-repo/
+          cp -f main-repo/docs/styles.css catalog-repo/
 
       - name: Commit and push to catalog
         run: |
