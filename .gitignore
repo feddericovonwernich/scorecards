@@ -28,3 +28,9 @@ build/
 .coverage
 htmlcov/
 .pytest_cache/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Catalog data worktree
+catalog-data/

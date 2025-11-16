@@ -1,0 +1,150 @@
+{
+  "service": {
+    "org": "feddericovonwernich",
+    "repo": "test-repo-perfect",
+    "name": "test-repo-perfect",
+    "team": "",
+    "links": [],
+    "openapi": null
+  },
+  "score": 76,
+  "rank": "gold",
+  "passed_checks": 6,
+  "total_checks": 10,
+  "commit_sha": "d0450350440de48aa3b1a1b2a7eaa0892ccfdfca",
+  "timestamp": "2025-11-16T18:58:54Z",
+  "checks_hash": "df8169736e22602a07ea3957f0f89eef5cd6a78cb083df17bb1cfbb086f17463",
+  "checks_count": 11,
+  "installed": false,
+  "recent_contributors": [
+    {
+      "name": "Federico von Wernich",
+      "email": "feddericokz @gmail.com",
+      "commit_count": 1,
+      "last_commit_date": "2025-11-16T15:28:44Z",
+      "last_commit_hash": "d045035"
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "01-readme",
+      "name": "README Documentation",
+      "description": "Checks that the repository has a README file with meaningful content. A good README helps users understand what the project is and how to use it.",
+      "category": "documentation",
+      "weight": 15,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "README found: README.md (897 characters)\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "02-license",
+      "name": "License File",
+      "description": "Checks that the repository has a LICENSE file. Open source licenses clarify how others can use, modify, and distribute your code.",
+      "category": "compliance",
+      "weight": 12,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "LICENSE file found: LICENSE (1079 chars, detected: MIT)\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "03-ci-config",
+      "name": "CI Configuration",
+      "description": "Checks that the repository has continuous integration configured. CI helps catch bugs early and ensures code quality.",
+      "category": "ci",
+      "weight": 18,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "04-tests",
+      "name": "Test Coverage",
+      "description": "Checks that the repository has test files. Tests ensure code reliability and help prevent regressions.",
+      "category": "testing",
+      "weight": 20,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "Found tests: 6 file(s) in directories: tests\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "05-scorecard-config",
+      "name": "Scorecard Configuration",
+      "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
+      "category": "documentation",
+      "weight": 8,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+    },
+    {
+      "check_id": "06-openapi-spec",
+      "name": "OpenAPI Specification",
+      "description": "Checks that the repository has an OpenAPI/Swagger specification file and that it is valid. Validates syntax and structure of API documentation.",
+      "category": "documentation",
+      "weight": 12,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "07-openapi-quality",
+      "name": "OpenAPI Quality",
+      "description": "Evaluates the completeness and quality of the OpenAPI specification. Checks for descriptions, examples, schemas, and other documentation best practices.",
+      "category": "documentation",
+      "weight": 10,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "OpenAPI Quality Score: 98/100\n\nQuality Metrics:\n  Info: ✓ description, ✓ contact, ✓ license\n  Operations: 4 total\n    - 4/4 (100%) with descriptions\n    - 4/4 (100%) with tags\n    - 2/4 (50%) with examples\n  Parameters: 3/3 (100%) with descriptions\n  Responses: 9/9 (100%) with descriptions\n  Schemas: 4/4 (100%) with descriptions\n  Security: ✓ defined, ✓ applied\n\nQuality score meets threshold (60+)\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "08-api-environments",
+      "name": "API Environment Configuration",
+      "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
+      "category": "configuration",
+      "weight": 8,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "OpenAPI specification found (openapi.yaml), but no .scorecard/config.yml exists\nCreate .scorecard/config.yml with openapi.environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n      staging:\n        base_url: \"https://staging-api.example.com\"\n"
+    },
+    {
+      "check_id": "09-scorecard-badge",
+      "name": "Scorecard Badge",
+      "description": "Checks that the README displays scorecard badges. Badges promote transparency and help users quickly assess repository quality.",
+      "category": "documentation",
+      "weight": 5,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "No scorecard badges found in README.md\nExpected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)\n"
+    },
+    {
+      "check_id": "10-scorecard-config-quality",
+      "name": "Scorecard Config Quality",
+      "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
+      "category": "documentation",
+      "weight": 7,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+    }
+  ]
+}

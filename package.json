@@ -10,12 +10,21 @@
     "test:js": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:bash": "bats tests/unit/bash/",
     "test:python": "pytest tests/unit/python/",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint docs/**/*.js checks/**/*.js",
     "format": "prettier --write '**/*.{js,json,md,yml,yaml}'"
   },
-  "keywords": ["quality", "scoring", "github-action", "catalog"],
+  "keywords": [
+    "quality",
+    "scoring",
+    "github-action",
+    "catalog"
+  ],
   "license": "Apache-2.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
@@ -24,9 +33,11 @@
     "yaml": "^2.3.4"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
+    "@axe-core/playwright": "^4.11.0",
     "@jest/globals": "^29.7.0",
+    "@playwright/test": "^1.56.1",
     "eslint": "^8.56.0",
+    "jest": "^29.7.0",
     "prettier": "^3.1.1"
   },
   "engines": {
