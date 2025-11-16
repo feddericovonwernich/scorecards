@@ -27,7 +27,7 @@ jobs:
         with:
           ref: catalog
           path: catalog-repo
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SCORECARDS_PAT }}
 
       - name: Sync docs folder
         run: |

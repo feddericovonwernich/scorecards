@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: catalog
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SCORECARDS_PAT }}
 
       - name: Consolidate registry files
         run: |
