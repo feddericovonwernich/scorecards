@@ -165,6 +165,16 @@ function setupEventListeners() {
             closeModal();
         }
     });
+
+    // Modal close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('service-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        }
+    });
 }
 
 // Load Services from Registry
