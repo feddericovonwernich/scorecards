@@ -36,17 +36,16 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Create symlinks for common aliases
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# Copy package.json to install Node.js dependencies
-COPY package.json /tmp/package.json
+# Copy package.json and install Node.js dependencies locally
+COPY package.json /action/package.json
 
-# Install global npm packages from package.json
-RUN cd /tmp && \
-    npm install -g $(node -e "const pkg = require('/tmp/package.json'); console.log(Object.keys(pkg.dependencies).map(dep => dep + '@' + pkg.dependencies[dep].replace('^', '')).join(' '))") && \
-    npm cache clean --force && \
-    rm /tmp/package.json
+# Install npm packages locally (required for ES module resolution)
+RUN cd /action && \
+    npm install --omit=dev && \
+    npm cache clean --force
 
-# Set NODE_PATH so Node can find globally installed modules
-ENV NODE_PATH=/usr/lib/node_modules
+# Set NODE_PATH so ES modules can find packages in /action/node_modules
+ENV NODE_PATH=/action/node_modules
 
 # Set working directory
 WORKDIR /scorecard
@@ -56,6 +55,10 @@ COPY utils/ /scorecard/utils/
 
 # Copy library files for checks
 COPY lib/ /action/lib/
+
+# Create /checks directory and symlink node_modules for ES module resolution
+# This is necessary because ES modules don't respect NODE_PATH
+RUN mkdir -p /checks && ln -s /action/node_modules /checks/node_modules
 
 # Make all scripts executable
 RUN chmod +x /scorecard/utils/*.sh
