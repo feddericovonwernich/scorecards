@@ -12,7 +12,7 @@
     "test:python": "pytest tests/unit/python/",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "lint": "eslint docs/**/*.js checks/**/*.js",
+    "lint": "eslint catalog/**/*.js checks/**/*.js",
     "format": "prettier --write '**/*.{js,json,md,yml,yaml}'"
   },
   "keywords": ["quality", "scoring", "github-action", "catalog"],

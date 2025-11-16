@@ -149,7 +149,7 @@ custom:
   environment: "production"
 ```
 
-See [CONFIG.md](./CONFIG.md) for full configuration options.
+See [configuration.md](./configuration.md) for full configuration options.
 
 ## Action Inputs
 
@@ -322,7 +322,7 @@ Currently, all checks run automatically. Future versions may support check selec
 
 ## Getting Help
 
-- 📖 [Check Development Guide](./CHECKS.md)
-- 📖 [Configuration Reference](./CONFIG.md)
+- 📖 [Check Development Guide](../reference/check-catalog.md)
+- 📖 [Configuration Reference](./configuration.md)
 - 🐛 [Report Issues](https://github.com/your-org/scorecards/issues)
 - 💬 [Discussions](https://github.com/your-org/scorecards/discussions)
