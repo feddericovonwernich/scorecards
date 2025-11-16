@@ -230,6 +230,9 @@ git checkout main -- README.md .gitignore 2>/dev/null || true
 git checkout main -- .claude/ 2>/dev/null || true
 git checkout main -- scripts/ 2>/dev/null || true
 
+# Copy consolidate-registry workflow (must run from catalog branch)
+git checkout main -- .github/workflows/consolidate-registry.yml 2>/dev/null || true
+
 # Create data directories
 mkdir -p results badges registry
 
