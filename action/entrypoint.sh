@@ -253,7 +253,11 @@ echo -e "${BLUE}Generating check suite hash...${NC}"
 # Use update-checks-hash.sh to generate the hash (single source of truth)
 CHECKS_HASH=$(bash "$ACTION_DIR/utils/update-checks-hash.sh" --hash-only)
 
+# Count the number of check directories
+CHECKS_COUNT=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l)
+
 echo "Checks hash: $CHECKS_HASH"
+echo "Checks count: $CHECKS_COUNT"
 echo
 
 # ============================================================================
