@@ -131,7 +131,7 @@ jobs:
           # Copy and customize workflow template
           sed -e "s|feddericovonwernich/scorecards|${{ inputs.scorecards-repo }}|g" \
               -e "s|scorecards-branch: 'catalog'|scorecards-branch: '${{ inputs.scorecards-branch }}'|g" \
-              ../scorecards-repo/docs/examples/scorecard-workflow-template.yml > .github/workflows/scorecards.yml
+              ../scorecards-repo/documentation/examples/scorecard-workflow-template.yml > .github/workflows/scorecards.yml
 
           echo "✅ Created .github/workflows/scorecards.yml"
 

@@ -13,11 +13,11 @@ Thank you for your interest in contributing to Scorecards!
 
 ## Development Setup
 
-See `docs/development/local-setup.md` for detailed setup instructions.
+See `documentation/development/local-setup.md` for detailed setup instructions.
 
 ## Adding a New Check
 
-See `docs/development/adding-a-check.md` for a guide on creating new checks.
+See `documentation/development/adding-a-check.md` for a guide on creating new checks.
 
 ## Using Shared Libraries
 

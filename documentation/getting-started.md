@@ -50,7 +50,7 @@ See [Configuration Guide](guides/configuration.md) for all options.
 After the workflow runs:
 
 1. **Check the workflow output** - See which checks passed/failed
-2. **View your score** - Find your repo in the [Catalog](../catalog/)
+2. **View your score** - Find your repo in the [Catalog](../docs/)
 3. **Improve your score** - Follow check recommendations
 
 ## Score Tiers

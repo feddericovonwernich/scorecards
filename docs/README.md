@@ -1,48 +1,36 @@
-# Scorecards Documentation
+# Scorecards Catalog UI
 
-Welcome to the Scorecards documentation!
+This directory contains the catalog web UI for viewing scorecard results across all repositories.
 
-## Quick Links
+## Structure
 
-- [Getting Started](getting-started.md) - Install and configure Scorecards
-- [Architecture Overview](architecture/overview.md) - How Scorecards works
-- [Configuration Guide](guides/configuration.md) - Configure your repository
-- [Check Catalog](reference/check-catalog.md) - All available checks
-- [Contributing](development/contributing.md) - Contribute to Scorecards
+- `index.html` - Main catalog page
+- `api-explorer.html` - API exploration interface
+- `app.js` - Catalog application logic (will be modularized in Phase 4)
+- `styles.css` - Catalog styling
 
-## Documentation Structure
+## Development
 
-### Getting Started
-- **[Getting Started](getting-started.md)** - Quick start guide for new users
+The catalog is a static web application served via GitHub Pages.
 
-### Architecture
-- **[Overview](architecture/overview.md)** - High-level system architecture
-- **[Checks System](architecture/checks-system.md)** - How checks work
-- **[GitHub Action](architecture/github-action.md)** - Action implementation details
-- **[Catalog UI](architecture/catalog-ui.md)** - Catalog web interface
+### Local Development
 
-### Guides
-- **[Installation](guides/installation.md)** - Install Scorecards in your repos
-- **[Configuration](guides/configuration.md)** - Configure .scorecard/config.yml
-- **[Usage](guides/usage.md)** - Day-to-day usage patterns
-- **[Adding Checks](guides/adding-checks.md)** - Create new quality checks
-- **[Using Shared Libraries](guides/using-shared-libraries.md)** - Use common utilities
+```bash
+# Serve locally
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
 
-### Reference
-- **[Check Catalog](reference/check-catalog.md)** - Complete list of all checks
-- **[Config Schema](reference/config-schema.md)** - Configuration file schema
-- **[Metadata Schema](reference/metadata-schema.md)** - Check metadata schema
-- **[API](reference/api.md)** - GitHub API interactions
+### Deployment
 
-### Development
-- **[Contributing](development/contributing.md)** - How to contribute
-- **[Testing](development/testing.md)** - Running and writing tests
-- **[Local Setup](development/local-setup.md)** - Set up development environment
-- **[Architecture Decisions](development/decisions/)** - ADRs and design docs
+The catalog is automatically deployed to GitHub Pages from the `catalog` branch.
 
-## Other Resources
+The workflow `.github/workflows/sync-docs.yml` handles synchronization.
 
-- [Main README](../README.md) - Project overview
-- [Catalog UI](../catalog/) - View scorecard results
-- [License](../LICENSE) - Apache 2.0
-- [Code of Conduct](../CODE_OF_CONDUCT.md)
+## Architecture
+
+See `documentation/architecture/catalog-ui.md` for detailed architecture documentation.
+
+## Future Plans
+
+Phase 4 will modularize `app.js` into separate ES6 modules for better maintainability.
