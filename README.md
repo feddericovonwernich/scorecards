@@ -2,6 +2,14 @@
 
 A flexible, non-blocking scorecard system for measuring service quality and best practices across your organization.
 
+## Quick Start
+
+- **[Getting Started](docs/getting-started.md)** - Install and configure Scorecards
+- **[Architecture](docs/architecture/overview.md)** - How it works
+- **[Configuration](docs/guides/configuration.md)** - Configure your repo
+- **[Check Catalog](docs/reference/check-catalog.md)** - Available checks
+- **[Contributing](CONTRIBUTING.md)** - How to contribute
+
 ## Overview
 
 Scorecards helps teams understand and improve their services by running automated checks against configurable quality standards. It integrates seamlessly into existing CI pipelines and provides a centralized catalog of all services with their scores and rankings.
@@ -45,7 +53,7 @@ Scorecards helps teams understand and improve their services by running automate
 │  /results/       - Service results  │
 │  /badges/        - Badge JSONs      │
 │  /registry/      - Service registry │
-│  /docs/          - GitHub Pages     │
+│  /catalog/       - Catalog UI       │
 └─────────────────────────────────────┘
            │
            ▼
@@ -148,7 +156,7 @@ What happens:
 3. 📊 Shows results in Actions tab (even before merging)
 4. ✅ Respects your decision if you close the PR (won't spam you)
 
-See [detailed guide](./docs/USAGE.md#automated-installation-recommended) for more information.
+See [Usage Guide](docs/guides/usage.md) for more information.
 
 #### Manual Installation
 
@@ -267,7 +275,7 @@ Current checks:
 
 ## For Check Authors
 
-Want to add a new check? See [docs/CHECKS.md](./docs/CHECKS.md) for the development guide.
+Want to add a new check? See [Adding Checks Guide](docs/guides/adding-checks.md) for the development guide.
 
 ## Catalog
 
