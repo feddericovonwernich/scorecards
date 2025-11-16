@@ -227,7 +227,7 @@ git checkout main -- docs/ 2>/dev/null || {
 
 # Copy other necessary files
 git checkout main -- README.md .gitignore 2>/dev/null || true
-git checkout main -- CLAUDE.md 2>/dev/null || true
+git checkout main -- .claude/ 2>/dev/null || true
 git checkout main -- scripts/ 2>/dev/null || true
 
 # Create data directories

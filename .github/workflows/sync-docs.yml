@@ -1,17 +1,17 @@
-name: Sync Docs to Catalog Branch
+name: Sync Catalog UI to Catalog Branch
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'docs/**'
+      - 'catalog/**'
   workflow_dispatch:
 
 jobs:
-  sync-docs:
+  sync-catalog:
     runs-on: ubuntu-latest
-    name: Sync Documentation
+    name: Sync Catalog UI
     permissions:
       contents: write
 
@@ -29,13 +29,14 @@ jobs:
           path: catalog-repo
           token: ${{ secrets.SCORECARDS_PAT }}
 
-      - name: Sync docs folder
+      - name: Sync catalog UI files
         run: |
-          # Remove old docs from catalog
-          rm -rf catalog-repo/docs
-
-          # Copy docs from main to catalog
-          cp -r main-repo/docs catalog-repo/docs
+          # Copy catalog UI files from main to catalog branch root
+          # The catalog branch serves these files via GitHub Pages
+          cp -f main-repo/catalog/index.html catalog-repo/
+          cp -f main-repo/catalog/api-explorer.html catalog-repo/
+          cp -f main-repo/catalog/app.js catalog-repo/
+          cp -f main-repo/catalog/styles.css catalog-repo/
 
       - name: Commit and push to catalog
         run: |
@@ -44,17 +45,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add docs/
+          git add index.html api-explorer.html app.js styles.css
 
           if git diff --staged --quiet; then
-            echo "No changes to docs, skipping commit"
+            echo "No changes to catalog UI, skipping commit"
           else
-            git commit -m "Sync docs from main branch
+            git commit -m "Sync catalog UI from main branch
 
-            Auto-synced documentation changes from main branch.
+            Auto-synced catalog UI changes from main branch.
 
             Co-Authored-By: GitHub Actions <github-actions[bot]@users.noreply.github.com>"
 
             git push origin catalog
-            echo "✓ Docs synced to catalog branch"
+            echo "✓ Catalog UI synced to catalog branch"
           fi
