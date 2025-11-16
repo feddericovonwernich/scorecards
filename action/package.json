@@ -18,9 +18,10 @@
   "keywords": ["quality", "scoring", "github-action", "catalog"],
   "license": "Apache-2.0",
   "dependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
     "js-yaml": "^4.1.0",
     "marked": "^11.1.1",
-    "swagger-parser": "^10.0.3"
+    "yaml": "^2.3.4"
   },
   "devDependencies": {
     "jest": "^29.7.0",

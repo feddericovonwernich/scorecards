@@ -54,6 +54,9 @@ WORKDIR /scorecard
 # Copy utility scripts
 COPY utils/ /scorecard/utils/
 
+# Copy library files for checks
+COPY lib/ /action/lib/
+
 # Make all scripts executable
 RUN chmod +x /scorecard/utils/*.sh
 
