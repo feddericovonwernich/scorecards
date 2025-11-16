@@ -3,12 +3,23 @@
 set -euo pipefail
 
 # Usage: run-checks.sh <checks_dir> <repo_path> <output_file>
-CHECKS_DIR="${1:-/checks}"
+HOST_CHECKS_DIR="${1:-/host-checks}"
 REPO_PATH="${2:-/workspace}"
 OUTPUT_FILE="${3:-/output/results.json}"
 
 # Export repo path for checks to use
 export SCORECARD_REPO_PATH="$REPO_PATH"
+
+# Copy checks from mounted volume to /checks (which has node_modules symlink)
+# The volume is mounted at /host-checks to avoid destroying the symlink created at build time
+# ES modules need to find packages in /checks/node_modules -> /action/node_modules
+if [ -d "$HOST_CHECKS_DIR" ]; then
+    # Use find to copy all files, preserving the node_modules symlink in /checks
+    find "$HOST_CHECKS_DIR" -mindepth 1 -maxdepth 1 -exec cp -r {} /checks/ \;
+fi
+
+# Now use /checks for the rest of the script (where the symlink exists)
+CHECKS_DIR="/checks"
 
 # Colors for output
 RED='\033[0;31m'

@@ -202,11 +202,11 @@ RESULTS_FILE="$OUTPUT_DIR/results.json"
 
 # Run Docker container with checks
 if ! docker run --rm \
-    -v "$CHECKS_DIR:/checks:ro" \
+    -v "$CHECKS_DIR:/host-checks:ro" \
     -v "$GITHUB_WORKSPACE:/workspace:ro" \
     -v "$OUTPUT_DIR:/output" \
     scorecards-runner:latest \
-    /checks /workspace /output/results.json; then
+    /host-checks /workspace /output/results.json; then
     echo -e "${RED}✗ Check execution failed${NC}"
     exit 1
 fi
