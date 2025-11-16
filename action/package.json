@@ -1,5 +1,5 @@
 {
-  "_comment": "NOTE: This file is duplicated in action/package.json for Docker build context. Keep both files in sync!",
+  "_comment": "NOTE: This file is duplicated from ../package.json for Docker build context. Keep both files in sync!",
   "name": "scorecards",
   "version": "1.0.0",
   "description": "Automated quality scoring for service repositories",
