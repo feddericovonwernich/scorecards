@@ -3,17 +3,17 @@
   "repo": "test-repo-edge-cases",
   "name": "test-repo-edge-cases",
   "team": "",
-  "score": 63,
+  "score": 70,
   "rank": "silver",
-  "last_updated": "2025-11-17T21:16:23Z",
+  "last_updated": "2025-11-17T21:34:41Z",
   "has_api": false,
   "checks_hash": "4af8c899ff423ce173c81c2dc0f2e23b188e0fa7f70c40d5713c7f1d50d791fe",
   "checks_count": 11,
-  "installed": false,
+  "installed": true,
   "default_branch": "master",
   "installation_pr": {
     "number": 11,
-    "state": "OPEN",
+    "state": "MERGED",
     "url": "https://github.com/feddericovonwernich/test-repo-edge-cases/pull/11"
   }
 }

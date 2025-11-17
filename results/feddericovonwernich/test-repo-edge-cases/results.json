@@ -7,21 +7,21 @@
     "links": [],
     "openapi": null
   },
-  "score": 63,
+  "score": 70,
   "rank": "silver",
-  "passed_checks": 5,
+  "passed_checks": 6,
   "total_checks": 10,
-  "timestamp": "2025-11-17T21:16:23Z",
+  "timestamp": "2025-11-17T21:34:41Z",
   "checks_hash": "4af8c899ff423ce173c81c2dc0f2e23b188e0fa7f70c40d5713c7f1d50d791fe",
   "checks_count": 11,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
-      "email": "feddericokz @gmail.com",
+      "name": "feddericovonwernich",
+      "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-16T15:28:57Z",
-      "last_commit_hash": "e527946"
+      "last_commit_date": "2025-11-17T18:33:23Z",
+      "last_commit_hash": "69e4edb"
     }
   ],
   "checks": [
@@ -58,7 +58,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml); Other CI: .travis.yml, .gitlab-ci.yml\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml); Other CI: .travis.yml, .gitlab-ci.yml\n",
       "stderr": ""
     },
     {
@@ -79,11 +79,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "documentation",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (81 bytes)\n",
+      "stderr": ""
     },
     {
       "check_id": "06-openapi-spec",
@@ -143,7 +143,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     }
   ]
 }
