@@ -25,33 +25,7 @@ jobs:
           ref: catalog
           token: ${{ secrets.SCORECARDS_PAT }}
 
-      - name: Check if consolidation needed (debounce)
-        id: debounce
-        run: |
-          # Skip if all-services.json was updated less than 2 minutes ago
-          # This prevents excessive consolidations during bulk updates
-          if [ -f "registry/all-services.json" ]; then
-            LAST_UPDATE=$(jq -r '.generated_at' registry/all-services.json 2>/dev/null || echo "")
-
-            if [ -n "$LAST_UPDATE" ]; then
-              LAST_EPOCH=$(date -d "$LAST_UPDATE" +%s 2>/dev/null || echo "0")
-              NOW_EPOCH=$(date +%s)
-              DIFF=$((NOW_EPOCH - LAST_EPOCH))
-
-              # Debounce: Wait at least 2 minutes between consolidations
-              if [ $DIFF -lt 120 ]; then
-                echo "Last consolidation was $DIFF seconds ago (< 120s threshold)"
-                echo "Skipping to reduce commit volume during bulk updates"
-                echo "skip=true" >> $GITHUB_OUTPUT
-                exit 0
-              fi
-            fi
-          fi
-
-          echo "skip=false" >> $GITHUB_OUTPUT
-
       - name: Consolidate registry files
-        if: steps.debounce.outputs.skip != 'true'
         run: |
           # Find all registry files except all-services.json and services.json
           registry_files=$(find registry -name '*.json' -not -name 'all-services.json' -not -name 'services.json' | sort)
@@ -87,7 +61,6 @@ jobs:
           echo "Consolidated $service_count services"
 
       - name: Check for changes
-        if: steps.debounce.outputs.skip != 'true'
         id: check_changes
         run: |
           # Check if file is untracked (new) or modified
@@ -98,7 +71,7 @@ jobs:
           fi
 
       - name: Commit and push
-        if: steps.debounce.outputs.skip != 'true' && steps.check_changes.outputs.changed == 'true'
+        if: steps.check_changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
