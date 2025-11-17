@@ -172,7 +172,7 @@ function getCategoryForCheck(checkId) {
     }
 
     // Documentation: README and OpenAPI docs
-    if (['01-readme', '06-openapi-spec', '09-openapi-quality'].includes(checkId)) {
+    if (['01-readme', '06-openapi-spec', '09-openapi-quality', '08-api-env-config'].includes(checkId)) {
         return 'Documentation';
     }
 
@@ -181,8 +181,8 @@ function getCategoryForCheck(checkId) {
         return 'Testing & CI';
     }
 
-    // Configuration & Compliance: license and configuration files
-    if (['07-license', '08-api-env-config'].includes(checkId)) {
+    // Configuration & Compliance: license files
+    if (['07-license'].includes(checkId)) {
         return 'Configuration & Compliance';
     }
 
