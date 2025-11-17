@@ -10,10 +10,7 @@ get_pr_info() {
     local repo="$2"
     local github_token="$3"
 
-    if [ -z "$org" ] || [ -z "$repo" ] || [ -z "$github_token" ]; then
-        log_error "get_pr_info requires org, repo, and token"
-        return 1
-    fi
+    validate_params "get_pr_info" "org" "$org" "repo" "$repo" "token" "$github_token" || return 1
 
     log_info "Fetching PR info for $org/$repo"
 
@@ -35,10 +32,7 @@ get_default_branch() {
     local repo="$2"
     local github_token="$3"
 
-    if [ -z "$org" ] || [ -z "$repo" ] || [ -z "$github_token" ]; then
-        log_error "get_default_branch requires org, repo, and token"
-        return 1
-    fi
+    validate_params "get_default_branch" "org" "$org" "repo" "$repo" "token" "$github_token" || return 1
 
     log_info "Fetching default branch for $org/$repo"
 
@@ -50,35 +44,17 @@ get_default_branch() {
     echo "$default_branch"
 }
 
-# Extract PR number from PR data JSON
-extract_pr_number() {
+# Extract field from PR data JSON
+# Usage: extract_pr_field "$pr_data" "number"
+#        extract_pr_field "$pr_data" "state"
+#        extract_pr_field "$pr_data" "url"
+extract_pr_field() {
     local pr_data="$1"
+    local field="$2"
 
     if [ -z "$pr_data" ] || [ "$pr_data" = "[]" ]; then
         return 1
     fi
 
-    echo "$pr_data" | jq -r '.[0].number // empty'
-}
-
-# Extract PR state from PR data JSON
-extract_pr_state() {
-    local pr_data="$1"
-
-    if [ -z "$pr_data" ] || [ "$pr_data" = "[]" ]; then
-        return 1
-    fi
-
-    echo "$pr_data" | jq -r '.[0].state // empty'
-}
-
-# Extract PR URL from PR data JSON
-extract_pr_url() {
-    local pr_data="$1"
-
-    if [ -z "$pr_data" ] || [ "$pr_data" = "[]" ]; then
-        return 1
-    fi
-
-    echo "$pr_data" | jq -r '.[0].url // empty'
+    echo "$pr_data" | jq -r ".[0].$field // empty"
 }

@@ -55,9 +55,9 @@ if [ -z "${PR_NUMBER:-}" ]; then
     pr_data=$(get_pr_info "$SERVICE_ORG" "$SERVICE_REPO" "$GITHUB_TOKEN")
 
     if [ "$pr_data" != "[]" ]; then
-        export PR_NUMBER=$(extract_pr_number "$pr_data")
-        export PR_STATE=$(extract_pr_state "$pr_data")
-        export PR_URL=$(extract_pr_url "$pr_data")
+        export PR_NUMBER=$(extract_pr_field "$pr_data" "number")
+        export PR_STATE=$(extract_pr_field "$pr_data" "state")
+        export PR_URL=$(extract_pr_field "$pr_data" "url")
         log_success "Found installation PR #$PR_NUMBER (state: $PR_STATE)"
     else
         log_info "No installation PR found"
