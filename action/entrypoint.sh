@@ -226,6 +226,12 @@ CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
 TIMESTAMP=$(get_iso_timestamp)
 CHECKS_JSON=$(cat "$RESULTS_FILE")
 
+# Validate CHECKS_JSON is not empty and contains valid JSON
+if [ -z "$CHECKS_JSON" ] || ! echo "$CHECKS_JSON" | jq empty 2>/dev/null; then
+    log_error "Results file is empty or contains invalid JSON"
+    CHECKS_JSON="[]"
+fi
+
 # Group related data into associative arrays for cleaner function calls
 declare -A service_context=(
     [org]="$SERVICE_ORG"
