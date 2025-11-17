@@ -161,37 +161,133 @@ function renderTabs(data) {
 }
 
 /**
- * Renders checks tab content
+ * Maps check IDs to custom category groups
+ * @param {string} checkId - Check ID (e.g., "05-scorecard-config")
+ * @returns {string} Category name
+ */
+function getCategoryForCheck(checkId) {
+    // Scorecards Setup: checks related to scorecards integration
+    if (['05-scorecard-config', '10-scorecard-config-quality', '04-scorecard-badge'].includes(checkId)) {
+        return 'Scorecards Setup';
+    }
+
+    // Documentation: README and OpenAPI docs
+    if (['01-readme', '06-openapi-spec', '09-openapi-quality'].includes(checkId)) {
+        return 'Documentation';
+    }
+
+    // Testing & CI: testing and continuous integration
+    if (['02-ci-config', '03-test-coverage'].includes(checkId)) {
+        return 'Testing & CI';
+    }
+
+    // Configuration & Compliance: license and configuration files
+    if (['07-license', '08-api-env-config'].includes(checkId)) {
+        return 'Configuration & Compliance';
+    }
+
+    // Default category for unknown checks
+    return 'Other';
+}
+
+/**
+ * Groups checks by category
+ * @param {Array} checks - Array of check results
+ * @returns {Object} Object with category names as keys and arrays of checks as values
+ */
+function groupChecksByCategory(checks) {
+    const categories = {};
+
+    checks.forEach(check => {
+        const category = getCategoryForCheck(check.check_id);
+        if (!categories[category]) {
+            categories[category] = [];
+        }
+        categories[category].push(check);
+    });
+
+    // Define category order
+    const categoryOrder = [
+        'Scorecards Setup',
+        'Documentation',
+        'Testing & CI',
+        'Configuration & Compliance',
+        'Other'
+    ];
+
+    // Return categories in defined order
+    const orderedCategories = {};
+    categoryOrder.forEach(category => {
+        if (categories[category]) {
+            orderedCategories[category] = categories[category];
+        }
+    });
+
+    return orderedCategories;
+}
+
+/**
+ * Renders a single check result
+ * @param {Object} check - Check result object
+ * @returns {string} HTML for check result
+ */
+function renderCheck(check) {
+    return `
+        <div class="check-result ${check.status}">
+            <div class="check-name">
+                ${check.status === 'pass' ? '✓' : '✗'} ${escapeHtml(check.name)}
+            </div>
+            <div class="check-description">${escapeHtml(check.description)}</div>
+            ${check.stdout.trim() ? `
+                <div class="check-output">
+                    <strong>Output:</strong><br>
+                    ${escapeHtml(check.stdout.trim())}
+                </div>
+            ` : ''}
+            ${check.stderr.trim() && check.status === 'fail' ? `
+                <div class="check-output" style="color: #c62828;">
+                    <strong>Error:</strong><br>
+                    ${escapeHtml(check.stderr.trim())}
+                </div>
+            ` : ''}
+            <div style="margin-top: 8px; font-size: 0.85rem; color: #999;">
+                Weight: ${check.weight} | Duration: ${check.duration}s
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Renders checks tab content with collapsible category grouping
  * @param {Array} checks - Array of check results
  * @returns {string} HTML for checks tab
  */
 function renderChecksTab(checks) {
+    const categorizedChecks = groupChecksByCategory(checks);
+
     return `
         <div class="tab-content active" id="checks-tab">
-            <div>
-                ${checks.map(check => `
-                    <div class="check-result ${check.status}">
-                        <div class="check-name">
-                            ${check.status === 'pass' ? '✓' : '✗'} ${escapeHtml(check.name)}
-                        </div>
-                        <div class="check-description">${escapeHtml(check.description)}</div>
-                        ${check.stdout.trim() ? `
-                            <div class="check-output">
-                                <strong>Output:</strong><br>
-                                ${escapeHtml(check.stdout.trim())}
+            <div class="check-categories">
+                ${Object.entries(categorizedChecks).map(([category, categoryChecks]) => {
+                    const passCount = categoryChecks.filter(c => c.status === 'pass').length;
+                    const totalCount = categoryChecks.length;
+                    const allPassed = passCount === totalCount;
+
+                    return `
+                        <details class="check-category" open>
+                            <summary class="check-category-header">
+                                <span class="category-arrow">▼</span>
+                                <span class="category-name">${category}</span>
+                                <span class="category-stats ${allPassed ? 'all-passed' : 'has-failures'}">
+                                    ${passCount}/${totalCount} passed
+                                </span>
+                            </summary>
+                            <div class="check-category-content">
+                                ${categoryChecks.map(check => renderCheck(check)).join('')}
                             </div>
-                        ` : ''}
-                        ${check.stderr.trim() && check.status === 'fail' ? `
-                            <div class="check-output" style="color: #c62828;">
-                                <strong>Error:</strong><br>
-                                ${escapeHtml(check.stderr.trim())}
-                            </div>
-                        ` : ''}
-                        <div style="margin-top: 8px; font-size: 0.85rem; color: #999;">
-                            Weight: ${check.weight} | Duration: ${check.duration}s
-                        </div>
-                    </div>
-                `).join('')}
+                        </details>
+                    `;
+                }).join('')}
             </div>
         </div>
     `;

@@ -616,6 +616,83 @@ header h1 {
     margin-top: 8px;
 }
 
+/* Check Category Panels */
+.check-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.check-category {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.check-category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 1rem;
+    list-style: none;
+    transition: background 0.2s;
+}
+
+.check-category-header:hover {
+    background: #e9ecef;
+}
+
+.check-category-header::-webkit-details-marker {
+    display: none;
+}
+
+.category-arrow {
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+    color: #666;
+}
+
+.check-category:not([open]) .category-arrow {
+    transform: rotate(-90deg);
+}
+
+.category-name {
+    flex: 1;
+    color: var(--color-text);
+}
+
+.category-stats {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.category-stats.all-passed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.category-stats.has-failures {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.check-category-content {
+    padding: 16px;
+}
+
+.check-category-content .check-result:last-child {
+    margin-bottom: 0;
+}
+
 /* Settings Button in Header */
 .settings-btn {
     position: absolute;
