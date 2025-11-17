@@ -65,3 +65,60 @@ retry_with_backoff() {
         fi
     done
 }
+
+# Validate function parameters
+# Usage: validate_params "function_name" "param1" "$value1" "param2" "$value2" ...
+validate_params() {
+    local func_name="$1"
+    shift
+    local missing=()
+
+    while [ $# -gt 0 ]; do
+        local param_name="$1"
+        local param_value="$2"
+        if [ -z "$param_value" ]; then
+            missing+=("$param_name")
+        fi
+        shift 2
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        log_error "$func_name requires: ${missing[*]}"
+        return 1
+    fi
+    return 0
+}
+
+# Read JSON file safely with default value
+# Usage: read_json_file "/path/to/file.json" "null"
+read_json_file() {
+    local file="$1"
+    local default="${2:-null}"
+
+    if [ ! -f "$file" ]; then
+        echo "$default"
+        return 1
+    fi
+
+    jq '.' "$file" 2>/dev/null || echo "$default"
+}
+
+# Read specific field from JSON file
+# Usage: read_json_field "/path/to/file.json" "score" "0"
+read_json_field() {
+    local file="$1"
+    local field="$2"
+    local default="${3:-null}"
+
+    if [ ! -f "$file" ]; then
+        echo "$default"
+        return 1
+    fi
+
+    jq -r ".$field // \"$default\"" "$file" 2>/dev/null || echo "$default"
+}
+
+# Generate ISO 8601 timestamp
+get_iso_timestamp() {
+    date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
