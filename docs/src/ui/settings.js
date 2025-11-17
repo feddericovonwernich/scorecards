@@ -5,6 +5,7 @@
 
 import { showToast } from './toast.js';
 import { handlePATSaved, handlePATCleared } from './actions-widget.js';
+import { setToken, clearToken, getToken } from '../services/auth.js';
 
 /**
  * Open settings modal
@@ -52,7 +53,6 @@ export async function testPAT(pat) {
 
 /**
  * Save PAT to in-memory storage
- * Uses global variables: githubPAT
  * @returns {Promise<void>}
  */
 export async function savePAT() {
@@ -69,7 +69,7 @@ export async function savePAT() {
     const isValid = await testPAT(pat);
 
     if (isValid) {
-        githubPAT = pat;
+        setToken(pat);
         updateWidgetState();
         updateModeIndicator();
 
@@ -85,11 +85,10 @@ export async function savePAT() {
 
 /**
  * Clear PAT from in-memory storage
- * Uses global variables: githubPAT
  * @returns {void}
  */
 export function clearPAT() {
-    githubPAT = null;
+    clearToken();
     const input = document.getElementById('github-pat-input');
     input.value = '';
     updateWidgetState();
@@ -104,7 +103,6 @@ export function clearPAT() {
 
 /**
  * Update the widget visual state based on PAT presence
- * Uses global variables: githubPAT
  * @returns {void}
  */
 export function updateWidgetState() {
@@ -112,7 +110,7 @@ export function updateWidgetState() {
     const unlockedIcon = document.querySelector('.unlocked-icon');
     const lockedIcon = document.querySelector('.locked-icon');
 
-    if (githubPAT) {
+    if (getToken()) {
         // PAT loaded - show locked icon
         settingsBtn.classList.add('has-token');
         unlockedIcon.style.display = 'none';
@@ -131,14 +129,13 @@ export function updateWidgetState() {
 
 /**
  * Update mode indicator in settings modal
- * Uses global variables: githubPAT
  * @returns {void}
  */
 export function updateModeIndicator() {
     const indicator = document.getElementById('mode-indicator');
     const currentMode = document.querySelector('.current-mode');
 
-    if (githubPAT) {
+    if (getToken()) {
         indicator.textContent = 'GitHub API (fast, authenticated)';
         currentMode.classList.add('api-mode');
     } else {
@@ -149,13 +146,13 @@ export function updateModeIndicator() {
 
 /**
  * Check and display GitHub API rate limit status
- * Uses global variables: githubPAT
  * @returns {Promise<void>}
  */
 export async function checkRateLimit() {
     try {
-        const headers = githubPAT
-            ? { 'Authorization': `token ${githubPAT}` }
+        const token = getToken();
+        const headers = token
+            ? { 'Authorization': `token ${token}` }
             : {};
 
         const response = await fetch('https://api.github.com/rate_limit', { headers });
