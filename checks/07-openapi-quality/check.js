@@ -65,7 +65,7 @@ async function assessQuality() {
 
         // Analyze paths and operations
         if (api.paths) {
-            for (const [pathName, pathItem] of Object.entries(api.paths)) {
+            for (const [, pathItem] of Object.entries(api.paths)) {
                 const methods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head', 'trace'];
 
                 for (const method of methods) {
@@ -108,7 +108,7 @@ async function assessQuality() {
 
                         // Analyze responses
                         if (operation.responses) {
-                            for (const [statusCode, response] of Object.entries(operation.responses)) {
+                            for (const [, response] of Object.entries(operation.responses)) {
                                 metrics.responses.total++;
                                 if (response.description) {
                                     metrics.responses.withDescription++;
@@ -130,7 +130,7 @@ async function assessQuality() {
 
         // Analyze schemas
         const schemas = api.components?.schemas || api.definitions || {};
-        for (const [schemaName, schema] of Object.entries(schemas)) {
+        for (const [, schema] of Object.entries(schemas)) {
             metrics.schemas.total++;
             if (schema.description) {
                 metrics.schemas.withDescription++;
@@ -142,7 +142,6 @@ async function assessQuality() {
 
         // Calculate quality score (0-100)
         let qualityScore = 0;
-        let maxScore = 100;
 
         // Info section quality (15 points)
         if (metrics.info.hasDescription) qualityScore += 5;

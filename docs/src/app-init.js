@@ -138,7 +138,7 @@ export async function refreshData() {
 export async function initializeApp() {
     try {
         // Load services
-        const { services, usedAPI } = await loadServices();
+        const { services } = await loadServices();
         window.allServices = services;
         window.filteredServices = [...services];
 
