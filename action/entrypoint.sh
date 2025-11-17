@@ -10,6 +10,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 source "$SCRIPT_DIR/lib/setup.sh"
 source "$SCRIPT_DIR/lib/github-api.sh"
 source "$SCRIPT_DIR/lib/config-parser.sh"
+source "$SCRIPT_DIR/lib/contributor-analyzer.sh"
 
 # ============================================================================
 # Configuration and Environment
@@ -216,80 +217,7 @@ echo
 # Analyze Recent Contributors
 # ============================================================================
 
-echo -e "${BLUE}Analyzing recent contributors...${NC}"
-
-CONTRIBUTORS_JSON="[]"
-
-# Only analyze if we're in a git repository
-if [ -d "$GITHUB_WORKSPACE/.git" ]; then
-    cd "$GITHUB_WORKSPACE"
-
-    # Get last 20 commits with author info
-    # Format: AuthorName|author@email.com|2025-11-14 16:01:42 -0300|abc1234
-    COMMITS_DATA=$(git log -20 --pretty=format:'%an|%ae|%ad|%h' --date=iso 2>/dev/null || echo "")
-
-    if [ -n "$COMMITS_DATA" ]; then
-        # Create temporary file for processing
-        CONTRIBUTORS_FILE=$(mktemp)
-
-        # Process commits and aggregate by author email
-        echo "$COMMITS_DATA" | while IFS='|' read -r author_name author_email commit_date commit_hash; do
-            echo "$author_email|$author_name|$commit_date|$commit_hash"
-        done | awk -F'|' '
-        {
-            email = $1
-            name = $2
-            date = $3
-            hash = $4
-
-            # Count commits per author
-            count[email]++
-
-            # Store name (last occurrence)
-            names[email] = name
-
-            # Store most recent date and hash (first occurrence is most recent due to git log order)
-            if (!(email in dates)) {
-                dates[email] = date
-                hashes[email] = hash
-            }
-        }
-        END {
-            for (email in count) {
-                # Convert ISO 8601 date to UTC timestamp for JSON
-                # Remove timezone for simplicity, keep ISO format
-                gsub(/ [-+][0-9]+$/, "", dates[email])
-                gsub(/ /, "T", dates[email])
-                print names[email] "|" email "|" count[email] "|" dates[email] "Z|" hashes[email]
-            }
-        }
-        ' | sort -t'|' -k3 -rn > "$CONTRIBUTORS_FILE"
-
-        # Convert to JSON array
-        CONTRIBUTORS_JSON=$(jq -R -n '
-            [inputs |
-             split("|") |
-             {
-                 name: .[0],
-                 email: .[1],
-                 commit_count: (.[2] | tonumber),
-                 last_commit_date: .[3],
-                 last_commit_hash: .[4]
-             }]
-        ' < "$CONTRIBUTORS_FILE")
-
-        rm -f "$CONTRIBUTORS_FILE"
-
-        CONTRIBUTORS_COUNT=$(echo "$CONTRIBUTORS_JSON" | jq 'length')
-        echo "Found $CONTRIBUTORS_COUNT contributor(s) in last 20 commits"
-    else
-        echo "No git history available"
-    fi
-else
-    echo "Not a git repository - skipping contributor analysis"
-fi
-
-echo
+CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
 
 # ============================================================================
 # Create Final Results JSON
