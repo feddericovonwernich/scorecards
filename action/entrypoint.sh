@@ -138,9 +138,8 @@ log_info "Building check runner Docker image..."
 
 cd "$ACTION_DIR"
 if ! docker build --no-cache -t scorecards-runner:latest -f Dockerfile . > "$WORK_DIR/docker-build.log" 2>&1; then
-    echo -e "${RED}✗ Docker build failed${NC}"
     cat "$WORK_DIR/docker-build.log"
-    exit 1
+    die "Docker build failed" 1
 fi
 
 log_success "Docker image built successfully"
@@ -162,8 +161,7 @@ if ! docker run --rm \
     -v "$OUTPUT_DIR:/output" \
     scorecards-runner:latest \
     /host-checks /workspace /output/results.json; then
-    echo -e "${RED}✗ Check execution failed${NC}"
-    exit 1
+    die "Check execution failed" 1
 fi
 
 echo
@@ -211,9 +209,8 @@ CHECKS_HASH=$(bash "$ACTION_DIR/utils/update-checks-hash.sh" --hash-only)
 # Count the number of check directories
 CHECKS_COUNT=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l)
 
-echo "Checks hash: $CHECKS_HASH"
-echo "Checks count: $CHECKS_COUNT"
-echo
+log_info "Checks hash: $CHECKS_HASH"
+log_info "Checks count: $CHECKS_COUNT"
 
 # ============================================================================
 # Analyze Recent Contributors
@@ -225,7 +222,7 @@ CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
 # Create Final Results JSON
 # ============================================================================
 
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TIMESTAMP=$(get_iso_timestamp)
 CHECKS_JSON=$(cat "$RESULTS_FILE")
 
 # Group related data into associative arrays for cleaner function calls
@@ -307,11 +304,11 @@ log_info "========================================"
 log_info "Scorecard Summary"
 log_info "========================================"
 echo
-echo "Score: $SCORE/100"
-echo "Rank: $RANK"
-echo "Checks: $PASSED_CHECKS/$TOTAL_CHECKS passed"
+log_info "Score: $SCORE/100"
+log_info "Rank: $RANK"
+log_info "Checks: $PASSED_CHECKS/$TOTAL_CHECKS passed"
 echo
-echo -e "${GREEN}✓ Scorecard completed successfully${NC}"
+log_success "Scorecard completed successfully"
 echo
 
 # Always exit 0 (non-blocking)

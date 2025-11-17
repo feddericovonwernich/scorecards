@@ -288,7 +288,7 @@ update_catalog() {
     local rank_badge_file="${pth[rank_badge]}"
     local work_dir="${pth[work_dir]}"
 
-    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local timestamp=$(get_iso_timestamp)
     local central_repo_dir="$work_dir/central-repo"
     local repo_url="https://x-access-token:${github_token}@github.com/${scorecards_repo}.git"
 
