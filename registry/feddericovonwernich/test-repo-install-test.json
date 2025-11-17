@@ -12,8 +12,8 @@
   "installed": false,
   "default_branch": "main",
   "installation_pr": {
-    "number": 7,
-    "state": "MERGED",
-    "url": "https://github.com/feddericovonwernich/test-repo-install-test/pull/7"
+    "number": 8,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-install-test/pull/8"
   }
 }
