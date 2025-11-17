@@ -134,7 +134,7 @@ echo
 # Build Docker Image
 # ============================================================================
 
-echo -e "${BLUE}Building check runner Docker image...${NC}"
+log_info "Building check runner Docker image..."
 
 cd "$ACTION_DIR"
 if ! docker build --no-cache -t scorecards-runner:latest -f Dockerfile . > "$WORK_DIR/docker-build.log" 2>&1; then
@@ -143,14 +143,14 @@ if ! docker build --no-cache -t scorecards-runner:latest -f Dockerfile . > "$WOR
     exit 1
 fi
 
-echo -e "${GREEN}✓${NC} Docker image built successfully"
+log_success "Docker image built successfully"
 echo
 
 # ============================================================================
 # Run Checks in Docker
 # ============================================================================
 
-echo -e "${BLUE}Running checks...${NC}"
+log_info "Running checks..."
 echo
 
 RESULTS_FILE="$OUTPUT_DIR/results.json"
@@ -172,7 +172,7 @@ echo
 # Calculate Score and Rank
 # ============================================================================
 
-echo -e "${BLUE}Calculating score...${NC}"
+log_info "Calculating score..."
 
 SCORE_FILE="$OUTPUT_DIR/score.json"
 
@@ -190,7 +190,7 @@ echo
 # Generate Badges
 # ============================================================================
 
-echo -e "${BLUE}Generating badges...${NC}"
+log_info "Generating badges..."
 
 SCORE_BADGE_FILE="$OUTPUT_DIR/score-badge.json"
 RANK_BADGE_FILE="$OUTPUT_DIR/rank-badge.json"
@@ -203,7 +203,7 @@ echo
 # Generate Check Suite Hash
 # ============================================================================
 
-echo -e "${BLUE}Generating check suite hash...${NC}"
+log_info "Generating check suite hash..."
 
 # Use update-checks-hash.sh to generate the hash (single source of truth)
 CHECKS_HASH=$(bash "$ACTION_DIR/utils/update-checks-hash.sh" --hash-only)
@@ -269,9 +269,9 @@ echo "results-file=$RESULTS_FILE_PATH" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 # Summary
 # ============================================================================
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Scorecard Summary${NC}"
-echo -e "${BLUE}========================================${NC}"
+log_info "========================================"
+log_info "Scorecard Summary"
+log_info "========================================"
 echo
 echo "Score: $SCORE/100"
 echo "Rank: $RANK"
