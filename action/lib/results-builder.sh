@@ -4,8 +4,8 @@
 # Build complete results JSON
 build_results_json() {
     # Accept context arrays
-    local -n svc=$1
-    local -n scr=$2
+    local -n svc_ref=$1
+    local -n scr_ref=$2
     local timestamp="$3"
     local contributors_json="$4"
     local checks_json="$5"
@@ -13,18 +13,18 @@ build_results_json() {
     local openapi_json="${7:-null}"
 
     # Extract values
-    local service_org="${svc[org]}"
-    local service_repo="${svc[repo]}"
-    local service_name="${svc[name]}"
-    local team_name="${svc[team]}"
+    local service_org="${svc_ref[org]}"
+    local service_repo="${svc_ref[repo]}"
+    local service_name="${svc_ref[name]}"
+    local team_name="${svc_ref[team]}"
 
-    local score="${scr[score]}"
-    local rank="${scr[rank]}"
-    local passed_checks="${scr[passed_checks]}"
-    local total_checks="${scr[total_checks]}"
-    local checks_hash="${scr[checks_hash]}"
-    local checks_count="${scr[checks_count]}"
-    local installed="${scr[installed]}"
+    local score="${scr_ref[score]}"
+    local rank="${scr_ref[rank]}"
+    local passed_checks="${scr_ref[passed_checks]}"
+    local total_checks="${scr_ref[total_checks]}"
+    local checks_hash="${scr_ref[checks_hash]}"
+    local checks_count="${scr_ref[checks_count]}"
+    local installed="${scr_ref[installed]}"
 
     log_debug "[build_results_json] Extracted values:" >&2
     log_debug "  score=[$score], rank=[$rank]" >&2
