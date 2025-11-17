@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/common.sh"
 setup_cleanup_trap() {
     local work_dir="$1"
 
+    # shellcheck disable=SC2317  # Function is invoked indirectly via trap
     cleanup() {
         if [ -n "$work_dir" ] && [ -d "$work_dir" ]; then
             log_info "Cleaning up temporary directory: $work_dir"
