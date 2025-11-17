@@ -209,7 +209,7 @@ git_push_with_smart_retry() {
                     # Rebase successful - regenerate registry file
                     log_info "Rebase successful, regenerating registry entry..."
 
-                    build_registry_entry svc_ref scr_ref prs_ref "$timestamp" > "$registry_file"
+                    build_registry_entry "$5" "$6" "$7" "$timestamp" > "$registry_file"
 
                     git add "$registry_file"
                     git commit --amend --no-edit
@@ -353,7 +353,7 @@ update_catalog() {
 
         # Build registry entry
         local registry_file="registry/$service_org/$service_repo.json"
-        build_registry_entry svc_ref scr_ref prs_ref "$timestamp" > "$registry_file"
+        build_registry_entry "$1" "$2" "$4" "$timestamp" > "$registry_file"
 
         # Commit and push
         git add results/ badges/ registry/
@@ -371,7 +371,7 @@ Commit: $(git rev-parse HEAD | head -c 7)"
 
             # Push with smart retry
             if ! git_push_with_smart_retry "$central_repo_dir" "$scorecards_branch" "$registry_file" "$work_dir" \
-                svc_ref scr_ref prs_ref "$timestamp"; then
+                "$1" "$2" "$4" "$timestamp"; then
                 log_error "Failed to push catalog updates"
                 return 1
             fi
