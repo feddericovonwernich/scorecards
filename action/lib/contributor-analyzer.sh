@@ -12,7 +12,11 @@ analyze_contributors() {
         return 0
     fi
 
-    cd "$repo_path" || return 1
+    if ! cd "$repo_path"; then
+        log_error "Failed to access repository: $repo_path"
+        echo "[]"
+        return 1
+    fi
 
     log_info "Analyzing recent $commit_limit contributors"
 

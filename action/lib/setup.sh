@@ -3,13 +3,14 @@
 
 # Setup cleanup trap for temporary directories
 setup_cleanup_trap() {
-    local work_dir="$1"
+    # Use global variable to ensure it's available when trap fires
+    CLEANUP_WORK_DIR="$1"
 
     # shellcheck disable=SC2317  # Function is invoked indirectly via trap
     cleanup() {
-        if [ -n "$work_dir" ] && [ -d "$work_dir" ]; then
-            log_info "Cleaning up temporary directory: $work_dir"
-            rm -rf "$work_dir"
+        if [ -n "${CLEANUP_WORK_DIR:-}" ] && [ -d "${CLEANUP_WORK_DIR:-}" ]; then
+            log_info "Cleaning up temporary directory: $CLEANUP_WORK_DIR"
+            rm -rf "$CLEANUP_WORK_DIR"
         fi
     }
 
