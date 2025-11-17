@@ -12,8 +12,8 @@
   "installed": false,
   "default_branch": "master",
   "installation_pr": {
-    "number": 5,
-    "state": "MERGED",
-    "url": "https://github.com/feddericovonwernich/test-repo-javascript/pull/5"
+    "number": 6,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-javascript/pull/6"
   }
 }
