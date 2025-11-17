@@ -20,10 +20,12 @@ import * as serviceWorkflows from './ui/service-workflows.js';
 import * as actionsWidget from './ui/actions-widget.js';
 import * as settings from './ui/settings.js';
 import * as stats from './ui/stats.js';
+import * as buttonStates from './ui/button-states.js';
 
 // API modules
 import * as registry from './api/registry.js';
 import * as github from './api/github.js';
+import * as workflowTriggers from './api/workflow-triggers.js';
 
 // Service modules
 import * as auth from './services/auth.js';
@@ -46,8 +48,10 @@ window.ScorecardModules = {
     actionsWidget,
     settings,
     stats,
+    buttonStates,
     registry,
     github,
+    workflowTriggers,
     auth,
     staleness
 };
@@ -157,6 +161,12 @@ window.checkRateLimit = settings.checkRateLimit;
 // Stats functions
 window.updateStats = stats.updateStats;
 
+// Workflow trigger functions
+window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
+window.installService = workflowTriggers.installService;
+window.triggerBulkWorkflows = workflowTriggers.triggerBulkWorkflows;
+window.handleBulkTrigger = workflowTriggers.handleBulkTrigger;
+
 // Log initialization
 console.log('✓ ES6 Modules loaded successfully');
 console.log('Available modules:', Object.keys(window.ScorecardModules));
@@ -262,8 +272,10 @@ export {
     actionsWidget,
     settings,
     stats,
+    buttonStates,
     registry,
     github,
+    workflowTriggers,
     auth,
     staleness
 };
