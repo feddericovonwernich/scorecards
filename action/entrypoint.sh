@@ -9,6 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 source "$SCRIPT_DIR/lib/setup.sh"
 source "$SCRIPT_DIR/lib/github-api.sh"
+source "$SCRIPT_DIR/lib/config-parser.sh"
 
 # ============================================================================
 # Configuration and Environment
@@ -73,77 +74,35 @@ log_success "Default branch: $DEFAULT_BRANCH"
 # Check Configuration File
 # ============================================================================
 
-CONFIG_FILE="$GITHUB_WORKSPACE/.scorecard/config.yml"
 HAS_CONFIG=false
-
-if [ -f "$CONFIG_FILE" ]; then
-    echo -e "${GREEN}✓${NC} Configuration file found: .scorecard/config.yml"
+if has_scorecard_config "$GITHUB_WORKSPACE"; then
+    log_success "Configuration file found: .scorecard/config.yml"
     HAS_CONFIG=true
 else
-    echo -e "${YELLOW}!${NC} Configuration file not found: .scorecard/config.yml"
+    log_warning "Configuration file not found: .scorecard/config.yml"
 
     if [ "$CREATE_CONFIG_PR" = "true" ]; then
-        echo "  Creating PR with config template..."
+        log_info "Creating PR with config template..."
         # TODO: Implement PR creation logic
-        # For now, we'll just continue without config
-        echo -e "${YELLOW}  (PR creation not yet implemented)${NC}"
+        log_warning "(PR creation not yet implemented)"
     fi
 
-    echo "  Continuing with default configuration..."
+    log_info "Continuing with default configuration..."
 fi
-
-echo
 
 # ============================================================================
 # Parse Configuration (or use defaults)
 # ============================================================================
 
 if [ "$HAS_CONFIG" = "true" ]; then
-    # Parse config file (requires yq or similar - for now use simple defaults)
-    SERVICE_NAME=$(grep -A 1 "service:" "$CONFIG_FILE" | grep "name:" | sed 's/.*name: *"\?\([^"]*\)"\?.*/\1/' || echo "$SERVICE_REPO")
-    TEAM_NAME=$(grep "team:" "$CONFIG_FILE" | sed 's/.*team: *"\?\([^"]*\)"\?.*/\1/' || echo "")
+    SERVICE_NAME=$(get_service_name "$GITHUB_WORKSPACE" "$SERVICE_REPO")
+    TEAM_NAME=$(get_team_name "$GITHUB_WORKSPACE")
+    LINKS_JSON=$(parse_links_array "$GITHUB_WORKSPACE")
+    OPENAPI_JSON=$(parse_openapi_config "$GITHUB_WORKSPACE")
 
-    # Parse links array from config (if exists)
-    # Extract links section and convert to JSON array
-    LINKS_JSON="[]"
-    if grep -q "links:" "$CONFIG_FILE"; then
-        # Use python to parse YAML links section properly
-        if command -v python3 &> /dev/null; then
-            LINKS_JSON=$(python3 -c "
-import yaml, json, sys
-try:
-    with open('$CONFIG_FILE', 'r') as f:
-        config = yaml.safe_load(f)
-        links = config.get('service', {}).get('links', [])
-        print(json.dumps(links))
-except:
-    print('[]')
-" 2>/dev/null || echo "[]")
-        fi
-    fi
-
-    # Parse OpenAPI configuration (if exists)
-    OPENAPI_JSON="null"
     HAS_API="false"
-    if grep -q "openapi:" "$CONFIG_FILE"; then
-        if command -v python3 &> /dev/null; then
-            OPENAPI_JSON=$(python3 -c "
-import yaml, json, sys
-try:
-    with open('$CONFIG_FILE', 'r') as f:
-        config = yaml.safe_load(f)
-        openapi = config.get('openapi', None)
-        if openapi:
-            print(json.dumps(openapi))
-        else:
-            print('null')
-except:
-    print('null')
-" 2>/dev/null || echo "null")
-            if [ "$OPENAPI_JSON" != "null" ]; then
-                HAS_API="true"
-            fi
-        fi
+    if [ "$OPENAPI_JSON" != "null" ]; then
+        HAS_API="true"
     fi
 else
     SERVICE_NAME="$SERVICE_REPO"
@@ -153,19 +112,18 @@ else
     HAS_API="false"
 fi
 
-echo "Service Name: $SERVICE_NAME"
-echo "Team: ${TEAM_NAME:-<not set>}"
-echo "Links: $(echo "$LINKS_JSON" | jq length) link(s)"
-echo "Has API: $HAS_API"
+log_info "Service Name: $SERVICE_NAME"
+log_info "Team: ${TEAM_NAME:-<not set>}"
+log_info "Links: $(echo "$LINKS_JSON" | jq length) link(s)"
+log_info "Has API: $HAS_API"
 
 # Check if scorecards workflow is installed
 INSTALLED="false"
-WORKFLOW_FILE="$GITHUB_WORKSPACE/.github/workflows/scorecards.yml"
-if [ -f "$WORKFLOW_FILE" ]; then
-    echo "Installed: true (workflow detected)"
+if check_workflow_installed "$GITHUB_WORKSPACE"; then
+    log_info "Installed: true (workflow detected)"
     INSTALLED="true"
 else
-    echo "Installed: false (no workflow detected)"
+    log_info "Installed: false (no workflow detected)"
 fi
 echo
 
