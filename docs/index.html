@@ -248,15 +248,10 @@
         </div>
     </div>
 
-    <!-- Utility modules (loaded before app.js) -->
-    <script src="js/utils/formatting.js"></script>
-    <script src="js/utils/crypto.js"></script>
-    <script src="js/utils/clipboard.js"></script>
+    <!-- ES6 Modules (loaded first) -->
+    <script type="module" src="src/main.js"></script>
 
-    <!-- UI components -->
-    <script src="js/ui/toast.js"></script>
-
-    <!-- Main application -->
-    <script src="app.js"></script>
+    <!-- Main application (uses modules via window.ScorecardModules) -->
+    <script src="app.js" defer></script>
 </body>
 </html>

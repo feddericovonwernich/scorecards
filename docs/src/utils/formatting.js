@@ -1,10 +1,14 @@
 /**
  * Formatting Utilities
  * Pure utility functions for formatting dates, times, and text
- * These functions are loaded before app.js and available globally
  */
 
-function formatRelativeTime(timestamp) {
+/**
+ * Format timestamp as relative time
+ * @param {string|Date} timestamp - Date string or Date object
+ * @returns {string} Relative time string (e.g., "5 minutes ago")
+ */
+export function formatRelativeTime(timestamp) {
     if (!timestamp) return 'Unknown';
 
     const now = new Date();
@@ -29,7 +33,12 @@ function formatRelativeTime(timestamp) {
     return date.toLocaleDateString();
 }
 
-function formatDate(dateString) {
+/**
+ * Format date with relative time for recent dates
+ * @param {string} dateString - ISO date string
+ * @returns {string} Formatted date
+ */
+export function formatDate(dateString) {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
@@ -47,7 +56,12 @@ function formatDate(dateString) {
     });
 }
 
-function formatDuration(durationMs) {
+/**
+ * Format duration in milliseconds to human-readable string
+ * @param {number} durationMs - Duration in milliseconds
+ * @returns {string} Formatted duration (e.g., "2h 15m ago")
+ */
+export function formatDuration(durationMs) {
     const seconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
@@ -61,7 +75,12 @@ function formatDuration(durationMs) {
     }
 }
 
-function formatInterval(ms) {
+/**
+ * Format interval in milliseconds to human-readable string
+ * @param {number} ms - Interval in milliseconds
+ * @returns {string} Formatted interval
+ */
+export function formatInterval(ms) {
     if (ms === 0) {
         return 'Off';
     } else if (ms < 60000) {
@@ -72,13 +91,23 @@ function formatInterval(ms) {
     }
 }
 
-function escapeHtml(text) {
+/**
+ * Escape HTML special characters to prevent XSS
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped HTML
+ */
+export function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-function capitalize(str) {
+/**
+ * Capitalize first letter of string
+ * @param {string} str - String to capitalize
+ * @returns {string} Capitalized string
+ */
+export function capitalize(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }

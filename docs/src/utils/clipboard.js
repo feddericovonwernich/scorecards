@@ -1,9 +1,13 @@
 /**
  * Clipboard Utilities
  * Functions for copying text to clipboard with fallback support
- * These functions are loaded before app.js and available globally
  */
 
+/**
+ * Fallback method for copying to clipboard using legacy execCommand
+ * @param {string} text - Text to copy
+ * @returns {boolean} Success status
+ */
 function fallbackCopyToClipboard(text) {
     const textArea = document.createElement('textarea');
     textArea.value = text;
@@ -24,8 +28,12 @@ function fallbackCopyToClipboard(text) {
     }
 }
 
-// Copy badge code to clipboard
-async function copyBadgeCode(elementId, event) {
+/**
+ * Copy badge code to clipboard with visual feedback
+ * @param {string} elementId - ID of element containing text to copy
+ * @param {Event} event - Click event object
+ */
+export async function copyBadgeCode(elementId, event) {
     const element = document.getElementById(elementId);
     const text = element.textContent;
     const button = event?.currentTarget || event?.target;

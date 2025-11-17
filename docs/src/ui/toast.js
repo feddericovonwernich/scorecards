@@ -1,12 +1,16 @@
 /**
  * Toast Notification System
  * Function for displaying temporary notification messages
- * This function is loaded before app.js and available globally
- *
- * Dependencies: escapeHtml() from utils/formatting.js
  */
 
-function showToast(message, type = 'info') {
+import { escapeHtml } from '../utils/formatting.js';
+
+/**
+ * Show a toast notification
+ * @param {string} message - Message to display
+ * @param {string} type - Notification type (info, success, error, warning)
+ */
+export function showToast(message, type = 'info') {
     // Create toast container if it doesn't exist
     let container = document.getElementById('toast-container');
     if (!container) {

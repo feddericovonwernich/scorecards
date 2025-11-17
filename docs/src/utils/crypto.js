@@ -1,11 +1,15 @@
 /**
  * Cryptographic Utilities
  * MD5 hashing function for Gravatar email hash generation
- * This function is loaded before app.js and available globally
  */
 
-// MD5 hash function for Gravatar support
-function md5(string) {
+/**
+ * Calculate MD5 hash of a string
+ * Used primarily for generating Gravatar hashes from email addresses
+ * @param {string} string - String to hash
+ * @returns {string} MD5 hash (lowercase hex)
+ */
+export function md5(string) {
     function rotateLeft(lValue, iShiftBits) {
         return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
     }
