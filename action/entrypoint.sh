@@ -241,13 +241,47 @@ echo "$FINAL_RESULTS" | jq '.' > "$OUTPUT_DIR/final-results.json"
 # ============================================================================
 
 if [ -n "$SCORECARDS_REPO" ]; then
-    update_catalog \
-        "$GITHUB_TOKEN" "$SCORECARDS_REPO" "$SCORECARDS_BRANCH" \
-        "$SERVICE_ORG" "$SERVICE_REPO" "$SERVICE_NAME" "$TEAM_NAME" \
-        "$SCORE" "$RANK" "$PASSED_CHECKS" "$TOTAL_CHECKS" \
-        "$HAS_API" "$CHECKS_HASH" "$CHECKS_COUNT" "$INSTALLED" \
-        "$DEFAULT_BRANCH" "${PR_NUMBER:-}" "${PR_STATE:-}" "${PR_URL:-}" \
-        "$OUTPUT_DIR" "$SCORE_BADGE_FILE" "$RANK_BADGE_FILE" "$WORK_DIR"
+    # Group related data into associative arrays for cleaner function calls
+    declare -A service_context=(
+        [org]="$SERVICE_ORG"
+        [repo]="$SERVICE_REPO"
+        [name]="$SERVICE_NAME"
+        [team]="$TEAM_NAME"
+        [has_api]="$HAS_API"
+        [default_branch]="$DEFAULT_BRANCH"
+    )
+
+    declare -A score_context=(
+        [score]="$SCORE"
+        [rank]="$RANK"
+        [passed_checks]="$PASSED_CHECKS"
+        [total_checks]="$TOTAL_CHECKS"
+        [checks_hash]="$CHECKS_HASH"
+        [checks_count]="$CHECKS_COUNT"
+        [installed]="$INSTALLED"
+    )
+
+    declare -A repo_context=(
+        [github_token]="$GITHUB_TOKEN"
+        [scorecards_repo]="$SCORECARDS_REPO"
+        [scorecards_branch]="$SCORECARDS_BRANCH"
+    )
+
+    declare -A pr_context=(
+        [number]="${PR_NUMBER:-}"
+        [state]="${PR_STATE:-}"
+        [url]="${PR_URL:-}"
+    )
+
+    declare -A paths=(
+        [output_dir]="$OUTPUT_DIR"
+        [score_badge]="$SCORE_BADGE_FILE"
+        [rank_badge]="$RANK_BADGE_FILE"
+        [work_dir]="$WORK_DIR"
+    )
+
+    # Clean function call with structured parameters
+    update_catalog service_context score_context repo_context pr_context paths
 fi
 
 # ============================================================================

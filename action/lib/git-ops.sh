@@ -81,21 +81,29 @@ check_meaningful_changes() {
 
 # Build registry entry JSON
 build_registry_entry() {
-    local org="$1"
-    local repo="$2"
-    local name="$3"
-    local team="$4"
-    local score="$5"
-    local rank="$6"
-    local timestamp="$7"
-    local has_api="$8"
-    local checks_hash="$9"
-    local checks_count="${10}"
-    local installed="${11}"
-    local default_branch="${12}"
-    local pr_number="${13:-}"
-    local pr_state="${14:-}"
-    local pr_url="${15:-}"
+    # Accept context arrays
+    local -n svc=$1
+    local -n scr=$2
+    local -n prs=$3
+    local timestamp="$4"
+
+    # Extract values
+    local org="${svc[org]}"
+    local repo="${svc[repo]}"
+    local name="${svc[name]}"
+    local team="${svc[team]}"
+    local has_api="${svc[has_api]}"
+    local default_branch="${svc[default_branch]}"
+
+    local score="${scr[score]}"
+    local rank="${scr[rank]}"
+    local checks_hash="${scr[checks_hash]}"
+    local checks_count="${scr[checks_count]}"
+    local installed="${scr[installed]}"
+
+    local pr_number="${prs[number]}"
+    local pr_state="${prs[state]}"
+    local pr_url="${prs[url]}"
 
     local jq_args=(
         -n
@@ -165,19 +173,10 @@ git_push_with_smart_retry() {
     local branch="$2"
     local registry_file="$3"
     local work_dir="$4"
-    # Parameters for registry regeneration
-    local org="$5"
-    local repo="$6"
-    local name="$7"
-    local team="$8"
-    local score="$9"
-    local rank="${10}"
-    local timestamp="${11}"
-    local has_api="${12}"
-    local checks_hash="${13}"
-    local checks_count="${14}"
-    local installed="${15}"
-    local default_branch="${16}"
+    local -n svc=$5
+    local -n scr=$6
+    local -n prs=$7
+    local timestamp="$8"
 
     cd "$repo_path" || return 1
 
@@ -204,10 +203,7 @@ git_push_with_smart_retry() {
                     # Rebase successful - regenerate registry file
                     log_info "Rebase successful, regenerating registry entry..."
 
-                    build_registry_entry \
-                        "$org" "$repo" "$name" "$team" "$score" "$rank" \
-                        "$timestamp" "$has_api" "$checks_hash" "$checks_count" \
-                        "$installed" "$default_branch" > "$registry_file"
+                    build_registry_entry svc scr prs "$timestamp" > "$registry_file"
 
                     git add "$registry_file"
                     git commit --amend --no-edit
@@ -256,29 +252,41 @@ git_push_simple() {
 
 # Complete catalog update workflow
 update_catalog() {
-    local github_token="$1"
-    local scorecards_repo="$2"
-    local scorecards_branch="$3"
-    local service_org="$4"
-    local service_repo="$5"
-    local service_name="$6"
-    local team_name="$7"
-    local score="$8"
-    local rank="$9"
-    local passed_checks="${10}"
-    local total_checks="${11}"
-    local has_api="${12}"
-    local checks_hash="${13}"
-    local checks_count="${14}"
-    local installed="${15}"
-    local default_branch="${16}"
-    local pr_number="${17:-}"
-    local pr_state="${18:-}"
-    local pr_url="${19:-}"
-    local output_dir="${20}"
-    local score_badge_file="${21}"
-    local rank_badge_file="${22}"
-    local work_dir="${23}"
+    # Accept 5 context arrays instead of 23 individual parameters
+    local -n svc=$1
+    local -n scr=$2
+    local -n rpo=$3
+    local -n prs=$4
+    local -n pth=$5
+
+    # Extract individual values from context arrays
+    local service_org="${svc[org]}"
+    local service_repo="${svc[repo]}"
+    local service_name="${svc[name]}"
+    local team_name="${svc[team]}"
+    local has_api="${svc[has_api]}"
+    local default_branch="${svc[default_branch]}"
+
+    local score="${scr[score]}"
+    local rank="${scr[rank]}"
+    local passed_checks="${scr[passed_checks]}"
+    local total_checks="${scr[total_checks]}"
+    local checks_hash="${scr[checks_hash]}"
+    local checks_count="${scr[checks_count]}"
+    local installed="${scr[installed]}"
+
+    local github_token="${rpo[github_token]}"
+    local scorecards_repo="${rpo[scorecards_repo]}"
+    local scorecards_branch="${rpo[scorecards_branch]}"
+
+    local pr_number="${prs[number]}"
+    local pr_state="${prs[state]}"
+    local pr_url="${prs[url]}"
+
+    local output_dir="${pth[output_dir]}"
+    local score_badge_file="${pth[score_badge]}"
+    local rank_badge_file="${pth[rank_badge]}"
+    local work_dir="${pth[work_dir]}"
 
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local central_repo_dir="$work_dir/central-repo"
@@ -337,11 +345,7 @@ update_catalog() {
 
         # Build registry entry
         local registry_file="registry/$service_org/$service_repo.json"
-        build_registry_entry \
-            "$service_org" "$service_repo" "$service_name" "$team_name" \
-            "$score" "$rank" "$timestamp" "$has_api" "$checks_hash" "$checks_count" \
-            "$installed" "$default_branch" "$pr_number" "$pr_state" "$pr_url" \
-            > "$registry_file"
+        build_registry_entry svc scr prs "$timestamp" > "$registry_file"
 
         # Commit and push
         git add results/ badges/ registry/
@@ -359,9 +363,7 @@ Commit: $(git rev-parse HEAD | head -c 7)"
 
             # Push with smart retry
             if ! git_push_with_smart_retry "$central_repo_dir" "$scorecards_branch" "$registry_file" "$work_dir" \
-                "$service_org" "$service_repo" "$service_name" "$team_name" \
-                "$score" "$rank" "$timestamp" "$has_api" "$checks_hash" "$checks_count" \
-                "$installed" "$default_branch"; then
+                svc scr prs "$timestamp"; then
                 log_error "Failed to push catalog updates"
                 return 1
             fi
