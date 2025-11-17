@@ -2,6 +2,14 @@
 # Scorecard Action Entrypoint
 set -euo pipefail
 
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source all libraries
+source "$SCRIPT_DIR/lib/common.sh"
+source "$SCRIPT_DIR/lib/setup.sh"
+source "$SCRIPT_DIR/lib/github-api.sh"
+
 # ============================================================================
 # Configuration and Environment
 # ============================================================================
@@ -16,27 +24,23 @@ SERVICE_ORG=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f1)
 SERVICE_REPO=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
 
 # Directories
-ACTION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ACTION_DIR="$SCRIPT_DIR"
 WORK_DIR=$(mktemp -d)
+setup_cleanup_trap "$WORK_DIR"
+
 CHECKS_DIR="$ACTION_DIR/../checks"
 OUTPUT_DIR="$WORK_DIR/output"
 
 mkdir -p "$OUTPUT_DIR"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Initialize environment
+initialize_environment
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Scorecards - Service Quality Measurement${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo
-echo "Service: $GITHUB_REPOSITORY"
-echo "Commit: $GITHUB_SHA"
-echo
+log_info "========================================"
+log_info "Scorecards - Service Quality Measurement"
+log_info "========================================"
+log_info "Service: $GITHUB_REPOSITORY"
+log_info "Commit: $GITHUB_SHA"
 
 # ============================================================================
 # Fetch PR Info (with fallback if not provided via environment)
@@ -44,36 +48,26 @@ echo
 
 # Fallback: Fetch PR info from GitHub if not provided via environment
 if [ -z "${PR_NUMBER:-}" ]; then
-    echo "PR info not provided, checking for existing installation PR..."
-    export GH_TOKEN="$GITHUB_TOKEN"
-
-    pr_data=$(gh pr list --repo "$SERVICE_ORG/$SERVICE_REPO" --label "scorecards-install" --state all --json number,state,url --limit 1 2>/dev/null || echo "[]")
+    pr_data=$(get_pr_info "$SERVICE_ORG" "$SERVICE_REPO" "$GITHUB_TOKEN")
 
     if [ "$pr_data" != "[]" ]; then
-        PR_NUMBER=$(echo "$pr_data" | jq -r '.[0].number')
-        PR_STATE=$(echo "$pr_data" | jq -r '.[0].state')
-        PR_URL=$(echo "$pr_data" | jq -r '.[0].url')
-        echo -e "${GREEN}✓${NC} Found installation PR #$PR_NUMBER (state: $PR_STATE)"
+        export PR_NUMBER=$(extract_pr_number "$pr_data")
+        export PR_STATE=$(extract_pr_state "$pr_data")
+        export PR_URL=$(extract_pr_url "$pr_data")
+        log_success "Found installation PR #$PR_NUMBER (state: $PR_STATE)"
     else
-        echo "  No installation PR found"
+        log_info "No installation PR found"
     fi
 else
-    echo -e "${GREEN}✓${NC} Using PR info from environment: PR #$PR_NUMBER ($PR_STATE)"
+    log_info "Using PR info from environment: PR #$PR_NUMBER ($PR_STATE)"
 fi
-
-echo
 
 # ============================================================================
 # Fetch Default Branch
 # ============================================================================
 
-echo "Fetching default branch..."
-export GH_TOKEN="$GITHUB_TOKEN"
-
-DEFAULT_BRANCH=$(gh api "repos/$SERVICE_ORG/$SERVICE_REPO" --jq '.default_branch' 2>/dev/null || echo "main")
-echo -e "${GREEN}✓${NC} Default branch: $DEFAULT_BRANCH"
-
-echo
+DEFAULT_BRANCH=$(get_default_branch "$SERVICE_ORG" "$SERVICE_REPO" "$GITHUB_TOKEN")
+log_success "Default branch: $DEFAULT_BRANCH"
 
 # ============================================================================
 # Check Configuration File
