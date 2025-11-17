@@ -6,10 +6,11 @@
 import { escapeHtml, formatInterval, formatDuration } from '../utils/formatting.js';
 import { renderWorkflowRun } from './workflow-run.js';
 import { showToast } from './toast.js';
+import { getToken } from '../services/auth.js';
 
 /**
  * Load workflow runs for the current service
- * Uses global variables: currentServiceOrg, currentServiceRepo, githubPAT
+ * Uses global variables: currentServiceOrg, currentServiceRepo
  * @returns {Promise<void>}
  */
 export async function loadWorkflowRunsForService() {
@@ -17,7 +18,7 @@ export async function loadWorkflowRunsForService() {
         return;
     }
 
-    if (!githubPAT) {
+    if (!getToken()) {
         const content = document.getElementById('service-workflows-content');
         content.innerHTML = `
             <div class="widget-empty">
@@ -45,7 +46,7 @@ export async function loadWorkflowRunsForService() {
             `https://api.github.com/repos/${currentServiceOrg}/${currentServiceRepo}/actions/runs?per_page=25&_t=${Date.now()}`,
             {
                 headers: {
-                    'Authorization': `token ${githubPAT}`,
+                    'Authorization': `token ${getToken()}`,
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 cache: 'no-cache'
@@ -86,7 +87,7 @@ export async function loadWorkflowRunsForService() {
 
 /**
  * Start or restart polling for service workflow runs
- * Uses global variables: serviceWorkflowPollInterval, serviceWorkflowPollIntervalTime, githubPAT
+ * Uses global variables: serviceWorkflowPollInterval, serviceWorkflowPollIntervalTime
  * @returns {void}
  */
 export function startServiceWorkflowPolling() {
@@ -97,7 +98,7 @@ export function startServiceWorkflowPolling() {
     }
 
     // Only start polling if interval is not 0 (disabled) and PAT is available
-    if (serviceWorkflowPollIntervalTime > 0 && githubPAT) {
+    if (serviceWorkflowPollIntervalTime > 0 && getToken()) {
         serviceWorkflowPollInterval = setInterval(() => {
             loadWorkflowRunsForService();
         }, serviceWorkflowPollIntervalTime);
