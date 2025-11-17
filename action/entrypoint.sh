@@ -104,6 +104,18 @@ if [ "$HAS_CONFIG" = "true" ]; then
     LINKS_JSON=$(parse_links_array "$GITHUB_WORKSPACE")
     OPENAPI_JSON=$(parse_openapi_config "$GITHUB_WORKSPACE")
 
+    # Validate LINKS_JSON is not empty and contains valid JSON
+    if [ -z "$LINKS_JSON" ] || ! echo "$LINKS_JSON" | jq empty 2>/dev/null; then
+        log_warning "Links JSON is empty or invalid, using empty array"
+        LINKS_JSON="[]"
+    fi
+
+    # Validate OPENAPI_JSON is not empty and contains valid JSON
+    if [ -z "$OPENAPI_JSON" ] || ! echo "$OPENAPI_JSON" | jq empty 2>/dev/null; then
+        log_warning "OpenAPI JSON is empty or invalid, using null"
+        OPENAPI_JSON="null"
+    fi
+
     HAS_API="false"
     if [ "$OPENAPI_JSON" != "null" ]; then
         HAS_API="true"
@@ -218,6 +230,12 @@ log_info "Checks count: $CHECKS_COUNT"
 # ============================================================================
 
 CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
+
+# Validate CONTRIBUTORS_JSON is not empty and contains valid JSON
+if [ -z "$CONTRIBUTORS_JSON" ] || ! echo "$CONTRIBUTORS_JSON" | jq empty 2>/dev/null; then
+    log_warning "Contributors JSON is empty or invalid, using empty array"
+    CONTRIBUTORS_JSON="[]"
+fi
 
 # ============================================================================
 # Create Final Results JSON

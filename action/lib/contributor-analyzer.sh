@@ -83,6 +83,12 @@ analyze_contributors() {
 
     rm -f "$contributors_file"
 
+    # Ensure contributors_json is never empty
+    if [ -z "$contributors_json" ]; then
+        log_warning "Failed to generate contributors JSON, returning empty array"
+        contributors_json="[]"
+    fi
+
     local contributors_count
     contributors_count=$(echo "$contributors_json" | jq 'length')
     log_info "Found $contributors_count contributor(s) in last $commit_limit commits"
