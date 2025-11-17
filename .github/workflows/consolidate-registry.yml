@@ -53,8 +53,8 @@ jobs:
       - name: Consolidate registry files
         if: steps.debounce.outputs.skip != 'true'
         run: |
-          # Find all registry files except all-services.json
-          registry_files=$(find registry -name '*.json' -not -name 'all-services.json' | sort)
+          # Find all registry files except all-services.json and services.json
+          registry_files=$(find registry -name '*.json' -not -name 'all-services.json' -not -name 'services.json' | sort)
 
           if [ -z "$registry_files" ]; then
             echo "No registry files found"
