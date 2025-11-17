@@ -45,8 +45,8 @@ check_meaningful_changes() {
         return 0
     fi
 
-    # Extract meaningful fields (excluding timestamp, commit_sha, stdout, stderr, duration)
-    local old_summary=$(jq -S '{
+    # Define filter once (extracts meaningful fields excluding timestamp, commit_sha, stdout, stderr, duration)
+    local jq_filter='{
         score: .score,
         rank: .rank,
         passed_checks: .passed_checks,
@@ -66,29 +66,11 @@ check_meaningful_changes() {
             status: .status,
             exit_code: .exit_code
         }]
-    }' "$old_file" 2>/dev/null)
+    }'
 
-    local new_summary=$(jq -S '{
-        score: .score,
-        rank: .rank,
-        passed_checks: .passed_checks,
-        total_checks: .total_checks,
-        checks_hash: .checks_hash,
-        checks_count: .checks_count,
-        installed: .installed,
-        recent_contributors: .recent_contributors,
-        service: {
-            name: .service.name,
-            team: .service.team,
-            links: .service.links,
-            openapi: .service.openapi
-        },
-        checks: [.checks[] | {
-            check_id: .check_id,
-            status: .status,
-            exit_code: .exit_code
-        }]
-    }' "$new_file" 2>/dev/null)
+    # Apply filter to both files
+    local old_summary=$(jq -S "$jq_filter" "$old_file" 2>/dev/null)
+    local new_summary=$(jq -S "$jq_filter" "$new_file" 2>/dev/null)
 
     if [ "$old_summary" = "$new_summary" ]; then
         return 1  # No meaningful changes
