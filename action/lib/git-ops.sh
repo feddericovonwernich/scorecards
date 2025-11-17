@@ -69,8 +69,10 @@ check_meaningful_changes() {
     }'
 
     # Apply filter to both files
-    local old_summary=$(jq -S "$jq_filter" "$old_file" 2>/dev/null)
-    local new_summary=$(jq -S "$jq_filter" "$new_file" 2>/dev/null)
+    local old_summary
+    local new_summary
+    old_summary=$(jq -S "$jq_filter" "$old_file" 2>/dev/null)
+    new_summary=$(jq -S "$jq_filter" "$new_file" 2>/dev/null)
 
     if [ "$old_summary" = "$new_summary" ]; then
         return 1  # No meaningful changes
@@ -288,7 +290,8 @@ update_catalog() {
     local rank_badge_file="${pth[rank_badge]}"
     local work_dir="${pth[work_dir]}"
 
-    local timestamp=$(get_iso_timestamp)
+    local timestamp
+    timestamp=$(get_iso_timestamp)
     local central_repo_dir="$work_dir/central-repo"
     local repo_url="https://x-access-token:${github_token}@github.com/${scorecards_repo}.git"
 
@@ -329,7 +332,8 @@ update_catalog() {
 
     # Check if PR state changed (override skip if it did)
     if [ -n "$pr_number" ] && [ -n "$pr_state" ]; then
-        local old_pr_state=$(jq -r '.installation_pr.state // ""' "$old_registry_file" 2>/dev/null || echo "")
+        local old_pr_state
+        old_pr_state=$(jq -r '.installation_pr.state // ""' "$old_registry_file" 2>/dev/null || echo "")
         if [ "$old_pr_state" != "$pr_state" ]; then
             log_info "PR state changed: $old_pr_state → $pr_state - forcing catalog update"
             skip_commit=false

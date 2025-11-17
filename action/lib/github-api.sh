@@ -16,7 +16,8 @@ get_pr_info() {
 
     export GH_TOKEN="$github_token"
 
-    local pr_data=$(gh pr list \
+    local pr_data
+    pr_data=$(gh pr list \
         --repo "$org/$repo" \
         --label "scorecards-install" \
         --state all \
@@ -38,7 +39,8 @@ get_default_branch() {
 
     export GH_TOKEN="$github_token"
 
-    local default_branch=$(gh api "/repos/$org/$repo" \
+    local default_branch
+    default_branch=$(gh api "/repos/$org/$repo" \
         --jq '.default_branch' 2>/dev/null || echo "main")
 
     echo "$default_branch"
