@@ -1,0 +1,293 @@
+/**
+ * Main Application Entry Point
+ * Imports all ES6 modules and initializes the application
+ */
+
+// Utility modules
+import * as formatting from './utils/formatting.js';
+import * as crypto from './utils/crypto.js';
+import * as clipboard from './utils/clipboard.js';
+import * as dom from './utils/dom.js';
+
+// UI modules
+import * as toast from './ui/toast.js';
+import * as modals from './ui/modals.js';
+import * as filters from './ui/filters.js';
+import * as workflowRun from './ui/workflow-run.js';
+import * as serviceCard from './ui/service-card.js';
+import * as serviceModal from './ui/service-modal.js';
+import * as serviceWorkflows from './ui/service-workflows.js';
+import * as actionsWidget from './ui/actions-widget.js';
+import * as settings from './ui/settings.js';
+import * as stats from './ui/stats.js';
+import * as buttonStates from './ui/button-states.js';
+
+// API modules
+import * as registry from './api/registry.js';
+import * as github from './api/github.js';
+import * as workflowTriggers from './api/workflow-triggers.js';
+
+// Service modules
+import * as auth from './services/auth.js';
+import * as staleness from './services/staleness.js';
+
+// Application initialization
+import * as appInit from './app-init.js';
+
+// Export modules to window for backward compatibility with app.js
+// This allows the existing app.js to use the modular functions
+window.ScorecardModules = {
+    formatting,
+    crypto,
+    clipboard,
+    dom,
+    toast,
+    modals,
+    filters,
+    workflowRun,
+    serviceCard,
+    serviceModal,
+    serviceWorkflows,
+    actionsWidget,
+    settings,
+    stats,
+    buttonStates,
+    registry,
+    github,
+    workflowTriggers,
+    auth,
+    staleness,
+    appInit
+};
+
+// Export individual functions to global scope for easier access
+// (This bridges the gap between ES6 modules and the existing app.js)
+
+// Formatting utilities
+window.formatRelativeTime = formatting.formatRelativeTime;
+window.formatDate = formatting.formatDate;
+window.formatDuration = formatting.formatDuration;
+window.formatInterval = formatting.formatInterval;
+window.escapeHtml = formatting.escapeHtml;
+window.capitalize = formatting.capitalize;
+
+// Crypto utilities
+window.md5 = crypto.md5;
+
+// Clipboard utilities
+window.copyBadgeCode = clipboard.copyBadgeCode;
+
+// Toast notifications
+window.showToast = toast.showToast;
+
+// Modal management
+window.showModal = modals.showModal;
+window.hideModal = modals.hideModal;
+window.closeAllModals = modals.closeAllModals;
+window.showConfirmation = modals.showConfirmation;
+
+// Auth functions
+window.getGitHubToken = auth.getToken;
+window.hasGitHubToken = auth.hasToken;
+window.setGitHubToken = auth.setToken;
+window.clearGitHubToken = auth.clearToken;
+window.validateGitHubToken = auth.validateToken;
+
+// Staleness functions
+window.isServiceStale = staleness.isServiceStale;
+
+// Registry functions
+window.loadServicesData = registry.loadServices;
+window.fetchCurrentChecksHash = registry.fetchCurrentChecksHash;
+window.fetchWithHybridAuth = registry.fetchWithHybridAuth;
+
+// GitHub API functions
+window.fetchWorkflowRuns = github.fetchWorkflowRuns;
+window.triggerScorecardWorkflow = github.triggerScorecardWorkflow;
+window.triggerBulkScorecardWorkflows = github.triggerBulkScorecardWorkflows;
+window.createInstallationPR = github.createInstallationPR;
+window.checkGitHubRateLimit = github.checkRateLimit;
+
+// Filter functions
+window.filterServices = filters.filterServices;
+window.sortServices = filters.sortServices;
+window.filterAndSort = filters.filterAndSort;
+window.getFilterStats = filters.getFilterStats;
+
+// Workflow run rendering functions
+window.renderWorkflowRun = workflowRun.renderWorkflowRun;
+window.getStatusIcon = workflowRun.getStatusIcon;
+window.calculateDuration = workflowRun.calculateDuration;
+
+// Service card rendering functions
+window.renderServices = serviceCard.renderServices;
+
+// Service modal functions
+window.showServiceDetail = serviceModal.showServiceDetail;
+window.refreshServiceData = serviceModal.refreshServiceData;
+window.closeModal = serviceModal.closeModal;
+window.switchTab = serviceModal.switchTab;
+
+// Service workflows functions
+window.loadWorkflowRunsForService = serviceWorkflows.loadWorkflowRunsForService;
+window.startServiceWorkflowPolling = serviceWorkflows.startServiceWorkflowPolling;
+window.changeServicePollingInterval = serviceWorkflows.changeServicePollingInterval;
+window.refreshServiceWorkflowRuns = serviceWorkflows.refreshServiceWorkflowRuns;
+window.renderServiceWorkflowRuns = serviceWorkflows.renderServiceWorkflowRuns;
+window.updateServiceFilterCounts = serviceWorkflows.updateServiceFilterCounts;
+window.filterServiceWorkflows = serviceWorkflows.filterServiceWorkflows;
+window.startServiceLiveDurationUpdates = serviceWorkflows.startServiceLiveDurationUpdates;
+
+// Actions widget functions
+window.initializeActionsWidget = actionsWidget.initializeActionsWidget;
+window.toggleActionsWidget = actionsWidget.toggleActionsWidget;
+window.startWidgetPolling = actionsWidget.startWidgetPolling;
+window.stopWidgetPolling = actionsWidget.stopWidgetPolling;
+window.fetchWorkflowRuns = actionsWidget.fetchWorkflowRuns;
+window.updateWidgetBadge = actionsWidget.updateWidgetBadge;
+window.renderWidgetContent = actionsWidget.renderWidgetContent;
+window.filterActions = actionsWidget.filterActions;
+window.refreshActionsWidget = actionsWidget.refreshActionsWidget;
+window.changePollingInterval = actionsWidget.changePollingInterval;
+window.handlePATSaved = actionsWidget.handlePATSaved;
+window.handlePATCleared = actionsWidget.handlePATCleared;
+
+// Settings functions
+window.openSettings = settings.openSettings;
+window.closeSettings = settings.closeSettings;
+window.testPAT = settings.testPAT;
+window.savePAT = settings.savePAT;
+window.clearPAT = settings.clearPAT;
+window.updateWidgetState = settings.updateWidgetState;
+window.updateModeIndicator = settings.updateModeIndicator;
+window.checkRateLimit = settings.checkRateLimit;
+
+// Stats functions
+window.updateStats = stats.updateStats;
+
+// Workflow trigger functions
+window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
+window.installService = workflowTriggers.installService;
+window.triggerBulkWorkflows = workflowTriggers.triggerBulkWorkflows;
+window.handleBulkTrigger = workflowTriggers.handleBulkTrigger;
+
+// Application initialization
+window.filterAndRenderServices = appInit.filterAndRenderServices;
+window.refreshData = appInit.refreshData;
+
+// Log initialization
+console.log('✓ ES6 Modules loaded successfully');
+console.log('Available modules:', Object.keys(window.ScorecardModules));
+
+/**
+ * Setup Event Listeners
+ * Initializes all DOM event listeners for the application
+ * Uses global variables from app.js: searchQuery, activeFilters, currentSort
+ * @returns {void}
+ */
+function setupEventListeners() {
+    // Search
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        window.searchQuery = e.target.value.toLowerCase();
+        window.filterAndRenderServices();
+    });
+
+    // Filterable stat cards (multi-select with include/exclude)
+    document.querySelectorAll('.stat-card.filterable').forEach(card => {
+        card.addEventListener('click', () => {
+            const filter = card.dataset.filter;
+
+            // Cycle through states: null -> include -> exclude -> null
+            const currentState = window.activeFilters.get(filter);
+
+            // Remove existing classes
+            card.classList.remove('active', 'exclude');
+
+            if (!currentState) {
+                // Null -> Include
+                window.activeFilters.set(filter, 'include');
+                card.classList.add('active');
+            } else if (currentState === 'include') {
+                // Include -> Exclude
+                window.activeFilters.set(filter, 'exclude');
+                card.classList.add('exclude');
+            } else {
+                // Exclude -> Null
+                window.activeFilters.delete(filter);
+            }
+
+            window.filterAndRenderServices();
+        });
+    });
+
+    // Sort
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+        window.currentSort = e.target.value;
+        window.filterAndRenderServices();
+    });
+
+    // Modal close
+    document.querySelector('.modal-close').addEventListener('click', window.closeModal);
+    document.getElementById('service-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'service-modal') {
+            window.closeModal();
+        }
+    });
+
+    // Modal close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('service-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                window.closeModal();
+            }
+        }
+    });
+}
+
+// Export to window for backward compatibility
+window.setupEventListeners = setupEventListeners;
+
+// Initialize modal handlers and event listeners for common modals
+document.addEventListener('DOMContentLoaded', () => {
+    // Setup modal handlers
+    const modalIds = ['service-modal', 'settings-modal'];
+    modalIds.forEach(id => {
+        if (document.getElementById(id)) {
+            modals.setupModalHandlers(id);
+        }
+    });
+
+    // Setup event listeners
+    setupEventListeners();
+
+    // Initialize application (load services and render)
+    appInit.initializeApp();
+
+    console.log('✓ Modal handlers and event listeners initialized');
+});
+
+// Export for ES6 module imports
+export {
+    formatting,
+    crypto,
+    clipboard,
+    dom,
+    toast,
+    modals,
+    filters,
+    workflowRun,
+    serviceCard,
+    serviceModal,
+    serviceWorkflows,
+    actionsWidget,
+    settings,
+    stats,
+    buttonStates,
+    registry,
+    github,
+    workflowTriggers,
+    auth,
+    staleness,
+    appInit
+};
