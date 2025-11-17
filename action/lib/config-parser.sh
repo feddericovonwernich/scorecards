@@ -70,7 +70,8 @@ get_service_name() {
     fi
 
     # Parse service name
-    local name=$(grep -A 1 "service:" "$config_file" | grep "name:" | sed 's/.*name: *"\?\([^"]*\)"\?.*/\1/' || echo "")
+    local name
+    name=$(grep -A 1 "service:" "$config_file" | grep "name:" | sed 's/.*name: *"\?\([^"]*\)"\?.*/\1/' || echo "")
     if [ -n "$name" ]; then
         echo "$name"
     else

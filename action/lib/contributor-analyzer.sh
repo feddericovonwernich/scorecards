@@ -20,7 +20,8 @@ analyze_contributors() {
     log_info "Analyzing recent $commit_limit contributors"
 
     # Get commits data
-    local commits_data=$(git log -"$commit_limit" --pretty=format:'%an|%ae|%ad|%h' --date=iso 2>/dev/null || echo "")
+    local commits_data
+    commits_data=$(git log -"$commit_limit" --pretty=format:'%an|%ae|%ad|%h' --date=iso 2>/dev/null || echo "")
 
     if [ -z "$commits_data" ]; then
         log_info "No git history available"
@@ -29,7 +30,8 @@ analyze_contributors() {
     fi
 
     # Create temporary file for processing
-    local contributors_file=$(mktemp)
+    local contributors_file
+    contributors_file=$(mktemp)
 
     # Process commits and aggregate by author email
     echo "$commits_data" | while IFS='|' read -r author_name author_email commit_date commit_hash; do
@@ -65,7 +67,8 @@ analyze_contributors() {
     ' | sort -t'|' -k3 -rn > "$contributors_file"
 
     # Convert to JSON array
-    local contributors_json=$(jq -R -n '
+    local contributors_json
+    contributors_json=$(jq -R -n '
         [inputs |
          split("|") |
          {
@@ -79,7 +82,8 @@ analyze_contributors() {
 
     rm -f "$contributors_file"
 
-    local contributors_count=$(echo "$contributors_json" | jq 'length')
+    local contributors_count
+    contributors_count=$(echo "$contributors_json" | jq 'length')
     log_info "Found $contributors_count contributor(s) in last $commit_limit commits"
 
     echo "$contributors_json"

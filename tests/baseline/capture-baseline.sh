@@ -5,7 +5,7 @@ CATALOG_BRANCH="catalog"
 BASELINE_DIR="tests/baseline/pre-refactor"
 
 # Checkout catalog branch to inspect current results
-cd /home/fedderico/Repos/scorecards-workspace/scorecards
+cd /home/fedderico/Repos/scorecards-workspace/scorecards || exit
 git fetch origin $CATALOG_BRANCH
 git checkout $CATALOG_BRANCH
 
