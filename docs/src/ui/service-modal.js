@@ -161,37 +161,7 @@ function renderTabs(data) {
 }
 
 /**
- * Maps check IDs to custom category groups
- * @param {string} checkId - Check ID (e.g., "05-scorecard-config")
- * @returns {string} Category name
- */
-function getCategoryForCheck(checkId) {
-    // Scorecards Setup: checks related to scorecards integration
-    if (['05-scorecard-config', '10-scorecard-config-quality', '04-scorecard-badge'].includes(checkId)) {
-        return 'Scorecards Setup';
-    }
-
-    // Documentation: README and OpenAPI docs
-    if (['01-readme', '06-openapi-spec', '09-openapi-quality', '08-api-env-config'].includes(checkId)) {
-        return 'Documentation';
-    }
-
-    // Testing & CI: testing and continuous integration
-    if (['02-ci-config', '03-test-coverage'].includes(checkId)) {
-        return 'Testing & CI';
-    }
-
-    // Configuration & Compliance: license files
-    if (['07-license'].includes(checkId)) {
-        return 'Configuration & Compliance';
-    }
-
-    // Default category for unknown checks
-    return 'Other';
-}
-
-/**
- * Groups checks by category
+ * Groups checks by category (read from check metadata)
  * @param {Array} checks - Array of check results
  * @returns {Object} Object with category names as keys and arrays of checks as values
  */
@@ -199,14 +169,15 @@ function groupChecksByCategory(checks) {
     const categories = {};
 
     checks.forEach(check => {
-        const category = getCategoryForCheck(check.check_id);
+        // Read category from check metadata, default to 'Other' if missing
+        const category = check.category || 'Other';
         if (!categories[category]) {
             categories[category] = [];
         }
         categories[category].push(check);
     });
 
-    // Define category order
+    // Define category order for consistent display
     const categoryOrder = [
         'Scorecards Setup',
         'Documentation',
