@@ -11,6 +11,8 @@ source "$SCRIPT_DIR/lib/setup.sh"
 source "$SCRIPT_DIR/lib/github-api.sh"
 source "$SCRIPT_DIR/lib/config-parser.sh"
 source "$SCRIPT_DIR/lib/contributor-analyzer.sh"
+source "$SCRIPT_DIR/lib/git-ops.sh"
+source "$SCRIPT_DIR/lib/results-builder.sh"
 
 # ============================================================================
 # Configuration and Environment
@@ -224,46 +226,13 @@ CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
 # ============================================================================
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+CHECKS_JSON=$(cat "$RESULTS_FILE")
 
-FINAL_RESULTS=$(jq -n \
-    --arg service_org "$SERVICE_ORG" \
-    --arg service_repo "$SERVICE_REPO" \
-    --arg service_name "$SERVICE_NAME" \
-    --arg team "$TEAM_NAME" \
-    --argjson links "$LINKS_JSON" \
-    --argjson openapi "$OPENAPI_JSON" \
-    --arg commit_sha "$GITHUB_SHA" \
-    --arg timestamp "$TIMESTAMP" \
-    --argjson score "$SCORE" \
-    --arg rank "$RANK" \
-    --argjson passed_checks "$PASSED_CHECKS" \
-    --argjson total_checks "$TOTAL_CHECKS" \
-    --arg checks_hash "$CHECKS_HASH" \
-    --argjson checks_count "$CHECKS_COUNT" \
-    --argjson installed "$INSTALLED" \
-    --argjson recent_contributors "$CONTRIBUTORS_JSON" \
-    --argjson checks "$(cat "$RESULTS_FILE")" \
-    '{
-        service: {
-            org: $service_org,
-            repo: $service_repo,
-            name: $service_name,
-            team: $team,
-            links: $links,
-            openapi: (if $openapi != null then $openapi else null end)
-        },
-        score: $score,
-        rank: $rank,
-        passed_checks: $passed_checks,
-        total_checks: $total_checks,
-        commit_sha: $commit_sha,
-        timestamp: $timestamp,
-        checks_hash: $checks_hash,
-        checks_count: $checks_count,
-        installed: $installed,
-        recent_contributors: $recent_contributors,
-        checks: $checks
-    }')
+FINAL_RESULTS=$(build_results_json \
+    "$SERVICE_ORG" "$SERVICE_REPO" "$SERVICE_NAME" "$TEAM_NAME" \
+    "$SCORE" "$RANK" "$PASSED_CHECKS" "$TOTAL_CHECKS" \
+    "$TIMESTAMP" "$CHECKS_HASH" "$CHECKS_COUNT" "$INSTALLED" \
+    "$CONTRIBUTORS_JSON" "$CHECKS_JSON" "$LINKS_JSON" "$OPENAPI_JSON")
 
 echo "$FINAL_RESULTS" | jq '.' > "$OUTPUT_DIR/final-results.json"
 
@@ -272,300 +241,13 @@ echo "$FINAL_RESULTS" | jq '.' > "$OUTPUT_DIR/final-results.json"
 # ============================================================================
 
 if [ -n "$SCORECARDS_REPO" ]; then
-    echo -e "${BLUE}Committing results to central repository...${NC}"
-    echo "Central repo: $SCORECARDS_REPO"
-
-    # Clone central repo
-    CENTRAL_REPO_DIR="$WORK_DIR/central-repo"
-
-    if ! git clone -b "$SCORECARDS_BRANCH" "https://x-access-token:${GITHUB_TOKEN}@github.com/${SCORECARDS_REPO}.git" "$CENTRAL_REPO_DIR" > "$WORK_DIR/git-clone.log" 2>&1; then
-        echo -e "${YELLOW}⚠ Failed to clone central repository${NC}"
-        echo "  Results will not be stored centrally"
-        cat "$WORK_DIR/git-clone.log"
-    else
-        cd "$CENTRAL_REPO_DIR"
-        git config user.name "scorecard-bot"
-        git config user.email "scorecard-bot@users.noreply.github.com"
-
-        # Create directories for this service
-        mkdir -p "results/$SERVICE_ORG/$SERVICE_REPO"
-        mkdir -p "badges/$SERVICE_ORG/$SERVICE_REPO"
-        mkdir -p "registry"
-
-        # Check if results have meaningfully changed
-        SKIP_COMMIT=false
-        OLD_RESULTS_FILE="results/$SERVICE_ORG/$SERVICE_REPO/results.json"
-        OLD_REGISTRY_FILE="registry/$SERVICE_ORG/$SERVICE_REPO.json"
-
-        # Always commit if registry file doesn't exist in new format (migration case)
-        if [ ! -f "$OLD_REGISTRY_FILE" ]; then
-            echo "Registry file doesn't exist in new format - will create it"
-            SKIP_COMMIT=false
-        elif [ -f "$OLD_RESULTS_FILE" ]; then
-            echo "Comparing with previous results..."
-
-            # Extract meaningful fields (excluding timestamp, commit_sha, stdout, stderr, duration)
-            OLD_SUMMARY=$(jq -S '{
-                score: .score,
-                rank: .rank,
-                passed_checks: .passed_checks,
-                total_checks: .total_checks,
-                checks_hash: .checks_hash,
-                checks_count: .checks_count,
-                installed: .installed,
-                recent_contributors: .recent_contributors,
-                service: {
-                    name: .service.name,
-                    team: .service.team,
-                    links: .service.links,
-                    openapi: .service.openapi
-                },
-                checks: [.checks[] | {
-                    check_id: .check_id,
-                    status: .status,
-                    exit_code: .exit_code
-                }]
-            }' "$OLD_RESULTS_FILE")
-
-            NEW_SUMMARY=$(jq -S '{
-                score: .score,
-                rank: .rank,
-                passed_checks: .passed_checks,
-                total_checks: .total_checks,
-                checks_hash: .checks_hash,
-                checks_count: .checks_count,
-                installed: .installed,
-                recent_contributors: .recent_contributors,
-                service: {
-                    name: .service.name,
-                    team: .service.team,
-                    links: .service.links,
-                    openapi: .service.openapi
-                },
-                checks: [.checks[] | {
-                    check_id: .check_id,
-                    status: .status,
-                    exit_code: .exit_code
-                }]
-            }' "$OUTPUT_DIR/final-results.json")
-
-            if [ "$OLD_SUMMARY" = "$NEW_SUMMARY" ]; then
-                echo -e "${YELLOW}No meaningful changes detected - skipping commit${NC}"
-                SKIP_COMMIT=true
-            else
-                echo "Changes detected - will update catalog"
-            fi
-        else
-            echo "First run for this service - will create initial entry"
-        fi
-
-        # Check if PR state changed (override skip if it did)
-        if [ -n "$PR_NUMBER" ] && [ -n "$PR_STATE" ]; then
-            OLD_PR_STATE=$(jq -r '.installation_pr.state // ""' "registry/$SERVICE_ORG/$SERVICE_REPO.json" 2>/dev/null || echo "")
-            if [ "$OLD_PR_STATE" != "$PR_STATE" ]; then
-                echo "PR state changed: $OLD_PR_STATE → $PR_STATE - forcing catalog update"
-                SKIP_COMMIT=false
-            fi
-        fi
-
-        # Only update files if there are meaningful changes
-        if [ "$SKIP_COMMIT" = "false" ]; then
-            # Copy results
-            cp "$OUTPUT_DIR/final-results.json" "results/$SERVICE_ORG/$SERVICE_REPO/results.json"
-
-            # Copy badges
-            cp "$SCORE_BADGE_FILE" "badges/$SERVICE_ORG/$SERVICE_REPO/score.json"
-            cp "$RANK_BADGE_FILE" "badges/$SERVICE_ORG/$SERVICE_REPO/rank.json"
-
-            # Create per-service registry entry (eliminates shared file conflicts)
-            mkdir -p "registry/$SERVICE_ORG"
-            REGISTRY_FILE="registry/$SERVICE_ORG/$SERVICE_REPO.json"
-
-            # Write this service's registry entry
-            # Build jq command with optional PR info
-            JQ_ARGS=(
-                -n
-                --arg org "$SERVICE_ORG"
-                --arg repo "$SERVICE_REPO"
-                --arg name "$SERVICE_NAME"
-                --arg team "$TEAM_NAME"
-                --argjson score "$SCORE"
-                --arg rank "$RANK"
-                --arg timestamp "$TIMESTAMP"
-                --argjson has_api "$HAS_API"
-                --arg checks_hash "$CHECKS_HASH"
-                --argjson checks_count "$CHECKS_COUNT"
-                --argjson installed "$INSTALLED"
-                --arg default_branch "$DEFAULT_BRANCH"
-            )
-
-            # Add PR info if available
-            if [ -n "$PR_NUMBER" ] && [ -n "$PR_STATE" ] && [ -n "$PR_URL" ]; then
-                JQ_ARGS+=(
-                    --argjson pr_number "$PR_NUMBER"
-                    --arg pr_state "$PR_STATE"
-                    --arg pr_url "$PR_URL"
-                )
-                JQ_FILTER='{
-                    org: $org,
-                    repo: $repo,
-                    name: $name,
-                    team: $team,
-                    score: $score,
-                    rank: $rank,
-                    last_updated: $timestamp,
-                    has_api: $has_api,
-                    checks_hash: $checks_hash,
-                    checks_count: $checks_count,
-                    installed: $installed,
-                    default_branch: $default_branch,
-                    installation_pr: {
-                        number: $pr_number,
-                        state: $pr_state,
-                        url: $pr_url
-                    }
-                }'
-            else
-                JQ_FILTER='{
-                    org: $org,
-                    repo: $repo,
-                    name: $name,
-                    team: $team,
-                    score: $score,
-                    rank: $rank,
-                    last_updated: $timestamp,
-                    has_api: $has_api,
-                    checks_hash: $checks_hash,
-                    checks_count: $checks_count,
-                    installed: $installed,
-                    default_branch: $default_branch
-                }'
-            fi
-
-            jq "${JQ_ARGS[@]}" "$JQ_FILTER" > "$REGISTRY_FILE"
-
-            # Commit and push service results
-            git add results/ badges/ registry/
-
-            if git diff --staged --quiet; then
-                echo -e "${YELLOW}No meaningful changes to commit${NC}"
-            else
-                git commit -m "Update scorecard for $SERVICE_ORG/$SERVICE_REPO
-
-Score: $SCORE/100
-Rank: $RANK
-Checks: $PASSED_CHECKS/$TOTAL_CHECKS passed
-
-Commit: $GITHUB_SHA"
-
-                # Retry loop with exponential backoff to handle concurrent pushes
-                MAX_RETRIES=10
-                RETRY_COUNT=0
-                PUSH_SUCCESS=false
-
-                while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-                    if git push origin "$SCORECARDS_BRANCH" > "$WORK_DIR/git-push.log" 2>&1; then
-                        echo -e "${GREEN}✓${NC} Results committed to central repository"
-                        PUSH_SUCCESS=true
-                        break
-                    else
-                        RETRY_COUNT=$((RETRY_COUNT + 1))
-
-                        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                            echo -e "${YELLOW}Push failed (attempt $RETRY_COUNT/$MAX_RETRIES)${NC}"
-
-                            # Fetch latest changes and rebase
-                            echo "Fetching latest changes and rebasing..."
-                            git fetch origin "$SCORECARDS_BRANCH"
-
-                            if git rebase "origin/$SCORECARDS_BRANCH" > "$WORK_DIR/git-rebase.log" 2>&1; then
-                                # Rebase successful - regenerate registry file to ensure we have latest data
-                                echo "Rebase successful, regenerating registry entry..."
-                                jq -n \
-                                    --arg org "$SERVICE_ORG" \
-                                    --arg repo "$SERVICE_REPO" \
-                                    --arg name "$SERVICE_NAME" \
-                                    --arg team "$TEAM_NAME" \
-                                    --argjson score "$SCORE" \
-                                    --arg rank "$RANK" \
-                                    --arg timestamp "$TIMESTAMP" \
-                                    --argjson has_api "$HAS_API" \
-                                    --arg checks_hash "$CHECKS_HASH" \
-                                    --argjson checks_count "$CHECKS_COUNT" \
-                                    --argjson installed "$INSTALLED" \
-                                    '{
-                                        org: $org,
-                                        repo: $repo,
-                                        name: $name,
-                                        team: $team,
-                                        score: $score,
-                                        rank: $rank,
-                                        last_updated: $timestamp,
-                                        has_api: $has_api,
-                                        checks_hash: $checks_hash,
-                                        checks_count: $checks_count,
-                                        installed: $installed
-                                    }' > "$REGISTRY_FILE"
-
-                                git add "$REGISTRY_FILE"
-                                git commit --amend --no-edit
-
-                                # Progressive exponential backoff with jitter to prevent thundering herd
-                                # Base: 5s, increases by 5s per retry, plus 0-5s random jitter
-                                BASE_BACKOFF=$((5 + RETRY_COUNT * 5))
-                                JITTER=$((RANDOM % 6))
-                                BACKOFF=$((BASE_BACKOFF + JITTER))
-                                echo "Retrying in ${BACKOFF}s (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
-                                sleep $BACKOFF
-                            else
-                                echo -e "${YELLOW}⚠ Rebase failed${NC}"
-                                cat "$WORK_DIR/git-rebase.log"
-                                break
-                            fi
-                        fi
-                    fi
-                done
-
-                if [ "$PUSH_SUCCESS" = "false" ]; then
-                    echo -e "${YELLOW}⚠ Failed to push after $MAX_RETRIES attempts${NC}"
-                    cat "$WORK_DIR/git-push.log"
-                fi
-            fi
-        fi
-
-        # Write current checks hash to a well-known location for UI
-        # This is done on every run (outside SKIP_COMMIT check) since it represents
-        # the current state of checks, not service-specific results
-        echo "$CHECKS_HASH" > "current-checks-hash.txt"
-        jq -n --arg hash "$CHECKS_HASH" --argjson count "$CHECKS_COUNT" '{
-            checks_hash: $hash,
-            checks_count: $count,
-            generated_at: (now | todate)
-        }' > "current-checks.json"
-
-        # Commit current-checks files only if they changed
-        # This happens when checks are added, modified, or removed
-        git add current-checks.json current-checks-hash.txt
-
-        if ! git diff --staged --quiet; then
-            echo -e "${BLUE}Check suite changed - committing metadata...${NC}"
-            git commit -m "Update check suite metadata
-
-Checks hash: $CHECKS_HASH
-Checks count: $CHECKS_COUNT"
-
-            if git push origin "$SCORECARDS_BRANCH" > "$WORK_DIR/git-push-checks.log" 2>&1; then
-                echo -e "${GREEN}✓${NC} Check suite metadata committed"
-            else
-                echo -e "${YELLOW}⚠ Failed to push check suite metadata${NC}"
-                cat "$WORK_DIR/git-push-checks.log"
-            fi
-        else
-            echo "Check suite unchanged - no metadata commit needed"
-        fi
-    fi
-
-    echo
+    update_catalog \
+        "$GITHUB_TOKEN" "$SCORECARDS_REPO" "$SCORECARDS_BRANCH" \
+        "$SERVICE_ORG" "$SERVICE_REPO" "$SERVICE_NAME" "$TEAM_NAME" \
+        "$SCORE" "$RANK" "$PASSED_CHECKS" "$TOTAL_CHECKS" \
+        "$HAS_API" "$CHECKS_HASH" "$CHECKS_COUNT" "$INSTALLED" \
+        "$DEFAULT_BRANCH" "${PR_NUMBER:-}" "${PR_STATE:-}" "${PR_URL:-}" \
+        "$OUTPUT_DIR" "$SCORE_BADGE_FILE" "$RANK_BADGE_FILE" "$WORK_DIR"
 fi
 
 # ============================================================================
