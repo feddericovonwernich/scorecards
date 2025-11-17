@@ -4,6 +4,48 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
+# Parse YAML field from config file
+# Usage: parse_yaml_field "config.yml" "service.links" "[]"
+#        parse_yaml_field "config.yml" "openapi" "null"
+parse_yaml_field() {
+    local config_file="$1"
+    local field_path="$2"
+    local default_value="$3"
+
+    if ! command -v python3 &> /dev/null; then
+        log_warning "Python not available, cannot parse YAML field: $field_path"
+        echo "$default_value"
+        return 1
+    fi
+
+    python3 -c "
+import yaml, json, sys
+
+try:
+    with open('$config_file', 'r') as f:
+        config = yaml.safe_load(f) or {}
+
+    # Navigate nested path (e.g., 'service.links' -> config['service']['links'])
+    path_parts = '$field_path'.split('.')
+    value = config
+    for key in path_parts:
+        if isinstance(value, dict):
+            value = value.get(key, None)
+        else:
+            value = None
+            break
+
+    # Output JSON or default
+    if value is not None:
+        print(json.dumps(value))
+    else:
+        print('$default_value')
+except Exception as e:
+    print('$default_value', file=sys.stderr)
+    print('$default_value')
+" 2>/dev/null || echo "$default_value"
+}
+
 # Check if config file exists
 has_scorecard_config() {
     local repo_path="$1"
@@ -60,28 +102,7 @@ parse_links_array() {
         return 0
     fi
 
-    # Check if links section exists
-    if ! grep -q "links:" "$config_file"; then
-        echo "[]"
-        return 0
-    fi
-
-    # Use Python for robust YAML array parsing
-    if command -v python3 &> /dev/null; then
-        python3 -c "
-import yaml, json, sys
-try:
-    with open('$config_file', 'r') as f:
-        config = yaml.safe_load(f)
-        links = config.get('service', {}).get('links', [])
-        print(json.dumps(links))
-except:
-    print('[]')
-" 2>/dev/null || echo "[]"
-    else
-        log_warning "Python not available, cannot parse links array"
-        echo "[]"
-    fi
+    parse_yaml_field "$config_file" "service.links" "[]"
 }
 
 # Parse OpenAPI configuration from config
@@ -94,31 +115,7 @@ parse_openapi_config() {
         return 0
     fi
 
-    # Check if openapi section exists
-    if ! grep -q "openapi:" "$config_file"; then
-        echo "null"
-        return 0
-    fi
-
-    # Use Python for robust YAML parsing
-    if command -v python3 &> /dev/null; then
-        python3 -c "
-import yaml, json, sys
-try:
-    with open('$config_file', 'r') as f:
-        config = yaml.safe_load(f)
-        openapi = config.get('openapi', None)
-        if openapi:
-            print(json.dumps(openapi))
-        else:
-            print('null')
-except:
-    print('null')
-" 2>/dev/null || echo "null"
-    else
-        log_warning "Python not available, cannot parse OpenAPI config"
-        echo "null"
-    fi
+    parse_yaml_field "$config_file" "openapi" "null"
 }
 
 # Check if workflow is installed
