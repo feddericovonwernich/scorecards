@@ -228,10 +228,29 @@ CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 CHECKS_JSON=$(cat "$RESULTS_FILE")
 
+# Group related data into associative arrays for cleaner function calls
+declare -A service_context=(
+    [org]="$SERVICE_ORG"
+    [repo]="$SERVICE_REPO"
+    [name]="$SERVICE_NAME"
+    [team]="$TEAM_NAME"
+    [has_api]="$HAS_API"
+    [default_branch]="$DEFAULT_BRANCH"
+)
+
+declare -A score_context=(
+    [score]="$SCORE"
+    [rank]="$RANK"
+    [passed_checks]="$PASSED_CHECKS"
+    [total_checks]="$TOTAL_CHECKS"
+    [checks_hash]="$CHECKS_HASH"
+    [checks_count]="$CHECKS_COUNT"
+    [installed]="$INSTALLED"
+)
+
+# Build final results using context arrays
 FINAL_RESULTS=$(build_results_json \
-    "$SERVICE_ORG" "$SERVICE_REPO" "$SERVICE_NAME" "$TEAM_NAME" \
-    "$SCORE" "$RANK" "$PASSED_CHECKS" "$TOTAL_CHECKS" \
-    "$TIMESTAMP" "$CHECKS_HASH" "$CHECKS_COUNT" "$INSTALLED" \
+    service_context score_context "$TIMESTAMP" \
     "$CONTRIBUTORS_JSON" "$CHECKS_JSON" "$LINKS_JSON" "$OPENAPI_JSON")
 
 echo "$FINAL_RESULTS" | jq '.' > "$OUTPUT_DIR/final-results.json"
@@ -241,26 +260,7 @@ echo "$FINAL_RESULTS" | jq '.' > "$OUTPUT_DIR/final-results.json"
 # ============================================================================
 
 if [ -n "$SCORECARDS_REPO" ]; then
-    # Group related data into associative arrays for cleaner function calls
-    declare -A service_context=(
-        [org]="$SERVICE_ORG"
-        [repo]="$SERVICE_REPO"
-        [name]="$SERVICE_NAME"
-        [team]="$TEAM_NAME"
-        [has_api]="$HAS_API"
-        [default_branch]="$DEFAULT_BRANCH"
-    )
-
-    declare -A score_context=(
-        [score]="$SCORE"
-        [rank]="$RANK"
-        [passed_checks]="$PASSED_CHECKS"
-        [total_checks]="$TOTAL_CHECKS"
-        [checks_hash]="$CHECKS_HASH"
-        [checks_count]="$CHECKS_COUNT"
-        [installed]="$INSTALLED"
-    )
-
+    # Additional context arrays for catalog update
     declare -A repo_context=(
         [github_token]="$GITHUB_TOKEN"
         [scorecards_repo]="$SCORECARDS_REPO"

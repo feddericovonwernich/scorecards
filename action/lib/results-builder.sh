@@ -6,22 +6,28 @@ source "$SCRIPT_DIR/common.sh"
 
 # Build complete results JSON
 build_results_json() {
-    local service_org="$1"
-    local service_repo="$2"
-    local service_name="$3"
-    local team_name="$4"
-    local score="$5"
-    local rank="$6"
-    local passed_checks="$7"
-    local total_checks="$8"
-    local timestamp="$9"
-    local checks_hash="${10}"
-    local checks_count="${11}"
-    local installed="${12}"
-    local contributors_json="${13}"
-    local checks_json="${14}"
-    local links_json="${15:-[]}"
-    local openapi_json="${16:-null}"
+    # Accept context arrays
+    local -n svc=$1
+    local -n scr=$2
+    local timestamp="$3"
+    local contributors_json="$4"
+    local checks_json="$5"
+    local links_json="${6:-[]}"
+    local openapi_json="${7:-null}"
+
+    # Extract values
+    local service_org="${svc[org]}"
+    local service_repo="${svc[repo]}"
+    local service_name="${svc[name]}"
+    local team_name="${svc[team]}"
+
+    local score="${scr[score]}"
+    local rank="${scr[rank]}"
+    local passed_checks="${scr[passed_checks]}"
+    local total_checks="${scr[total_checks]}"
+    local checks_hash="${scr[checks_hash]}"
+    local checks_count="${scr[checks_count]}"
+    local installed="${scr[installed]}"
 
     log_info "Building final results JSON"
 
