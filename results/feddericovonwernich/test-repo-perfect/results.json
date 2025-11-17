@@ -7,21 +7,21 @@
     "links": [],
     "openapi": null
   },
-  "score": 76,
+  "score": 83,
   "rank": "gold",
-  "passed_checks": 6,
+  "passed_checks": 7,
   "total_checks": 10,
-  "timestamp": "2025-11-17T21:16:41Z",
+  "timestamp": "2025-11-17T21:34:36Z",
   "checks_hash": "4af8c899ff423ce173c81c2dc0f2e23b188e0fa7f70c40d5713c7f1d50d791fe",
   "checks_count": 11,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
-      "email": "feddericokz @gmail.com",
+      "name": "feddericovonwernich",
+      "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-16T15:28:44Z",
-      "last_commit_hash": "d045035"
+      "last_commit_date": "2025-11-17T18:33:12Z",
+      "last_commit_hash": "f40bf33"
     }
   ],
   "checks": [
@@ -57,8 +57,8 @@
       "weight": 18,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "duration": 0,
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -79,11 +79,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "documentation",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
+      "stderr": ""
     },
     {
       "check_id": "06-openapi-spec",
@@ -93,7 +93,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
@@ -105,7 +105,7 @@
       "weight": 10,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI Quality Score: 98/100\n\nQuality Metrics:\n  Info: ✓ description, ✓ contact, ✓ license\n  Operations: 4 total\n    - 4/4 (100%) with descriptions\n    - 4/4 (100%) with tags\n    - 2/4 (50%) with examples\n  Parameters: 3/3 (100%) with descriptions\n  Responses: 9/9 (100%) with descriptions\n  Schemas: 4/4 (100%) with descriptions\n  Security: ✓ defined, ✓ applied\n\nQuality score meets threshold (60+)\n",
       "stderr": ""
     },
@@ -119,7 +119,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": "OpenAPI specification found (openapi.yaml), but no .scorecard/config.yml exists\nCreate .scorecard/config.yml with openapi.environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n      staging:\n        base_url: \"https://staging-api.example.com\"\n"
+      "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
     },
     {
       "check_id": "09-scorecard-badge",
@@ -143,7 +143,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     }
   ]
 }
