@@ -1243,6 +1243,11 @@ footer a:hover {
     margin: 0 !important;
 }
 
+/* Spinning animation for loading state */
+.trigger-btn svg.spinning {
+    animation: spin 1s linear infinite;
+}
+
 /* Bulk trigger button */
 .trigger-btn-bulk {
     background: #667eea;
