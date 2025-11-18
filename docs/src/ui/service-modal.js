@@ -186,11 +186,15 @@ function groupChecksByCategory(checks) {
         'Other'
     ];
 
-    // Return categories in defined order
+    // Return categories in defined order (case-insensitive matching)
     const orderedCategories = {};
     categoryOrder.forEach(category => {
-        if (categories[category]) {
-            orderedCategories[category] = categories[category];
+        // Find matching category key (case-insensitive)
+        const matchingKey = Object.keys(categories).find(
+            key => key.toLowerCase() === category.toLowerCase()
+        );
+        if (matchingKey) {
+            orderedCategories[category] = categories[matchingKey];
         }
     });
 
