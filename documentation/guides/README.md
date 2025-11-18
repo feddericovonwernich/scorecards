@@ -4,21 +4,16 @@ This section contains step-by-step guides for using Scorecards.
 
 ## Available Guides
 
-- **[Installation](installation.md)** - Install Scorecards in your repository
+- **[Usage](usage.md)** - Installation and day-to-day usage patterns
 - **[Configuration](configuration.md)** - Configure .scorecard/config.yml
-- **[Usage](usage.md)** - Day-to-day usage patterns and workflows
-- **[Adding Checks](adding-checks.md)** - Create new quality checks
-- **[Using Shared Libraries](using-shared-libraries.md)** - Use common utility functions
-- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
 ## Quick Start
 
 New to Scorecards? Start here:
 
 1. Read [Getting Started](../getting-started.md) for a quick overview
-2. Follow [Installation](installation.md) to install in your repo
-3. Configure your repository using [Configuration](configuration.md)
-4. Learn about daily use in [Usage](usage.md)
+2. Follow the [Usage Guide](usage.md) to install in your repository
+3. Configure your repository using the [Configuration Guide](configuration.md)
 
 ## Common Tasks
 
@@ -38,12 +33,12 @@ New to Scorecards? Start here:
 
 ### Adding Custom Checks
 
-See [Adding Checks](adding-checks.md) for detailed instructions on creating custom quality checks for your organization.
+See the [Check Development Guide](../reference/check-catalog.md) for detailed instructions on creating custom quality checks for your organization.
 
 ## Getting Help
 
 If you encounter issues:
 
-1. Check [Troubleshooting](troubleshooting.md)
+1. Review the [Usage Guide troubleshooting section](usage.md#troubleshooting)
 2. Review workflow logs in GitHub Actions
 3. Open an issue in the Scorecards repository

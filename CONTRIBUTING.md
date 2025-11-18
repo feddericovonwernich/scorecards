@@ -13,11 +13,11 @@ Thank you for your interest in contributing to Scorecards!
 
 ## Development Setup
 
-See `documentation/development/local-setup.md` for detailed setup instructions.
+See the [Development Guide](documentation/development/README.md) for development guidelines and setup instructions.
 
 ## Adding a New Check
 
-See `documentation/development/adding-a-check.md` for a guide on creating new checks.
+See the [Check Development Guide](documentation/reference/check-catalog.md) for a guide on creating new checks.
 
 ## Using Shared Libraries
 

@@ -293,5 +293,5 @@ Future versions of scorecards may support:
 ## Questions?
 
 If you have questions about configuration or want to suggest new fields:
-- Open an [issue](https://github.com/your-org/scorecards/issues)
-- Start a [discussion](https://github.com/your-org/scorecards/discussions)
+- Open an [issue](https://github.com/feddericovonwernich/scorecards/issues)
+- Start a [discussion](https://github.com/feddericovonwernich/scorecards/discussions)

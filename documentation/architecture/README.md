@@ -5,9 +5,6 @@ This section contains detailed architecture documentation for the Scorecards sys
 ## Documents
 
 - **[Overview](overview.md)** - High-level system architecture and data flow
-- **[Checks System](checks-system.md)** - How checks are implemented and executed
-- **[GitHub Action](github-action.md)** - GitHub Action implementation details
-- **[Catalog UI](catalog-ui.md)** - Web interface architecture and features
 
 ## Design Principles
 

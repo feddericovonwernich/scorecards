@@ -294,11 +294,15 @@ export async function getVisibleServiceNames(page) {
  * @param {boolean} options.requireAuth - Whether to require authorization header (default: true)
  */
 export async function mockWorkflowDispatch(page, { status = 204, requireAuth = true } = {}) {
-  await page.route('**/api.github.com/repos/*/actions/workflows/*/dispatches', async (route) => {
+  const pattern = '**/api.github.com/repos/**/actions/workflows/*/dispatches';
+  console.log('Setting up workflow dispatch mock with pattern:', pattern);
+
+  await page.route(pattern, async (route) => {
     const headers = route.request().headers();
     const hasAuth = headers['authorization'] && (headers['authorization'].startsWith('Bearer ') || headers['authorization'].startsWith('token '));
+    const url = route.request().url();
 
-    console.log('Mock intercepted: workflow dispatch', hasAuth ? '(authenticated)' : '(unauthenticated)');
+    console.log('Mock intercepted: workflow dispatch', url, hasAuth ? '(authenticated)' : '(unauthenticated)');
 
     // If auth is required but not provided, return 401
     if (requireAuth && !hasAuth) {

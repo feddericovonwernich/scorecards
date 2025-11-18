@@ -15,11 +15,10 @@ Complete reference documentation for Scorecards.
 
 | Tier | Score Range | Badge Color | Description |
 |------|-------------|-------------|-------------|
-| Platinum | 90-100% | Purple | Exceptional quality |
-| Gold | 80-89% | Gold | High quality |
-| Silver | 60-79% | Silver | Good quality |
-| Bronze | 40-59% | Bronze | Basic quality |
-| Needs Improvement | 0-39% | Red | Requires attention |
+| Platinum | 90-100 | Purple | Exceptional quality |
+| Gold | 75-89 | Gold | High quality |
+| Silver | 50-74 | Silver | Good quality |
+| Bronze | 0-49 | Bronze | Basic quality |
 
 ### Check Categories
 

@@ -76,7 +76,7 @@ No problem! If you close the PR without merging:
 #### After Installation
 
 Once the PR is merged, add a `SCORECARDS_PAT` secret:
-1. Create a PAT with `repo` scope
+1. Create a Personal Access Token (PAT) with `repo` scope
 2. Add it to your repository secrets as `SCORECARDS_PAT`
 3. This allows pushing results to the central catalog
 
@@ -106,10 +106,10 @@ jobs:
       # ... your existing CI steps ...
 
       - name: Run Scorecards
-        uses: your-org/scorecards/action@main
+        uses: feddericovonwernich/scorecards/action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          scorecards-repo: 'your-org/scorecards'  # Central scorecards repo
+          scorecards-repo: 'feddericovonwernich/scorecards'  # Central scorecards repo
 ```
 
 ### Step 2: Push to Default Branch
@@ -119,7 +119,7 @@ Once you've added the action, push to your default branch. The scorecard will ru
 ### Step 3: View Your Results
 
 After the first run:
-1. Visit the [Scorecards Catalog](https://your-org.github.io/scorecards/)
+1. Visit the [Scorecards Catalog](https://feddericovonwernich.github.io/scorecards/)
 2. Find your service in the list
 3. See your score, rank, and detailed check results
 
@@ -172,7 +172,7 @@ github-token: ${{ secrets.SCORECARD_PAT }}
 The central scorecards repository where results are stored (format: `owner/repo`).
 
 ```yaml
-scorecards-repo: 'your-org/scorecards'
+scorecards-repo: 'feddericovonwernich/scorecards'
 ```
 
 If not provided, the action will detect it from the action source.
@@ -200,7 +200,7 @@ The action provides outputs you can use in subsequent steps:
 ```yaml
 - name: Run Scorecards
   id: scorecard
-  uses: your-org/scorecards/action@main
+  uses: feddericovonwernich/scorecards/action@main
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -225,13 +225,13 @@ Add scorecard badges to your README to show your score and rank:
 ```markdown
 # My Service
 
-![Scorecard Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/your-org/scorecards/catalog/badges/your-org/your-repo/score.json)
-![Scorecard Rank](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/your-org/scorecards/catalog/badges/your-org/your-repo/rank.json)
+![Scorecard Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/feddericovonwernich/scorecards/catalog/badges/your-org/your-repo/score.json)
+![Scorecard Rank](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/feddericovonwernich/scorecards/catalog/badges/your-org/your-repo/rank.json)
 
 ...rest of your README...
 ```
 
-Replace `your-org` and `your-repo` with your organization and repository names.
+Replace `your-org` and `your-repo` with your service's organization and repository names.
 
 ## Understanding Your Score
 
@@ -310,7 +310,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run Scorecards (PR Check)
-        uses: your-org/scorecards/action@main
+        uses: feddericovonwernich/scorecards/action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Don't set scorecards-repo to avoid committing on PRs
@@ -324,5 +324,5 @@ Currently, all checks run automatically. Future versions may support check selec
 
 - 📖 [Check Development Guide](../reference/check-catalog.md)
 - 📖 [Configuration Reference](./configuration.md)
-- 🐛 [Report Issues](https://github.com/your-org/scorecards/issues)
-- 💬 [Discussions](https://github.com/your-org/scorecards/discussions)
+- 🐛 [Report Issues](https://github.com/feddericovonwernich/scorecards/issues)
+- 💬 [Discussions](https://github.com/feddericovonwernich/scorecards/discussions)

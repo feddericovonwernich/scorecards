@@ -87,7 +87,7 @@ scorecards/
 5. Update check catalog documentation
 6. Submit PR
 
-See [Adding Checks](../guides/adding-checks.md) for detailed guide.
+See the [Check Development Guide](../reference/check-catalog.md) for a detailed guide.
 
 ## Testing Strategy
 

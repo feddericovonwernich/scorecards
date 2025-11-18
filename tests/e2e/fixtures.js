@@ -10,14 +10,14 @@ export const mockPAT = 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
 // Expected catalog statistics
 export const expectedStats = {
-  totalServices: 8,
-  averageScore: 53,  // This may vary slightly
-  withAPI: 0,
-  stale: 0,
-  installed: 0,
+  totalServices: 9,
+  averageScore: 56,  // This may vary slightly
+  withAPI: 1,
+  stale: 1,
+  installed: 1,
   ranks: {
     platinum: 0,
-    gold: 1,
+    gold: 2,
     silver: 4,
     bronze: 3,
   },
@@ -25,6 +25,14 @@ export const expectedStats = {
 
 // Expected service data
 export const expectedServices = [
+  {
+    name: 'test-repo-stale',
+    org: 'feddericovonwernich',
+    repo: 'test-repo-stale',
+    score: 80,
+    rank: 'gold',
+    hasInstallationPR: false,
+  },
   {
     name: 'test-repo-perfect',
     org: 'feddericovonwernich',

@@ -84,8 +84,6 @@ If you need these features, use Cortex or Backstage. They're excellent tools for
 - Have the team and budget for a full internal developer platform
 - Manage 100+ services across multiple organizations
 
-**Or use both:** Many teams run Scorecards alongside Backstage or Cortex for specific quality measurements.
-
 ## Quick Start
 
 ### For Platform Teams

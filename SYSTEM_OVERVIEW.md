@@ -1,6 +1,10 @@
-# Scorecards
+# Scorecards - System Overview
+
+> **Looking for a quick introduction?** See [README.md](README.md) for project overview, positioning, and quick start.
 
 A flexible, non-blocking scorecard system for measuring service quality and best practices across your organization.
+
+This document contains detailed technical documentation, architecture details, and comprehensive usage instructions.
 
 ## Quick Start
 
@@ -128,11 +132,7 @@ After installation, you can:
 
 ### For Service Teams
 
-Once your platform team has installed the central scorecards repository, you can add scorecards to your service in two ways:
-
-#### Automated Installation (Recommended)
-
-The easiest way to get started! This "try before you buy" approach lets you see your scorecard results before committing to installation:
+Add scorecards to your service repository with the automated installation workflow:
 
 ```yaml
 # .github/workflows/scorecards-check.yml
@@ -150,101 +150,34 @@ jobs:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-What happens:
-1. 🔍 Calculates your scorecard score daily
-2. 📝 Creates an automated PR with scorecards workflow and config
-3. 📊 Shows results in Actions tab (even before merging)
-4. ✅ Respects your decision if you close the PR (won't spam you)
+This creates an automated PR with scorecards configuration. Review, customize, and merge when ready.
 
-See [Usage Guide](documentation/guides/usage.md) for more information.
-
-#### Manual Installation
-
-If you prefer direct control, add this workflow to your service:
-
-```yaml
-# .github/workflows/scorecards.yml
-name: Scorecards
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  scorecards:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Scorecards
-        uses: feddericovonwernich/scorecards/action@main
-        with:
-          github-token: ${{ secrets.SCORECARDS_TOKEN }}
-          scorecards-repo: 'feddericovonwernich/scorecards'
-          scorecards-branch: 'catalog'  # optional, this is the default
-```
-
-**Setting up the Token:**
-
-Create a GitHub Personal Access Token with `repo` permissions and add it as a secret:
-
-1. Create token: [GitHub Settings → Tokens](https://github.com/settings/tokens/new)
-2. Select `repo` (full control of private repositories)
-3. Add as `SCORECARDS_TOKEN` secret in your service repository
-
-That's it! The next push to main will calculate your score and you'll appear in the catalog.
+See the [Usage Guide](documentation/guides/usage.md) for detailed installation instructions, manual setup options, and configuration details.
 
 ### Optional Configuration
 
-Create `.scorecard/config.yml` in your repo for customization:
+Create `.scorecard/config.yml` in your repository:
 
 ```yaml
 service:
-  name: "My Amazing Service"
+  name: "My Service"
   team: "Platform Team"
-  description: "Core API service handling user authentication"
-  links:
-    - name: "Documentation"
-      url: "https://docs.example.com/my-service"
-    - name: "Runbook"
-      url: "https://wiki.example.com/runbook"
-
-# For services with OpenAPI/Swagger specifications
-openapi:
-  spec_file: "openapi.yaml"  # Path to your OpenAPI spec file
-  branch: "main"  # Branch where the spec is located (optional, defaults to trying main/master)
-  environments:
-    production:
-      base_url: "https://api.example.com/v1"
-      description: "Production environment"
-    staging:
-      base_url: "https://staging-api.example.com/v1"
-      description: "Staging environment"
-    development:
-      base_url: "http://localhost:8000"
-      description: "Local development"
-
-custom:
-  criticality: "high"
-  environment: "production"
+  description: "Brief service description"
 ```
+
+See the [Configuration Guide](documentation/guides/configuration.md) for all available options, including OpenAPI configuration and custom metadata.
 
 ## Scoring System
 
-### How Scores Are Calculated
+Scores are calculated based on weighted checks. Each check has a weight indicating its importance.
 
-Each check has a weight (defined in its `metadata.json`). Your score is:
-
-```
-score = (sum of passed check weights / sum of all check weights) × 100
-```
-
-### Ranking
-
+**Tiers:**
 - **Platinum** (90-100): Exemplary
 - **Gold** (75-89): Excellent
 - **Silver** (50-74): Good
 - **Bronze** (0-49): Needs improvement
+
+See the [Usage Guide](documentation/guides/usage.md#understanding-your-score) for detailed scoring calculations and examples.
 
 ## Badges
 
@@ -275,7 +208,7 @@ Current checks:
 
 ## For Check Authors
 
-Want to add a new check? See [Adding Checks Guide](documentation/guides/adding-checks.md) for the development guide.
+Want to add a new check? See the [Check Development Guide](documentation/reference/check-catalog.md) for details on creating new checks.
 
 ## Catalog
 
@@ -295,13 +228,6 @@ The catalog automatically detects when scorecards are outdated:
 - Uses SHA256 hash of the entire check suite (IDs + metadata + implementation code)
 
 To update a stale scorecard, simply re-run the scorecard workflow on your service repository. The next run will use the latest check suite and clear the stale indicator.
-
-## Action Inputs
-
-| Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `github-token` | Yes | - | GitHub token for API access and committing results |
-| `create-config-pr` | No | `false` | Create PR with config template if missing |
 
 ## License
 

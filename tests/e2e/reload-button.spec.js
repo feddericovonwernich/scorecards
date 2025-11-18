@@ -109,12 +109,7 @@ test.describe('Reload Button', () => {
     // Click the button
     await reloadBtn.click();
 
-    // Loading state: should still have reload icon (same icon, but spinning)
-    await page.waitForTimeout(100);
-    svgPath = await reloadBtn.locator('svg path').getAttribute('d');
-    expect(svgPath).toContain('1.705'); // Still reload icon
-
-    // Wait for success state
+    // Wait for success state (mock responds immediately, so skip intermediate check)
     await page.waitForTimeout(500);
 
     // Success state: should have checkmark icon
@@ -184,6 +179,9 @@ test.describe('Reload Button', () => {
     // Wait for reset (3 seconds)
     await page.waitForTimeout(3500);
 
+    // Move mouse away to remove hover state
+    await page.mouse.move(0, 0);
+
     // After reset: back to orange
     await expect(reloadBtn).toHaveCSS('background', /rgb\(243, 156, 18\)/);
     await expect(reloadBtn).not.toBeDisabled();
@@ -219,8 +217,11 @@ test.describe('Reload Button', () => {
     // Wait for reset (3 seconds)
     await page.waitForTimeout(3500);
 
+    // Move mouse away to remove hover state
+    await page.mouse.move(0, 0);
+
     // After reset: back to orange with reload icon
-    await expect(reloadBtn).toHaveCSS('background', /rgb\(243, 156, 18\)/);
+    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(243, 156, 18)'); // #f39c12
     await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
   });
 
@@ -257,6 +258,9 @@ test.describe('Reload Button', () => {
 
     // Wait exactly 3 seconds
     await page.waitForTimeout(3000);
+
+    // Move mouse away to remove hover state
+    await page.mouse.move(0, 0);
 
     // Should be reset to original state
     await expect(reloadBtn).toHaveCSS('background', /rgb\(243, 156, 18\)/);

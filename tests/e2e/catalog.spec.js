@@ -98,8 +98,8 @@ test.describe('Catalog Page', () => {
 
   test('should sort by "Score: High to Low" by default', async ({ page }) => {
     const names = await getVisibleServiceNames(page);
-    // First service should be test-repo-perfect (highest score: 76)
-    expect(names[0]).toBe('test-repo-perfect');
+    // First service should be test-repo-stale (highest score: 80)
+    expect(names[0]).toBe('test-repo-stale');
     // Last service should be test-repo-empty (lowest score: 23)
     expect(names[names.length - 1]).toBe('test-repo-empty');
   });
@@ -111,8 +111,8 @@ test.describe('Catalog Page', () => {
     const names = await getVisibleServiceNames(page);
     // First service should be test-repo-empty (lowest score: 23)
     expect(names[0]).toBe('test-repo-empty');
-    // Last service should be test-repo-perfect (highest score: 76)
-    expect(names[names.length - 1]).toBe('test-repo-perfect');
+    // Last service should be test-repo-stale (highest score: 80)
+    expect(names[names.length - 1]).toBe('test-repo-stale');
   });
 
   test('should sort by "Name: A to Z"', async ({ page }) => {
@@ -122,8 +122,8 @@ test.describe('Catalog Page', () => {
     const names = await getVisibleServiceNames(page);
     // Should start with 'test-repo-edge-cases' (alphabetically first)
     expect(names[0]).toBe('test-repo-edge-cases');
-    // Should end with 'test-repo-python' (alphabetically last)
-    expect(names[names.length - 1]).toBe('test-repo-python');
+    // Should end with 'test-repo-stale' (alphabetically last)
+    expect(names[names.length - 1]).toBe('test-repo-stale');
   });
 
   test('should sort by "Name: Z to A"', async ({ page }) => {
@@ -131,8 +131,8 @@ test.describe('Catalog Page', () => {
     await page.waitForTimeout(300);
 
     const names = await getVisibleServiceNames(page);
-    // Should start with 'test-repo-python' (alphabetically last)
-    expect(names[0]).toBe('test-repo-python');
+    // Should start with 'test-repo-stale' (alphabetically last)
+    expect(names[0]).toBe('test-repo-stale');
     // Should end with 'test-repo-edge-cases' (alphabetically first)
     expect(names[names.length - 1]).toBe('test-repo-edge-cases');
   });

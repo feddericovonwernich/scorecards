@@ -6,9 +6,10 @@ Welcome to the Scorecards documentation!
 
 - [Getting Started](getting-started.md) - Install and configure Scorecards
 - [Architecture Overview](architecture/overview.md) - How Scorecards works
+- [Usage Guide](guides/usage.md) - Installation and usage patterns
 - [Configuration Guide](guides/configuration.md) - Configure your repository
-- [Check Catalog](reference/check-catalog.md) - All available checks
-- [Contributing](development/contributing.md) - Contribute to Scorecards
+- [Check Catalog](reference/check-catalog.md) - All available checks and development guide
+- [Contributing](../CONTRIBUTING.md) - Contribute to Scorecards
 
 ## Documentation Structure
 
@@ -17,32 +18,24 @@ Welcome to the Scorecards documentation!
 
 ### Architecture
 - **[Overview](architecture/overview.md)** - High-level system architecture
-- **[Checks System](architecture/checks-system.md)** - How checks work
-- **[GitHub Action](architecture/github-action.md)** - Action implementation details
-- **[Catalog UI](architecture/catalog-ui.md)** - Catalog web interface
 
 ### Guides
-- **[Installation](guides/installation.md)** - Install Scorecards in your repos
+- **[Usage](guides/usage.md)** - Installation and usage patterns
 - **[Configuration](guides/configuration.md)** - Configure .scorecard/config.yml
-- **[Usage](guides/usage.md)** - Day-to-day usage patterns
-- **[Adding Checks](guides/adding-checks.md)** - Create new quality checks
-- **[Using Shared Libraries](guides/using-shared-libraries.md)** - Use common utilities
 
 ### Reference
-- **[Check Catalog](reference/check-catalog.md)** - Complete list of all checks
-- **[Config Schema](reference/config-schema.md)** - Configuration file schema
-- **[Metadata Schema](reference/metadata-schema.md)** - Check metadata schema
-- **[API](reference/api.md)** - GitHub API interactions
+- **[Check Catalog](reference/check-catalog.md)** - Check development guide and catalog
+- **[Reference](reference/README.md)** - Score tiers, categories, and file formats
 
 ### Development
-- **[Contributing](development/contributing.md)** - How to contribute
-- **[Testing](development/testing.md)** - Running and writing tests
-- **[Local Setup](development/local-setup.md)** - Set up development environment
+- **[Contributing](../CONTRIBUTING.md)** - How to contribute
+- **[Development Guide](development/README.md)** - Development overview and guidelines
 - **[Architecture Decisions](development/decisions/)** - ADRs and design docs
 
 ## Other Resources
 
-- [Main README](../README.md) - Project overview
+- [Main README](../README.md) - Project overview and positioning
+- [System Overview](../SYSTEM_OVERVIEW.md) - Complete technical documentation
 - [Catalog UI](../docs/) - View scorecard results
-- [License](../LICENSE) - Apache 2.0
+- [License](../LICENSE) - MIT
 - [Code of Conduct](../CODE_OF_CONDUCT.md)

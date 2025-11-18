@@ -8,31 +8,13 @@ Scorecards is an automated quality scoring system for service repositories. It r
 
 ## Installation
 
-### Prerequisites
-
-- A GitHub repository
-- Write access to the repository
-- GitHub Actions enabled
-
 ### Quick Install
 
-1. **Run the installation workflow**
+1. Add the scorecards workflow to your repository
+2. Review and merge the automated installation PR
+3. Configure your service metadata (optional)
 
-   Visit the Scorecards repository and trigger the installation workflow for your repository.
-
-2. **Review the PR**
-
-   The installation creates a pull request in your repository with:
-   - `.github/workflows/scorecards.yml` - The workflow file
-   - `.scorecard/config.yml` - Configuration file
-
-3. **Merge the PR**
-
-   Review and merge the pull request. Scorecards will run on the next push.
-
-### Manual Installation
-
-See [Installation Guide](guides/installation.md) for manual installation steps.
+See the [Usage Guide](guides/usage.md) for detailed installation instructions, including automated and manual setup options.
 
 ## Configuration
 
@@ -55,11 +37,10 @@ After the workflow runs:
 
 ## Score Tiers
 
-- **Platinum (90-100%)** - Exceptional quality
-- **Gold (80-89%)** - High quality
-- **Silver (60-79%)** - Good quality
-- **Bronze (40-59%)** - Basic quality
-- **Needs Improvement (<40%)** - Requires attention
+- **Platinum (90-100)** - Exceptional quality
+- **Gold (75-89)** - High quality
+- **Silver (50-74)** - Good quality
+- **Bronze (0-49)** - Basic quality
 
 ## Available Checks
 
@@ -77,10 +58,9 @@ Common checks include:
 - [Configure your repository](guides/configuration.md)
 - [Learn about the architecture](architecture/overview.md)
 - [View all checks](reference/check-catalog.md)
-- [Add Scorecards to more repositories](guides/installation.md)
+- [Add Scorecards to more repositories](guides/usage.md)
 
 ## Getting Help
 
 - Check the [documentation](README.md)
-- Review [common issues](guides/troubleshooting.md)
 - Open an issue in the Scorecards repository

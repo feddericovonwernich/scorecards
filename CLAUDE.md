@@ -1,5 +1,12 @@
 # Scorecards - AI Context
 
+## Documentation Guidelines
+
+- Write concise, clear documentation
+- Avoid repetition - apply DRY principle
+- Reference existing docs rather than duplicating
+- Assume mature technical audience
+
 ## Testing Guidelines
 
 ### Playwright E2E Tests
