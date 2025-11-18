@@ -129,9 +129,7 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
-  schedule:
-    - cron: '0 0 * * *'  # Daily for scorecards
+  workflow_dispatch:
 
 jobs:
   # Your existing CI jobs
@@ -151,10 +149,9 @@ jobs:
 
   # Add scorecards automated onboarding
   scorecards:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
     secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
+      github-token: ${{ secrets.SCORECARDS_PAT }}
 ```
 
 **Benefits:**
@@ -188,7 +185,7 @@ jobs:
       - name: Run Scorecards
         uses: feddericovonwernich/scorecards/action@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.SCORECARDS_PAT }}
           scorecards-repo: 'feddericovonwernich/scorecards'
 ```
 
