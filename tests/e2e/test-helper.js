@@ -208,8 +208,8 @@ export async function setGitHubPAT(page, pat) {
   await openSettingsModal(page);
   await page.getByRole('textbox', { name: 'Personal Access Token' }).fill(pat);
   await page.getByRole('button', { name: 'Save Token' }).click();
-  // Wait for success notification
-  await page.waitForSelector('.notification', { state: 'visible' });
+  // Wait for success toast
+  await page.waitForSelector('.toast', { state: 'visible' });
   await closeSettingsModal(page);
 }
 
@@ -284,4 +284,46 @@ export async function getVisibleServiceNames(page) {
     names.push(name.trim());
   }
   return names;
+}
+
+/**
+ * Mock GitHub workflow dispatch API endpoint
+ * @param {import('@playwright/test').Page} page
+ * @param {Object} options - Mock options
+ * @param {number} options.status - HTTP status code (default: 204 for success)
+ * @param {boolean} options.requireAuth - Whether to require authorization header (default: true)
+ */
+export async function mockWorkflowDispatch(page, { status = 204, requireAuth = true } = {}) {
+  await page.route('**/api.github.com/repos/*/actions/workflows/*/dispatches', async (route) => {
+    const headers = route.request().headers();
+    const hasAuth = headers['authorization'] && (headers['authorization'].startsWith('Bearer ') || headers['authorization'].startsWith('token '));
+
+    console.log('Mock intercepted: workflow dispatch', hasAuth ? '(authenticated)' : '(unauthenticated)');
+
+    // If auth is required but not provided, return 401
+    if (requireAuth && !hasAuth) {
+      await route.fulfill({
+        status: 401,
+        body: JSON.stringify({
+          message: 'Requires authentication'
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return;
+    }
+
+    // Return the configured status
+    await route.fulfill({
+      status: status,
+      body: status === 204 ? '' : JSON.stringify({ message: 'Workflow dispatch failed' }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  });
+
+  // CRITICAL: Wait to ensure route handler is fully registered
+  await page.waitForTimeout(100);
 }

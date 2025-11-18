@@ -15,8 +15,10 @@
     {"org":"feddericovonwernich","repo":"test-repo-perfect","name":"test-repo-perfect","team":"","score":76,"rank":"gold","last_updated":"2025-11-16T18:58:54Z","has_api":false,"checks_hash":"df8169736e22602a07ea3957f0f89eef5cd6a78cb083df17bb1cfbb086f17463","checks_count":11,"installed":false}
 ,
     {"org":"feddericovonwernich","repo":"test-repo-python","name":"test-repo-python","team":"","score":63,"rank":"silver","last_updated":"2025-11-16T18:58:48Z","has_api":false,"checks_hash":"df8169736e22602a07ea3957f0f89eef5cd6a78cb083df17bb1cfbb086f17463","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":6,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-python/pull/6"}}
+,
+    {"org":"feddericovonwernich","repo":"test-repo-stale","name":"test-repo-stale","team":"Platform","score":80,"rank":"gold","last_updated":"2025-11-15T12:00:00Z","has_api":true,"checks_hash":"old_hash_12345","checks_count":11,"installed":true,"default_branch":"main"}
 
   ],
   "generated_at": "2025-11-16T19:00:52Z",
-  "count": 8
+  "count": 9
 }
