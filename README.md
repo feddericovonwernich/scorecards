@@ -120,19 +120,38 @@ The install workflow runs in service repositories and:
 
 This "try before you buy" approach lets service teams see their scores before committing to installation.
 
-**Example workflow to add to your unified CI template:**
+**Example - Add to your existing unified CI template:**
 
 ```yaml
-# .github/workflows/scorecards-check.yml
-name: Scorecards Check
+# .github/workflows/ci.yml (your existing unified CI template)
+name: CI
 
 on:
+  push:
+    branches: [main]
+  pull_request:
   schedule:
-    - cron: '0 0 * * *'  # Daily at midnight UTC
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # Daily for scorecards
 
 jobs:
+  # Your existing CI jobs
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint code
+        run: npm run lint
+
+  # Add scorecards automated onboarding
   scorecards:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
