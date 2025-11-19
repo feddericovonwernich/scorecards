@@ -28,7 +28,7 @@ This document describes the high-level architecture of the Scorecards system.
                       ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   Catalog Branch                             │
-│  registry.json - All repository scores and metadata         │
+│  registry/, results/, badges/, docs/                        │
 └─────────────────────┬───────────────────────────────────────┘
                       │ Served via GitHub Pages
                       ▼
@@ -102,43 +102,31 @@ The system uses GitHub Actions workflows for automation:
 
 ## Data Flow
 
+The system processes quality checks through several interconnected flows:
+
 ### Scoring Flow
 
-1. **Trigger**: Push to service repository triggers workflow
-2. **Clone**: Action clones the repository
-3. **Execute**: Runs all checks against the repository
-4. **Score**: Calculates total score from check results
-5. **Badge**: Generates SVG badge with score and tier
-6. **Commit**: Creates commit in catalog branch with results
-7. **Display**: Catalog UI shows updated score
+Service repositories trigger the scorecards action on push/PR, which clones the repo, runs checks in Docker, calculates a weighted score, generates badges, and commits results to the catalog branch for display in the UI.
+
+**See [Scoring Flow](flows/scoring-flow.md) for detailed diagram and step-by-step explanation.**
 
 ### Check Execution Flow
 
-1. **Discovery**: Find all checks in `checks/` directory
-2. **Parse Metadata**: Read weight, timeout, category from metadata.json
-3. **Build Docker**: Create container with all runtimes
-4. **Run Check**: Execute check script with timeout
-5. **Parse Result**: Extract pass/fail/points from output
-6. **Aggregate**: Sum points for total score
+Checks are discovered from the `checks/` directory, their metadata parsed, a multi-runtime Docker image built, each check executed with timeout protection, results parsed from exit codes, and scores aggregated using weighted calculations.
+
+**See [Check Execution Flow](flows/check-execution-flow.md) for detailed diagram and implementation details.**
 
 ### Installation Flow
 
-1. **Trigger**: Manual workflow dispatch for target repository
-2. **Create Files**: Generate .github/workflows/scorecards.yml and .scorecard/config.yml
-3. **Create Branch**: Push files to scorecards-installation branch
-4. **Open PR**: Create pull request in target repository
-5. **Track**: Update registry with installation_pr metadata (number, state, url)
-6. **Merge**: Service maintainers review and merge PR
-7. **Activate**: First push triggers initial scorecard run
+Services are onboarded via automated PRs that add workflow and config files. The installation workflow generates the necessary files, creates a branch, opens a PR, tracks the PR in the registry, and activates scoring once merged.
+
+**See [Installation Flow](flows/installation-flow.md) for detailed diagram and onboarding process.**
 
 ### Staleness Detection Flow
 
-1. **Hash Generation**: When checks are modified, update-checks-hash.yml calculates SHA256
-2. **Store Current**: Write hash to catalog branch (current-checks-hash.txt)
-3. **Service Scoring**: Each scorecard run stores the checks_hash it used
-4. **Comparison**: UI compares service's checks_hash vs current-checks-hash.txt
-5. **Flag**: Services with mismatched hashes shown as stale
-6. **Trigger**: Bulk re-run available for all stale services
+When checks are modified, a SHA256 hash is generated and stored in the catalog branch. The UI compares each service's stored hash against the current hash to flag outdated scorecards, enabling targeted or bulk re-runs to update scores with the latest checks.
+
+**See [Staleness Detection Flow](flows/staleness-detection-flow.md) for detailed diagram and staleness mechanics.**
 
 ## Security Model
 
@@ -162,4 +150,13 @@ The system uses GitHub Actions workflows for automation:
 
 ## Related Documentation
 
+### Architecture Docs
+
 - [Catalog UI](catalog-ui.md) - Frontend architecture and features
+
+### Flow Diagrams
+
+- [Scoring Flow](flows/scoring-flow.md) - End-to-end scoring process
+- [Check Execution Flow](flows/check-execution-flow.md) - How checks are discovered and run
+- [Installation Flow](flows/installation-flow.md) - Service onboarding via automated PRs
+- [Staleness Detection Flow](flows/staleness-detection-flow.md) - Detecting outdated scorecards

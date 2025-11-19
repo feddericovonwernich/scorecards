@@ -81,6 +81,8 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 - Highlighted rows
 - Tooltip explaining staleness
 
+**See [Staleness Detection Flow](flows/staleness-detection-flow.md) for detailed diagram and mechanics.**
+
 ## Advanced Features
 
 ### Settings Management
@@ -222,3 +224,4 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 ## Related Documentation
 
 - [Architecture Overview](overview.md) - System-wide architecture
+- [Staleness Detection Flow](flows/staleness-detection-flow.md) - How staleness detection works
