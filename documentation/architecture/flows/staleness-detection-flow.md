@@ -30,12 +30,12 @@ This document describes how the system detects when service scorecards are outda
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  3. Export check metadata to JSON                      │ │
 │  │     {                                                   │ │
+│  │       "checks_hash": "abc123def456...",                │ │
 │  │       "checks": [                                       │ │
 │  │         { "id": "01", "weight": 10, ... },             │ │
 │  │         { "id": "02", "weight": 5, ... }               │ │
 │  │       ],                                                │ │
-│  │       "total_weight": 100,                             │ │
-│  │       "hash": "abc123def456..."                        │ │
+│  │       "total_weight": 100                              │ │
 │  │     }                                                   │ │
 │  └────────────────────────────────────────────────────────┘ │
 └────────────────┬─────────────────────────────────────────────┘
@@ -46,11 +46,12 @@ This document describes how the system detects when service scorecards are outda
 ┌──────────────────────────────────────────────────────────────┐
 │          Catalog Branch                                      │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  current-checks-hash.txt                               │ │
-│  │  abc123def456...                                       │ │
+│  │  current-checks.json (primary)                         │ │
+│  │  { "checks_hash": "abc123...",                         │ │
+│  │    "checks": [...], ... }                              │ │
 │  │                                                         │ │
-│  │  current-checks.json                                   │ │
-│  │  { "checks": [...], "hash": "abc123...", ... }         │ │
+│  │  current-checks-hash.txt (legacy)                      │ │
+│  │  abc123def456...                                       │ │
 │  └────────────────────────────────────────────────────────┘ │
 └────────────────┬─────────────────────────────────────────────┘
                  │
@@ -62,7 +63,7 @@ This document describes how the system detects when service scorecards are outda
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  On page load:                                         │ │
 │  │  1. Fetch registry/all-services.json                   │ │
-│  │  2. Fetch current-checks-hash.txt                      │ │
+│  │  2. Fetch current-checks.json (extract checks_hash)    │ │
 │  │  3. For each service, compare:                         │ │
 │  │     service.checks_hash vs current-checks-hash         │ │
 │  └────────────────────────────────────────────────────────┘ │
@@ -145,11 +146,20 @@ on:
 
 **Process**:
 ```bash
-# Find all check files
-find checks/ -type f | sort | \
-  # Hash contents
-  xargs sha256sum | \
-  # Hash the hashes
+# For each check directory (sorted):
+for check_dir in $(find checks/ -mindepth 1 -maxdepth 1 -type d | sort); do
+  check_id=$(basename "$check_dir")
+
+  # Hash metadata.json
+  metadata_hash=$(sha256sum "$check_dir/metadata.json" | awk '{print $1}')
+
+  # Hash check implementation (check.sh, check.py, or check.js)
+  impl_hash=$(sha256sum "$check_dir/check.*" | awk '{print $1}')
+
+  # Combine: check_id:metadata_hash:impl_hash
+  echo "$check_id:$metadata_hash:$impl_hash"
+done | \
+  # Hash all combined strings
   sha256sum | \
   # Extract hash only
   awk '{print $1}'
@@ -158,10 +168,12 @@ find checks/ -type f | sort | \
 **Includes**:
 - All `check.sh`, `check.py`, `check.js` files
 - All `metadata.json` files
+- Check ID (directory name)
 - Directory structure (adding/removing checks changes hash)
 
 **Deterministic**:
-- Files sorted alphabetically
+- Check directories sorted alphabetically
+- Each check hashed independently then combined
 - Same input always produces same hash
 - Independent of execution environment
 
@@ -177,7 +189,7 @@ abc123def456789fedcba987654321deadbeef0123456789abcdef0123456789
 **Generated JSON** (`current-checks.json`):
 ```json
 {
-  "hash": "abc123def456...",
+  "checks_hash": "abc123def456...",
   "generated_at": "2024-01-15T10:30:00Z",
   "total_weight": 100,
   "checks_count": 15,
@@ -212,20 +224,26 @@ abc123def456789fedcba987654321deadbeef0123456789abcdef0123456789
 **Implementation**: `.github/workflows/update-checks-hash.yml`
 
 **Files Written**:
-1. `current-checks-hash.txt` - Single line with hash
-2. `current-checks.json` - Full check metadata
+1. `current-checks.json` - Full check metadata including hash in `checks_hash` field
+2. `current-checks-hash.txt` - Optional single line with hash (for backwards compatibility)
 
 **Git Operations**:
 ```bash
 git checkout catalog
-echo "$HASH" > current-checks-hash.txt
 cat > current-checks.json <<EOF
-{...}
+{
+  "checks_hash": "$HASH",
+  "checks": [...],
+  ...
+}
 EOF
-git add current-checks-hash.txt current-checks.json
+echo "$HASH" > current-checks-hash.txt
+git add current-checks.json current-checks-hash.txt
 git commit -m "Update checks hash to $HASH"
 git push
 ```
+
+**Note**: The UI primarily fetches `current-checks.json` and extracts the `checks_hash` field from it, rather than reading `current-checks-hash.txt` separately.
 
 **Atomic Update**:
 - Both files updated in single commit
@@ -233,25 +251,28 @@ git push
 
 ### 5. UI Fetches Current Hash
 
-**Implementation**: `docs/modules/api.js` or similar
+**Implementation**: `docs/src/api/registry.js`
 
 **On Page Load**:
 ```javascript
-// Fetch current hash
-const response = await fetch('current-checks-hash.txt');
-const currentHash = (await response.text()).trim();
+// Fetch current checks metadata (includes hash)
+const hashUrl = `${RAW_BASE_URL}/current-checks.json?t=${Date.now()}`;
+const response = await fetch(hashUrl, { cache: 'no-cache' });
+const data = await response.json();
+const currentHash = data.checks_hash;
 
 // Fetch service registry
 const services = await fetch('registry/all-services.json').then(r => r.json());
 
-// Compare hashes
+// Compare hashes (in staleness.js)
 services.forEach(service => {
   service.is_stale = service.checks_hash !== currentHash;
 });
 ```
 
 **Caching**:
-- Current hash cached for page session
+- Current hash fetched on page load with cache-busting timestamp
+- `current-checks.json` provides both hash and check metadata
 - Registry re-fetched on user action
 - Staleness recalculated on each render
 
@@ -400,49 +421,6 @@ async function triggerBulkStale() {
 6. Day 3: No longer stale
 
 **Impact**: Reveals previously undetected issues
-
-## Performance
-
-**Hash Calculation**: <1 second (hash is fast)
-
-**UI Staleness Check**: Instant (simple string comparison)
-
-**Bulk Trigger**: Rate limited to avoid API quota issues
-
-## Best Practices
-
-**For Scorecards Maintainers**:
-- Update checks hash automatically on push
-- Document check changes in commit messages
-- Communicate major check changes to users
-
-**For Service Teams**:
-- Monitor staleness indicator in catalog
-- Re-run promptly when flagged stale
-- Review score changes after re-running
-- Investigate score decreases
-
-**For Organizations**:
-- Schedule periodic bulk re-runs
-- Set policy for maximum staleness age
-- Track re-run compliance metrics
-
-## Troubleshooting
-
-**Service Always Stale**:
-- Check if service workflow is running
-- Verify workflow uses latest action version
-- Confirm catalog updates are succeeding
-
-**Hash Never Updates**:
-- Check update-checks-hash.yml workflow
-- Verify write access to catalog branch
-- Review workflow logs for errors
-
-**UI Not Showing Staleness**:
-- Clear browser cache
-- Check network tab for current-checks-hash.txt fetch
-- Verify file exists in catalog branch
 
 ## Related Documentation
 
