@@ -178,30 +178,18 @@ jobs:
 
 **Template Content**:
 ```yaml
-# Scorecard Configuration
-# See: https://github.com/{scorecards_org}/{scorecards_repo}
-
-team: {team_name}
-description: {description}
-
-# Optional: Additional metadata
-# tags:
-#   - frontend
-#   - backend
-# contacts:
-#   - email@example.com
+service:
+  name: "{repository_name}"
+  team: ""
+  description: ""
+  links: []
 ```
 
 **Auto-populated Fields**:
-- `team`: From input or detected from CODEOWNERS
-- `description`: From input or repository description
-
-**Team Detection**:
-If not provided, attempts to extract from:
-1. `.github/CODEOWNERS` file
-2. Repository topics
-3. Organization name
-4. Defaults to "Unknown"
+- `service.name`: Populated from repository name
+- `service.team`: Empty string (must be manually filled)
+- `service.description`: Empty string (must be manually filled)
+- `service.links`: Empty array (can be populated with documentation links)
 
 ### 5. Create Branch & Push
 
