@@ -77,147 +77,28 @@ We believe quality measurement should encourage improvement, not gate deployment
 
 ## Installation
 
-### For Platform/DevOps Teams
+### For Platform Teams
 
-Set up the central scorecards repository for your organization:
+Platform teams should set up the central Scorecards repository for their organization. See the [Platform Installation Guide](documentation/guides/platform-installation.md) for:
 
-#### One-Line Installation
-
-```bash
-export GITHUB_TOKEN=your_github_pat
-curl -fsSL https://raw.githubusercontent.com/feddericovonwernich/scorecards/main/scripts/install.sh | bash
-```
-
-The installation script will:
-1. Validate prerequisites (git, gh CLI, jq)
-2. Prompt for your target repository (org/repo)
-3. Create the repository if it doesn't exist
-4. Set up the main branch with all system code
-5. Create the catalog branch for data storage
-6. Push both branches to your repository
-7. Customize documentation to reference your repository
-8. Configure GitHub Pages to host the catalog
-9. Provide next steps for service integration
-
-#### Prerequisites
-
-- **git**: Version control
-- **gh**: [GitHub CLI](https://cli.github.com/)
-- **jq**: JSON processor
-- **GitHub Personal Access Token** with `repo` and `workflow` permissions
-
-#### Manual Installation
-
-If you prefer to set up manually:
-
-1. Clone or fork this repository to your organization
-2. Create an orphan `catalog` branch:
-   ```bash
-   git checkout --orphan catalog
-   git rm -rf .
-   git checkout main -- docs/
-   mkdir -p results badges registry
-   echo '[]' > registry/services.json
-   git add . && git commit -m "Initialize catalog branch"
-   git push -u origin catalog
-   ```
-3. Enable GitHub Pages: Settings → Pages → Source: `catalog` branch, `/` (root)
-4. Wait for Pages to deploy (check Settings → Pages for the URL)
-
-#### Customization
-
-After installation, you can:
-- Add custom checks in `checks/` directory
-- Customize the catalog UI in `docs/`
-- Adjust check weights in `checks/*/metadata.json`
-- Configure branch protection rules
-
-#### Automated Service Onboarding
-
-If you have a unified CI system or want to proactively onboard services, you can use the **install reusable workflow** to automatically add scorecards to service repositories.
-
-**How it works:**
-
-The install workflow runs in service repositories and:
-1. Calculates the service's current scorecard score
-2. Creates an automated PR with scorecards configuration files
-3. Shows results in the PR description (even before merging)
-4. Respects the service team's decision if they close the PR
-
-This "try before you buy" approach lets service teams see their scores before committing to installation.
-
-**Example - Add to your existing unified CI template:**
-
-```yaml
-# .github/workflows/ci.yml (your existing unified CI template)
-name: CI
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  # Your existing CI jobs
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
-        run: npm test
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint code
-        run: npm run lint
-
-  # Add scorecards automated onboarding
-  scorecards:
-    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
-    secrets:
-      github-token: ${{ secrets.SCORECARDS_PAT }}
-```
-
-**Benefits:**
-- Service teams see their scores immediately without installation
-- Automated PR creation reduces onboarding friction
-- Non-intrusive: respects team decisions, won't create duplicate PRs
-- Scores are still calculated daily even if PR is closed
-- Platform teams can track adoption and quality across all services
-
-See the [Usage Guide](documentation/guides/usage.md) for detailed instructions on automated onboarding.
-
-## Quick Start
+- One-line installation script
+- Manual installation steps
+- Prerequisites and setup
+- Customization options
+- Automated service onboarding setup
 
 ### For Service Teams
 
-Add scorecards to your service repository with the automated installation workflow:
+Service teams should integrate Scorecards into their repositories. See the [Service Installation Guide](documentation/guides/service-installation.md) for:
 
-```yaml
-# .github/workflows/scorecards-check.yml
-name: Scorecards Check
+- Automated installation (recommended)
+- Manual integration
+- PAT setup and configuration
+- Badge setup
 
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Daily at midnight UTC
-  workflow_dispatch:
+## Configuration
 
-jobs:
-  scorecards:
-    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
-    secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-This creates an automated PR with scorecards configuration. Review, customize, and merge when ready.
-
-See the [Usage Guide](documentation/guides/usage.md) for detailed installation instructions, manual setup options, and configuration details.
-
-### Optional Configuration
-
-While scorecards works out-of-the-box without configuration, you can add service metadata by creating `.scorecard/config.yml` in your repository:
+While Scorecards works out-of-the-box without configuration, you can add service metadata by creating `.scorecard/config.yml` in your repository:
 
 ```yaml
 service:

@@ -4,11 +4,13 @@ Welcome to the Scorecards documentation!
 
 ## Quick Links
 
-- [Getting Started](getting-started.md) - Install and configure Scorecards
-- [Architecture Overview](architecture/overview.md) - How Scorecards works
-- [Usage Guide](guides/usage.md) - Installation and usage patterns
+- [Getting Started](getting-started.md) - Overview and first steps
+- [Platform Installation](guides/platform-installation.md) - Set up Scorecards for your organization
+- [Service Installation](guides/service-installation.md) - Add Scorecards to your service
 - [Configuration Guide](guides/configuration.md) - Configure your repository
+- [Usage Guide](guides/usage.md) - Action inputs, outputs, and troubleshooting
 - [Check Catalog](reference/check-catalog.md) - All available checks and development guide
+- [Architecture Overview](architecture/overview.md) - How Scorecards works
 - [Contributing](../CONTRIBUTING.md) - Contribute to Scorecards
 
 ## Documentation Structure
@@ -20,8 +22,10 @@ Welcome to the Scorecards documentation!
 - **[Overview](architecture/overview.md)** - High-level system architecture
 
 ### Guides
-- **[Usage](guides/usage.md)** - Installation and usage patterns
+- **[Platform Installation](guides/platform-installation.md)** - Set up Scorecards for your organization
+- **[Service Installation](guides/service-installation.md)** - Add Scorecards to your service
 - **[Configuration](guides/configuration.md)** - Configure .scorecard/config.yml
+- **[Usage](guides/usage.md)** - Action inputs, outputs, badges, and troubleshooting
 
 ### Reference
 - **[Check Catalog](reference/check-catalog.md)** - Check development guide and catalog

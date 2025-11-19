@@ -8,13 +8,23 @@ Scorecards is an automated quality scoring system for service repositories. It r
 
 ## Installation
 
-### Quick Install
+Choose your role to get started:
 
-1. Add the scorecards workflow to your repository
-2. Review and merge the automated installation PR
-3. Configure your service metadata (optional)
+### For Platform Teams
 
-See the [Usage Guide](guides/usage.md) for detailed installation instructions, including automated and manual setup options.
+Setting up Scorecards for your organization:
+
+→ **[Platform Installation Guide](guides/platform-installation.md)**
+
+Covers: one-line installation, manual setup, prerequisites, customization, and automated service onboarding.
+
+### For Service Teams
+
+Adding Scorecards to your service repository:
+
+→ **[Service Installation Guide](guides/service-installation.md)**
+
+Covers: automated installation (recommended), manual integration, PAT setup, and configuration.
 
 ## Configuration
 

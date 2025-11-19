@@ -88,21 +88,16 @@ If you need these features, use Cortex or Backstage. They're excellent tools for
 
 ### For Platform Teams
 
-Set up the central scorecards system for your organization:
+Set up the central scorecards system for your organization with a single command:
 
 ```bash
-# One-line installation
 export GITHUB_TOKEN=your_github_pat
 curl -fsSL https://raw.githubusercontent.com/feddericovonwernich/scorecards/main/scripts/install.sh | bash
 ```
 
 This creates a repository with GitHub Actions, catalog UI on GitHub Pages, and results storage.
 
-**For detailed installation options, manual setup, and customization:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#installation)
-
-#### Automated Service Onboarding (Optional)
-
-Add scorecards to your unified CI template to automatically onboard services:
+**Optional:** Add scorecards to your unified CI template to automatically onboard services:
 
 ```yaml
 # Add to your existing .github/workflows/ci.yml
@@ -112,9 +107,7 @@ scorecards:
     github-token: ${{ secrets.SCORECARDS_PAT }}
 ```
 
-This creates automated PRs showing each service's score before they commit to installation.
-
-**For complete setup details:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#automated-service-onboarding) and [Usage Guide](documentation/guides/usage.md)
+**→ [Platform Installation Guide](documentation/guides/platform-installation.md)** for manual setup, prerequisites, customization, and automated onboarding details.
 
 ### For Service Teams
 
@@ -143,16 +136,21 @@ jobs:
 
 The workflow runs daily and reports results to the catalog.
 
-**For configuration options and metadata:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#optional-configuration) and [Configuration Guide](documentation/guides/configuration.md)
+**→ [Service Installation Guide](documentation/guides/service-installation.md)** for automated installation, PAT setup, configuration, and badges.
 
-## What's Inside
+## Documentation
 
-- **[Getting Started](documentation/getting-started.md)** - Quick start guide
-- **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - Complete technical documentation
-- **[Usage Guide](documentation/guides/usage.md)** - Installation and daily usage
+### Setup Guides
+- **[Platform Installation](documentation/guides/platform-installation.md)** - Set up Scorecards for your organization
+- **[Service Installation](documentation/guides/service-installation.md)** - Add Scorecards to your service
 - **[Configuration Guide](documentation/guides/configuration.md)** - Customize your setup
+
+### Reference
+- **[Getting Started](documentation/getting-started.md)** - Quick overview and first steps
+- **[Usage Guide](documentation/guides/usage.md)** - Action inputs, outputs, badges, and troubleshooting
 - **[Check Catalog](documentation/reference/check-catalog.md)** - Available checks and how to add new ones
 - **[Architecture](documentation/architecture/overview.md)** - How the system works
+- **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - Complete technical reference
 
 ## Contributing
 
