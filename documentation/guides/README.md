@@ -11,8 +11,8 @@ This section contains step-by-step guides for using Scorecards.
 
 New to Scorecards? Start here:
 
-1. Read [Getting Started](../getting-started.md) for a quick overview
-2. Follow the [Usage Guide](usage.md) to install in your repository
+1. **Platform teams**: Follow the [Platform Installation Guide](platform-installation.md) to set up Scorecards for your organization
+2. **Service teams**: Follow the [Service Installation Guide](service-installation.md) to add Scorecards to your repository
 3. Configure your repository using the [Configuration Guide](configuration.md)
 
 ## Common Tasks

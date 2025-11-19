@@ -146,7 +146,6 @@ The workflow runs daily and reports results to the catalog.
 - **[Configuration Guide](documentation/guides/configuration.md)** - Customize your setup
 
 ### Reference
-- **[Getting Started](documentation/getting-started.md)** - Quick overview and first steps
 - **[Usage Guide](documentation/guides/usage.md)** - Action inputs, outputs, badges, and troubleshooting
 - **[Check Catalog](documentation/reference/check-catalog.md)** - Available checks and how to add new ones
 - **[Architecture](documentation/architecture/overview.md)** - How the system works

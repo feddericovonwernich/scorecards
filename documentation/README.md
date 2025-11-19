@@ -4,7 +4,6 @@ Welcome to the Scorecards documentation!
 
 ## Quick Links
 
-- [Getting Started](getting-started.md) - Overview and first steps
 - [Platform Installation](guides/platform-installation.md) - Set up Scorecards for your organization
 - [Service Installation](guides/service-installation.md) - Add Scorecards to your service
 - [Configuration Guide](guides/configuration.md) - Configure your repository
@@ -14,9 +13,6 @@ Welcome to the Scorecards documentation!
 - [Contributing](../CONTRIBUTING.md) - Contribute to Scorecards
 
 ## Documentation Structure
-
-### Getting Started
-- **[Getting Started](getting-started.md)** - Quick start guide for new users
 
 ### Architecture
 - **[Overview](architecture/overview.md)** - High-level system architecture

@@ -8,7 +8,8 @@ This document contains detailed technical documentation, architecture details, a
 
 ## Quick Start
 
-- **[Getting Started](documentation/getting-started.md)** - Install and configure Scorecards
+- **[Platform Installation](documentation/guides/platform-installation.md)** - Set up Scorecards for your organization
+- **[Service Installation](documentation/guides/service-installation.md)** - Add Scorecards to your service
 - **[Architecture](documentation/architecture/overview.md)** - How it works
 - **[Configuration](documentation/guides/configuration.md)** - Configure your repo
 - **[Check Catalog](documentation/reference/check-catalog.md)** - Available checks
