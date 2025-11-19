@@ -20,11 +20,15 @@ Scorecards helps teams understand and improve their services by running automate
 
 ## Philosophy
 
-- **Non-blocking**: Never fails CI - scorecards are informational, not gatekeeping
-- **Zero-config**: Works out-of-the-box with sensible defaults
-- **Flexible**: Teams adopt at their own pace
-- **Transparent**: All results visible in a central catalog
-- **Extensible**: Easy to add new checks
+Scorecards follows a simple philosophy:
+
+1. **Non-blocking** - Never fail CI, always provide information
+2. **Transparent** - All check code is visible and auditable
+3. **Lightweight** - No infrastructure overhead, leverages GitHub
+4. **Voluntary** - Teams adopt at their own pace
+5. **Simple** - Easy to understand, modify, and extend
+
+We believe quality measurement should encourage improvement, not gate deployments.
 
 ## Architecture
 
@@ -128,6 +132,63 @@ After installation, you can:
 - Adjust check weights in `checks/*/metadata.json`
 - Configure branch protection rules
 
+#### Automated Service Onboarding
+
+If you have a unified CI system or want to proactively onboard services, you can use the **install reusable workflow** to automatically add scorecards to service repositories.
+
+**How it works:**
+
+The install workflow runs in service repositories and:
+1. Calculates the service's current scorecard score
+2. Creates an automated PR with scorecards configuration files
+3. Shows results in the PR description (even before merging)
+4. Respects the service team's decision if they close the PR
+
+This "try before you buy" approach lets service teams see their scores before committing to installation.
+
+**Example - Add to your existing unified CI template:**
+
+```yaml
+# .github/workflows/ci.yml (your existing unified CI template)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # Your existing CI jobs
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint code
+        run: npm run lint
+
+  # Add scorecards automated onboarding
+  scorecards:
+    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+    secrets:
+      github-token: ${{ secrets.SCORECARDS_PAT }}
+```
+
+**Benefits:**
+- Service teams see their scores immediately without installation
+- Automated PR creation reduces onboarding friction
+- Non-intrusive: respects team decisions, won't create duplicate PRs
+- Scores are still calculated daily even if PR is closed
+- Platform teams can track adoption and quality across all services
+
+See the [Usage Guide](documentation/guides/usage.md) for detailed instructions on automated onboarding.
+
 ## Quick Start
 
 ### For Service Teams
@@ -156,14 +217,20 @@ See the [Usage Guide](documentation/guides/usage.md) for detailed installation i
 
 ### Optional Configuration
 
-Create `.scorecard/config.yml` in your repository:
+While scorecards works out-of-the-box without configuration, you can add service metadata by creating `.scorecard/config.yml` in your repository:
 
 ```yaml
 service:
   name: "My Service"
   team: "Platform Team"
-  description: "Brief service description"
+  description: "Core API service handling user authentication"
 ```
+
+**Benefits of adding metadata:**
+- Custom service names in the catalog (instead of repo names)
+- Team ownership visibility
+- Improved searchability and organization
+- Better documentation in the central catalog
 
 See the [Configuration Guide](documentation/guides/configuration.md) for all available options, including OpenAPI configuration and custom metadata.
 

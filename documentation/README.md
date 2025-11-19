@@ -34,8 +34,8 @@ Welcome to the Scorecards documentation!
 
 ## Other Resources
 
-- [Main README](../README.md) - Project overview and positioning
-- [System Overview](../SYSTEM_OVERVIEW.md) - Complete technical documentation
+- [Main README](../README.md) - Project overview, positioning, and quick start
+- [System Overview](../SYSTEM_OVERVIEW.md) - Complete technical reference (architecture, installation, scoring, configuration)
 - [Catalog UI](../docs/) - View scorecard results
 - [License](../LICENSE) - MIT
 - [Code of Conduct](../CODE_OF_CONDUCT.md)

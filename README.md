@@ -88,8 +88,6 @@ If you need these features, use Cortex or Backstage. They're excellent tools for
 
 ### For Platform Teams
 
-#### Central System Installation
-
 Set up the central scorecards system for your organization:
 
 ```bash
@@ -98,74 +96,29 @@ export GITHUB_TOKEN=your_github_pat
 curl -fsSL https://raw.githubusercontent.com/feddericovonwernich/scorecards/main/scripts/install.sh | bash
 ```
 
-The script creates a repository with:
-- GitHub Action for running quality checks
-- Catalog UI hosted on GitHub Pages
-- Check definitions and scoring system
-- Results storage in the `catalog` branch
+This creates a repository with GitHub Actions, catalog UI on GitHub Pages, and results storage.
 
-See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#installation) for manual installation and customization.
+**For detailed installation options, manual setup, and customization:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#installation)
 
 #### Automated Service Onboarding (Optional)
 
-If you have a unified CI system or want to proactively onboard services, you can use the **install reusable workflow** to automatically add scorecards to service repositories.
-
-**How it works:**
-
-The install workflow runs in service repositories and:
-1. Calculates the service's current scorecard score
-2. Creates an automated PR with scorecards configuration files
-3. Shows results in the PR description (even before merging)
-4. Respects the service team's decision if they close the PR
-
-This "try before you buy" approach lets service teams see their scores before committing to installation.
-
-**Example - Add to your existing unified CI template:**
+Add scorecards to your unified CI template to automatically onboard services:
 
 ```yaml
-# .github/workflows/ci.yml (your existing unified CI template)
-name: CI
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  # Your existing CI jobs
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
-        run: npm test
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint code
-        run: npm run lint
-
-  # Add scorecards automated onboarding
-  scorecards:
-    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
-    secrets:
-      github-token: ${{ secrets.SCORECARDS_PAT }}
+# Add to your existing .github/workflows/ci.yml
+scorecards:
+  uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+  secrets:
+    github-token: ${{ secrets.SCORECARDS_PAT }}
 ```
 
-**Benefits:**
-- Service teams see their scores immediately without installation
-- Automated PR creation reduces onboarding friction
-- Non-intrusive: respects team decisions, won't create duplicate PRs
-- Scores are still calculated daily even if PR is closed
-- Platform teams can track adoption and quality across all services
+This creates automated PRs showing each service's score before they commit to installation.
 
-See the [Usage Guide](documentation/guides/usage.md) for detailed instructions on automated onboarding.
+**For complete setup details:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#automated-service-onboarding) and [Usage Guide](documentation/guides/usage.md)
 
 ### For Service Teams
 
-Add scorecards to your service repository:
+Add this workflow to your service repository:
 
 ```yaml
 # .github/workflows/scorecards.yml
@@ -181,7 +134,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Run Scorecards
         uses: feddericovonwernich/scorecards/action@main
         with:
@@ -189,18 +141,9 @@ jobs:
           scorecards-repo: 'feddericovonwernich/scorecards'
 ```
 
-That's it! The workflow runs daily, calculates your score, and reports results to the catalog.
+The workflow runs daily and reports results to the catalog.
 
-**Optional:** Add service metadata in `.scorecard/config.yml`:
-
-```yaml
-service:
-  name: "My Service"
-  team: "Platform Team"
-  description: "Core API service"
-```
-
-See the [Usage Guide](documentation/guides/usage.md) for detailed instructions.
+**For configuration options and metadata:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md#optional-configuration) and [Configuration Guide](documentation/guides/configuration.md)
 
 ## What's Inside
 
@@ -223,22 +166,12 @@ To add a new check:
 
 See the [Check Development Guide](documentation/reference/check-catalog.md) for details.
 
-## Philosophy
-
-Scorecards follows a simple philosophy:
-
-1. **Non-blocking** - Never fail CI, always provide information
-2. **Transparent** - All check code is visible and auditable
-3. **Lightweight** - No infrastructure overhead, leverages GitHub
-4. **Voluntary** - Teams adopt at their own pace
-5. **Simple** - Easy to understand, modify, and extend
-
-We believe quality measurement should encourage improvement, not gate deployments.
-
 ## License
 
 MIT
 
 ---
 
-**Not sure if Scorecards is right for you?** Check out [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md) for detailed technical documentation, or compare with [Cortex](https://www.cortex.io/) and [Backstage](https://backstage.io/) to see which solution fits your needs.
+**Next steps:**
+- **Technical details:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md) for architecture, installation methods, scoring system, and configuration
+- **Compare solutions:** Review [Cortex](https://www.cortex.io/) and [Backstage](https://backstage.io/) to see which tool fits your needs
