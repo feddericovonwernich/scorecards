@@ -147,7 +147,7 @@ The workflow runs daily and reports results to the catalog.
 
 ### Reference
 - **[Usage Guide](documentation/guides/usage.md)** - Action inputs, outputs, badges, and troubleshooting
-- **[Check Catalog](documentation/reference/check-catalog.md)** - Available checks and how to add new ones
+- **[Check Catalog](documentation/guides/check-development-guide.md)** - Available checks and how to add new ones
 - **[Architecture](documentation/architecture/overview.md)** - How the system works
 - **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - Complete technical reference
 
@@ -161,7 +161,7 @@ To add a new check:
 3. Add tests
 4. Submit a PR
 
-See the [Check Development Guide](documentation/reference/check-catalog.md) for details.
+See the [Check Development Guide](documentation/guides/check-development-guide.md) for details.
 
 ## License
 

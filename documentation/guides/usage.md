@@ -169,7 +169,7 @@ Currently, all checks run automatically. Future versions may support check selec
 
 ## Getting Help
 
-- 📖 [Check Development Guide](../reference/check-catalog.md)
+- 📖 [Check Development Guide](check-development-guide.md)
 - 📖 [Configuration Reference](./configuration.md)
 - 🐛 [Report Issues](https://github.com/feddericovonwernich/scorecards/issues)
 - 💬 [Discussions](https://github.com/feddericovonwernich/scorecards/discussions)

@@ -27,13 +27,13 @@ New to Scorecards? Start here:
 ### Improving Your Score
 
 1. Check workflow output to see which checks failed
-2. Review [Check Catalog](../reference/check-catalog.md) for requirements
+2. Review [Check Catalog](check-development-guide.md) for requirements
 3. Make improvements to your repository
 4. Push changes and see updated score
 
 ### Adding Custom Checks
 
-See the [Check Development Guide](../reference/check-catalog.md) for detailed instructions on creating custom quality checks for your organization.
+See the [Check Development Guide](check-development-guide.md) for detailed instructions on creating custom quality checks for your organization.
 
 ## Getting Help
 

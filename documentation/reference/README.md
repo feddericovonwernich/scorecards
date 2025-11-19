@@ -4,7 +4,7 @@ Complete reference documentation for Scorecards.
 
 ## Documents
 
-- **[Check Catalog](check-catalog.md)** - All available checks with descriptions and requirements
+- **[Check Catalog](../guides/check-development-guide.md)** - All available checks with descriptions and requirements
 - **[Config Schema](config-schema.md)** - .scorecard/config.yml schema and options
 - **[Metadata Schema](metadata-schema.md)** - Check metadata.json schema
 - **[API](api.md)** - GitHub API usage and interactions
@@ -38,7 +38,7 @@ Complete reference documentation for Scorecards.
 - Important checks (CI, Tests): 7-8 points
 - Nice-to-have checks: 3-5 points
 
-See [Check Catalog](check-catalog.md) for complete list with weights.
+See [Check Catalog](../guides/check-development-guide.md) for complete list with weights.
 
 ## File Formats
 

@@ -12,7 +12,7 @@ This document contains detailed technical documentation, architecture details, a
 - **[Service Installation](documentation/guides/service-installation.md)** - Add Scorecards to your service
 - **[Architecture](documentation/architecture/overview.md)** - How it works
 - **[Configuration](documentation/guides/configuration.md)** - Configure your repo
-- **[Check Catalog](documentation/reference/check-catalog.md)** - Available checks
+- **[Check Catalog](documentation/guides/check-development-guide.md)** - Available checks
 - **[Contributing](CONTRIBUTING.md)** - How to contribute
 
 ## Overview
@@ -157,7 +157,7 @@ Current checks:
 
 ## For Check Authors
 
-Want to add a new check? See the [Check Development Guide](documentation/reference/check-catalog.md) for details on creating new checks.
+Want to add a new check? See the [Check Development Guide](documentation/guides/check-development-guide.md) for details on creating new checks.
 
 ## Catalog
 

@@ -17,7 +17,7 @@ See the [Development Guide](documentation/development/README.md) for development
 
 ## Adding a New Check
 
-See the [Check Development Guide](documentation/reference/check-catalog.md) for a guide on creating new checks.
+See the [Check Development Guide](documentation/guides/check-development-guide.md) for a guide on creating new checks.
 
 ## Using Shared Libraries
 

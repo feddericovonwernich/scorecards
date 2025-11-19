@@ -89,7 +89,7 @@ checks/
     test.sh         # Tests for your check
 ```
 
-See the [Check Catalog](../reference/check-catalog.md) for details on creating checks.
+See the [Check Catalog](check-development-guide.md) for details on creating checks.
 
 ### Customize the Catalog UI
 
@@ -231,5 +231,5 @@ After setting up the central system:
 
 - [Service Installation Guide](service-installation.md) - For service teams
 - [Configuration Guide](configuration.md) - Configure .scorecard/config.yml
-- [Check Catalog](../reference/check-catalog.md) - Available checks and how to create new ones
+- [Check Catalog](check-development-guide.md) - Available checks and how to create new ones
 - [Architecture Overview](../architecture/overview.md) - How Scorecards works
