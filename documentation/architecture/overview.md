@@ -12,7 +12,7 @@ This document describes the high-level architecture of the Scorecards system.
 │  │  .scorecard/config.yml                                 │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────┬───────────────────────────────────────┘
-                      │ Triggers on push/PR
+                      │ Triggers on schedule/push/PR
                       ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   Scorecards Action                          │
@@ -106,7 +106,7 @@ The system processes quality checks through several interconnected flows:
 
 ### Scoring Flow
 
-Service repositories trigger the scorecards action on push/PR, which clones the repo, runs checks in Docker, calculates a weighted score, generates badges, and commits results to the catalog branch for display in the UI.
+The scorecards action runs on a daily schedule (midnight UTC) or when triggered by push/PR. It clones the repo, runs checks in Docker, calculates a weighted score, generates badges, and commits results to the catalog branch for display in the UI.
 
 **See [Scoring Flow](flows/scoring-flow.md) for detailed diagram and step-by-step explanation.**
 

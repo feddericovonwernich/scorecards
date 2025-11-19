@@ -83,7 +83,7 @@ This document describes how service repositories are onboarded to the scorecards
 │  └────────────────────────────────────────────────────────┘ │
 └────────────────┬─────────────────────────────────────────────┘
                  │
-                 │ 9. First push triggers scorecard
+                 │ 9. Workflow runs on schedule or push
                  │
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
@@ -146,6 +146,8 @@ This document describes how service repositories are onboarded to the scorecards
 name: Scorecards
 
 on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
   push:
     branches: [main, master]
   workflow_dispatch:
@@ -315,7 +317,7 @@ EOF
 
 ### 9. First Scorecard Run
 
-**Trigger**: Any push after PR merge (or manual workflow_dispatch)
+**Trigger**: Workflow runs automatically based on schedule (daily at midnight UTC), on push to main/master, or manual workflow_dispatch
 
 **Actions**:
 1. Scorecards workflow runs for first time

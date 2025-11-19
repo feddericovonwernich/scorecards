@@ -66,9 +66,10 @@ This document describes the end-to-end flow of how a service repository gets sco
 
 ### 1. Trigger
 
-The scoring workflow can be triggered in three ways:
+The scoring workflow can be triggered in multiple ways:
 
-- **Push Event**: Any push to the service repository's default branch
+- **Scheduled**: Daily cron job at midnight UTC (0 0 * * *)
+- **Push Event**: Any push to main or master branch
 - **Pull Request**: PRs to provide preview scores (non-blocking)
 - **Workflow Dispatch**: Manual trigger via GitHub UI or API
 
@@ -199,9 +200,9 @@ The catalog UI automatically reflects the updated score.
 
 ### Automatic Triggers
 
-- **On Push**: Every push to default branch triggers scoring
+- **Scheduled**: Daily cron job at midnight UTC (0 0 * * *) - default in template
+- **On Push**: Every push to main or master branch triggers scoring
 - **On PR**: Pull requests get preview scores (catalog not updated)
-- **Scheduled**: Optional cron trigger for periodic re-scoring
 
 ### Manual Triggers
 
