@@ -381,24 +381,6 @@ done
 - Verify GITHUB_TOKEN has write access to catalog
 - Check for conflicts in catalog branch
 
-## Security
-
-**Token Requirements**:
-- `SCORECARDS_PAT` must have:
-  - `repo` scope (to create branches and PRs)
-  - `workflow` scope (to add workflow files)
-- Token should be organization-scoped if possible
-
-**Permissions**:
-- Installation workflow runs with elevated permissions
-- Target repository sees standard GITHUB_TOKEN permissions
-- Catalog updates require write access to catalog branch
-
-**Privacy**:
-- No sensitive data collected
-- Only public repository metadata
-- Scores calculated from publicly visible artifacts
-
 ## Related Documentation
 
 - [Scoring Flow](scoring-flow.md) - What happens after installation
