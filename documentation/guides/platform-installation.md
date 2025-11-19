@@ -153,6 +153,8 @@ This "try before you buy" approach lets service teams see their scores before co
 
 Add scorecards to your organization's unified CI template:
 
+> **Important:** Replace `your-org/scorecards` with your organization's scorecards repository, not the template repository.
+
 ```yaml
 # .github/workflows/ci.yml (your existing unified CI template)
 name: CI
@@ -180,10 +182,13 @@ jobs:
 
   # Add scorecards automated onboarding
   scorecards:
-    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+    uses: your-org/scorecards/.github/workflows/install.yml@main  # Replace with YOUR org's scorecards repo
     secrets:
       github-token: ${{ secrets.SCORECARDS_PAT }}
 ```
+
+**What to customize:**
+- `uses`: Replace `your-org/scorecards` with your organization's scorecards repository (e.g., `acme-corp/scorecards`)
 
 ### Benefits
 
