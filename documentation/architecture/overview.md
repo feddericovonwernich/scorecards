@@ -106,21 +106,23 @@ Static web application that displays scores in a sortable, filterable table with
 
 ## Workflows
 
-The system uses GitHub Actions workflows for automation:
+The system uses GitHub Actions workflows for automation across three categories:
 
-### Service Workflows
+### Development & Quality
+- **test.yml** - Test suite and linting for PR/push validation
+- **update-checks-hash.yml** - Staleness detection hash updates
+- **sync-docs.yml** - Catalog UI deployment to GitHub Pages
 
-- **scorecards.yml** - Installed in service repositories; triggers scoring on push/PR
+### Service Onboarding
+- **create-installation-pr.yml** - Manual installation PR creation
+- **install.yml** - Reusable workflow for automated installation
 
-### Central Workflows
+### Execution & Maintenance
+- **scorecards.yml** - Service-side check execution (template)
+- **trigger-service-workflow.yml** - Remote workflow triggering
+- **consolidate-registry.yml** - Registry aggregation
 
-- **test.yml** - Runs JavaScript, Bash, and Python tests plus linting
-- **create-installation-pr.yml** - Automatically creates PRs in service repos to install scorecards workflow
-- **install.yml** - Reusable workflow that performs the installation process
-- **trigger-service-workflow.yml** - Triggers scoring on single or multiple services via workflow_dispatch
-- **update-checks-hash.yml** - Auto-generates hash when checks are modified; writes to catalog branch
-- **consolidate-registry.yml** - Merges individual registry files into all-services.json
-- **sync-docs.yml** - Syncs catalog UI from main branch to catalog branch for GitHub Pages
+**See [Workflows](workflows.md) for detailed documentation on each workflow's triggers, inputs, outputs, and implementation.**
 
 ## Data Flow
 
@@ -175,6 +177,7 @@ When checks are modified, a SHA256 hash is generated and stored in the catalog b
 ### Architecture Docs
 
 - [Catalog UI](catalog-ui.md) - Frontend architecture and features
+- [Workflows](workflows.md) - Detailed workflow documentation and patterns
 
 ### Flow Diagrams
 
