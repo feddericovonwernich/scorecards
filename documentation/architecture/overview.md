@@ -6,6 +6,14 @@ This document describes the high-level architecture of the Scorecards system.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
+│                      Main Branch                             │
+│  checks/, action/, .github/workflows/, docs/                │
+└─────────────────────┬──────────────────┬────────────────────┘
+                      │                  │
+                      │ Defines checks   │ Workflow definitions
+                      │ and action       │ and automation
+                      ▼                  ▼
+┌─────────────────────────────────────────────────────────────┐
 │                     Service Repository                       │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  .github/workflows/scorecards.yml                      │ │
@@ -39,6 +47,20 @@ This document describes the high-level architecture of the Scorecards system.
 ```
 
 ## Component Details
+
+The following sections describe the core architectural components of the Scorecards system and how they work together to provide automated quality measurement and reporting.
+
+### Main Branch
+
+The `main` branch is the source of truth for the Scorecards system, containing all the code and configuration that powers quality measurement:
+
+- **checks/** - Individual quality check implementations and metadata
+- **action/** - GitHub Action entrypoint and orchestration scripts
+- **.github/workflows/** - Automation workflows (installation, triggering, hash updates, etc.)
+- **documentation/** - System architecture and flow documentation
+- **docs/** - Catalog UI static files (synced to catalog branch for GitHub Pages)
+
+This branch is where development happens and can be forked/cloned for organization-specific customization of checks, weights, categories, and workflows.
 
 ### Service Repository
 
