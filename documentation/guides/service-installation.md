@@ -50,6 +50,8 @@ jobs:
 
 ### Step 2: Add SCORECARDS_PAT Secret
 
+> **Note:** Your platform team may have already configured `SCORECARDS_PAT` as an organizational secret. If so, you can skip this step. Check with your platform team or try running the workflow - it will only fail if the secret is missing.
+
 1. Create a Personal Access Token (PAT) with `repo` scope:
    - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
    - Click "Generate new token (classic)"
