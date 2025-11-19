@@ -38,14 +38,6 @@ The branch to commit results to in the central repository.
 scorecards-branch: 'catalog'
 ```
 
-### `create-config-pr` (optional, default: `false`)
-
-Whether to create a PR with a config template if `.scorecard/config.yml` is missing.
-
-```yaml
-create-config-pr: 'true'
-```
-
 ## Action Outputs
 
 The action provides outputs you can use in subsequent steps:

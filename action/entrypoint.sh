@@ -19,7 +19,6 @@ source "$SCRIPT_DIR/lib/results-builder.sh"
 # ============================================================================
 
 GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}"
-CREATE_CONFIG_PR="${INPUT_CREATE_CONFIG_PR:-false}"
 SCORECARDS_REPO="${INPUT_SCORECARDS_REPO}"
 SCORECARDS_BRANCH="${INPUT_SCORECARDS_BRANCH:-catalog}"
 
@@ -84,13 +83,6 @@ if has_scorecard_config "$GITHUB_WORKSPACE"; then
     HAS_CONFIG=true
 else
     log_warning "Configuration file not found: .scorecard/config.yml"
-
-    if [ "$CREATE_CONFIG_PR" = "true" ]; then
-        log_info "Creating PR with config template..."
-        # TODO: Implement PR creation logic
-        log_warning "(PR creation not yet implemented)"
-    fi
-
     log_info "Continuing with default configuration..."
 fi
 
