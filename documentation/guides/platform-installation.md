@@ -114,9 +114,26 @@ Modify check weights in `checks/*/metadata.json` to change how checks impact sco
 
 ### Configure Branch Protection
 
-Consider adding branch protection rules for:
-- `main` branch - Protect system code
-- `catalog` branch - Protect scorecard data
+Protect your branches from accidental changes while allowing automation to function:
+
+**To configure:**
+1. Go to repository **Settings → Branches → Add branch protection rule**
+
+**For `main` branch** (system code):
+- Pattern: `main`
+- Enable: **Require a pull request before merging** (1 approval)
+- Enable: **Require status checks to pass** (if you have tests)
+- Enable: **Require conversation resolution before merging**
+- Allow bypass: Add `github-actions[bot]` to allow doc syncs
+- **Don't enable** "Require linear history" (breaks automation)
+
+**For `catalog` branch** (scorecard data):
+- Pattern: `catalog`
+- Enable: **Restrict deletions** (prevent accidental removal)
+- **Don't require** pull requests (would block service workflows)
+- Allow bypass: Add `github-actions[bot]` for automation
+
+**Note:** Your `SCORECARDS_PAT` token needs `repo` and `workflow` scopes to work with these protections.
 
 ## Automated Service Onboarding
 
