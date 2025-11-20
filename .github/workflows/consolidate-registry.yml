@@ -7,6 +7,7 @@ on:
     paths:
       - 'registry/**/*.json'
       - '!registry/all-services.json'
+  workflow_dispatch:
 
 # Prevent multiple consolidations from running concurrently
 # Cancel in-progress runs when new changes arrive
