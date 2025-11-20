@@ -189,19 +189,6 @@ When checks are modified, a SHA256 hash is generated and stored in the catalog b
 - Scoped to minimum required permissions
 - See [Token Requirements Guide](../guides/token-requirements.md) for details
 
-## Performance
-
-- **Results Caching**: Daily cache of scorecard results to avoid redundant calculations
-- **Docker Image**: Multi-runtime image (Node.js 20, Python 3, bash tools) built fresh each run
-- **Sequential Execution**: Checks run sequentially within a single Docker container
-
-## Extension Points
-
-- **New Checks**: Add directory in `checks/` with check script and metadata.json
-- **Custom Weights**: Configure point values via metadata.json
-- **Custom Categories**: Add new category values to metadata.json
-- **Custom Workflows**: Add triggers via create-installation-pr.yml or install.yml
-
 ## Related Documentation
 
 ### Architecture Docs
