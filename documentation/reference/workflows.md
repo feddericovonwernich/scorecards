@@ -322,58 +322,14 @@ The Scorecards system uses 8 workflows across three categories:
 
 ---
 
-## Workflow Interaction Diagram
+## Visual Flow Diagrams
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Development (main branch)                     │
-├─────────────────────────────────────────────────────────────────┤
-│ test.yml          - PR/push to main → Run tests                 │
-│ update-checks-hash.yml - checks/** changes → Update hash        │
-│ sync-docs.yml     - docs/** changes → Sync to catalog           │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│               Service Onboarding (manual trigger)                │
-├─────────────────────────────────────────────────────────────────┤
-│ create-installation-pr.yml - Manual → Create PR in service      │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Service Repository (daily/push/manual)              │
-├─────────────────────────────────────────────────────────────────┤
-│ scorecards.yml    - Calls action → Calculate scores             │
-│       OR                                                         │
-│ (custom).yml      - Calls install.yml → PR + scores             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 Scorecards Action (composite)                    │
-├─────────────────────────────────────────────────────────────────┤
-│ action/action.yml - Runs checks → Commits to catalog            │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  Catalog Branch (automated)                      │
-├─────────────────────────────────────────────────────────────────┤
-│ consolidate-registry.yml - registry/** changes → Consolidate    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Catalog UI (GitHub Pages - catalog branch)         │
-└─────────────────────────────────────────────────────────────────┘
+For detailed workflow interactions and data flows, see:
 
-┌─────────────────────────────────────────────────────────────────┐
-│              Manual Operations (workflow dispatch)               │
-├─────────────────────────────────────────────────────────────────┤
-│ trigger-service-workflow.yml - Manual → Trigger service runs    │
-└─────────────────────────────────────────────────────────────────┘
-```
+- **[Scoring Flow](../architecture/flows/scoring-flow.md)** - Complete daily scorecard run process (service → action → catalog → UI)
+- **[Installation Flow](../architecture/flows/installation-flow.md)** - Service onboarding via automated PRs
+- **[Staleness Detection Flow](../architecture/flows/staleness-detection-flow.md)** - Hash updates, detection, and re-triggering
+- **[Check Execution Flow](../architecture/flows/check-execution-flow.md)** - How individual checks are discovered and executed
 
 ## Key Workflow Patterns
 
