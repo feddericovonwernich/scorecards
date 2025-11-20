@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: catalog
-          token: ${{ secrets.SCORECARDS_PAT }}
+          token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 
       - name: Consolidate registry files
         run: |

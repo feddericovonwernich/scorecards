@@ -22,7 +22,7 @@ jobs:
         uses: feddericovonwernich/scorecards/action@main
         id: scorecards
         with:
-          github-token: ${{ secrets.SCORECARDS_PAT }}
+          github-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
           scorecards-repo: 'feddericovonwernich/scorecards'
           scorecards-branch: 'catalog'
 

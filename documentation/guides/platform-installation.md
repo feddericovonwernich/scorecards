@@ -39,7 +39,11 @@ Before running the installation script, ensure you have:
 - **git**: Version control
 - **gh**: [GitHub CLI](https://cli.github.com/)
 - **jq**: JSON processor
-- **GitHub Personal Access Token** with `repo` and `workflow` permissions
+- **GitHub Personal Access Tokens**:
+  - `SCORECARDS_CATALOG_TOKEN` with `repo` scope (required)
+  - `SCORECARDS_WORKFLOW_TOKEN` with `repo` and `workflow` scopes (optional, for automated installation)
+
+See [Token Requirements Guide](token-requirements.md) for token creation instructions.
 
 ## Manual Installation
 
@@ -133,7 +137,7 @@ Protect your branches from accidental changes while allowing automation to funct
 - **Don't require** pull requests (would block service workflows)
 - Allow bypass: Add `github-actions[bot]` for automation
 
-**Note:** Your `SCORECARDS_PAT` token needs `repo` and `workflow` scopes to work with these protections.
+**Note:** Your `SCORECARDS_CATALOG_TOKEN` needs `repo` scope, and `SCORECARDS_WORKFLOW_TOKEN` needs `repo` and `workflow` scopes to work with these protections.
 
 ## Automated Service Onboarding
 
@@ -184,7 +188,9 @@ jobs:
   scorecards:
     uses: your-org/scorecards/.github/workflows/install.yml@main  # Replace with YOUR org's scorecards repo
     secrets:
-      github-token: ${{ secrets.SCORECARDS_PAT }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
+      scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 ```
 
 **What to customize:**
@@ -225,7 +231,7 @@ After setting up the central system:
 
 - Verify service workflows are running successfully
 - Check the `catalog` branch for results in `results/org/repo/`
-- Ensure services are using a valid `SCORECARDS_PAT` token
+- Ensure services are using a valid `SCORECARDS_CATALOG_TOKEN` token
 
 ## Additional Resources
 

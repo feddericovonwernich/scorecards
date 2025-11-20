@@ -109,6 +109,19 @@ scorecards:
 
 **→ [Platform Installation Guide](documentation/guides/platform-installation.md)** for manual setup, prerequisites, customization, and automated onboarding details.
 
+## Token Requirements
+
+Scorecards uses GitHub Personal Access Tokens for authentication:
+
+| Token | Purpose | Required Scopes | Required? |
+|-------|---------|-----------------|-----------|
+| `SCORECARDS_CATALOG_TOKEN` | Write results to catalog branch | `repo` | Yes |
+| `SCORECARDS_WORKFLOW_TOKEN` | Create PRs with workflow files | `repo`, `workflow` | Optional* |
+
+*Only required for automated installation via `install.yml`
+
+See [Token Requirements Guide](documentation/guides/token-requirements.md) for setup instructions.
+
 ### For Service Teams
 
 Add this workflow to your service repository:
@@ -130,7 +143,7 @@ jobs:
       - name: Run Scorecards
         uses: feddericovonwernich/scorecards/action@main
         with:
-          github-token: ${{ secrets.SCORECARDS_PAT }}
+          github-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
           scorecards-repo: 'feddericovonwernich/scorecards'
 ```
 

@@ -50,7 +50,7 @@ jobs:
 
       - name: Trigger workflow via GitHub API
         env:
-          GH_TOKEN: ${{ secrets.SCORECARDS_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
         run: |
           echo "Triggering scorecard workflow for ${{ inputs.org }}/${{ inputs.repo }}"
 
@@ -104,7 +104,7 @@ jobs:
 
       - name: Parse and trigger services
         env:
-          GH_TOKEN: ${{ secrets.SCORECARDS_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
           SERVICES_JSON: ${{ inputs.services }}
         run: |
           echo "Processing bulk service triggers..."

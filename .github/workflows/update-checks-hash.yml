@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for catalog branch
-          token: ${{ secrets.SCORECARDS_PAT }}
+          token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 
       - name: Configure git
         run: |
@@ -36,7 +36,7 @@ jobs:
           echo "Running checks hash update script..."
           bash action/utils/update-checks-hash.sh
         env:
-          GITHUB_TOKEN: ${{ secrets.SCORECARDS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 
       - name: Summary
         run: |

@@ -66,7 +66,7 @@ The Scorecards system uses 8 workflows across three categories:
    - Generates SHA256 hash of all checks (metadata + implementation)
    - Switches to catalog branch
    - Updates `current-checks-hash.txt` and `current-checks.json`
-   - Commits and pushes to catalog branch using SCORECARDS_PAT
+   - Commits and pushes to catalog branch using SCORECARDS_CATALOG_TOKEN
 
 **How it works:**
 - Finds all check directories in `checks/`
@@ -387,7 +387,8 @@ jobs:
     uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
-      scorecards-pat: ${{ secrets.SCORECARDS_PAT }}
+      scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
+      scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 ```
 
 **Benefits:**
@@ -423,7 +424,7 @@ Multiple workflows write to catalog branch to prevent conflicts and loops:
 
 - **Concurrency control**: `consolidate-registry.yml` uses concurrency groups
 - **Skip CI commits**: Registry updates use `[skip ci]` in commit messages
-- **Dedicated tokens**: All catalog updates use SCORECARDS_PAT
+- **Dedicated tokens**: All catalog updates use SCORECARDS_CATALOG_TOKEN
 - **Bot commits**: All automated commits by github-actions[bot]
 
 ### Caching Strategy
@@ -444,16 +445,20 @@ The system uses three types of tokens for different permissions:
    - Read access to repositories
    - Write access to workflow run artifacts
 
-2. **SCORECARDS_PAT** (secret)
+2. **SCORECARDS_CATALOG_TOKEN** (required secret)
    - Write access to catalog branch in central repo
    - Used by scorecards action to commit results
    - Required for all service workflows
+   - **Scopes:** `repo`
+   - **Rationale:** Results must be written to the catalog branch
 
-3. **SCORECARDS_INSTALLATION_PAT** (secret, optional)
-   - Special token for creating PRs with workflow files
+3. **SCORECARDS_WORKFLOW_TOKEN** (optional secret)
+   - Creates PRs that modify .github/workflows/ files
    - Bypasses GitHub security restriction on workflow file PRs
-   - Only needed for automated installation PR creation
-   - Required by `install.yml` and `create-installation-pr.yml`
+   - Only needed for automated installation
+   - Used by `install.yml` and `create-installation-pr.yml`
+   - **Scopes:** `repo`, `workflow`
+   - **Rationale:** GitHub requires `workflow` scope to modify workflow files via PR
 
 ## Quick Reference
 

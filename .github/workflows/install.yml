@@ -15,13 +15,13 @@ on:
         default: 'catalog'
     secrets:
       github-token:
-        description: 'GitHub token with repo and contents permissions'
+        description: 'GitHub token for basic operations'
         required: true
-      scorecards-pat:
-        description: 'PAT for pushing to scorecards central repo (optional, only needed if installed)'
-        required: false
-      installation-pat:
-        description: 'PAT for creating installation PR with workflow files (required to bypass GitHub security restrictions)'
+      scorecards-catalog-token:
+        description: 'Token for writing results to catalog branch (repo scope)'
+        required: true
+      scorecards-workflow-token:
+        description: 'Token for creating PRs with workflow files (repo + workflow scopes)'
         required: false
 
 jobs:
@@ -86,7 +86,7 @@ jobs:
       - name: Checkout service repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.installation-pat || secrets.github-token }}
+          token: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
 
       - name: Checkout scorecards repository for templates
         uses: actions/checkout@v4
@@ -148,7 +148,7 @@ jobs:
       - name: Create Pull Request
         id: create-pr
         env:
-          GH_TOKEN_RAW: ${{ secrets.installation-pat || secrets.github-token }}
+          GH_TOKEN_RAW: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
         run: |
           # Sanitize token by removing any trailing whitespace/newlines
           export GH_TOKEN=$(echo -n "$GH_TOKEN_RAW" | tr -d '\n\r\t ')
@@ -273,7 +273,7 @@ jobs:
         id: scorecards
         uses: feddericovonwernich/scorecards/action@main
         with:
-          github-token: ${{ secrets.scorecards-pat || secrets.github-token }}
+          github-token: ${{ secrets.scorecards-catalog-token }}
           scorecards-repo: ${{ inputs.scorecards-repo }}
           scorecards-branch: ${{ inputs.scorecards-branch }}
 
@@ -357,7 +357,7 @@ jobs:
 
       - name: Update Pull Request with Results
         env:
-          GH_TOKEN: ${{ secrets.installation-pat || secrets.github-token }}
+          GH_TOKEN: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
         run: |
           # Determine PR number from either existing or newly created PR
           PR_NUMBER="${{ needs.create-installation-pr-placeholder.outputs.pr-number || needs.check-status.outputs.pr-number }}"
