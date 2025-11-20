@@ -1,26 +1,16 @@
 # Architecture Documentation
 
-This section contains detailed architecture documentation for the Scorecards system.
+Technical documentation for how the Scorecards system works.
 
-## Documents
+## Core Documentation
 
-- **[Overview](overview.md)** - High-level system architecture and data flow
+- **[Overview](overview.md)** - System architecture, components, security model
+- **[Workflows](workflows.md)** - GitHub Actions workflows and automation
+- **[Catalog UI](catalog-ui.md)** - Frontend architecture and features
 
-## Design Principles
+## Data Flow Diagrams
 
-1. **Non-Blocking** - Never fail CI, always succeed even if checks fail
-2. **Isolated** - Checks run in Docker containers for security
-3. **Extensible** - Easy to add new checks without modifying core system
-4. **Transparent** - All results visible in centralized catalog
-
-## System Overview
-
-The Scorecards system consists of several key components:
-
-- **Service Repositories**: Individual repositories being scored
-- **GitHub Action**: Executes checks and updates results
-- **Check Suite**: Collection of quality checks
-- **Catalog Branch**: Stores all results and serves GitHub Pages
-- **Catalog UI**: Web interface for browsing results
-
-See [Overview](overview.md) for detailed architecture diagrams and explanations.
+- **[Scoring Flow](flows/scoring-flow.md)** - How scorecards are calculated and stored
+- **[Check Execution Flow](flows/check-execution-flow.md)** - How individual checks run
+- **[Installation Flow](flows/installation-flow.md)** - Service onboarding process
+- **[Staleness Detection Flow](flows/staleness-detection-flow.md)** - Outdated scorecard detection
