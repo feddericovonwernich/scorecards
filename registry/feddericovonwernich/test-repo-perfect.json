@@ -12,8 +12,8 @@
   "installed": false,
   "default_branch": "master",
   "installation_pr": {
-    "number": 8,
-    "state": "MERGED",
-    "url": "https://github.com/feddericovonwernich/test-repo-perfect/pull/8"
+    "number": 9,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-perfect/pull/9"
   }
 }
