@@ -161,8 +161,12 @@ The workflow runs daily and reports results to the catalog.
 ### Reference
 - **[Action Reference](documentation/reference/action-reference.md)** - Action inputs, outputs, badges, and troubleshooting
 - **[Check Development Guide](documentation/guides/check-development-guide.md)** - How to create custom checks
+- **[Glossary](documentation/reference/glossary.md)** - Definitions of domain-specific terms
 - **[Architecture](documentation/architecture/overview.md)** - System design and flows
 - **[Token Requirements](documentation/reference/token-requirements.md)** - PAT setup and scopes
+
+### Project
+- **[CHANGELOG](CHANGELOG.md)** - Version history and notable changes
 
 ## Contributing
 
