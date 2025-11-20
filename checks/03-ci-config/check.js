@@ -1,5 +1,39 @@
 #!/usr/bin/env node
-// Check: CI configuration existence
+/**
+ * Check 03: CI Configuration Existence
+ *
+ * Validates that continuous integration (CI) is configured for the repository.
+ * Checks for GitHub Actions workflows and other popular CI systems.
+ *
+ * Pass criteria:
+ *   - At least one CI configuration file exists in the repository
+ *   - Supported CI systems:
+ *     - GitHub Actions (.github/workflows/*.yml or *.yaml)
+ *     - Travis CI (.travis.yml)
+ *     - GitLab CI (.gitlab-ci.yml)
+ *     - CircleCI (circle.yml or .circleci/config.yml)
+ *     - Jenkins (Jenkinsfile)
+ *     - Drone CI (.drone.yml)
+ *     - Azure Pipelines (azure-pipelines.yml)
+ *     - Bitbucket Pipelines (bitbucket-pipelines.yml)
+ *
+ * Environment variables:
+ *   SCORECARD_REPO_PATH - Path to repository being checked (default: current dir)
+ *
+ * Exit codes:
+ *   0 - Check passed (CI configuration found)
+ *   1 - Check failed (No CI configuration found)
+ *
+ * Outputs:
+ *   Success message to stdout with detected CI systems
+ *   Error message to stderr
+ *
+ * Example:
+ *   $ SCORECARD_REPO_PATH=/path/to/repo node check.js
+ *   GitHub Actions: 3 workflow(s) (ci.yml, deploy.yml, test.yml)
+ *
+ * @module checks/03-ci-config
+ */
 
 import fs from 'fs';
 import path from 'path';

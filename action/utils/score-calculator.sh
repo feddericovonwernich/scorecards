@@ -1,8 +1,68 @@
 #!/bin/bash
 # Score Calculator - Calculates weighted score and rank from check results
+#
+# This script processes check results JSON and calculates a quality score using
+# weighted scoring, determines the rank based on score thresholds, and assigns
+# colors for badge generation.
+#
+# USAGE:
+#   score-calculator.sh <results_file> <output_file>
+#
+# ARGUMENTS:
+#   $1 - Path to check results JSON file (default: results.json)
+#   $2 - Path to output score JSON file (default: score.json)
+#
+# INPUT FORMAT (results_file):
+#   Array of check objects:
+#   [
+#     {
+#       "name": "Check name",
+#       "status": "pass" | "fail",
+#       "weight": <points>,
+#       "category": "...",
+#       "description": "..."
+#     },
+#     ...
+#   ]
+#
+# OUTPUT FORMAT (output_file):
+#   {
+#     "score": <0-100>,
+#     "rank": "bronze" | "silver" | "gold" | "platinum",
+#     "rank_color": "<color>",
+#     "score_color": "<color>",
+#     "total_checks": <count>,
+#     "passed_checks": <count>,
+#     "total_weight": <sum>,
+#     "passed_weight": <sum>
+#   }
+#
+# SCORING ALGORITHM:
+#   score = (passed_weight / total_weight) * 100 (rounded to integer)
+#
+# RANK THRESHOLDS:
+#   Platinum: >= 90
+#   Gold:     >= 75
+#   Silver:   >= 50
+#   Bronze:   <  50
+#
+# SCORE COLOR THRESHOLDS (for badges):
+#   Bright Green: >= 80
+#   Green:        >= 60
+#   Yellow:       >= 40
+#   Orange:       >= 20
+#   Red:          <  20
+#
+# EXIT CODES:
+#   0 - Success (score calculated)
+#   1 - Error (results file not found)
+#
+# EXAMPLE:
+#   bash score-calculator.sh ./results.json ./score.json
+#
 set -euo pipefail
 
-# Usage: score-calculator.sh <results_file> <output_file>
+# Parse command-line arguments
 RESULTS_FILE="${1:-results.json}"
 OUTPUT_FILE="${2:-score.json}"
 

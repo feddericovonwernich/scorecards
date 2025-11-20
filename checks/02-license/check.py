@@ -1,5 +1,39 @@
 #!/usr/bin/env python3
-"""Check: LICENSE file existence"""
+"""
+Check 02: LICENSE File Existence and Quality
+
+This module implements the LICENSE file quality check for Scorecards.
+It validates that a LICENSE file exists in the repository root and contains
+meaningful content, ensuring projects have proper legal documentation.
+
+Pass criteria:
+    - LICENSE file exists in repository root (case-insensitive)
+    - Accepted filenames: LICENSE, LICENSE.txt, LICENSE.md, COPYING, COPYING.txt
+    - LICENSE contains at least 100 characters of content
+    - License type is detected if possible (MIT, Apache, GPL, BSD, etc.)
+
+Environment Variables:
+    SCORECARD_REPO_PATH: Path to repository being checked (default: current dir)
+
+Exit Codes:
+    0: Check passed (LICENSE exists with sufficient content)
+    1: Check failed (LICENSE missing or too short)
+
+Outputs:
+    Success message to stdout with detected license type
+    Error messages to stderr
+
+Example:
+    $ SCORECARD_REPO_PATH=/path/to/repo python3 check.py
+    LICENSE file found: LICENSE (1090 chars, detected: MIT)
+
+Detected License Types:
+    - MIT
+    - Apache
+    - GPL-2.0, GPL-3.0, GPL (unversioned)
+    - BSD
+    - Unknown (if no pattern match)
+"""
 import os
 import sys
 from pathlib import Path

@@ -1,5 +1,58 @@
 #!/bin/bash
-# Scorecard Action Entrypoint
+# Scorecards GitHub Action - Main Entrypoint
+#
+# This script coordinates the execution of all quality checks, collects results,
+# calculates scores, generates badges, and submits results to the catalog branch.
+#
+# USAGE:
+#   This script is designed to run as a GitHub Action. It reads inputs from
+#   the GitHub Actions environment and executes the complete scorecard workflow.
+#
+# ENVIRONMENT VARIABLES (Required):
+#   INPUT_GITHUB_TOKEN         - GitHub PAT for API access and catalog updates
+#   INPUT_SCORECARDS_REPO      - Target scorecards repo (format: owner/repo)
+#   GITHUB_REPOSITORY          - Current repository (format: owner/repo)
+#   GITHUB_WORKSPACE           - Path to checked out repository
+#   GITHUB_SHA                 - Current commit SHA
+#   GITHUB_OUTPUT              - Path to GitHub Actions output file
+#
+# ENVIRONMENT VARIABLES (Optional):
+#   INPUT_SCORECARDS_BRANCH    - Target branch in scorecards repo (default: catalog)
+#   PR_NUMBER                  - Installation PR number (auto-detected if not set)
+#   PR_STATE                   - Installation PR state (auto-detected if not set)
+#   PR_URL                     - Installation PR URL (auto-detected if not set)
+#
+# EXIT CODES:
+#   0 - Success (always exits 0 to prevent blocking workflows)
+#   1 - Fatal error during execution (rare, caught by error handlers)
+#
+# WORKFLOW:
+#   1. Initialize environment and load libraries
+#   2. Parse configuration from .scorecard/config.yml (or use defaults)
+#   3. Build Docker image for isolated check execution
+#   4. Run all quality checks in Docker container
+#   5. Calculate score and rank from check results
+#   6. Generate score and rank badges
+#   7. Calculate check suite hash for staleness detection
+#   8. Analyze recent contributors
+#   9. Build final results JSON
+#  10. Commit results to catalog branch (if scorecards repo configured)
+#  11. Set GitHub Actions outputs
+#
+# OUTPUTS (GitHub Actions):
+#   score          - Quality score (0-100)
+#   rank           - Quality rank (Bronze, Silver, Gold, Platinum)
+#   passed-checks  - Number of checks passed
+#   total-checks   - Total number of checks run
+#   results-file   - Path to results JSON file
+#
+# EXAMPLE:
+#   # Typical usage in GitHub Actions workflow:
+#   - uses: your-org/scorecards@v1
+#     with:
+#       github-token: ${{ secrets.GITHUB_TOKEN }}
+#       scorecards-repo: your-org/scorecards
+#
 set -euo pipefail
 
 # Get script directory
