@@ -438,27 +438,13 @@ Multiple workflows write to catalog branch to prevent conflicts and loops:
 
 ### Token Requirements
 
-The system uses three types of tokens for different permissions:
+The system uses three types of tokens:
 
-1. **GITHUB_TOKEN** (automatic)
-   - Basic operations in service repos
-   - Read access to repositories
-   - Write access to workflow run artifacts
+1. **GITHUB_TOKEN** (automatic) - Basic operations in service repos
+2. **SCORECARDS_CATALOG_TOKEN** (required) - Writes results to catalog branch (`repo` scope)
+3. **SCORECARDS_WORKFLOW_TOKEN** (optional) - Creates PRs with workflow files (`repo`, `workflow` scopes)
 
-2. **SCORECARDS_CATALOG_TOKEN** (required secret)
-   - Write access to catalog branch in central repo
-   - Used by scorecards action to commit results
-   - Required for all service workflows
-   - **Scopes:** `repo`
-   - **Rationale:** Results must be written to the catalog branch
-
-3. **SCORECARDS_WORKFLOW_TOKEN** (optional secret)
-   - Creates PRs that modify .github/workflows/ files
-   - Bypasses GitHub security restriction on workflow file PRs
-   - Only needed for automated installation
-   - Used by `install.yml` and `create-installation-pr.yml`
-   - **Scopes:** `repo`, `workflow`
-   - **Rationale:** GitHub requires `workflow` scope to modify workflow files via PR
+**See [Token Requirements Guide](../guides/token-requirements.md) for setup instructions and detailed explanations.**
 
 ## Quick Reference
 
