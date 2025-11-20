@@ -4,7 +4,28 @@
     "repo": "test-repo-perfect",
     "name": "test-repo-perfect",
     "team": "Platform Engineering",
-    "links": [],
+    "links": [
+      {
+        "name": "OpenAPI Specification",
+        "url": "https://github.com/feddericovonwernich/test-repo-perfect/blob/master/openapi.yaml",
+        "description": "API contract and schema definitions"
+      },
+      {
+        "name": "API Explorer",
+        "url": "https://api.example.com/swagger-ui",
+        "description": "Interactive Swagger UI for testing endpoints"
+      },
+      {
+        "name": "Documentation Portal",
+        "url": "https://docs.example.com/services/perfect-api",
+        "description": "Comprehensive service documentation"
+      },
+      {
+        "name": "Incident Runbook",
+        "url": "https://confluence.example.com/display/ENG/Perfect+API+Runbook",
+        "description": "Troubleshooting guides and escalation procedures"
+      }
+    ],
     "openapi": {
       "spec_file": "openapi.yaml",
       "environments": {
@@ -27,17 +48,17 @@
   "rank": "platinum",
   "passed_checks": 9,
   "total_checks": 10,
-  "timestamp": "2025-11-20T21:51:00Z",
+  "timestamp": "2025-11-20T22:51:42Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
-      "email": "feddericovonwernich@gmail.com",
+      "name": "Federico von Wernich",
+      "email": "feddericokz @gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-20T18:49:47Z",
-      "last_commit_hash": "50035d6"
+      "last_commit_date": "2025-11-20T19:49:59Z",
+      "last_commit_hash": "34777a1"
     }
   ],
   "checks": [
@@ -98,7 +119,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (561 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (1219 bytes)\n",
       "stderr": ""
     },
     {
@@ -109,7 +130,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
@@ -157,8 +178,8 @@
       "weight": 7,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
-      "stdout": "Scorecard config has meaningful content:\n  • Team: Platform Engineering\n  • Description: Reference implementation demonstrating all scorecards best practices\n",
+      "duration": 0,
+      "stdout": "Scorecard config has meaningful content:\n  • Team: Platform Engineering\n  • Description: Reference implementation demonstrating all scorecards best practices\n  • Links: 4 configured\n",
       "stderr": ""
     }
   ]
