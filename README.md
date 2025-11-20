@@ -161,8 +161,8 @@ The workflow runs daily and reports results to the catalog.
 ### Reference
 - **[Usage Guide](documentation/guides/usage.md)** - Action inputs, outputs, badges, and troubleshooting
 - **[Check Development Guide](documentation/guides/check-development-guide.md)** - How to create custom checks
-- **[Architecture](documentation/architecture/overview.md)** - How the system works
-- **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - Complete technical reference
+- **[Architecture](documentation/architecture/overview.md)** - System design and flows
+- **[Token Requirements](documentation/reference/token-requirements.md)** - PAT setup and scopes
 
 ## Contributing
 
@@ -183,5 +183,5 @@ MIT
 ---
 
 **Next steps:**
-- **Technical details:** See [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md) for architecture, installation methods, scoring system, and configuration
+- **Technical details:** See [Documentation](documentation/) for architecture, installation, scoring, and configuration
 - **Compare solutions:** Review [Cortex](https://www.cortex.io/) and [Backstage](https://backstage.io/) to see which tool fits your needs
