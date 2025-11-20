@@ -3,15 +3,31 @@
     "org": "feddericovonwernich",
     "repo": "test-repo-perfect",
     "name": "test-repo-perfect",
-    "team": "",
+    "team": "Platform Engineering",
     "links": [],
-    "openapi": null
+    "openapi": {
+      "spec_file": "openapi.yaml",
+      "environments": {
+        "production": {
+          "base_url": "https://api.example.com/v1",
+          "description": "Production environment"
+        },
+        "staging": {
+          "base_url": "https://staging-api.example.com/v1",
+          "description": "Staging environment for pre-production testing"
+        },
+        "development": {
+          "base_url": "http://localhost:8000",
+          "description": "Local development server"
+        }
+      }
+    }
   },
-  "score": 76,
-  "rank": "gold",
-  "passed_checks": 6,
+  "score": 90,
+  "rank": "platinum",
+  "passed_checks": 8,
   "total_checks": 10,
-  "timestamp": "2025-11-20T20:15:00Z",
+  "timestamp": "2025-11-20T21:45:04Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
   "installed": false,
@@ -20,8 +36,8 @@
       "name": "Federico von Wernich",
       "email": "feddericokz @gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-20T16:55:17Z",
-      "last_commit_hash": "a340ee4"
+      "last_commit_date": "2025-11-20T17:42:34Z",
+      "last_commit_hash": "a9a1c1b"
     }
   ],
   "checks": [
@@ -79,11 +95,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "Scorecards Setup",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (505 bytes)\n",
+      "stderr": ""
     },
     {
       "check_id": "06-openapi-spec",
@@ -93,7 +109,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
@@ -115,11 +131,11 @@
       "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
       "category": "Documentation",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "OpenAPI specification found (openapi.yaml), but no .scorecard/config.yml exists\nCreate .scorecard/config.yml with openapi.environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n      staging:\n        base_url: \"https://staging-api.example.com\"\n"
+      "stdout": "API environment configuration found for OpenAPI spec: openapi.yaml\nConfigured environments: 3\n  • production: https://api.example.com/v1 - Production environment\n  • staging: https://staging-api.example.com/v1 - Staging environment for pre-production testing\n  • development: http://localhost:8000 - Local development server\nSpec file reference: openapi.yaml\n",
+      "stderr": ""
     },
     {
       "check_id": "09-scorecard-badge",
@@ -143,7 +159,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+      "stderr": ".scorecard/config.yml exists but missing \"service\" section\n\nExpected structure:\n  service:\n    name: \"Your Service Name\"\n    team: \"Your Team Name\"\n    description: \"A meaningful description of your service\"\n"
     }
   ]
 }
