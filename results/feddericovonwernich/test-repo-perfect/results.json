@@ -23,21 +23,21 @@
       }
     }
   },
-  "score": 90,
+  "score": 96,
   "rank": "platinum",
-  "passed_checks": 8,
+  "passed_checks": 9,
   "total_checks": 10,
-  "timestamp": "2025-11-20T21:45:04Z",
+  "timestamp": "2025-11-20T21:51:00Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
-      "email": "feddericokz @gmail.com",
+      "name": "feddericovonwernich",
+      "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-20T17:42:34Z",
-      "last_commit_hash": "a9a1c1b"
+      "last_commit_date": "2025-11-20T18:49:47Z",
+      "last_commit_hash": "50035d6"
     }
   ],
   "checks": [
@@ -74,7 +74,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -98,7 +98,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (505 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (561 bytes)\n",
       "stderr": ""
     },
     {
@@ -109,7 +109,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
@@ -155,11 +155,11 @@
       "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
       "category": "Scorecards Setup",
       "weight": 7,
-      "status": "fail",
-      "exit_code": 1,
-      "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml exists but missing \"service\" section\n\nExpected structure:\n  service:\n    name: \"Your Service Name\"\n    team: \"Your Team Name\"\n    description: \"A meaningful description of your service\"\n"
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 1,
+      "stdout": "Scorecard config has meaningful content:\n  • Team: Platform Engineering\n  • Description: Reference implementation demonstrating all scorecards best practices\n",
+      "stderr": ""
     }
   ]
 }
