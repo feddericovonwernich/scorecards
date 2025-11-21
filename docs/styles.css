@@ -17,6 +17,31 @@
     --color-border: #e0e0e0;
     --color-success: #4caf50;
     --color-error: #f44336;
+    --color-header-bg: #000000;
+    --color-shadow: rgba(0, 0, 0, 0.1);
+    --color-shadow-hover: rgba(0, 0, 0, 0.15);
+    --color-active-bg: #f1f5ff;
+    --color-active-border: #667eea;
+    --color-exclude-bg: #ffe6e6;
+    --color-exclude-border: #e74c3c;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --color-bg: #1a1a1a;
+    --color-surface: #2d2d2d;
+    --color-text: #e0e0e0;
+    --color-text-muted: #a0a0a0;
+    --color-border: #404040;
+    --color-success: #66bb6a;
+    --color-error: #ef5350;
+    --color-header-bg: #0d0d0d;
+    --color-shadow: rgba(0, 0, 0, 0.3);
+    --color-shadow-hover: rgba(0, 0, 0, 0.4);
+    --color-active-bg: #1a2744;
+    --color-active-border: #667eea;
+    --color-exclude-bg: #3d1f1f;
+    --color-exclude-border: #e74c3c;
 }
 
 body {
@@ -24,6 +49,7 @@ body {
     background-color: var(--color-bg);
     color: var(--color-text);
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -34,11 +60,12 @@ body {
 
 /* Header */
 header {
-    background: #000000;
+    background: var(--color-header-bg);
     color: white;
     padding: 40px 20px;
     text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px var(--color-shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 header h1 {
@@ -64,8 +91,8 @@ header h1 {
     padding: 20px;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.2s;
+    box-shadow: 0 2px 8px var(--color-shadow);
+    transition: all 0.2s, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .stat-card.filterable {
@@ -75,21 +102,21 @@ header h1 {
 
 .stat-card.filterable:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px var(--color-shadow-hover);
 }
 
 .stat-card.filterable.active {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-    border: 2px solid #667eea;
-    background: #f1f5ff;
+    border: 2px solid var(--color-active-border);
+    background: var(--color-active-bg);
 }
 
 .stat-card.filterable.exclude {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
-    border: 2px solid #e74c3c;
-    background: #ffe6e6;
+    border: 2px solid var(--color-exclude-border);
+    background: var(--color-exclude-bg);
 }
 
 .stat-card.rank-platinum { border-left: 3px solid var(--color-platinum); }
@@ -225,15 +252,15 @@ header h1 {
     background: var(--color-surface);
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s;
+    box-shadow: 0 2px 8px var(--color-shadow);
+    transition: all 0.3s, background-color 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     border-left: 4px solid transparent;
 }
 
 .service-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 20px var(--color-shadow-hover);
 }
 
 .service-card.rank-platinum { border-left-color: var(--color-platinum); }
@@ -425,7 +452,8 @@ header h1 {
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 40px var(--color-shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .modal-close {
@@ -693,6 +721,33 @@ header h1 {
     margin-bottom: 0;
 }
 
+/* Theme Toggle Button in Header */
+.theme-toggle-btn {
+    position: absolute;
+    top: 20px;
+    right: 70px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.theme-toggle-btn:active {
+    transform: translateY(0);
+}
+
 /* Settings Button in Header */
 .settings-btn {
     position: absolute;
@@ -803,7 +858,9 @@ header h1 {
     font-family: monospace;
     font-size: 0.9rem;
     margin-bottom: 12px;
-    transition: border-color 0.2s ease;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 #github-pat-input:focus {
@@ -1298,14 +1355,14 @@ footer a:hover {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: white;
+    background: var(--color-surface);
     padding: 16px 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--color-shadow-hover);
     border-left: 4px solid;
     opacity: 0;
     transform: translateX(400px);
-    transition: all 0.3s ease;
+    transition: all 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .toast.show {
@@ -1323,7 +1380,7 @@ footer a:hover {
     flex: 1;
     font-size: 0.95rem;
     line-height: 1.4;
-    color: #2c3e50;
+    color: var(--color-text);
 }
 
 /* Toast types */
@@ -1436,10 +1493,10 @@ footer a:hover {
     right: 0;
     width: 400px;
     height: 100vh;
-    background: white;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    background: var(--color-surface);
+    box-shadow: -4px 0 20px var(--color-shadow-hover);
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     z-index: 10000;
@@ -1455,8 +1512,9 @@ footer a:hover {
     align-items: center;
     justify-content: space-between;
     padding: 20px;
-    border-bottom: 2px solid #e1e4e8;
-    background: #f6f8fa;
+    border-bottom: 2px solid var(--color-border);
+    background: var(--color-bg);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .widget-header h3 {

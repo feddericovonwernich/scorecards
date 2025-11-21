@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Explorer - Scorecards</title>
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            const THEME_KEY = 'theme';
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            const osPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (osPrefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
     <style>
         * {
@@ -15,6 +25,12 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #fafbfc;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        [data-theme="dark"] body {
+            background: #1a1a1a;
+            color: #e0e0e0;
         }
 
         .header {
@@ -22,6 +38,12 @@
             border-bottom: 1px solid #e1e4e8;
             padding: 20px;
             margin-bottom: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .header {
+            background: #2d2d2d;
+            border-bottom-color: #404040;
         }
 
         .header-content {
@@ -65,6 +87,34 @@
             font-size: 0.9rem;
             cursor: pointer;
             min-width: 150px;
+        }
+
+        .theme-toggle-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #24292e;
+        }
+
+        .theme-toggle-btn:hover {
+            background: #f6f8fa;
+            border-color: #d0d7de;
+        }
+
+        [data-theme="dark"] .theme-toggle-btn {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .theme-toggle-btn:hover {
+            background: var(--color-bg);
         }
 
         .back-btn {
@@ -130,6 +180,14 @@
                 <select id="env-selector" class="env-selector" style="display:none;">
                     <option value="">Select Environment</option>
                 </select>
+                <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle night mode" aria-label="Toggle night mode">
+                    <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+                    </svg>
+                    <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="display: none;">
+                        <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+                    </svg>
+                </button>
                 <a href="./" class="back-btn">← Back to Catalog</a>
             </div>
         </div>
@@ -321,6 +379,79 @@
             document.getElementById('error').style.display = 'block';
             document.getElementById('error-message').textContent = message;
         }
+
+        // Theme management
+        const THEME_KEY = 'theme';
+        const THEMES = { LIGHT: 'light', DARK: 'dark' };
+
+        function getOSPreference() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return THEMES.DARK;
+            }
+            return THEMES.LIGHT;
+        }
+
+        function getSavedTheme() {
+            const saved = localStorage.getItem(THEME_KEY);
+            if (saved === THEMES.DARK || saved === THEMES.LIGHT) {
+                return saved;
+            }
+            return getOSPreference();
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            if (theme === THEMES.DARK) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        function getCurrentTheme() {
+            return document.documentElement.getAttribute('data-theme') || THEMES.LIGHT;
+        }
+
+        function toggleTheme() {
+            const current = getCurrentTheme();
+            const newTheme = current === THEMES.DARK ? THEMES.LIGHT : THEMES.DARK;
+            applyTheme(newTheme);
+            localStorage.setItem(THEME_KEY, newTheme);
+            return newTheme;
+        }
+
+        function initTheme() {
+            const theme = getSavedTheme();
+            applyTheme(theme);
+
+            // Listen for OS preference changes
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (!saved) {
+                        const newTheme = e.matches ? THEMES.DARK : THEMES.LIGHT;
+                        applyTheme(newTheme);
+                    }
+                });
+            }
+
+            // Attach toggle button event listener
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleTheme);
+            }
+        }
+
+        // Initialize theme early
+        initTheme();
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', init);

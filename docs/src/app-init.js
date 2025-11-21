@@ -5,6 +5,7 @@
 
 import { loadServices, fetchCurrentChecksHash } from './api/registry.js';
 import { isServiceStale } from './services/staleness.js';
+import { initTheme, getCurrentTheme } from './services/theme.js';
 import { renderServices } from './ui/service-card.js';
 import { updateStats } from './ui/stats.js';
 import { showToast } from './ui/toast.js';
@@ -132,11 +133,33 @@ export async function refreshData() {
 }
 
 /**
+ * Update theme toggle button icon
+ * @param {string} theme - 'dark' or 'light'
+ */
+function updateThemeIcon(theme) {
+    const sunIcon = document.getElementById('theme-icon-sun');
+    const moonIcon = document.getElementById('theme-icon-moon');
+    if (sunIcon && moonIcon) {
+        if (theme === 'dark') {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
+    }
+}
+
+/**
  * Initialize application on page load
  * @returns {Promise<void>}
  */
 export async function initializeApp() {
     try {
+        // Initialize theme early to prevent flash
+        initTheme();
+        updateThemeIcon(getCurrentTheme());
+
         // Load services
         const { services } = await loadServices();
         window.allServices = services;

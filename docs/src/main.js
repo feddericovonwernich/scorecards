@@ -30,6 +30,7 @@ import * as workflowTriggers from './api/workflow-triggers.js';
 // Service modules
 import * as auth from './services/auth.js';
 import * as staleness from './services/staleness.js';
+import * as theme from './services/theme.js';
 
 // Application initialization
 import * as appInit from './app-init.js';
@@ -57,6 +58,7 @@ window.ScorecardModules = {
     workflowTriggers,
     auth,
     staleness,
+    theme,
     appInit
 };
 
@@ -95,6 +97,12 @@ window.validateGitHubToken = auth.validateToken;
 
 // Staleness functions
 window.isServiceStale = staleness.isServiceStale;
+
+// Theme functions
+window.initTheme = theme.initTheme;
+window.toggleTheme = theme.toggleTheme;
+window.getCurrentTheme = theme.getCurrentTheme;
+window.setTheme = theme.setTheme;
 
 // Registry functions
 window.loadServicesData = registry.loadServices;
@@ -180,6 +188,24 @@ console.log('✓ ES6 Modules loaded successfully');
 console.log('Available modules:', Object.keys(window.ScorecardModules));
 
 /**
+ * Update theme toggle button icon
+ * @param {string} theme - 'dark' or 'light'
+ */
+function updateThemeIcon(theme) {
+    const sunIcon = document.getElementById('theme-icon-sun');
+    const moonIcon = document.getElementById('theme-icon-moon');
+    if (sunIcon && moonIcon) {
+        if (theme === 'dark') {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
+    }
+}
+
+/**
  * Setup Event Listeners
  * Initializes all DOM event listeners for the application
  * Uses global variables from app.js: searchQuery, activeFilters, currentSort
@@ -225,6 +251,15 @@ function setupEventListeners() {
         window.currentSort = e.target.value;
         window.filterAndRenderServices();
     });
+
+    // Theme toggle
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = window.toggleTheme();
+            updateThemeIcon(newTheme);
+        });
+    }
 
     // Modal close
     document.querySelector('.modal-close').addEventListener('click', window.closeModal);
@@ -289,5 +324,6 @@ export {
     workflowTriggers,
     auth,
     staleness,
+    theme,
     appInit
 };
