@@ -6,7 +6,7 @@
 ,
     {"org":"feddericovonwernich","repo":"test-repo-install-test","name":"test-repo-install-test","team":"","score":63,"rank":"silver","last_updated":"2025-11-20T20:15:31Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"main","installation_pr":{"number":8,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-install-test/pull/8"}}
 ,
-    {"org":"feddericovonwernich","repo":"test-repo-javascript","name":"test-repo-javascript","team":"","score":63,"rank":"silver","last_updated":"2025-11-20T20:15:12Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":6,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-javascript/pull/6"}}
+    {"org":"feddericovonwernich","repo":"test-repo-javascript","name":"test-repo-javascript","team":"","score":63,"rank":"silver","last_updated":"2025-11-20T20:15:12Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":7,"state":"OPEN","url":"https://github.com/feddericovonwernich/test-repo-javascript/pull/7"}}
 ,
     {"org":"feddericovonwernich","repo":"test-repo-minimal","name":"test-repo-minimal","team":"","score":36,"rank":"bronze","last_updated":"2025-11-20T20:14:56Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":6,"state":"CLOSED","url":"https://github.com/feddericovonwernich/test-repo-minimal/pull/6"}}
 ,
@@ -17,6 +17,6 @@
     {"org":"feddericovonwernich","repo":"test-repo-python","name":"test-repo-python","team":"","score":63,"rank":"silver","last_updated":"2025-11-20T20:15:08Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":7,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-python/pull/7"}}
 
   ],
-  "generated_at": "2025-11-20T22:53:45Z",
+  "generated_at": "2025-11-21T02:17:43Z",
   "count": 8
 }
