@@ -148,14 +148,25 @@ function renderModalStats(data) {
  * @returns {string} HTML for tabs
  */
 function renderTabs(data) {
+    const leftArrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>';
+    const rightArrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>';
+
     return `
-        <div class="tabs" style="margin-top: 30px;">
-            <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
-            ${data.service.openapi ? '<button class="tab-btn" onclick="switchTab(event, \'api\')">API Specification</button>' : ''}
-            ${data.service.links && data.service.links.length > 0 ? `<button class="tab-btn" onclick="switchTab(event, 'links')">Links</button>` : ''}
-            ${data.recent_contributors && data.recent_contributors.length > 0 ? '<button class="tab-btn" onclick="switchTab(event, \'contributors\')">Contributors</button>' : ''}
-            <button class="tab-btn" onclick="switchTab(event, 'workflows')">Workflow Runs</button>
-            <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
+        <div class="tabs-container">
+            <button class="tabs-scroll-btn tabs-scroll-left" onclick="scrollTabs('left')" aria-label="Scroll tabs left">
+                ${leftArrowSvg}
+            </button>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'checks')">Check Results</button>
+                ${data.service.openapi ? '<button class="tab-btn" onclick="switchTab(event, \'api\')">API Specification</button>' : ''}
+                ${data.service.links && data.service.links.length > 0 ? '<button class="tab-btn" onclick="switchTab(event, \'links\')">Links</button>' : ''}
+                ${data.recent_contributors && data.recent_contributors.length > 0 ? '<button class="tab-btn" onclick="switchTab(event, \'contributors\')">Contributors</button>' : ''}
+                <button class="tab-btn" onclick="switchTab(event, 'workflows')">Workflow Runs</button>
+                <button class="tab-btn" onclick="switchTab(event, 'badges')">Badges</button>
+            </div>
+            <button class="tabs-scroll-btn tabs-scroll-right" onclick="scrollTabs('right')" aria-label="Scroll tabs right">
+                ${rightArrowSvg}
+            </button>
         </div>
     `;
 }
@@ -569,6 +580,9 @@ export async function showServiceDetail(org, repo) {
             }
         }
 
+        // Initialize tab scroll arrows for mobile
+        initTabScrollArrows();
+
     } catch (error) {
         console.error('Error loading service details:', error);
         detailDiv.innerHTML = `
@@ -732,4 +746,65 @@ export function switchTab(event, tabName) {
     if (tabName === 'workflows' && !serviceWorkflowLoaded) {
         loadWorkflowRunsForService();
     }
+}
+
+/**
+ * Scrolls the tabs container left or right
+ * @param {string} direction - 'left' or 'right'
+ */
+export function scrollTabs(direction) {
+    const tabsContainer = document.querySelector('.tabs');
+    if (!tabsContainer) return;
+
+    const scrollAmount = 150;
+    const newScrollLeft = direction === 'left'
+        ? tabsContainer.scrollLeft - scrollAmount
+        : tabsContainer.scrollLeft + scrollAmount;
+
+    tabsContainer.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+    });
+}
+
+/**
+ * Updates the visibility of tab scroll arrows based on scroll position
+ */
+export function updateTabScrollArrows() {
+    const tabsContainer = document.querySelector('.tabs');
+    const leftBtn = document.querySelector('.tabs-scroll-left');
+    const rightBtn = document.querySelector('.tabs-scroll-right');
+
+    if (!tabsContainer || !leftBtn || !rightBtn) return;
+
+    const scrollLeft = tabsContainer.scrollLeft;
+    const maxScroll = tabsContainer.scrollWidth - tabsContainer.clientWidth;
+
+    // Show left arrow if not at the beginning
+    if (scrollLeft > 5) {
+        leftBtn.classList.add('visible');
+    } else {
+        leftBtn.classList.remove('visible');
+    }
+
+    // Show right arrow if not at the end
+    if (scrollLeft < maxScroll - 5) {
+        rightBtn.classList.add('visible');
+    } else {
+        rightBtn.classList.remove('visible');
+    }
+}
+
+/**
+ * Initializes tab scroll arrows event listeners
+ */
+export function initTabScrollArrows() {
+    const tabsContainer = document.querySelector('.tabs');
+    if (!tabsContainer) return;
+
+    // Update arrows on scroll
+    tabsContainer.addEventListener('scroll', updateTabScrollArrows);
+
+    // Initial check after a small delay to ensure layout is complete
+    setTimeout(updateTabScrollArrows, 100);
 }
