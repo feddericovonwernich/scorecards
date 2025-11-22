@@ -7,9 +7,6 @@ import { defineConfig, devices } from '@playwright/test';
  * API requests are mocked via page.route() to serve test fixtures.
  */
 
-// Use local server in CI for faster, more reliable tests
-const useLocalServer = !process.env.CI || process.env.CI_USE_LOCAL_SERVER;
-
 export default defineConfig({
   testDir: './tests/e2e',
 
