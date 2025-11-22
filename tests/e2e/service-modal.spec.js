@@ -324,3 +324,98 @@ test.describe('Stale Scorecard Check Results (Case-Insensitive Categories)', () 
     await expect(modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })).toBeVisible();
   });
 });
+
+test.describe('Mobile Tab Scroll Arrows', () => {
+  test.beforeEach(async ({ page }) => {
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+    await mockCatalogRequests(page);
+    await page.goto('/');
+    await waitForCatalogLoad(page);
+  });
+
+  test('should have scroll arrow buttons in tabs container on mobile', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const modal = page.locator('#service-modal');
+    const tabsContainer = modal.locator('.tabs-container');
+    const leftArrow = modal.locator('.tabs-scroll-left');
+    const rightArrow = modal.locator('.tabs-scroll-right');
+
+    await expect(tabsContainer).toBeVisible();
+    // Arrows exist in DOM (may not be visible depending on scroll state)
+    await expect(leftArrow).toHaveCount(1);
+    await expect(rightArrow).toHaveCount(1);
+  });
+
+  test('should show right arrow when tabs overflow on mobile', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    // Wait for scroll arrows to be initialized
+    await page.waitForTimeout(200);
+
+    const rightArrow = page.locator('.tabs-scroll-right');
+    // Right arrow should be visible when there are more tabs to scroll
+    await expect(rightArrow).toHaveClass(/visible/);
+  });
+
+  test('should hide left arrow initially on mobile', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    // Wait for scroll arrows to be initialized
+    await page.waitForTimeout(200);
+
+    const leftArrow = page.locator('.tabs-scroll-left');
+    // Left arrow should not be visible at start (scrolled to beginning)
+    await expect(leftArrow).not.toHaveClass(/visible/);
+  });
+
+  test('should scroll tabs and update arrow visibility when clicking arrows', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    // Wait for scroll arrows to be initialized
+    await page.waitForTimeout(200);
+
+    const tabs = page.locator('.tabs');
+    const leftArrow = page.locator('.tabs-scroll-left');
+    const rightArrow = page.locator('.tabs-scroll-right');
+
+    // Get initial scroll position
+    const initialScrollLeft = await tabs.evaluate(el => el.scrollLeft);
+    expect(initialScrollLeft).toBe(0);
+
+    // Click right arrow to scroll
+    await rightArrow.click();
+    await page.waitForTimeout(300); // Wait for smooth scroll
+
+    // Verify tabs scrolled
+    const scrolledPosition = await tabs.evaluate(el => el.scrollLeft);
+    expect(scrolledPosition).toBeGreaterThan(0);
+
+    // Left arrow should now be visible
+    await expect(leftArrow).toHaveClass(/visible/);
+
+    // Click left arrow to scroll back
+    await leftArrow.click();
+    await page.waitForTimeout(300);
+
+    // Verify scrolled back toward start
+    const finalScrollLeft = await tabs.evaluate(el => el.scrollLeft);
+    expect(finalScrollLeft).toBeLessThan(scrolledPosition);
+  });
+
+  test('should not show scroll arrows on desktop viewport', async ({ page }) => {
+    // Set desktop viewport
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await openServiceModal(page, 'test-repo-perfect');
+
+    await page.waitForTimeout(200);
+
+    const leftArrow = page.locator('.tabs-scroll-left');
+    const rightArrow = page.locator('.tabs-scroll-right');
+
+    // Arrows should be hidden (display: none) on desktop
+    await expect(leftArrow).toBeHidden();
+    await expect(rightArrow).toBeHidden();
+  });
+});
