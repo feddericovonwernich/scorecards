@@ -99,6 +99,7 @@ jobs:
   test-e2e:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -116,6 +117,9 @@ jobs:
 
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
+        env:
+          # Use local server instead of GitHub Pages for faster, more reliable tests
+          CI_USE_LOCAL_SERVER: true
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
