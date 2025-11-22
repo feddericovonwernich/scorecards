@@ -135,6 +135,7 @@ window.showServiceDetail = serviceModal.showServiceDetail;
 window.refreshServiceData = serviceModal.refreshServiceData;
 window.closeModal = serviceModal.closeModal;
 window.switchTab = serviceModal.switchTab;
+window.scrollTabs = serviceModal.scrollTabs;
 
 // Service workflows functions
 window.loadWorkflowRunsForService = serviceWorkflows.loadWorkflowRunsForService;

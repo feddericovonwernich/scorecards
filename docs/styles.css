@@ -1906,3 +1906,79 @@ footer a:hover {
 .widget-content::-webkit-scrollbar-thumb:hover {
     background: #959da5;
 }
+
+/* Mobile Tabs with Scroll Arrows */
+.tabs-container {
+    position: relative;
+    margin-top: 30px;
+}
+
+.tabs-scroll-btn {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .tabs-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        scroll-behavior: smooth;
+        flex: 1;
+        margin-top: 0;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab-btn {
+        padding: 10px 14px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .tabs-scroll-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--color-border);
+        border-radius: 50%;
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .tabs-scroll-btn.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .tabs-scroll-btn:hover {
+        background: var(--color-bg);
+        color: var(--color-text);
+        border-color: var(--color-text-muted);
+    }
+
+    .tabs-scroll-btn:active {
+        transform: scale(0.95);
+    }
+
+    .tabs-scroll-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+}
