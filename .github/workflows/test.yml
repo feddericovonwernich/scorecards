@@ -94,7 +94,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y shellcheck
-          find . -name "*.sh" -type f -not -path "./node_modules/*" -exec shellcheck {} +
+          find . -name "*.sh" -type f -not -path "./node_modules/*" -exec shellcheck -S error {} +
 
   test-e2e:
     name: E2E Tests (Playwright)
