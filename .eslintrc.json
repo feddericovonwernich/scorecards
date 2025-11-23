@@ -10,6 +10,25 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
+  "globals": {
+    "RAW_BASE_URL": "readonly",
+    "REPO_OWNER": "readonly",
+    "REPO_NAME": "readonly",
+    "allServices": "writable",
+    "currentChecksHash": "writable",
+    "filteredServices": "writable",
+    "currentServiceOrg": "writable",
+    "currentServiceRepo": "writable",
+    "serviceWorkflowLoaded": "writable",
+    "serviceWorkflowRuns": "writable",
+    "serviceWorkflowFilterStatus": "writable",
+    "serviceWorkflowPollInterval": "writable",
+    "serviceWorkflowPollIntervalTime": "writable",
+    "serviceDurationUpdateInterval": "writable",
+    "fetchWithHybridAuth": "readonly",
+    "showToast": "readonly",
+    "loadWorkflowRunsForService": "readonly"
+  },
   "rules": {
     "indent": "off",
     "linebreak-style": ["error", "unix"],
