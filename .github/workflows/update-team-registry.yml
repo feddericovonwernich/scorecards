@@ -37,7 +37,7 @@ on:
 
 # Only allow one team update at a time
 concurrency:
-  group: update-team-${{ github.event.inputs.team_id }}
+  group: update-team-${{ github.event.inputs.team_id || 'validation' }}
   cancel-in-progress: false
 
 jobs:
