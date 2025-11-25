@@ -3,6 +3,10 @@
  * Centralized button UI state transitions
  */
 
+import { getCssVar } from '../utils/css.js';
+import { getIcon } from '../config/icons.js';
+import { TIMING } from '../config/constants.js';
+
 /**
  * Set button to loading state
  * @param {HTMLButtonElement} button - Button element
@@ -33,7 +37,7 @@ export function setButtonLoading(button, message = 'Loading...') {
  * @param {number} duration - How long to show success (ms)
  * @returns {Promise<void>}
  */
-export function setButtonSuccess(button, message, duration = 3000) {
+export function setButtonSuccess(button, message, duration = TIMING.BUTTON_STATE_DURATION) {
     if (!button) return Promise.resolve();
 
     // Store original state if not already stored
@@ -45,12 +49,8 @@ export function setButtonSuccess(button, message, duration = 3000) {
     button.dataset.originalColor = button.style.color || '';
 
     // Show success state - replace with checkmark icon
-    button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
-        </svg>
-    `;
-    button.style.background = '#10b981';
+    button.innerHTML = getIcon('checkmark');
+    button.style.background = getCssVar('--color-success-btn');
     button.style.color = 'white';
     button.title = message;
 
@@ -69,7 +69,7 @@ export function setButtonSuccess(button, message, duration = 3000) {
  * @param {number} duration - How long to show error (ms)
  * @returns {Promise<void>}
  */
-export function setButtonError(button, message, duration = 3000) {
+export function setButtonError(button, message, duration = TIMING.BUTTON_STATE_DURATION) {
     if (!button) return Promise.resolve();
 
     // Store original state if not already stored
@@ -81,12 +81,8 @@ export function setButtonError(button, message, duration = 3000) {
     button.dataset.originalColor = button.style.color || '';
 
     // Show error state - replace with X icon
-    button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path>
-        </svg>
-    `;
-    button.style.background = '#ef4444';
+    button.innerHTML = getIcon('xMark');
+    button.style.background = getCssVar('--color-error-btn');
     button.style.color = 'white';
     button.title = message;
 

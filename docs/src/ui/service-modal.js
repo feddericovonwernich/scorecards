@@ -6,6 +6,8 @@
 import { escapeHtml, formatDate, formatRelativeTime, capitalize } from '../utils/formatting.js';
 import { isServiceStale } from '../services/staleness.js';
 import { md5 } from '../utils/crypto.js';
+import { STORAGE_KEYS, TIMING } from '../config/constants.js';
+import { startButtonSpin } from '../utils/animation.js';
 
 /**
  * Renders staleness warning banner
@@ -472,6 +474,42 @@ function renderWorkflowsTab() {
 }
 
 /**
+ * Composes the full modal content HTML
+ * @param {Object} data - Service data
+ * @param {string} org - Organization name
+ * @param {string} repo - Repository name
+ * @param {boolean} isStale - Whether service is stale
+ * @param {boolean} canTrigger - Whether re-run button should be shown
+ * @returns {string} Complete modal HTML content
+ */
+function composeModalContent(data, org, repo, isStale, canTrigger) {
+    return renderModalHeader(data, org, repo) +
+        renderStalenessWarning(isStale, canTrigger, org, repo) +
+        renderModalStats(data) +
+        renderTabs(data) +
+        renderChecksTab(data.checks) +
+        renderAPITab(data.service.openapi, org, repo) +
+        renderLinksTab(data.service.links) +
+        renderContributorsTab(data.recent_contributors) +
+        renderWorkflowsTab() +
+        renderBadgesTab(org, repo);
+}
+
+/**
+ * Restores the interval dropdown state from localStorage
+ */
+function restoreIntervalDropdownState() {
+    const savedInterval = localStorage.getItem(STORAGE_KEYS.SERVICE_WORKFLOW_POLL_INTERVAL);
+    if (savedInterval !== null) {
+        serviceWorkflowPollIntervalTime = parseInt(savedInterval);
+        const select = document.getElementById('service-workflow-interval-select');
+        if (select) {
+            select.value = savedInterval;
+        }
+    }
+}
+
+/**
  * Renders badges tab content
  * @param {string} org - Organization name
  * @param {string} repo - Repository name
@@ -553,28 +591,11 @@ export async function showServiceDetail(org, repo) {
         const isStale = isServiceStale(data, currentChecksHash);
         const canTrigger = isStale && data.installed;
 
-        // Compose modal HTML using helper functions
-        detailDiv.innerHTML =
-            renderModalHeader(data, org, repo) +
-            renderStalenessWarning(isStale, canTrigger, org, repo) +
-            renderModalStats(data) +
-            renderTabs(data) +
-            renderChecksTab(data.checks) +
-            renderAPITab(data.service.openapi, org, repo) +
-            renderLinksTab(data.service.links) +
-            renderContributorsTab(data.recent_contributors) +
-            renderWorkflowsTab() +
-            renderBadgesTab(org, repo);
+        // Compose modal HTML using helper function
+        detailDiv.innerHTML = composeModalContent(data, org, repo, isStale, canTrigger);
 
         // Initialize service workflow polling interval dropdown with saved preference
-        const savedInterval = localStorage.getItem('service_workflow_poll_interval');
-        if (savedInterval !== null) {
-            serviceWorkflowPollIntervalTime = parseInt(savedInterval);
-            const select = document.getElementById('service-workflow-interval-select');
-            if (select) {
-                select.value = savedInterval;
-            }
-        }
+        restoreIntervalDropdownState();
 
         // Initialize tab scroll arrows for mobile
         initTabScrollArrows();
@@ -604,11 +625,8 @@ export async function refreshServiceData(org, repo) {
     const activeTabName = activeTab ? activeTab.textContent.trim().toLowerCase().replace(/\s+/g, '-') : 'check-results';
 
     // Add spinning animation
-    const svg = button.querySelector('svg');
     const originalContent = button.innerHTML;
-    if (svg) {
-        svg.style.animation = 'spin 1s linear infinite';
-    }
+    startButtonSpin(button);
     button.disabled = true;
 
     try {
@@ -649,28 +667,11 @@ export async function refreshServiceData(org, repo) {
         const isStale = isServiceStale(data, currentChecksHash);
         const canTrigger = isStale && data.installed;
 
-        // Regenerate modal content using helper functions
-        detailDiv.innerHTML =
-            renderModalHeader(data, org, repo) +
-            renderStalenessWarning(isStale, canTrigger, org, repo) +
-            renderModalStats(data) +
-            renderTabs(data) +
-            renderChecksTab(data.checks) +
-            renderAPITab(data.service.openapi, org, repo) +
-            renderLinksTab(data.service.links) +
-            renderContributorsTab(data.recent_contributors) +
-            renderWorkflowsTab() +
-            renderBadgesTab(org, repo);
+        // Regenerate modal content using helper function
+        detailDiv.innerHTML = composeModalContent(data, org, repo, isStale, canTrigger);
 
         // Re-initialize interval dropdown with saved preference
-        const savedInterval = localStorage.getItem('service_workflow_poll_interval');
-        if (savedInterval !== null) {
-            serviceWorkflowPollIntervalTime = parseInt(savedInterval);
-            const select = document.getElementById('service-workflow-interval-select');
-            if (select) {
-                select.value = savedInterval;
-            }
-        }
+        restoreIntervalDropdownState();
 
         showToast('Service data refreshed', 'success');
 

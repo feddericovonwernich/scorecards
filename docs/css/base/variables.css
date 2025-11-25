@@ -49,6 +49,15 @@
     --color-warning-bg: #fff3cd;
     --color-warning-border: #f39c12;
     --color-warning-text: #856404;
+
+    /* Button state colors (for JS usage) */
+    --color-success-btn: #10b981;
+    --color-error-btn: #ef4444;
+    --color-copy-success: #27ae60;
+    --color-copy-default: #3498db;
+    --color-link-btn: #0969da;
+    --color-link-btn-hover: #0860ca;
+    --color-text-error: #d73a49;
 }
 
 /* Dark Theme */
@@ -99,4 +108,13 @@
     --color-warning-bg: #3d3520;
     --color-warning-border: #c9920a;
     --color-warning-text: #f5d67a;    /* 8.2:1 on #3d3520 - WCAG AAA */
+
+    /* Button state colors - dark theme */
+    --color-success-btn: #34d399;
+    --color-error-btn: #f87171;
+    --color-copy-success: #34d399;
+    --color-copy-default: #60a5fa;
+    --color-link-btn: #6ba3ff;
+    --color-link-btn-hover: #8ab8ff;
+    --color-text-error: #f87171;
 }

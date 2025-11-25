@@ -4,6 +4,7 @@
  */
 
 import { isServiceStale } from '../services/staleness.js';
+import { countByRank } from '../utils/statistics.js';
 
 /**
  * Filter services based on active filters and search query
@@ -113,19 +114,12 @@ export function getFilterStats(allServices, filteredServices, currentHash) {
     const installedCount = allServices.filter(s => s.installed).length;
     const hasApiCount = allServices.filter(s => s.has_api).length;
 
-    const rankCounts = {
-        platinum: allServices.filter(s => s.rank === 'platinum').length,
-        gold: allServices.filter(s => s.rank === 'gold').length,
-        silver: allServices.filter(s => s.rank === 'silver').length,
-        bronze: allServices.filter(s => s.rank === 'bronze').length
-    };
-
     return {
         total: allServices.length,
         filtered: filteredServices.length,
         stale: staleCount,
         installed: installedCount,
         hasApi: hasApiCount,
-        ranks: rankCounts
+        ranks: countByRank(allServices)
     };
 }

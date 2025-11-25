@@ -9,6 +9,7 @@ import { initTheme, getCurrentTheme } from './services/theme.js';
 import { renderServices } from './ui/service-card.js';
 import { updateStats } from './ui/stats.js';
 import { showToast } from './ui/toast.js';
+import { getCssVar } from './utils/css.js';
 
 /**
  * Filter and render services based on active filters
@@ -175,11 +176,12 @@ export async function initializeApp() {
 
     } catch (error) {
         console.error('Error loading services:', error);
+        const textMuted = getCssVar('--color-text-muted');
         document.getElementById('services-grid').innerHTML = `
             <div class="empty-state">
                 <h3>No Services Found</h3>
                 <p>No services have run scorecards yet, or the registry is not available.</p>
-                <p style="margin-top: 10px; font-size: 0.9rem; color: #999;">
+                <p style="margin-top: 10px; font-size: 0.9rem; color: ${textMuted};">
                     Error: ${error.message}
                 </p>
             </div>

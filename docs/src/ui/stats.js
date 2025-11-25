@@ -4,6 +4,7 @@
  */
 
 import { isServiceStale } from '../services/staleness.js';
+import { countByRank, calculateAverageScore } from '../utils/statistics.js';
 
 /**
  * Update dashboard statistics
@@ -12,16 +13,8 @@ import { isServiceStale } from '../services/staleness.js';
  */
 export function updateStats() {
     const total = allServices.length;
-    const avgScore = total > 0
-        ? Math.round(allServices.reduce((sum, s) => sum + s.score, 0) / total)
-        : 0;
-
-    const rankCounts = {
-        platinum: allServices.filter(s => s.rank === 'platinum').length,
-        gold: allServices.filter(s => s.rank === 'gold').length,
-        silver: allServices.filter(s => s.rank === 'silver').length,
-        bronze: allServices.filter(s => s.rank === 'bronze').length
-    };
+    const avgScore = calculateAverageScore(allServices);
+    const rankCounts = countByRank(allServices);
 
     const apiCount = allServices.filter(s => s.has_api).length;
     const staleCount = allServices.filter(s => isServiceStale(s, currentChecksHash)).length;

@@ -5,6 +5,7 @@
 
 import { getToken } from '../services/auth.js';
 import { getRepoOwner, getRepoName } from './registry.js';
+import { API_CONFIG } from '../config/constants.js';
 
 /**
  * Make a GitHub API request
@@ -16,7 +17,7 @@ export async function githubApiRequest(endpoint, options = {}) {
     const token = getToken();
 
     const headers = {
-        'Accept': 'application/vnd.github.v3+json',
+        'Accept': API_CONFIG.ACCEPT_HEADER,
         ...options.headers
     };
 
@@ -24,7 +25,7 @@ export async function githubApiRequest(endpoint, options = {}) {
         headers['Authorization'] = `token ${token}`;
     }
 
-    const response = await fetch(`https://api.github.com${endpoint}`, {
+    const response = await fetch(`${API_CONFIG.GITHUB_BASE_URL}${endpoint}`, {
         ...options,
         headers
     });
@@ -65,7 +66,7 @@ export async function checkRateLimit() {
  * @returns {Promise<Array<Object>>} Array of workflow runs
  */
 export async function fetchWorkflowRuns(org, repo, options = {}) {
-    const perPage = options.per_page || 25;
+    const perPage = options.per_page || API_CONFIG.PER_PAGE;
     const endpoint = `/repos/${org}/${repo}/actions/runs?per_page=${perPage}&_t=${Date.now()}`;
 
     try {

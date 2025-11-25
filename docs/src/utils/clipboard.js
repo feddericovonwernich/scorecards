@@ -3,6 +3,9 @@
  * Functions for copying text to clipboard with fallback support
  */
 
+import { getCssVar } from './css.js';
+import { TIMING } from '../config/constants.js';
+
 /**
  * Fallback method for copying to clipboard using legacy execCommand
  * @param {string} text - Text to copy
@@ -54,12 +57,12 @@ export async function copyBadgeCode(elementId, event) {
         if (button) {
             const originalText = button.textContent;
             button.textContent = 'Copied!';
-            button.style.background = '#27ae60';
+            button.style.background = getCssVar('--color-copy-success');
 
             setTimeout(() => {
                 button.textContent = originalText;
-                button.style.background = '#3498db';
-            }, 2000);
+                button.style.background = getCssVar('--color-copy-default');
+            }, TIMING.BUTTON_FEEDBACK);
         }
     } catch (err) {
         console.error('Failed to copy:', err);

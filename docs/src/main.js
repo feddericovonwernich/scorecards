@@ -3,11 +3,19 @@
  * Imports all ES6 modules and initializes the application
  */
 
+// Config modules
+import * as constants from './config/constants.js';
+import * as icons from './config/icons.js';
+
 // Utility modules
 import * as formatting from './utils/formatting.js';
 import * as crypto from './utils/crypto.js';
 import * as clipboard from './utils/clipboard.js';
 import * as dom from './utils/dom.js';
+import * as cssUtils from './utils/css.js';
+import * as animation from './utils/animation.js';
+import * as statistics from './utils/statistics.js';
+import * as durationTracker from './utils/duration-tracker.js';
 
 // UI modules
 import * as toast from './ui/toast.js';
@@ -38,10 +46,19 @@ import * as appInit from './app-init.js';
 // Export modules to window for backward compatibility with app.js
 // This allows the existing app.js to use the modular functions
 window.ScorecardModules = {
+    // Config
+    constants,
+    icons,
+    // Utilities
     formatting,
     crypto,
     clipboard,
     dom,
+    cssUtils,
+    animation,
+    statistics,
+    durationTracker,
+    // UI
     toast,
     modals,
     filters,
@@ -53,9 +70,11 @@ window.ScorecardModules = {
     settings,
     stats,
     buttonStates,
+    // API
     registry,
     github,
     workflowTriggers,
+    // Services
     auth,
     staleness,
     theme,
@@ -75,6 +94,24 @@ window.capitalize = formatting.capitalize;
 
 // Crypto utilities
 window.md5 = crypto.md5;
+
+// CSS utilities
+window.getCssVar = cssUtils.getCssVar;
+
+// Animation utilities
+window.startButtonSpin = animation.startButtonSpin;
+window.stopButtonSpin = animation.stopButtonSpin;
+
+// Statistics utilities
+window.countByRank = statistics.countByRank;
+window.calculateAverageScore = statistics.calculateAverageScore;
+
+// Duration tracker utilities
+window.startLiveDurationUpdates = durationTracker.startLiveDurationUpdates;
+window.stopLiveDurationUpdates = durationTracker.stopLiveDurationUpdates;
+
+// Icon utilities
+window.getIcon = icons.getIcon;
 
 // Clipboard utilities
 window.copyBadgeCode = clipboard.copyBadgeCode;
@@ -305,10 +342,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for ES6 module imports
 export {
+    // Config
+    constants,
+    icons,
+    // Utilities
     formatting,
     crypto,
     clipboard,
     dom,
+    cssUtils,
+    animation,
+    statistics,
+    durationTracker,
+    // UI
     toast,
     modals,
     filters,
@@ -320,9 +366,11 @@ export {
     settings,
     stats,
     buttonStates,
+    // API
     registry,
     github,
     workflowTriggers,
+    // Services
     auth,
     staleness,
     theme,

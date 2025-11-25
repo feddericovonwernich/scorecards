@@ -6,6 +6,7 @@
 import { escapeHtml, formatDuration, formatInterval } from '../utils/formatting.js';
 import { showToast } from './toast.js';
 import { getToken } from '../services/auth.js';
+import { API_CONFIG, TIMING, STORAGE_KEYS } from '../config/constants.js';
 
 // Widget State
 let widgetOpen = false;
@@ -13,10 +14,10 @@ let widgetWorkflowRuns = [];
 let widgetFilterStatus = 'all';
 let widgetPollInterval = null;
 let widgetLastFetch = 0;
-let currentPollingInterval = 30000; // Default 30s, configurable
-const WIDGET_POLL_INTERVAL_ACTIVE = 30000; // 30 seconds when activity detected
-const WIDGET_POLL_INTERVAL_IDLE = 60000; // 60 seconds when idle
-const WIDGET_CACHE_TTL = 15000; // 15 seconds cache
+let currentPollingInterval = TIMING.POLLING_ACTIVE; // Default, configurable
+const WIDGET_POLL_INTERVAL_ACTIVE = TIMING.POLLING_ACTIVE; // 30 seconds when activity detected
+const WIDGET_POLL_INTERVAL_IDLE = TIMING.POLLING_IDLE; // 60 seconds when idle
+const WIDGET_CACHE_TTL = TIMING.CACHE_MEDIUM; // 15 seconds cache
 
 /**
  * Initialize the widget
@@ -25,7 +26,7 @@ const WIDGET_CACHE_TTL = 15000; // 15 seconds cache
  */
 export function initializeActionsWidget() {
     // Load saved interval preference
-    const savedInterval = localStorage.getItem('widget_poll_interval');
+    const savedInterval = localStorage.getItem(STORAGE_KEYS.WIDGET_POLL_INTERVAL);
     if (savedInterval !== null) {
         currentPollingInterval = parseInt(savedInterval);
         // Update dropdown to reflect saved value
@@ -130,11 +131,11 @@ export async function fetchWorkflowRuns() {
     try {
         // Fetch workflow runs from the scorecards repository
         const response = await fetch(
-            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=25&_t=${Date.now()}`,
+            `${API_CONFIG.GITHUB_BASE_URL}/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=${API_CONFIG.PER_PAGE}&_t=${Date.now()}`,
             {
                 headers: {
                     'Authorization': `token ${getToken()}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Accept': API_CONFIG.ACCEPT_HEADER
                 },
                 cache: 'no-cache'
             }
@@ -406,7 +407,7 @@ export function changePollingInterval() {
     const newInterval = parseInt(select.value);
 
     // Save preference
-    localStorage.setItem('widget_poll_interval', newInterval);
+    localStorage.setItem(STORAGE_KEYS.WIDGET_POLL_INTERVAL, newInterval);
     currentPollingInterval = newInterval;
 
     // Restart polling with new interval (if PAT is available)

@@ -7,6 +7,9 @@ import { escapeHtml, formatInterval, formatDuration } from '../utils/formatting.
 import { renderWorkflowRun } from './workflow-run.js';
 import { showToast } from './toast.js';
 import { getToken } from '../services/auth.js';
+import { getCssVar } from '../utils/css.js';
+import { API_CONFIG, STORAGE_KEYS } from '../config/constants.js';
+import { startButtonSpin, stopButtonSpin } from '../utils/animation.js';
 
 /**
  * Load workflow runs for the current service
@@ -20,17 +23,20 @@ export async function loadWorkflowRunsForService() {
 
     if (!getToken()) {
         const content = document.getElementById('service-workflows-content');
+        const linkBtnColor = getCssVar('--color-link-btn');
+        const linkBtnHover = getCssVar('--color-link-btn-hover');
+        const textSecondary = getCssVar('--color-text-secondary');
         content.innerHTML = `
             <div class="widget-empty">
                 <p style="margin-bottom: 15px;">GitHub Personal Access Token required to view workflow runs.</p>
                 <button
                     onclick="openSettings()"
-                    style="background: #0969da; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500;"
-                    onmouseover="this.style.background='#0860ca'"
-                    onmouseout="this.style.background='#0969da'">
+                    style="background: ${linkBtnColor}; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500;"
+                    onmouseover="this.style.background='${linkBtnHover}'"
+                    onmouseout="this.style.background='${linkBtnColor}'">
                     Set GitHub PAT
                 </button>
-                <p style="margin-top: 10px; font-size: 0.85rem; color: #586069;">
+                <p style="margin-top: 10px; font-size: 0.85rem; color: ${textSecondary};">
                     Need a PAT with <code>workflow</code> scope to view workflow runs.
                 </p>
             </div>
@@ -43,11 +49,11 @@ export async function loadWorkflowRunsForService() {
 
     try {
         const response = await fetch(
-            `https://api.github.com/repos/${currentServiceOrg}/${currentServiceRepo}/actions/runs?per_page=25&_t=${Date.now()}`,
+            `${API_CONFIG.GITHUB_BASE_URL}/repos/${currentServiceOrg}/${currentServiceRepo}/actions/runs?per_page=${API_CONFIG.PER_PAGE}&_t=${Date.now()}`,
             {
                 headers: {
                     'Authorization': `token ${getToken()}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Accept': API_CONFIG.ACCEPT_HEADER
                 },
                 cache: 'no-cache'
             }
@@ -76,10 +82,12 @@ export async function loadWorkflowRunsForService() {
 
     } catch (error) {
         console.error('Error fetching service workflow runs:', error);
+        const errorColor = getCssVar('--color-text-error');
+        const textSecondary = getCssVar('--color-text-secondary');
         content.innerHTML = `
             <div class="widget-empty">
-                <p style="color: #d73a49; margin-bottom: 10px;">Error loading workflow runs</p>
-                <p style="font-size: 0.9rem; color: #586069;">${escapeHtml(error.message)}</p>
+                <p style="color: ${errorColor}; margin-bottom: 10px;">Error loading workflow runs</p>
+                <p style="font-size: 0.9rem; color: ${textSecondary};">${escapeHtml(error.message)}</p>
             </div>
         `;
     }
@@ -115,7 +123,7 @@ export function changeServicePollingInterval() {
     const newInterval = parseInt(select.value);
 
     // Save preference
-    localStorage.setItem('service_workflow_poll_interval', newInterval);
+    localStorage.setItem(STORAGE_KEYS.SERVICE_WORKFLOW_POLL_INTERVAL, newInterval);
     serviceWorkflowPollIntervalTime = newInterval;
 
     // Restart polling with new interval
@@ -140,10 +148,7 @@ export async function refreshServiceWorkflowRuns() {
     if (!button) return;
 
     // Add spinning animation
-    const svg = button.querySelector('svg');
-    if (svg) {
-        svg.style.animation = 'spin 1s linear infinite';
-    }
+    startButtonSpin(button);
 
     // Clear loaded flag to force fresh fetch
     serviceWorkflowLoaded = false;
@@ -155,9 +160,7 @@ export async function refreshServiceWorkflowRuns() {
         showToast('Failed to refresh workflow runs', 'error');
     } finally {
         // Remove spinning animation
-        if (svg) {
-            svg.style.animation = '';
-        }
+        stopButtonSpin(button);
     }
 }
 
