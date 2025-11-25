@@ -5,6 +5,19 @@
 
 import { escapeHtml, formatDate, formatRelativeTime, capitalize } from '../utils/formatting.js';
 import { isServiceStale } from '../services/staleness.js';
+import { getTeamName } from '../utils/team-statistics.js';
+
+/**
+ * Render clickable team link
+ * @param {Object} service - Service object
+ * @returns {string} HTML string for team display
+ */
+function renderTeamLink(service) {
+    const teamName = getTeamName(service);
+    if (!teamName) return '';
+
+    return `<div class="service-team">Team: <span class="service-team-link" onclick="event.stopPropagation(); window.selectTeam && window.selectTeam('${escapeHtml(teamName)}')">${escapeHtml(teamName)}</span></div>`;
+}
 
 /**
  * Renders the services grid with filtered services
@@ -73,7 +86,7 @@ export function renderServices() {
                 </div>
             </div>
             <div class="rank-badge ${service.rank}">${capitalize(service.rank)}</div>
-            ${service.team ? `<div>Team: ${escapeHtml(service.team)}</div>` : ''}
+            ${renderTeamLink(service)}
             <div class="service-meta">
                 <div>Last updated: ${formatDate(service.last_updated)}</div>
                 ${service.installation_pr && service.installation_pr.updated_at ? `

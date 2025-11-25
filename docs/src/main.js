@@ -15,6 +15,7 @@ import * as dom from './utils/dom.js';
 import * as cssUtils from './utils/css.js';
 import * as animation from './utils/animation.js';
 import * as statistics from './utils/statistics.js';
+import * as teamStatistics from './utils/team-statistics.js';
 import * as durationTracker from './utils/duration-tracker.js';
 
 // UI modules
@@ -29,6 +30,9 @@ import * as actionsWidget from './ui/actions-widget.js';
 import * as settings from './ui/settings.js';
 import * as stats from './ui/stats.js';
 import * as buttonStates from './ui/button-states.js';
+import * as teamFilter from './ui/team-filter.js';
+import * as teamDashboard from './ui/team-dashboard.js';
+import * as teamEditModal from './ui/team-edit-modal.js';
 
 // API modules
 import * as registry from './api/registry.js';
@@ -57,6 +61,7 @@ window.ScorecardModules = {
     cssUtils,
     animation,
     statistics,
+    teamStatistics,
     durationTracker,
     // UI
     toast,
@@ -70,6 +75,9 @@ window.ScorecardModules = {
     settings,
     stats,
     buttonStates,
+    teamFilter,
+    teamDashboard,
+    teamEditModal,
     // API
     registry,
     github,
@@ -211,6 +219,34 @@ window.checkRateLimit = settings.checkRateLimit;
 // Stats functions
 window.updateStats = stats.updateStats;
 
+// Team statistics functions
+window.getTeamName = teamStatistics.getTeamName;
+window.getTeamCount = teamStatistics.getTeamCount;
+window.getUniqueTeams = teamStatistics.getUniqueTeams;
+window.calculateTeamStats = teamStatistics.calculateTeamStats;
+
+// Team filter functions
+window.initTeamFilter = teamFilter.initTeamFilter;
+window.updateTeamFilter = teamFilter.updateTeamFilter;
+window.filterByTeam = teamFilter.filterByTeam;
+window.selectTeam = teamFilter.selectTeam;
+window.clearTeamFilter = teamFilter.clearTeamFilter;
+
+// Team dashboard functions
+window.initTeamDashboard = teamDashboard.initTeamDashboard;
+window.openTeamDashboard = teamDashboard.openTeamDashboard;
+window.closeTeamDashboard = teamDashboard.closeTeamDashboard;
+window.updateDashboardServices = teamDashboard.updateDashboardServices;
+
+// Team edit modal functions
+window.initTeamEditModal = teamEditModal.initTeamEditModal;
+window.openTeamEditModal = teamEditModal.openTeamEditModal;
+window.openCreateTeamModal = teamEditModal.openCreateTeamModal;
+window.closeTeamEditModal = teamEditModal.closeTeamEditModal;
+
+// Registry team functions
+window.loadTeams = registry.loadTeams;
+
 // Workflow trigger functions
 window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
 window.installService = workflowTriggers.installService;
@@ -324,7 +360,7 @@ window.setupEventListeners = setupEventListeners;
 // Initialize modal handlers and event listeners for common modals
 document.addEventListener('DOMContentLoaded', () => {
     // Setup modal handlers
-    const modalIds = ['service-modal', 'settings-modal'];
+    const modalIds = ['service-modal', 'settings-modal', 'team-dashboard-modal'];
     modalIds.forEach(id => {
         if (document.getElementById(id)) {
             modals.setupModalHandlers(id);
@@ -353,6 +389,7 @@ export {
     cssUtils,
     animation,
     statistics,
+    teamStatistics,
     durationTracker,
     // UI
     toast,
@@ -366,6 +403,9 @@ export {
     settings,
     stats,
     buttonStates,
+    teamFilter,
+    teamDashboard,
+    teamEditModal,
     // API
     registry,
     github,

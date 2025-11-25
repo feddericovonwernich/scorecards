@@ -188,6 +188,91 @@ export async function loadServices() {
     };
 }
 
+// Cache for teams data
+let teamsDataCache = null;
+let teamsDataTimestamp = 0;
+const TEAMS_CACHE_TTL = 60 * 1000; // 60 seconds
+
+/**
+ * Load all teams from the teams registry
+ * @param {boolean} forceRefresh - Force refresh even if cached
+ * @returns {Promise<{teams: Object, usedAPI: boolean}>}
+ */
+export async function loadTeams(forceRefresh = false) {
+    const now = Date.now();
+
+    // Return cached value if still valid
+    if (!forceRefresh && teamsDataCache && (now - teamsDataTimestamp) < TEAMS_CACHE_TTL) {
+        console.log('Using cached teams data');
+        return {
+            teams: teamsDataCache,
+            usedAPI: false,
+        };
+    }
+
+    console.log('Loading teams from registry...');
+
+    try {
+        const { response, usedAPI } = await fetchWithHybridAuth('teams/all-teams.json');
+
+        if (!response.ok) {
+            console.warn('Failed to load teams registry:', response.status);
+            return {
+                teams: null,
+                usedAPI,
+            };
+        }
+
+        const teamsData = await response.json();
+
+        // Update cache
+        teamsDataCache = teamsData;
+        teamsDataTimestamp = now;
+
+        console.log(`Loaded ${teamsData.count || 0} teams from registry (generated at ${teamsData.generated_at})`);
+
+        return {
+            teams: teamsData,
+            usedAPI,
+        };
+    } catch (error) {
+        console.error('Error loading teams:', error);
+        return {
+            teams: null,
+            usedAPI: false,
+        };
+    }
+}
+
+/**
+ * Load a single team file
+ * @param {string} teamId - Team ID
+ * @returns {Promise<Object|null>} Team data or null
+ */
+export async function loadTeamById(teamId) {
+    try {
+        const { response } = await fetchWithHybridAuth(`teams/${teamId}.json`);
+
+        if (!response.ok) {
+            console.warn(`Failed to load team ${teamId}:`, response.status);
+            return null;
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error(`Error loading team ${teamId}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Clear teams cache
+ */
+export function clearTeamsCache() {
+    teamsDataCache = null;
+    teamsDataTimestamp = 0;
+}
+
 /**
  * Get repository owner
  * @returns {string} Repository owner

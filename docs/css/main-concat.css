@@ -2159,3 +2159,430 @@ footer a:hover {
 .hidden {
     display: none;
 }
+/* Team Filter Dropdown */
+.team-filter-container {
+    position: relative;
+}
+
+.team-filter-dropdown {
+    position: relative;
+}
+
+.team-filter-toggle {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.team-filter-toggle:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-secondary);
+}
+
+.team-filter-toggle.active {
+    background: var(--color-active-bg);
+    border-color: var(--color-active-border);
+    color: var(--color-accent);
+}
+
+.team-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 280px;
+    max-width: 320px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px var(--color-shadow);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+}
+
+.team-dropdown-menu.open {
+    display: block;
+}
+
+.team-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.team-clear-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    background: transparent;
+    border: none;
+    color: var(--color-link);
+    cursor: pointer;
+}
+
+.team-clear-btn:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+}
+
+.team-dropdown-search {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.team-dropdown-search input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    font-size: 14px;
+}
+
+.team-dropdown-search input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.team-dropdown-options {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.team-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.team-option:hover {
+    background: var(--color-surface-hover);
+}
+
+.team-option.selected {
+    background: var(--color-active-bg);
+}
+
+.team-option input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.team-option .team-name {
+    flex: 1;
+    color: var(--color-text);
+}
+
+.team-option .team-name.no-team {
+    font-style: italic;
+    color: var(--color-text-muted);
+}
+
+/* Team Stats Card */
+.stat-card.team-stat-card {
+    cursor: pointer;
+}
+
+.stat-card.team-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--color-shadow-hover);
+}
+
+/* Team Dashboard Modal */
+#team-dashboard-modal .modal-content {
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.team-dashboard-header {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 20px;
+}
+
+.team-dashboard-summary {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.summary-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-stat .summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.summary-stat .summary-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+}
+
+.summary-stat.warning .summary-value {
+    color: var(--color-warning-text);
+}
+
+.team-dashboard-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.team-search {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    font-size: 14px;
+}
+
+.team-search:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.team-sort-select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Team Cards Grid */
+.team-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    overflow-y: auto;
+    padding: 4px;
+    max-height: calc(90vh - 200px);
+}
+
+.team-empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-muted);
+}
+
+/* Team Card */
+.team-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.team-card:hover {
+    box-shadow: 0 4px 12px var(--color-shadow-hover);
+    border-color: var(--color-border-secondary);
+}
+
+.team-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.team-card-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.team-slack {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    background: var(--color-surface-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.team-card-description {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+}
+
+.team-card-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.team-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.team-stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.team-stat-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+}
+
+.team-stat.warning .team-stat-value {
+    color: var(--color-warning-text);
+}
+
+/* Mini Rank Badges */
+.team-card-ranks {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mini-rank-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+.mini-rank-badge.rank-platinum {
+    background: var(--color-platinum);
+}
+
+.mini-rank-badge.rank-gold {
+    background: var(--color-gold);
+    color: #333;
+}
+
+.mini-rank-badge.rank-silver {
+    background: var(--color-silver);
+}
+
+.mini-rank-badge.rank-bronze {
+    background: var(--color-bronze);
+    color: #333;
+}
+
+/* Progress Bar */
+.team-card-progress {
+    margin-bottom: 12px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+}
+
+.progress-bar {
+    height: 6px;
+    background: var(--color-surface-secondary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--color-success);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Team Card Actions */
+.team-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.team-card-actions .team-filter-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.team-card-actions .team-filter-btn:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+}
+
+/* Clickable Team Link in Service Cards */
+.service-team-link {
+    cursor: pointer;
+    color: var(--color-link);
+    transition: color 0.15s ease;
+}
+
+.service-team-link:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .team-dropdown-menu {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: none;
+        border-radius: 16px 16px 0 0;
+        max-height: 70vh;
+    }
+
+    .team-dashboard-summary {
+        flex-wrap: wrap;
+    }
+
+    .team-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}

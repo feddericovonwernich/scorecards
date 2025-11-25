@@ -81,6 +81,10 @@
                 <div class="stat-value" id="bronze-count">-</div>
                 <div class="stat-label">Bronze</div>
             </div>
+            <div class="stat-card team-stat-card" onclick="window.openTeamDashboard && window.openTeamDashboard(window.allServices || [], window.currentChecksHash || '')">
+                <div class="stat-value" id="team-count">-</div>
+                <div class="stat-label">Teams</div>
+            </div>
         </section>
 
         <!-- Controls -->
@@ -91,6 +95,7 @@
                 placeholder="Search services..."
                 class="search-box"
             >
+            <div id="team-filter-container" class="team-filter-container"></div>
             <select id="sort-select" class="sort-select">
                 <option value="score-desc">Score: High to Low</option>
                 <option value="score-asc">Score: Low to High</option>
@@ -122,6 +127,15 @@
             <div class="modal-content">
                 <button class="modal-close">&times;</button>
                 <div id="service-detail"></div>
+            </div>
+        </div>
+
+        <!-- Team Dashboard Modal -->
+        <div id="team-dashboard-modal" class="modal hidden">
+            <div class="modal-content">
+                <button class="modal-close" onclick="window.closeTeamDashboard()">&times;</button>
+                <h2>Team Dashboard</h2>
+                <div id="team-dashboard-content"></div>
             </div>
         </div>
 

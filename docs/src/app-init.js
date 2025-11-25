@@ -10,14 +10,23 @@ import { renderServices } from './ui/service-card.js';
 import { updateStats } from './ui/stats.js';
 import { showToast } from './ui/toast.js';
 import { getCssVar } from './utils/css.js';
+import { initTeamFilter, updateTeamFilter, filterByTeam } from './ui/team-filter.js';
+import { initTeamDashboard } from './ui/team-dashboard.js';
+import { getTeamCount, getTeamName } from './utils/team-statistics.js';
 
 /**
  * Filter and render services based on active filters
  * @returns {void}
  */
 export function filterAndRenderServices() {
-    // Filter
-    window.filteredServices = window.allServices.filter(service => {
+    // Start with all services
+    let services = [...window.allServices];
+
+    // Apply team filter first
+    services = filterByTeam(services);
+
+    // Then apply other filters
+    window.filteredServices = services.filter(service => {
         // Multi-select filters with include/exclude (AND logic)
         if (window.activeFilters.size > 0) {
             for (const [filterName, filterState] of window.activeFilters) {
@@ -49,9 +58,10 @@ export function filterAndRenderServices() {
             }
         }
 
-        // Search filter
+        // Search filter - also search team name
         if (window.searchQuery) {
-            const searchText = `${service.name} ${service.org} ${service.repo} ${service.team || ''}`.toLowerCase();
+            const teamName = getTeamName(service) || '';
+            const searchText = `${service.name} ${service.org} ${service.repo} ${teamName}`.toLowerCase();
             if (!searchText.includes(window.searchQuery)) {
                 return false;
             }
@@ -110,6 +120,10 @@ export async function refreshData() {
         window.currentChecksHash = await fetchCurrentChecksHash();
         window.checksHashTimestamp = Date.now();
 
+        // Update team filter with new services
+        updateTeamFilter(services);
+        updateTeamCount(services);
+
         // Update UI
         updateStats();
         filterAndRenderServices();
@@ -130,6 +144,17 @@ export async function refreshData() {
             refreshBtn.disabled = false;
             refreshBtn.innerHTML = originalText;
         }, 1000);
+    }
+}
+
+/**
+ * Update team count display
+ * @param {Array<Object>} services - All services
+ */
+function updateTeamCount(services) {
+    const teamCountEl = document.getElementById('team-count');
+    if (teamCountEl) {
+        teamCountEl.textContent = getTeamCount(services);
     }
 }
 
@@ -169,6 +194,17 @@ export async function initializeApp() {
         // Fetch checks hash
         window.currentChecksHash = await fetchCurrentChecksHash();
         window.checksHashTimestamp = Date.now();
+
+        // Initialize team filter
+        initTeamFilter(services, () => {
+            filterAndRenderServices();
+        });
+
+        // Initialize team dashboard
+        initTeamDashboard(isServiceStale);
+
+        // Update team count
+        updateTeamCount(services);
 
         // Initialize UI
         updateStats();
