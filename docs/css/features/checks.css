@@ -1,0 +1,114 @@
+/* Check Results */
+.check-result {
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid;
+}
+
+.check-result.pass {
+    background: var(--color-check-pass-bg);
+    border-left-color: var(--color-success);
+}
+
+.check-result.fail {
+    background: var(--color-check-fail-bg);
+    border-left-color: var(--color-error);
+}
+
+.check-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.check-description {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+}
+
+.check-output {
+    font-family: monospace;
+    font-size: 0.85rem;
+    background: var(--color-bg);
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+/* Check Category Panels */
+.check-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.check-category {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.check-category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-category-header-bg);
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 1rem;
+    list-style: none;
+    transition: background 0.2s;
+}
+
+.check-category-header:hover {
+    background: var(--color-category-header-hover);
+}
+
+.check-category-header::-webkit-details-marker {
+    display: none;
+}
+
+.category-arrow {
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+    color: #666;
+}
+
+.check-category:not([open]) .category-arrow {
+    transform: rotate(-90deg);
+}
+
+.category-name {
+    flex: 1;
+    color: var(--color-text);
+}
+
+.category-stats {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.category-stats.all-passed {
+    background: var(--color-category-stats-pass-bg);
+    color: var(--color-category-stats-pass-text);
+}
+
+.category-stats.has-failures {
+    background: var(--color-category-stats-fail-bg);
+    color: var(--color-category-stats-fail-text);
+}
+
+.check-category-content {
+    padding: 16px;
+}
+
+.check-category-content .check-result:last-child {
+    margin-bottom: 0;
+}
