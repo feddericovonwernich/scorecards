@@ -1,0 +1,78 @@
+/* Service Badges */
+.service-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.badge-api,
+.badge-stale,
+.badge-installed {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+    color: white;
+}
+
+.badge-api {
+    background: #0366d6;
+}
+
+.badge-stale {
+    background: #f39c12;
+}
+
+.badge-installed {
+    background: #9b59b6;
+}
+
+/* Rank Badges */
+.rank-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.rank-badge.platinum { background: var(--color-platinum); }
+.rank-badge.gold { background: var(--color-gold); color: var(--color-text); }
+.rank-badge.silver { background: var(--color-silver); }
+.rank-badge.bronze { background: var(--color-bronze); }
+
+/* Widget Badge */
+.widget-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #f44336;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+/* Filter Count Badge */
+.filter-count {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    min-width: 20px;
+    text-align: center;
+}
+
+.widget-filter-btn.active .filter-count {
+    background: rgba(255, 255, 255, 0.3);
+}

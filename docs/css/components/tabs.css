@@ -1,0 +1,22 @@
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #e1e4e8;
+    margin-bottom: 20px;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Mobile Tabs with Scroll Arrows */
+.tabs-container {
+    position: relative;
+    margin-top: 30px;
+}
