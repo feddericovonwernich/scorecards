@@ -10,7 +10,7 @@
 
 .search-box:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -21,7 +21,8 @@
     border-radius: 8px;
     font-size: 0.9rem;
     cursor: pointer;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
 }
 
 /* GitHub PAT Input */
@@ -40,30 +41,30 @@
 
 #github-pat-input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 /* Widget Interval Select */
 .widget-interval-select {
     padding: 6px 10px;
-    border: 1px solid #d1d5da;
+    border: 1px solid var(--color-border-secondary);
     border-radius: 6px;
     font-size: 0.85rem;
-    background: white;
-    color: #586069;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: inherit;
 }
 
 .widget-interval-select:hover {
-    background: #f6f8fa;
-    border-color: #959da5;
+    background: var(--color-surface-secondary);
+    border-color: var(--color-border);
 }
 
 .widget-interval-select:focus {
     outline: none;
-    border-color: #0969da;
+    border-color: var(--color-link);
     box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
 }

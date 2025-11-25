@@ -8,7 +8,7 @@ footer {
 }
 
 footer a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
 }
 
