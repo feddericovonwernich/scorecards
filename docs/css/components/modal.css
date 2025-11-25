@@ -66,7 +66,7 @@
 }
 
 .modal-stat-label {
-    color: #7f8c8d;
+    color: var(--color-text-muted);
 }
 
 /* Settings Modal Specific Styles */
@@ -144,7 +144,7 @@
 /* Help Text */
 .help-text {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--color-text-muted);
     line-height: 1.6;
 }
 
@@ -174,7 +174,7 @@
 }
 
 .help-text a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
 }
 

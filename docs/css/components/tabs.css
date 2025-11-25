@@ -2,7 +2,7 @@
 .tabs {
     display: flex;
     gap: 8px;
-    border-bottom: 2px solid #e1e4e8;
+    border-bottom: 2px solid var(--color-border-secondary);
     margin-bottom: 20px;
 }
 

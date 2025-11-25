@@ -76,7 +76,7 @@
 .category-arrow {
     font-size: 0.75rem;
     transition: transform 0.2s;
-    color: #666;
+    color: var(--color-text-muted);
 }
 
 .check-category:not([open]) .category-arrow {
