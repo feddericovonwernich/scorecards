@@ -1,5 +1,28 @@
 #!/bin/bash
-# Check: README existence and quality
+# Check 01: README Existence and Quality
+#
+# Validates that a README file exists in the repository root and contains
+# meaningful content. This ensures projects have basic documentation.
+#
+# PASS CRITERIA:
+#   - README file exists in repository root (case-insensitive: README.md,
+#     readme.md, README.txt, etc.)
+#   - README contains at least 100 characters of content
+#
+# ENVIRONMENT VARIABLES:
+#   SCORECARD_REPO_PATH - Path to repository being checked (default: current dir)
+#
+# EXIT CODES:
+#   0 - Check passed (README exists with sufficient content)
+#   1 - Check failed (README missing or too short)
+#
+# OUTPUTS:
+#   Success message to stdout
+#   Error messages to stderr
+#
+# EXAMPLE:
+#   SCORECARD_REPO_PATH=/path/to/repo ./check.sh
+#
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
