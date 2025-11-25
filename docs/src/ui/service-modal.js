@@ -19,12 +19,12 @@ function renderStalenessWarning(isStale, canTrigger, org, repo) {
     if (!isStale) return '';
 
     return `
-        <div style="background: #fff3cd; border: 1px solid #f39c12; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+        <div class="stale-warning">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.5rem;">⚠️</span>
                 <div style="flex: 1;">
-                    <strong style="color: #856404;">Scorecard is Stale</strong>
-                    <p style="margin: 5px 0 0 0; color: #856404;">
+                    <strong class="stale-warning-text">Scorecard is Stale</strong>
+                    <p class="stale-warning-text" style="margin: 5px 0 0 0;">
                         This scorecard was generated with an older version of the check suite.
                         New checks may have been added or existing checks may have been modified.
                         ${canTrigger ? 'Click the "Re-run Scorecard" button to get up-to-date results.' : 'Re-run the scorecard workflow to get up-to-date results.'}
@@ -61,7 +61,7 @@ function renderModalHeader(data, org, repo) {
         </div>
 
         <h2>${escapeHtml(data.service.name)}</h2>
-        <p style="color: #7f8c8d; margin-bottom: 10px;">
+        <p class="tab-section-description">
             ${escapeHtml(data.service.org)}/${escapeHtml(data.service.repo)}
         </p>
         <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -136,7 +136,7 @@ function renderModalStats(data) {
         ${data.recent_contributors && data.recent_contributors.length > 0 && data.recent_contributors[0].last_commit_hash ? `<p><strong>Last Commit:</strong> <code>${data.recent_contributors[0].last_commit_hash}</code></p>` : ''}
         ${data.installation_pr && data.installation_pr.updated_at ? `
         <p><strong>PR Status Updated:</strong> ${formatRelativeTime(data.installation_pr.updated_at)}
-            <span style="color: #999; font-size: 0.9em;" title="${new Date(data.installation_pr.updated_at).toLocaleString()}">(${new Date(data.installation_pr.updated_at).toLocaleString()})</span>
+            <span class="tab-section-description" style="font-size: 0.9em;" title="${new Date(data.installation_pr.updated_at).toLocaleString()}">(${new Date(data.installation_pr.updated_at).toLocaleString()})</span>
         </p>
         ` : ''}
     `;
@@ -231,12 +231,12 @@ function renderCheck(check) {
                 </div>
             ` : ''}
             ${check.stderr.trim() && check.status === 'fail' ? `
-                <div class="check-output" style="color: #c62828;">
+                <div class="check-output check-output-error">
                     <strong>Error:</strong><br>
                     ${escapeHtml(check.stderr.trim())}
                 </div>
             ` : ''}
-            <div style="margin-top: 8px; font-size: 0.85rem; color: #999;">
+            <div class="check-meta">
                 Weight: ${check.weight} | Duration: ${check.duration}s
             </div>
         </div>
@@ -299,12 +299,10 @@ function renderAPITab(openapi, org, repo) {
                     <h4 style="margin-top: 20px; margin-bottom: 10px;">Environments</h4>
                     <div style="display: grid; gap: 12px;">
                         ${Object.entries(openapi.environments).map(([envName, envConfig]) => `
-                            <div style="border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px; background: #f6f8fa;">
-                                <div style="font-weight: bold; margin-bottom: 5px; text-transform: capitalize;">${escapeHtml(envName)}</div>
-                                <div style="font-family: monospace; font-size: 0.9rem; color: #0366d6; margin-bottom: 5px;">
-                                    ${escapeHtml(envConfig.base_url)}
-                                </div>
-                                ${envConfig.description ? `<div style="font-size: 0.85rem; color: #586069;">${escapeHtml(envConfig.description)}</div>` : ''}
+                            <div class="environment-card">
+                                <div class="environment-card-name">${escapeHtml(envName)}</div>
+                                <div class="environment-card-url">${escapeHtml(envConfig.base_url)}</div>
+                                ${envConfig.description ? `<div class="environment-card-description">${escapeHtml(envConfig.description)}</div>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -313,13 +311,11 @@ function renderAPITab(openapi, org, repo) {
                 <div style="margin-top: 20px;">
                     <button
                         onclick="openApiExplorer('${escapeHtml(org)}', '${escapeHtml(repo)}')"
-                        style="background: #0366d6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;"
-                        onmouseover="this.style.background='#0256c2'"
-                        onmouseout="this.style.background='#0366d6'"
+                        class="api-explorer-button"
                     >
                         🔍 Open API Explorer
                     </button>
-                    <p style="margin-top: 10px; font-size: 0.85rem; color: #586069;">
+                    <p class="environment-card-description" style="margin-top: 10px;">
                         Explore and test the API with an interactive Swagger UI interface
                     </p>
                 </div>
@@ -367,10 +363,10 @@ function renderContributorsTab(contributors) {
 
     return `
         <div class="tab-content" id="contributors-tab">
-            <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 1rem; color: #2c3e50;">
+            <h4 class="tab-section-header">
                 Recent Contributors (Last 20 Commits)
             </h4>
-            <p style="margin-bottom: 20px; color: #7f8c8d; font-size: 0.9rem;">
+            <p class="tab-section-description" style="margin-bottom: 20px;">
                 Contributors who have committed to this repository recently, ordered by commit count.
             </p>
             <div class="contributors-list">
@@ -484,25 +480,25 @@ function renderWorkflowsTab() {
 function renderBadgesTab(org, repo) {
     return `
         <div class="tab-content" id="badges-tab">
-            <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 1rem; color: #2c3e50;">Badge Preview</h4>
-            <div style="background: #f5f7fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <h4 class="tab-section-header">Badge Preview</h4>
+            <div class="badge-preview-container">
                 <img src="https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json" alt="Score Badge" style="height: 20px;">
                 <img src="https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json" alt="Rank Badge" style="height: 20px;">
             </div>
 
-            <h4 style="margin-bottom: 10px; font-size: 1rem; color: #2c3e50;">Add to Your README</h4>
-            <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px;">
+            <h4 class="tab-section-header" style="margin-bottom: 10px;">Add to Your README</h4>
+            <p class="tab-section-description">
                 Copy the markdown below:
             </p>
 
             <div style="position: relative; margin-bottom: 15px;">
-                <button onclick="copyBadgeCode('score-badge-${org}-${repo}', event)" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
-                <pre id="score-badge-${org}-${repo}" style="background: #f5f7fa; padding: 15px; padding-right: 80px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 0;">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)</pre>
+                <button onclick="copyBadgeCode('score-badge-${org}-${repo}', event)" class="copy-button">Copy</button>
+                <pre id="score-badge-${org}-${repo}" class="badge-code-block">![Score](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/score.json)</pre>
             </div>
 
             <div style="position: relative;">
-                <button onclick="copyBadgeCode('rank-badge-${org}-${repo}', event)" style="position: absolute; right: 10px; top: 10px; background: #3498db; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; z-index: 1;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">Copy</button>
-                <pre id="rank-badge-${org}-${repo}" style="background: #f5f7fa; padding: 15px; padding-right: 80px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; margin: 0;">![Rank](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json)</pre>
+                <button onclick="copyBadgeCode('rank-badge-${org}-${repo}', event)" class="copy-button">Copy</button>
+                <pre id="rank-badge-${org}-${repo}" class="badge-code-block">![Rank](https://img.shields.io/endpoint?url=${RAW_BASE_URL}/badges/${org}/${repo}/rank.json)</pre>
             </div>
         </div>
     `;
@@ -588,7 +584,7 @@ export async function showServiceDetail(org, repo) {
         detailDiv.innerHTML = `
             <h3>Error Loading Details</h3>
             <p>Could not load details for ${org}/${repo}</p>
-            <p style="color: #999; font-size: 0.9rem;">${error.message}</p>
+            <p class="tab-section-description">${error.message}</p>
         `;
     }
 }

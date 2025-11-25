@@ -44,6 +44,11 @@
     /* Accent colors */
     --color-accent: #667eea;
     --color-accent-hover: #5568d3;
+
+    /* Warning colors */
+    --color-warning-bg: #fff3cd;
+    --color-warning-border: #f39c12;
+    --color-warning-text: #856404;
 }
 
 /* Dark Theme */
@@ -89,4 +94,9 @@
     /* Accent colors - WCAG AA compliant */
     --color-accent: #8a9dff;          /* 5.13:1 on #2d2d2d */
     --color-accent-hover: #7a8be8;
+
+    /* Warning colors - dark theme */
+    --color-warning-bg: #3d3520;
+    --color-warning-border: #c9920a;
+    --color-warning-text: #f5d67a;    /* 8.2:1 on #3d3520 - WCAG AAA */
 }
