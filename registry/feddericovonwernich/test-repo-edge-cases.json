@@ -1,0 +1,26 @@
+{
+  "org": "feddericovonwernich",
+  "repo": "test-repo-edge-cases",
+  "name": "test-repo-edge-cases",
+  "team": {
+    "primary": "backend",
+    "all": [
+      "backend"
+    ],
+    "source": "codeowners",
+    "last_discovered": "2025-11-26T20:32:54Z"
+  },
+  "score": 63,
+  "rank": "silver",
+  "last_updated": "2025-11-26T20:33:53Z",
+  "has_api": false,
+  "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
+  "checks_count": 11,
+  "installed": false,
+  "default_branch": "master",
+  "installation_pr": {
+    "number": 13,
+    "state": "MERGED",
+    "url": "https://github.com/feddericovonwernich/test-repo-edge-cases/pull/13"
+  }
+}
