@@ -470,6 +470,7 @@
 
 .team-edit-modal-content {
     max-width: 560px;
+    padding: 0 40px 40px;
 }
 
 .team-edit-form {
