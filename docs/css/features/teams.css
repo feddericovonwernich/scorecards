@@ -613,7 +613,9 @@
 }
 
 #team-detail {
+    position: relative;
     padding: 20px 40px 40px;
+    z-index: 1;
 }
 
 .team-modal-stats {
