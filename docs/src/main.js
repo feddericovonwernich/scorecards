@@ -155,6 +155,7 @@ window.setTheme = theme.setTheme;
 window.loadServicesData = registry.loadServices;
 window.fetchCurrentChecksHash = registry.fetchCurrentChecksHash;
 window.fetchWithHybridAuth = registry.fetchWithHybridAuth;
+window.getRawBaseUrl = registry.getRawBaseUrl;
 
 // GitHub API functions
 window.fetchWorkflowRuns = github.fetchWorkflowRuns;

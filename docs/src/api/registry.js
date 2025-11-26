@@ -306,3 +306,11 @@ export function getRepoName() {
 export function getBranch() {
     return BRANCH;
 }
+
+/**
+ * Get raw base URL for GitHub content
+ * @returns {string} Raw base URL
+ */
+export function getRawBaseUrl() {
+    return RAW_BASE_URL;
+}
