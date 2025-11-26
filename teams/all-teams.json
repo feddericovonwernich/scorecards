@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-11-26T20:34:50Z",
+  "generated_at": "2025-11-26T21:06:47Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -24,11 +24,14 @@
     },
     "frontend": {
       "id": "frontend",
-      "name": "frontend",
-      "description": null,
-      "aliases": [],
+      "name": "Frontend Team",
+      "description": "Team responsible for the frontend.",
+      "aliases": [
+        "frontend-team"
+      ],
       "metadata": {},
       "auto_created": "2025-11-26T20:33:49Z",
+      "last_modified": "2025-11-26T21:06:37Z",
       "statistics": {
         "service_count": 1,
         "average_score": 63.0,
@@ -64,5 +67,7 @@
     }
   },
   "count": 3,
-  "aliases": {}
+  "aliases": {
+    "frontend-team": "frontend"
+  }
 }
