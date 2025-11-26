@@ -801,6 +801,24 @@
     font-size: 14px;
 }
 
+/* Edit Icon Button (inline with team name) */
+.edit-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    padding: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.edit-icon-btn:hover {
+    opacity: 1;
+    color: var(--color-link-btn);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .team-dropdown-menu {

@@ -586,16 +586,8 @@ function showTeamDetail(teamName) {
 
     content.innerHTML = `
         <div class="rank-badge modal-header-badge ${dominantRank}">${formatting.capitalize(dominantRank)}</div>
-        <h2>${formatting.escapeHtml(team.name)}</h2>
+        <h2>${formatting.escapeHtml(team.name)} <button class="edit-icon-btn" onclick="openTeamEditModal('${formatting.escapeHtml(team.name)}')" title="Edit Team"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z"></path></svg></button></h2>
         ${team.description ? `<p class="tab-section-description">${formatting.escapeHtml(team.description)}</p>` : ''}
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button class="github-button" onclick="openTeamEditModal('${formatting.escapeHtml(team.name)}')">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z"></path>
-                </svg>
-                Edit Team
-            </button>
-        </div>
 
         <div class="team-modal-stats">
             <div class="team-modal-stat">
