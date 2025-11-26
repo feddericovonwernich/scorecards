@@ -683,17 +683,14 @@ footer a:hover {
 
 /* Modal Close Button */
 .modal-close {
-    position: sticky;
-    top: 0;
-    right: 0;
-    float: right;
     background: none;
     border: none;
-    font-size: 2rem;
+    font-size: 1.5rem;
     cursor: pointer;
-    padding: 20px;
+    padding: 8px;
     color: var(--color-text-muted);
-    z-index: 10;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
 .modal-close:hover {
@@ -1094,6 +1091,21 @@ footer a:hover {
 
 .modal.hidden {
     display: none;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 0 20px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--color-text);
 }
 
 .modal-content {
