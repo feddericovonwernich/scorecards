@@ -572,12 +572,14 @@ function showTeamDetail(teamName) {
 
     // Build services list
     const servicesList = teamServices.map(s => {
-        const score = s.score?.percentage || 0;
-        const rank = s.score?.rank || 'bronze';
+        const score = s.score;
+        const rank = s.rank;
+        const scoreDisplay = score != null ? Math.round(score) : '-';
+        const rankClass = rank ? `rank-${rank}` : '';
         return `
             <div class="team-service-item" onclick="window.showServiceDetail('${s.org}', '${s.repo}')">
                 <span class="service-name">${formatting.escapeHtml(s.repo)}</span>
-                <span class="service-score rank-${rank}">${Math.round(score)}</span>
+                <span class="service-score ${rankClass}">${scoreDisplay}</span>
             </div>
         `;
     }).join('');
