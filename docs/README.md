@@ -10,7 +10,13 @@ docs/
 ├── api-explorer.html       # API exploration interface
 ├── app.js                  # Legacy application logic (being phased out)
 ├── app.js.backup           # Backup of original monolith
-├── styles.css              # Catalog styling
+├── css/                    # Modular CSS (main.css imports all modules)
+│   ├── main.css            # Entry point with @imports
+│   ├── base/               # Reset, variables, typography
+│   ├── components/         # Buttons, cards, modals, etc.
+│   ├── features/           # Stats, controls, teams, etc.
+│   ├── layout/             # Container, header, footer
+│   └── utilities/          # Animations, helpers, responsive
 └── src/                    # ES6 Modules (NEW)
     ├── main.js             # Module orchestration & exports
     ├── api/

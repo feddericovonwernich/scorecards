@@ -26,6 +26,7 @@
 @import 'features/checks.css';
 @import 'features/toast.css';
 @import 'features/actions-widget.css';
+@import 'features/teams.css';
 
 /* Utilities - loaded last */
 @import 'utilities/animations.css';
