@@ -820,6 +820,16 @@ function setupEventListeners() {
         });
     });
 
+    // View tab navigation
+    document.querySelectorAll('.view-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const view = tab.dataset.view;
+            if (view) {
+                switchView(view);
+            }
+        });
+    });
+
     // Handle URL hash on load
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
