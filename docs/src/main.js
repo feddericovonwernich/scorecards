@@ -583,17 +583,15 @@ function showTeamDetail(teamName) {
     }).join('');
 
     content.innerHTML = `
-        <div class="team-modal-header">
-            <div class="team-modal-rank rank-badge rank-${dominantRank}">${formatting.capitalize(dominantRank)}</div>
-            <div class="team-modal-title">
-                <h2>${formatting.escapeHtml(team.name)}</h2>
-                ${team.description ? `<p class="team-modal-description">${formatting.escapeHtml(team.description)}</p>` : ''}
-            </div>
-            <button class="team-edit-btn" onclick="openTeamEditModal('${formatting.escapeHtml(team.name)}')">
+        <div class="rank-badge modal-header-badge rank-${dominantRank}">${formatting.capitalize(dominantRank)}</div>
+        <h2>${formatting.escapeHtml(team.name)}</h2>
+        ${team.description ? `<p class="tab-section-description">${formatting.escapeHtml(team.description)}</p>` : ''}
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="github-button" onclick="openTeamEditModal('${formatting.escapeHtml(team.name)}')">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z"></path>
                 </svg>
-                Edit
+                Edit Team
             </button>
         </div>
 
@@ -623,9 +621,9 @@ function showTeamDetail(teamName) {
         </div>
         ` : ''}
 
-        <div class="team-modal-tabs tabs">
-            <button class="tab active" data-tab="services" onclick="switchTeamModalTab('services')">Services (${team.serviceCount})</button>
-            <button class="tab" data-tab="distribution" onclick="switchTeamModalTab('distribution')">Distribution</button>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="services" onclick="switchTeamModalTab('services')">Services (${team.serviceCount})</button>
+            <button class="tab-btn" data-tab="distribution" onclick="switchTeamModalTab('distribution')">Distribution</button>
         </div>
 
         <div class="team-tab-content tab-content active" id="team-tab-services">
@@ -649,7 +647,7 @@ function showTeamDetail(teamName) {
  */
 function switchTeamModalTab(tabName) {
     // Update tab buttons
-    document.querySelectorAll('#team-modal .tab').forEach(tab => {
+    document.querySelectorAll('#team-modal .tab-btn').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
     });
 

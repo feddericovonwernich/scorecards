@@ -2331,41 +2331,6 @@ footer a:hover {
     padding: 20px 40px 40px;
 }
 
-.team-modal-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 24px;
-    position: relative;
-}
-
-.team-modal-rank {
-    position: absolute;
-    top: 0;
-    right: 0;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 8px;
-    text-transform: capitalize;
-}
-
-.team-modal-title {
-    flex: 1;
-}
-
-.team-modal-title h2 {
-    margin: 0 0 8px 0;
-    font-size: 28px;
-    color: var(--color-text);
-}
-
-.team-modal-description {
-    margin: 0;
-    font-size: 14px;
-    color: var(--color-text-secondary);
-}
-
 .team-modal-stats {
     display: flex;
     gap: 32px;
@@ -2396,26 +2361,6 @@ footer a:hover {
     color: var(--color-warning-text);
 }
 
-/* Edit button styling */
-.team-edit-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: var(--color-surface-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    color: var(--color-text-muted);
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.team-edit-btn:hover {
-    background: var(--color-surface-hover);
-    color: var(--color-text);
-}
-
 .team-modal-contact {
     display: flex;
     gap: 16px;
@@ -2435,10 +2380,6 @@ footer a:hover {
 
 .team-modal-contact svg {
     color: var(--color-text-muted);
-}
-
-.team-modal-tabs {
-    margin-bottom: 16px;
 }
 
 /* Team Services List */
