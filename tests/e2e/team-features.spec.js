@@ -201,19 +201,19 @@ test.describe('Team Features', () => {
       await expect(teamLink).toBeVisible();
     });
 
-    test('should filter by team when clicking team link', async ({ page }) => {
+    test('should open team modal when clicking team link', async ({ page }) => {
       // Click on platform team link
       await page.locator('.service-card')
         .filter({ hasText: 'test-repo-stale' })
         .locator('.service-team-link')
         .click();
 
-      // Wait for filter to apply
+      // Wait for team modal to open
       await page.waitForTimeout(300);
 
-      // Should show only platform services
-      const count = await getServiceCount(page);
-      expect(count).toBe(2);
+      // Should show team modal with team details
+      await expect(page.locator('#team-modal')).toBeVisible();
+      await expect(page.locator('#team-modal')).toContainText('platform');
     });
   });
 
