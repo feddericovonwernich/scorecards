@@ -1,6 +1,6 @@
 {
   "services": [
-    {"org":"feddericovonwernich","repo":"test-repo-edge-cases","name":"test-repo-edge-cases","team":null,"score":63,"rank":"silver","last_updated":"2025-11-26T11:53:23Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":12,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-edge-cases/pull/12"}}
+    {"org":"feddericovonwernich","repo":"test-repo-edge-cases","name":"test-repo-edge-cases","team":null,"score":63,"rank":"silver","last_updated":"2025-11-26T11:53:23Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":13,"state":"OPEN","url":"https://github.com/feddericovonwernich/test-repo-edge-cases/pull/13"}}
 ,
     {"org":"feddericovonwernich","repo":"test-repo-empty","name":"test-repo-empty","team":null,"score":23,"rank":"bronze","last_updated":"2025-11-26T11:53:24Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":5,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-empty/pull/5"}}
 ,
@@ -17,6 +17,6 @@
     {"org":"feddericovonwernich","repo":"test-repo-python","name":"test-repo-python","team":null,"score":63,"rank":"silver","last_updated":"2025-11-26T11:53:10Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":7,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-python/pull/7"}}
 
   ],
-  "generated_at": "2025-11-26T12:29:14Z",
+  "generated_at": "2025-11-26T12:29:33Z",
   "count": 8
 }
