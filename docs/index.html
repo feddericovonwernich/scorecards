@@ -14,7 +14,7 @@
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
-    <link rel="stylesheet" href="css/main-concat.css?v=3">
+    <link rel="stylesheet" href="css/main-concat.css?v=4">
 </head>
 <body>
     <header>
@@ -89,10 +89,6 @@
                 <div class="stat-value" id="bronze-count">-</div>
                 <div class="stat-label">Bronze</div>
             </div>
-            <div class="stat-card team-stat-card" onclick="window.openTeamDashboard && window.openTeamDashboard(window.allServices || [], window.currentChecksHash || '')">
-                <div class="stat-value" id="team-count">-</div>
-                <div class="stat-label">Teams</div>
-            </div>
         </section>
 
         <!-- Controls -->
@@ -122,6 +118,7 @@
                 </svg>
                 Re-run All Stale
             </button>
+            <div id="team-filter-container" class="team-filter-container"></div>
         </section>
 
         <!-- Services Grid -->
