@@ -1,8 +1,10 @@
 {
   "services": [
     {"org":"feddericovonwernich","repo":"test-repo-install-test","name":"test-repo-install-test","team":null,"score":63,"rank":"silver","last_updated":"2025-11-26T11:52:30Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"main","installation_pr":{"number":9,"state":"MERGED","url":"https://github.com/feddericovonwernich/test-repo-install-test/pull/9"}}
+,
+    {"org":"feddericovonwernich","repo":"test-repo-minimal","name":"test-repo-minimal","team":null,"score":36,"rank":"bronze","last_updated":"2025-11-26T11:52:59Z","has_api":false,"checks_hash":"a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580","checks_count":11,"installed":false,"default_branch":"master","installation_pr":{"number":6,"state":"CLOSED","url":"https://github.com/feddericovonwernich/test-repo-minimal/pull/6"}}
 
   ],
-  "generated_at": "2025-11-26T11:52:37Z",
-  "count": 1
+  "generated_at": "2025-11-26T11:53:07Z",
+  "count": 2
 }
