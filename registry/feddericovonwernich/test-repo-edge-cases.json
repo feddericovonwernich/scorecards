@@ -12,8 +12,8 @@
   "installed": false,
   "default_branch": "master",
   "installation_pr": {
-    "number": 12,
-    "state": "MERGED",
-    "url": "https://github.com/feddericovonwernich/test-repo-edge-cases/pull/12"
+    "number": 13,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-edge-cases/pull/13"
   }
 }
