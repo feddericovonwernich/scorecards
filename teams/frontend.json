@@ -1,8 +1,11 @@
 {
   "id": "frontend",
-  "name": "frontend",
-  "description": null,
-  "aliases": [],
+  "name": "Frontend Team",
+  "description": "Team responsible for the frontend.",
+  "aliases": [
+    "frontend-team"
+  ],
   "metadata": {},
-  "auto_created": "2025-11-26T20:33:49Z"
+  "auto_created": "2025-11-26T20:33:49Z",
+  "last_modified": "2025-11-26T21:06:37Z"
 }
