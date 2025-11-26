@@ -12,7 +12,7 @@ import { showToast } from './ui/toast.js';
 import { getCssVar } from './utils/css.js';
 import { initTeamFilter, updateTeamFilter, filterByTeam } from './ui/team-filter.js';
 import { initTeamDashboard } from './ui/team-dashboard.js';
-import { getTeamCount, getTeamName } from './utils/team-statistics.js';
+import { getTeamName } from './utils/team-statistics.js';
 
 /**
  * Filter and render services based on active filters
@@ -122,7 +122,6 @@ export async function refreshData() {
 
         // Update team filter with new services
         updateTeamFilter(services);
-        updateTeamCount(services);
 
         // Update UI
         updateStats();
@@ -144,17 +143,6 @@ export async function refreshData() {
             refreshBtn.disabled = false;
             refreshBtn.innerHTML = originalText;
         }, 1000);
-    }
-}
-
-/**
- * Update team count display
- * @param {Array<Object>} services - All services
- */
-function updateTeamCount(services) {
-    const teamCountEl = document.getElementById('team-count');
-    if (teamCountEl) {
-        teamCountEl.textContent = getTeamCount(services);
     }
 }
 
@@ -202,9 +190,6 @@ export async function initializeApp() {
 
         // Initialize team dashboard
         initTeamDashboard(isServiceStale);
-
-        // Update team count
-        updateTeamCount(services);
 
         // Initialize UI
         updateStats();

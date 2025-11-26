@@ -131,16 +131,6 @@
     color: var(--color-text-muted);
 }
 
-/* Team Stats Card */
-.stat-card.team-stat-card {
-    cursor: pointer;
-}
-
-.stat-card.team-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--color-shadow-hover);
-}
-
 /* Team Dashboard Modal */
 #team-dashboard-modal .modal-content {
     max-width: 900px;
