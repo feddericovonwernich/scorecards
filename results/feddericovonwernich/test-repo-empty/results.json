@@ -3,7 +3,7 @@
     "org": "feddericovonwernich",
     "repo": "test-repo-empty",
     "name": "test-repo-empty",
-    "team": "",
+    "team": null,
     "links": [],
     "openapi": null
   },
@@ -11,7 +11,7 @@
   "rank": "bronze",
   "passed_checks": 2,
   "total_checks": 10,
-  "timestamp": "2025-11-20T20:15:20Z",
+  "timestamp": "2025-11-26T01:39:32Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
   "installed": false,
@@ -141,7 +141,7 @@
       "weight": 7,
       "status": "fail",
       "exit_code": 1,
-      "duration": 0,
+      "duration": 1,
       "stdout": "",
       "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
     }
