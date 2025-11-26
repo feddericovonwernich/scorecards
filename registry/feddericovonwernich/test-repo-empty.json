@@ -1,0 +1,19 @@
+{
+  "org": "feddericovonwernich",
+  "repo": "test-repo-empty",
+  "name": "test-repo-empty",
+  "team": null,
+  "score": 23,
+  "rank": "bronze",
+  "last_updated": "2025-11-26T11:53:24Z",
+  "has_api": false,
+  "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
+  "checks_count": 11,
+  "installed": false,
+  "default_branch": "master",
+  "installation_pr": {
+    "number": 5,
+    "state": "MERGED",
+    "url": "https://github.com/feddericovonwernich/test-repo-empty/pull/5"
+  }
+}
