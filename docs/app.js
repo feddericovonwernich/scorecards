@@ -15,6 +15,14 @@ window.searchQuery = '';
 window.currentChecksHash = null;
 window.checksHashTimestamp = 0;
 
+// Tab navigation state
+window.currentView = 'services'; // 'services' | 'teams'
+window.allTeams = [];
+window.filteredTeams = [];
+window.teamsSort = 'services-desc';
+window.teamsSearchQuery = '';
+window.teamsActiveFilters = new Map();
+
 // GitHub PAT State (in-memory only)
 window.githubPAT = null;
 

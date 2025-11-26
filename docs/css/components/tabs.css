@@ -1,4 +1,45 @@
-/* Tabs */
+/* View Tabs (Services/Teams navigation) */
+.view-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--color-border-secondary);
+}
+
+.view-tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    color: var(--color-text-muted);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-tab:hover {
+    color: var(--color-text);
+    background: var(--color-surface-hover);
+}
+
+.view-tab.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+}
+
+/* View Content */
+.view-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.view-content.active {
+    display: block;
+}
+
+/* Tabs (modal tabs) */
 .tabs {
     display: flex;
     gap: 8px;
