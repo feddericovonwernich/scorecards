@@ -3,25 +3,32 @@
     "org": "feddericovonwernich",
     "repo": "test-repo-perfect",
     "name": "test-repo-perfect",
-    "team": null,
+    "team": {
+      "primary": "platform",
+      "all": [
+        "platform"
+      ],
+      "source": "manual",
+      "last_discovered": "2025-11-26T12:27:59Z"
+    },
     "links": [],
     "openapi": null
   },
-  "score": 83,
+  "score": 89,
   "rank": "gold",
-  "passed_checks": 7,
+  "passed_checks": 8,
   "total_checks": 10,
-  "timestamp": "2025-11-26T12:13:20Z",
+  "timestamp": "2025-11-26T12:29:05Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
-      "email": "feddericovonwernich@gmail.com",
+      "name": "Federico von Wernich",
+      "email": "feddericokz @gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-26T09:12:17Z",
-      "last_commit_hash": "b66e9e3"
+      "last_commit_date": "2025-11-26T09:27:19Z",
+      "last_commit_hash": "cf09695"
     }
   ],
   "checks": [
@@ -82,7 +89,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (121 bytes)\n",
       "stderr": ""
     },
     {
@@ -139,11 +146,11 @@
       "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
       "category": "Scorecards Setup",
       "weight": 7,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
+      "stdout": "Scorecard config has meaningful content:\n  • Team: platform\n  • Description: Reference implementation repository\n",
+      "stderr": ""
     }
   ]
 }

@@ -2,10 +2,17 @@
   "org": "feddericovonwernich",
   "repo": "test-repo-perfect",
   "name": "test-repo-perfect",
-  "team": null,
-  "score": 83,
+  "team": {
+    "primary": "platform",
+    "all": [
+      "platform"
+    ],
+    "source": "manual",
+    "last_discovered": "2025-11-26T12:27:59Z"
+  },
+  "score": 89,
   "rank": "gold",
-  "last_updated": "2025-11-26T12:13:20Z",
+  "last_updated": "2025-11-26T12:29:05Z",
   "has_api": false,
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
