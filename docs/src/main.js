@@ -585,7 +585,7 @@ function showTeamDetail(teamName) {
     }).join('');
 
     content.innerHTML = `
-        <div class="rank-badge modal-header-badge rank-${dominantRank}">${formatting.capitalize(dominantRank)}</div>
+        <div class="rank-badge modal-header-badge ${dominantRank}">${formatting.capitalize(dominantRank)}</div>
         <h2>${formatting.escapeHtml(team.name)}</h2>
         ${team.description ? `<p class="tab-section-description">${formatting.escapeHtml(team.description)}</p>` : ''}
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -624,7 +624,7 @@ function showTeamDetail(teamName) {
         ` : ''}
 
         <div class="tabs">
-            <button class="tab-btn active" data-tab="services" onclick="switchTeamModalTab('services')">Services (${team.serviceCount})</button>
+            <button class="tab-btn active" data-tab="services" onclick="switchTeamModalTab('services')">Services</button>
             <button class="tab-btn" data-tab="distribution" onclick="switchTeamModalTab('distribution')">Distribution</button>
         </div>
 
