@@ -1,0 +1,120 @@
+:root {
+    --color-platinum: #00bcd4;
+    --color-gold: #ffc107;
+    --color-silver: #9e9e9e;
+    --color-bronze: #ff9800;
+    --color-bg: #f5f7fa;
+    --color-surface: #ffffff;
+    --color-text: #2c3e50;
+    --color-text-muted: #7f8c8d;
+    --color-border: #e0e0e0;
+    --color-success: #4caf50;
+    --color-error: #f44336;
+    --color-header-bg: #000000;
+    --color-shadow: rgba(0, 0, 0, 0.1);
+    --color-shadow-hover: rgba(0, 0, 0, 0.15);
+    --color-active-bg: #f1f5ff;
+    --color-active-border: #667eea;
+    --color-exclude-bg: #ffe6e6;
+    --color-exclude-border: #e74c3c;
+    --color-check-pass-bg: #e8f5e9;
+    --color-check-fail-bg: #ffebee;
+    --color-info-bg: #e3f2fd;
+    --color-category-header-bg: #f8f9fa;
+    --color-category-header-hover: #e9ecef;
+    --color-category-stats-pass-bg: #e8f5e9;
+    --color-category-stats-pass-text: #2e7d32;
+    --color-category-stats-fail-bg: #fff3e0;
+    --color-category-stats-fail-text: #e65100;
+
+    /* Text colors */
+    --color-text-secondary: #586069;
+
+    /* Link colors */
+    --color-link: #0969da;
+    --color-link-hover: #0550ae;
+
+    /* Surface colors */
+    --color-surface-secondary: #f6f8fa;
+    --color-surface-hover: #f1f3f5;
+
+    /* Border colors */
+    --color-border-secondary: #e1e4e8;
+
+    /* Accent colors */
+    --color-accent: #667eea;
+    --color-accent-hover: #5568d3;
+
+    /* Warning colors */
+    --color-warning-bg: #fff3cd;
+    --color-warning-border: #f39c12;
+    --color-warning-text: #856404;
+
+    /* Button state colors (for JS usage) */
+    --color-success-btn: #10b981;
+    --color-error-btn: #ef4444;
+    --color-copy-success: #27ae60;
+    --color-copy-default: #3498db;
+    --color-link-btn: #0969da;
+    --color-link-btn-hover: #0860ca;
+    --color-text-error: #d73a49;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --color-bg: #1a1a1a;
+    --color-surface: #2d2d2d;
+    --color-text: #e0e0e0;
+    --color-text-muted: #b3b3b3;  /* 5.09:1 on #2d2d2d - WCAG AA */
+    --color-border: #404040;
+    --color-success: #66bb6a;
+    --color-error: #ef5350;
+    --color-header-bg: #0d0d0d;
+    --color-shadow: rgba(0, 0, 0, 0.3);
+    --color-shadow-hover: rgba(0, 0, 0, 0.4);
+    --color-active-bg: #1a2744;
+    --color-active-border: #667eea;
+    --color-exclude-bg: #3d1f1f;
+    --color-exclude-border: #e74c3c;
+    --color-check-pass-bg: #1b3d1b;
+    --color-check-fail-bg: #3d1f1f;
+    --color-info-bg: #1a2744;
+    --color-category-header-bg: #3a3a3a;
+    --color-category-header-hover: #454545;
+    --color-category-stats-pass-bg: #1b3d1b;
+    --color-category-stats-pass-text: #66bb6a;
+    --color-category-stats-fail-bg: #3d1f1f;
+    --color-category-stats-fail-text: #ff9800;
+
+    /* Text colors - WCAG AA compliant */
+    --color-text-secondary: #9a9a9a;  /* 4.57:1 on #2d2d2d */
+
+    /* Link colors - WCAG AA compliant */
+    --color-link: #6ba3ff;            /* 5.02:1 on #2d2d2d */
+    --color-link-hover: #8ab8ff;      /* 6.27:1 on #2d2d2d */
+
+    /* Surface colors - dark alternatives */
+    --color-surface-secondary: #383838;
+    --color-surface-hover: #404040;
+
+    /* Border colors */
+    --color-border-secondary: #484848;
+
+    /* Accent colors - WCAG AA compliant */
+    --color-accent: #8a9dff;          /* 5.13:1 on #2d2d2d */
+    --color-accent-hover: #7a8be8;
+
+    /* Warning colors - dark theme */
+    --color-warning-bg: #3d3520;
+    --color-warning-border: #c9920a;
+    --color-warning-text: #f5d67a;    /* 8.2:1 on #3d3520 - WCAG AAA */
+
+    /* Button state colors - dark theme */
+    --color-success-btn: #34d399;
+    --color-error-btn: #f87171;
+    --color-copy-success: #34d399;
+    --color-copy-default: #60a5fa;
+    --color-link-btn: #6ba3ff;
+    --color-link-btn-hover: #8ab8ff;
+    --color-text-error: #f87171;
+}

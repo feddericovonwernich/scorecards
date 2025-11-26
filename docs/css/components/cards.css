@@ -1,0 +1,133 @@
+/* Stat Cards */
+.stat-card {
+    background: var(--color-surface);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px var(--color-shadow);
+    transition: all 0.2s, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.stat-card.filterable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stat-card.filterable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--color-shadow-hover);
+}
+
+.stat-card.filterable.active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    border: 2px solid var(--color-active-border);
+    background: var(--color-active-bg);
+}
+
+.stat-card.filterable.exclude {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+    border: 2px solid var(--color-exclude-border);
+    background: var(--color-exclude-bg);
+}
+
+.stat-card.rank-platinum { border-left: 3px solid var(--color-platinum); }
+.stat-card.rank-gold { border-left: 3px solid var(--color-gold); }
+.stat-card.rank-silver { border-left: 3px solid var(--color-silver); }
+.stat-card.rank-bronze { border-left: 3px solid var(--color-bronze); }
+.stat-card.filter-api { border-left: 3px solid var(--color-link); }
+.stat-card.filter-stale { border-left: 3px solid #f39c12; }
+.stat-card.filter-installed { border-left: 3px solid #9b59b6; }
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card.rank-platinum .stat-value { color: var(--color-platinum); }
+.stat-card.rank-gold .stat-value { color: var(--color-gold); }
+.stat-card.rank-silver .stat-value { color: var(--color-silver); }
+.stat-card.rank-bronze .stat-value { color: var(--color-bronze); }
+
+/* Service Cards */
+.service-card {
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px var(--color-shadow);
+    transition: all 0.3s, background-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+}
+
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px var(--color-shadow-hover);
+}
+
+.service-card.rank-platinum { border-left-color: var(--color-platinum); }
+.service-card.rank-gold { border-left-color: var(--color-gold); }
+.service-card.rank-silver { border-left-color: var(--color-silver); }
+.service-card.rank-bronze { border-left-color: var(--color-bronze); }
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.service-header > div:first-child {
+    flex: 1;
+    min-width: 0;
+    margin-right: 12px;
+}
+
+.service-title-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.service-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.service-org {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.score-badge {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: var(--color-bg);
+}
+
+.service-meta {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+.pr-status-timestamp {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-top: 4px;
+}

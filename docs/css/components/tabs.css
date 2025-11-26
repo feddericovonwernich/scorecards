@@ -1,0 +1,67 @@
+/* View Tabs (Services/Teams navigation) - Full-width buttons */
+.view-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--color-surface-secondary);
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.view-tab {
+    flex: 1;
+    padding: 16px 24px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--color-text-muted);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.view-tab:hover {
+    color: var(--color-text);
+    background: var(--color-surface-hover);
+}
+
+.view-tab.active {
+    color: var(--color-text);
+    background: var(--color-surface);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* View Content */
+.view-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.view-content.active {
+    display: block;
+}
+
+/* Tabs (modal tabs) */
+.tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--color-border-secondary);
+    margin-bottom: 20px;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Mobile Tabs with Scroll Arrows */
+.tabs-container {
+    position: relative;
+    margin-top: 30px;
+}
