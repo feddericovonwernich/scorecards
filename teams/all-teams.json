@@ -1,7 +1,27 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-11-26T12:29:33Z",
+  "generated_at": "2025-11-26T12:38:32Z",
   "teams": {
+    "backend": {
+      "id": "backend",
+      "name": "backend",
+      "description": null,
+      "aliases": [],
+      "metadata": {},
+      "auto_created": "2025-11-26T12:38:31Z",
+      "statistics": {
+        "service_count": 1,
+        "average_score": 70.0,
+        "rank_distribution": {
+          "platinum": 0,
+          "gold": 0,
+          "silver": 1,
+          "bronze": 0
+        },
+        "stale_count": 0,
+        "installed_count": 1
+      }
+    },
     "platform": {
       "id": "platform",
       "name": "platform",
@@ -23,6 +43,6 @@
       }
     }
   },
-  "count": 1,
+  "count": 2,
   "aliases": {}
 }
