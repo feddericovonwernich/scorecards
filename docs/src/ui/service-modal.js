@@ -9,6 +9,7 @@ import { md5 } from '../utils/crypto.js';
 import { STORAGE_KEYS, TIMING } from '../config/constants.js';
 import { startButtonSpin } from '../utils/animation.js';
 import { getRawBaseUrl } from '../api/registry.js';
+import { getTeamName } from '../utils/team-statistics.js';
 
 /**
  * Renders staleness warning banner
@@ -133,7 +134,7 @@ function renderModalStats(data) {
             </div>
         </div>
 
-        ${data.service.team ? `<p><strong>Team:</strong> ${escapeHtml(data.service.team)}</p>` : ''}
+        ${getTeamName(data.service) ? `<p><strong>Team:</strong> ${escapeHtml(getTeamName(data.service))}</p>` : ''}
         <p><strong>Last Run:</strong> ${formatDate(data.timestamp)}</p>
         ${data.commit_sha ? `<p><strong>Commit:</strong> <code>${data.commit_sha.substring(0, 7)}</code></p>` : ''}
         ${data.recent_contributors && data.recent_contributors.length > 0 && data.recent_contributors[0].last_commit_hash ? `<p><strong>Last Commit:</strong> <code>${data.recent_contributors[0].last_commit_hash}</code></p>` : ''}
