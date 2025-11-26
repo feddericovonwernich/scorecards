@@ -1,10 +1,5 @@
 // Scorecards Catalog App
-
-// Configuration (duplicated in src/api/registry.js - will be removed in Phase B)
-const REPO_OWNER = window.location.hostname.split('.')[0] || 'your-org';
-const REPO_NAME = 'scorecards';
-const BRANCH = 'catalog';
-const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
+// Note: Repository configuration moved to src/api/registry.js
 
 // State (defined on window for access from ES6 modules)
 window.allServices = [];

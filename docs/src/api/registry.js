@@ -6,7 +6,17 @@
 import { getToken } from '../services/auth.js';
 
 // Repository configuration
-const REPO_OWNER = window.location.hostname.split('.')[0] || 'your-org';
+function detectRepoOwner() {
+    const hostname = window.location.hostname;
+    // Local development detection
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+        return 'feddericovonwernich';
+    }
+    // GitHub Pages: extract from hostname (e.g., owner.github.io)
+    return hostname.split('.')[0] || 'feddericovonwernich';
+}
+
+const REPO_OWNER = detectRepoOwner();
 const REPO_NAME = 'scorecards';
 const BRANCH = 'catalog';
 const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
