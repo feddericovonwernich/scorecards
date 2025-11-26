@@ -3,7 +3,14 @@
     "org": "feddericovonwernich",
     "repo": "test-repo-perfect",
     "name": "test-repo-perfect",
-    "team": "Platform Engineering",
+    "team": {
+      "primary": "Platform Engineering",
+      "all": [
+        "Platform Engineering"
+      ],
+      "source": "manual",
+      "last_discovered": "2025-11-26T01:48:09Z"
+    },
     "links": [
       {
         "name": "OpenAPI Specification",
@@ -48,7 +55,7 @@
   "rank": "platinum",
   "passed_checks": 9,
   "total_checks": 10,
-  "timestamp": "2025-11-20T22:51:42Z",
+  "timestamp": "2025-11-26T01:49:06Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
   "installed": true,
