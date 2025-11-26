@@ -1,0 +1,36 @@
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+
+# Local configuration
+.env
+.env.local
+
+# Build artifacts
+*.pyc
+__pycache__/
+node_modules/
+dist/
+build/
+
+# Test outputs
+.coverage
+htmlcov/
+.pytest_cache/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Catalog data worktree
+catalog-data/

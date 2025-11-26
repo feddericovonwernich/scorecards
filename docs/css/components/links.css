@@ -1,0 +1,145 @@
+/* GitHub Icon Link on Service Cards */
+.github-icon-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.github-icon-link:hover {
+    color: var(--color-text);
+}
+
+/* PR Icon Link on Service Cards */
+.pr-icon-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.pr-icon-link:hover {
+    color: var(--color-text);
+}
+
+.pr-icon-link.pr-icon-open {
+    color: var(--color-link);
+}
+
+.pr-icon-link.pr-icon-open:hover {
+    color: var(--color-link-hover);
+}
+
+.pr-icon-link.pr-icon-closed {
+    color: #f44336;
+}
+
+.pr-icon-link.pr-icon-closed:hover {
+    color: #d32f2f;
+}
+
+/* Links List */
+.link-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.link-item {
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.link-item:hover {
+    background: var(--color-surface);
+    border-color: var(--color-link);
+    box-shadow: 0 2px 8px rgba(9, 105, 218, 0.1);
+    transform: translateY(-1px);
+}
+
+.link-item a {
+    display: flex;
+    align-items: flex-start;
+    text-decoration: none;
+    color: var(--color-link);
+    font-size: 0.95rem;
+}
+
+.link-item a:hover {
+    text-decoration: underline;
+}
+
+.link-item a svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+.link-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.link-name {
+    font-weight: 500;
+    color: var(--color-link);
+}
+
+.link-description {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Widget Run Link */
+.widget-run-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-link);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.widget-run-link:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+}
+
+.widget-run-link svg {
+    color: var(--color-text-muted);
+}
+
+/* Widget Title Link */
+.widget-title-link {
+    color: var(--color-text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+.widget-title-link:hover {
+    color: var(--color-link);
+}
+
+.widget-title-link svg {
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+}
+
+.widget-title-link:hover svg {
+    color: var(--color-text);
+}
