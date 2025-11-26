@@ -610,19 +610,28 @@
     color: var(--color-accent);
 }
 
-/* Team Detail Modal */
+/* Team Detail Modal - Match Service Modal Design */
 #team-modal .modal-content {
-    max-width: 700px;
+    max-width: 900px;
+    padding: 0;
+}
+
+#team-detail {
+    padding: 20px 40px 40px;
 }
 
 .team-modal-header {
     display: flex;
     align-items: flex-start;
     gap: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    position: relative;
 }
 
 .team-modal-rank {
+    position: absolute;
+    top: 0;
+    right: 0;
     padding: 8px 16px;
     font-size: 14px;
     font-weight: 600;
@@ -635,8 +644,8 @@
 }
 
 .team-modal-title h2 {
-    margin: 0 0 4px 0;
-    font-size: 24px;
+    margin: 0 0 8px 0;
+    font-size: 28px;
     color: var(--color-text);
 }
 
@@ -648,33 +657,52 @@
 
 .team-modal-stats {
     display: flex;
-    gap: 24px;
-    padding: 16px;
-    background: var(--color-surface-secondary);
-    border-radius: 12px;
-    margin-bottom: 20px;
+    gap: 32px;
+    margin-bottom: 24px;
+    padding: 0;
+    background: transparent;
 }
 
 .team-modal-stat {
     display: flex;
     flex-direction: column;
-    gap: 4px;
 }
 
 .team-modal-stat .stat-value {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 3rem;
+    font-weight: bold;
     color: var(--color-text);
+    line-height: 1;
 }
 
 .team-modal-stat .stat-label {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--color-text-muted);
-    text-transform: uppercase;
+    margin-top: 4px;
 }
 
 .team-modal-stat.warning .stat-value {
     color: var(--color-warning-text);
+}
+
+/* Edit button styling */
+.team-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.team-edit-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
 }
 
 .team-modal-contact {
