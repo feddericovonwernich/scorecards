@@ -96,6 +96,12 @@
     font-size: 1.8rem;
 }
 
+.settings-modal-content .modal-close {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
 .setting-section {
     margin-bottom: 30px;
     padding-bottom: 30px;
