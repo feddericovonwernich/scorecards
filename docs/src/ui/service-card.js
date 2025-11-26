@@ -16,7 +16,7 @@ function renderTeamLink(service) {
     const teamName = getTeamName(service);
     if (!teamName) return '';
 
-    return `<div class="service-team">Team: <span class="service-team-link" onclick="event.stopPropagation(); window.selectTeam && window.selectTeam('${escapeHtml(teamName)}')">${escapeHtml(teamName)}</span></div>`;
+    return `<div class="service-team">Team: <span class="service-team-link" onclick="event.stopPropagation(); window.showTeamDetail && window.showTeamDetail('${escapeHtml(teamName)}')">${escapeHtml(teamName)}</span></div>`;
 }
 
 /**

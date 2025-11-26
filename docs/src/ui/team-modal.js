@@ -4,13 +4,22 @@
  */
 
 import { capitalize, escapeHtml } from '../utils/formatting.js';
-import { getTeamName, getDominantRank } from '../utils/team-statistics.js';
+import { getTeamName, getDominantRank, calculateTeamStats } from '../utils/team-statistics.js';
 
 /**
  * Show team detail modal
  * @param {string} teamName - Name of the team to show
  */
 export function showTeamModal(teamName) {
+    // Lazily compute team data if not already available
+    if (!window.allTeams || window.allTeams.length === 0) {
+        const services = window.allServices || [];
+        if (services.length > 0) {
+            const teamData = calculateTeamStats(services);
+            window.allTeams = Object.values(teamData);
+        }
+    }
+
     const team = window.allTeams?.find(t => t.name === teamName);
     if (!team) {
         console.error('Team not found:', teamName);
