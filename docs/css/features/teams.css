@@ -473,6 +473,11 @@
     padding: 0 40px 40px;
 }
 
+/* Remove horizontal padding from header since parent provides it */
+.team-edit-modal-content .modal-header {
+    padding: 30px 0 0 0;
+}
+
 .team-edit-form {
     display: flex;
     flex-direction: column;
