@@ -28,6 +28,8 @@ docs/
     ├── ui/
     │   ├── filters.js      # Filtering & sorting (~135 lines)
     │   ├── modals.js       # Modal management (~125 lines)
+    │   ├── service-modal.js # Service detail modal
+    │   ├── team-modal.js   # Team detail modal (~145 lines)
     │   └── toast.js        # Toast notifications (~65 lines)
     └── utils/
         ├── clipboard.js    # Clipboard operations (~75 lines)
@@ -53,6 +55,8 @@ The catalog now uses a modular ES6 architecture with clear separation of concern
 **UI Layer** (`src/ui/`)
 - `filters.js` - Service filtering and sorting logic
 - `modals.js` - Modal dialog management
+- `service-modal.js` - Service detail modal rendering
+- `team-modal.js` - Team detail modal rendering
 - `toast.js` - Toast notification system
 
 **Utilities** (`src/utils/`)
