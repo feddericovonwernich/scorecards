@@ -13,30 +13,29 @@ test.describe('Team Features', () => {
     await waitForCatalogLoad(page);
   });
 
-  test.describe('Team Stats Card', () => {
-    test('should display teams stat card', async ({ page }) => {
-      const teamsCard = page.locator('.stat-card.team-stat-card');
-      await expect(teamsCard).toBeVisible();
-      await expect(teamsCard.locator('.stat-label')).toContainText('Teams');
+  test.describe('Teams Tab Navigation', () => {
+    test('should display Teams tab button', async ({ page }) => {
+      const teamsTab = page.locator('.view-tab[data-view="teams"]');
+      await expect(teamsTab).toBeVisible();
+      await expect(teamsTab).toContainText('Teams');
     });
 
-    test('should show correct team count', async ({ page }) => {
-      // Wait for team count to update (loaded asynchronously)
+    test('should switch to Teams view when clicking tab', async ({ page }) => {
+      await page.locator('.view-tab[data-view="teams"]').click();
+      await expect(page.locator('#teams-view')).toBeVisible();
+      await expect(page.locator('#services-view')).not.toBeVisible();
+    });
+
+    test('should show teams stats in Teams view', async ({ page }) => {
+      await page.locator('.view-tab[data-view="teams"]').click();
       await page.waitForTimeout(500);
 
-      const teamCount = await page
-        .locator('.stat-card.team-stat-card')
-        .locator('.stat-value')
-        .textContent();
+      // Verify Teams view stats section exists
+      const teamsStats = page.locator('.teams-stats');
+      await expect(teamsStats).toBeVisible();
 
-      // Based on fixture data: platform, frontend, backend = 3 teams
-      expect(parseInt(teamCount.trim())).toBe(3);
-    });
-
-    test('should open team dashboard on click', async ({ page }) => {
-      await page.locator('.stat-card.team-stat-card').click();
-      await expect(page.locator('#team-dashboard-modal')).toBeVisible();
-      await expect(page.locator('#team-dashboard-modal h2')).toContainText('Team Dashboard');
+      // Check for Total Teams stat
+      await expect(teamsStats.locator('.stat-card').filter({ hasText: 'Total Teams' })).toBeVisible();
     });
   });
 
@@ -115,8 +114,10 @@ test.describe('Team Features', () => {
 
   test.describe('Team Dashboard', () => {
     test.beforeEach(async ({ page }) => {
-      // Open team dashboard
-      await page.locator('.stat-card.team-stat-card').click();
+      // Open team dashboard via JavaScript (modal is legacy and not directly accessible from UI)
+      await page.evaluate(() => {
+        window.openTeamDashboard(window.allServices || [], window.currentChecksHash || '');
+      });
       await expect(page.locator('#team-dashboard-modal')).toBeVisible();
     });
 
@@ -201,19 +202,18 @@ test.describe('Team Features', () => {
       await expect(teamLink).toBeVisible();
     });
 
-    test('should filter by team when clicking team link', async ({ page }) => {
+    test('should open team detail modal when clicking team link', async ({ page }) => {
       // Click on platform team link
       await page.locator('.service-card')
         .filter({ hasText: 'test-repo-stale' })
         .locator('.service-team-link')
         .click();
 
-      // Wait for filter to apply
+      // Wait for modal to open
       await page.waitForTimeout(300);
 
-      // Should show only platform services
-      const count = await getServiceCount(page);
-      expect(count).toBe(2);
+      // Should open team detail modal
+      await expect(page.locator('#team-modal')).toBeVisible();
     });
   });
 

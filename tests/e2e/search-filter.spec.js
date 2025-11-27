@@ -52,7 +52,8 @@ test.describe('Search and Filters', () => {
   });
 
   test('should filter by Gold rank', async ({ page }) => {
-    const goldStat = page.locator('.stat-card').filter({ hasText: 'Gold' });
+    // Use .services-stats to target only the Services view stat cards
+    const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
     await goldStat.click();
     await page.waitForTimeout(300);
 
@@ -66,7 +67,7 @@ test.describe('Search and Filters', () => {
   });
 
   test('should filter by Silver rank', async ({ page }) => {
-    const silverStat = page.locator('.stat-card').filter({ hasText: 'Silver' });
+    const silverStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Silver' });
     await silverStat.click();
     await page.waitForTimeout(300);
 
@@ -80,7 +81,7 @@ test.describe('Search and Filters', () => {
   });
 
   test('should filter by Bronze rank', async ({ page }) => {
-    const bronzeStat = page.locator('.stat-card').filter({ hasText: 'Bronze' });
+    const bronzeStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Bronze' });
     await bronzeStat.click();
     await page.waitForTimeout(300);
 
@@ -95,7 +96,7 @@ test.describe('Search and Filters', () => {
 
   test('should clear filter when clicking active filter again', async ({ page }) => {
     // Apply Gold filter
-    const goldStat = page.locator('.stat-card').filter({ hasText: 'Gold' });
+    const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
     await goldStat.click();
     await page.waitForTimeout(300);
 
@@ -108,12 +109,12 @@ test.describe('Search and Filters', () => {
     await page.waitForTimeout(300);
 
     count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.totalServices - expectedStats.ranks.gold); // 8 - 1 = 7
+    expect(count).toBe(expectedStats.totalServices - expectedStats.ranks.gold); // 9 - 2 = 7
   });
 
   test('should combine search with rank filter', async ({ page }) => {
     // Filter by Silver rank
-    const silverStat = page.locator('.stat-card').filter({ hasText: 'Silver' });
+    const silverStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Silver' });
     await silverStat.click();
     await page.waitForTimeout(300);
 
@@ -169,8 +170,8 @@ test.describe('Search and Filters', () => {
   });
 
   test('should update filtered count in dashboard', async ({ page }) => {
-    // Apply Bronze filter
-    const bronzeStat = page.locator('.stat-card').filter({ hasText: 'Bronze' });
+    // Apply Bronze filter - use .services-stats to target only Services view
+    const bronzeStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Bronze' });
     await bronzeStat.click();
     await page.waitForTimeout(300);
 
