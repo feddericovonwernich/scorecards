@@ -97,7 +97,7 @@ if [ ${#WORKFLOW_URLS[@]} -gt 0 ]; then
 fi
 
 echo "View catalog at:"
-echo "  https://feddericovonwernich.github.io/scorecards/"
+echo "  https://feddericovonwernich-org.github.io/scorecards/"
 echo ""
 echo "Wait a few minutes for workflows to complete, then check the catalog."
 echo ""

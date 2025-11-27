@@ -239,6 +239,16 @@ mkdir -p results badges registry
 # Initialize registry
 echo '[]' > registry/services.json
 
+# Initialize all-services.json with empty structure
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+cat > registry/all-services.json <<EOF
+{
+  "services": [],
+  "generated_at": "$TIMESTAMP",
+  "count": 0
+}
+EOF
+
 # Create README files for each directory
 cat > results/README.md << 'EOF'
 # Service Results
