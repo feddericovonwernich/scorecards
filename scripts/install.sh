@@ -17,12 +17,12 @@ set -e
 #   SCORECARDS_SOURCE_REPO - Optional: Override the template repository URL
 #                            (defaults to https://github.com/feddericovonwernich/scorecards.git)
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Colors for output (use $'...' for actual escape characters)
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+BLUE=$'\033[0;34m'
+NC=$'\033[0m' # No Color
 
 # Template repository
 TEMPLATE_REPO="https://github.com/ossf/scorecards"
@@ -454,13 +454,11 @@ print_info "Enabling GitHub Pages on catalog branch..."
 
 # Enable Pages using GitHub API
 gh api -X POST "/repos/$FULL_REPO/pages" \
-    -f source[branch]=catalog \
-    -f source[path]=/docs \
+    --input - <<< '{"source":{"branch":"catalog","path":"/docs"}}' \
     2>/dev/null || {
     print_warning "Pages might already be configured, attempting to update..."
     gh api -X PUT "/repos/$FULL_REPO/pages" \
-        -f source[branch]=catalog \
-        -f source[path]=/docs \
+        --input - <<< '{"source":{"branch":"catalog","path":"/docs"}}' \
         2>/dev/null || print_warning "Could not configure Pages via API (might need manual setup)"
 }
 
