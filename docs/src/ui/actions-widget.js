@@ -7,6 +7,7 @@ import { escapeHtml, formatDuration, formatInterval } from '../utils/formatting.
 import { showToast } from './toast.js';
 import { getToken } from '../services/auth.js';
 import { API_CONFIG, TIMING, STORAGE_KEYS } from '../config/constants.js';
+import { getRepoOwner, getRepoName } from '../api/registry.js';
 
 // Widget State
 let widgetOpen = false;
@@ -21,7 +22,6 @@ const WIDGET_CACHE_TTL = TIMING.CACHE_MEDIUM; // 15 seconds cache
 
 /**
  * Initialize the widget
- * Uses global variables: REPO_OWNER, REPO_NAME
  * @returns {void}
  */
 export function initializeActionsWidget() {
@@ -39,7 +39,7 @@ export function initializeActionsWidget() {
     // Set GitHub Actions link URL
     const actionsLink = document.getElementById('widget-actions-link');
     if (actionsLink) {
-        actionsLink.href = `https://github.com/${REPO_OWNER}/${REPO_NAME}/actions`;
+        actionsLink.href = `https://github.com/${getRepoOwner()}/${getRepoName()}/actions`;
     }
 
     // Start polling if PAT is available
@@ -112,7 +112,6 @@ export function stopWidgetPolling() {
 
 /**
  * Fetch workflow runs from GitHub Actions API
- * Uses global variables: REPO_OWNER, REPO_NAME
  * @returns {Promise<void>}
  */
 export async function fetchWorkflowRuns() {
@@ -131,7 +130,7 @@ export async function fetchWorkflowRuns() {
     try {
         // Fetch workflow runs from the scorecards repository
         const response = await fetch(
-            `${API_CONFIG.GITHUB_BASE_URL}/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=${API_CONFIG.PER_PAGE}&_t=${Date.now()}`,
+            `${API_CONFIG.GITHUB_BASE_URL}/repos/${getRepoOwner()}/${getRepoName()}/actions/runs?per_page=${API_CONFIG.PER_PAGE}&_t=${Date.now()}`,
             {
                 headers: {
                     'Authorization': `token ${getToken()}`,
@@ -150,8 +149,8 @@ export async function fetchWorkflowRuns() {
         // Add org/repo metadata to each run
         const allRuns = data.workflow_runs.map(run => ({
             ...run,
-            org: REPO_OWNER,
-            repo: REPO_NAME,
+            org: getRepoOwner(),
+            repo: getRepoName(),
             service_name: 'Scorecards'
         }));
 
