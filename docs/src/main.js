@@ -317,7 +317,7 @@ async function initTeamsView() {
         updateTeamsStats(window.allTeams, services);
 
         // Render teams
-        renderTeamsGrid(window.allTeams, services);
+        renderTeamsGrid(window.allTeams);
 
         console.log(`Teams view initialized with ${window.allTeams.length} teams`);
     } catch (error) {
@@ -374,7 +374,7 @@ function updateTeamsStats(teams, services) {
 /**
  * Render teams grid
  */
-function renderTeamsGrid(teams, services) {
+function renderTeamsGrid(teams) {
     const grid = document.getElementById('teams-grid');
     if (!grid) return;
 
@@ -396,7 +396,7 @@ function renderTeamsGrid(teams, services) {
         );
     }
 
-    grid.innerHTML = filteredTeams.map(team => renderTeamCard(team, services)).join('');
+    grid.innerHTML = filteredTeams.map(team => renderTeamCard(team)).join('');
     window.filteredTeams = filteredTeams;
 }
 
@@ -425,7 +425,7 @@ function sortTeams(teams, sortBy) {
 /**
  * Render a single team card
  */
-function renderTeamCard(team, services) {
+function renderTeamCard(team) {
     const dominantRank = teamStatistics.getDominantRank(team);
     const rankDist = team.rankDistribution || {};
 
@@ -508,7 +508,7 @@ function filterAndRenderTeams() {
         }
     });
 
-    renderTeamsGrid(teams, window.allServices);
+    renderTeamsGrid(teams);
 }
 
 /**
@@ -634,7 +634,7 @@ function setupEventListeners() {
     if (teamsSearchInput) {
         teamsSearchInput.addEventListener('input', (e) => {
             window.teamsSearchQuery = e.target.value.toLowerCase();
-            renderTeamsGrid(window.allTeams, window.allServices);
+            renderTeamsGrid(window.allTeams);
         });
     }
 
@@ -643,7 +643,7 @@ function setupEventListeners() {
     if (teamsSortSelect) {
         teamsSortSelect.addEventListener('change', (e) => {
             window.teamsSort = e.target.value;
-            renderTeamsGrid(window.allTeams, window.allServices);
+            renderTeamsGrid(window.allTeams);
         });
     }
 
