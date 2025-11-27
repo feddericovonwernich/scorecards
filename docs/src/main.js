@@ -396,7 +396,7 @@ function renderTeamsGrid(teams, services) {
         );
     }
 
-    grid.innerHTML = filteredTeams.map(team => renderTeamCard(team, services)).join('');
+    grid.innerHTML = filteredTeams.map(team => renderTeamCard(team)).join('');
     window.filteredTeams = filteredTeams;
 }
 
@@ -425,7 +425,7 @@ function sortTeams(teams, sortBy) {
 /**
  * Render a single team card
  */
-function renderTeamCard(team, services) {
+function renderTeamCard(team) {
     const dominantRank = teamStatistics.getDominantRank(team);
     const rankDist = team.rankDistribution || {};
 

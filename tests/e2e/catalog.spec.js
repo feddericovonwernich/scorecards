@@ -21,8 +21,11 @@ test.describe('Catalog Page', () => {
   });
 
   test('should display correct dashboard stats', async ({ page }) => {
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
+
     // Total Services
-    const totalServices = await page
+    const totalServices = await servicesView
       .locator('.stat-card')
       .filter({ hasText: 'Total Services' })
       .locator('.stat-value')
@@ -30,7 +33,7 @@ test.describe('Catalog Page', () => {
     expect(totalServices.trim()).toBe(expectedStats.totalServices.toString());
 
     // Average Score (approximately)
-    const avgScore = await page
+    const avgScore = await servicesView
       .locator('.stat-card')
       .filter({ hasText: 'Average Score' })
       .locator('.stat-value')
@@ -40,7 +43,7 @@ test.describe('Catalog Page', () => {
     expect(avgScoreNum).toBeLessThan(60);
 
     // Gold rank count
-    const goldCount = await page
+    const goldCount = await servicesView
       .locator('.stat-card')
       .filter({ hasText: 'Gold' })
       .locator('.stat-value')
@@ -48,7 +51,7 @@ test.describe('Catalog Page', () => {
     expect(goldCount.trim()).toBe(expectedStats.ranks.gold.toString());
 
     // Silver rank count
-    const silverCount = await page
+    const silverCount = await servicesView
       .locator('.stat-card')
       .filter({ hasText: 'Silver' })
       .locator('.stat-value')
@@ -56,7 +59,7 @@ test.describe('Catalog Page', () => {
     expect(silverCount.trim()).toBe(expectedStats.ranks.silver.toString());
 
     // Bronze rank count
-    const bronzeCount = await page
+    const bronzeCount = await servicesView
       .locator('.stat-card')
       .filter({ hasText: 'Bronze' })
       .locator('.stat-value')

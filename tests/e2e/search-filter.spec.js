@@ -52,7 +52,9 @@ test.describe('Search and Filters', () => {
   });
 
   test('should filter by Gold rank', async ({ page }) => {
-    const goldStat = page.locator('.stat-card').filter({ hasText: 'Gold' });
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
+    const goldStat = servicesView.locator('.stat-card').filter({ hasText: 'Gold' });
     await goldStat.click();
     await page.waitForTimeout(300);
 
@@ -66,7 +68,9 @@ test.describe('Search and Filters', () => {
   });
 
   test('should filter by Silver rank', async ({ page }) => {
-    const silverStat = page.locator('.stat-card').filter({ hasText: 'Silver' });
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
+    const silverStat = servicesView.locator('.stat-card').filter({ hasText: 'Silver' });
     await silverStat.click();
     await page.waitForTimeout(300);
 
@@ -80,7 +84,9 @@ test.describe('Search and Filters', () => {
   });
 
   test('should filter by Bronze rank', async ({ page }) => {
-    const bronzeStat = page.locator('.stat-card').filter({ hasText: 'Bronze' });
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
+    const bronzeStat = servicesView.locator('.stat-card').filter({ hasText: 'Bronze' });
     await bronzeStat.click();
     await page.waitForTimeout(300);
 
@@ -94,8 +100,10 @@ test.describe('Search and Filters', () => {
   });
 
   test('should clear filter when clicking active filter again', async ({ page }) => {
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
     // Apply Gold filter
-    const goldStat = page.locator('.stat-card').filter({ hasText: 'Gold' });
+    const goldStat = servicesView.locator('.stat-card').filter({ hasText: 'Gold' });
     await goldStat.click();
     await page.waitForTimeout(300);
 
@@ -112,8 +120,10 @@ test.describe('Search and Filters', () => {
   });
 
   test('should combine search with rank filter', async ({ page }) => {
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
     // Filter by Silver rank
-    const silverStat = page.locator('.stat-card').filter({ hasText: 'Silver' });
+    const silverStat = servicesView.locator('.stat-card').filter({ hasText: 'Silver' });
     await silverStat.click();
     await page.waitForTimeout(300);
 
@@ -131,7 +141,9 @@ test.describe('Search and Filters', () => {
   });
 
   test('should show "With API" filter', async ({ page }) => {
-    const apiStat = page.locator('.stat-card').filter({ hasText: 'With API' });
+    // Scope to services view - these filters only exist in services view
+    const servicesView = page.locator('#services-view');
+    const apiStat = servicesView.locator('.stat-card').filter({ hasText: 'With API' });
     await expect(apiStat).toBeVisible();
 
     // Current test data has 1 service with API (test-repo-stale)
@@ -139,7 +151,9 @@ test.describe('Search and Filters', () => {
   });
 
   test('should show "Stale" filter', async ({ page }) => {
-    const staleStat = page.locator('.stat-card').filter({ hasText: 'Stale' });
+    // Scope to services view - these filters only exist in services view
+    const servicesView = page.locator('#services-view');
+    const staleStat = servicesView.locator('.stat-card').filter({ hasText: 'Stale' });
     await expect(staleStat).toBeVisible();
 
     // Current test data has 1 stale service (test-repo-stale)
@@ -147,7 +161,9 @@ test.describe('Search and Filters', () => {
   });
 
   test('should show "Installed" filter', async ({ page }) => {
-    const installedStat = page.locator('.stat-card').filter({ hasText: 'Installed' });
+    // Scope to services view - these filters only exist in services view
+    const servicesView = page.locator('#services-view');
+    const installedStat = servicesView.locator('.stat-card').filter({ hasText: 'Installed' });
     await expect(installedStat).toBeVisible();
 
     // Current test data has 1 installed service (test-repo-stale)
@@ -169,8 +185,10 @@ test.describe('Search and Filters', () => {
   });
 
   test('should update filtered count in dashboard', async ({ page }) => {
+    // Scope to services view to avoid matching duplicate stat cards in teams view
+    const servicesView = page.locator('#services-view');
     // Apply Bronze filter
-    const bronzeStat = page.locator('.stat-card').filter({ hasText: 'Bronze' });
+    const bronzeStat = servicesView.locator('.stat-card').filter({ hasText: 'Bronze' });
     await bronzeStat.click();
     await page.waitForTimeout(300);
 
