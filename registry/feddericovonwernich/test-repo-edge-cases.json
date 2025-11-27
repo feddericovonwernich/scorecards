@@ -8,11 +8,11 @@
       "backend"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-11-26T20:32:54Z"
+    "last_discovered": "2025-11-27T01:43:06Z"
   },
   "score": 63,
   "rank": "silver",
-  "last_updated": "2025-11-26T20:33:53Z",
+  "last_updated": "2025-11-27T01:44:02Z",
   "has_api": false,
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,

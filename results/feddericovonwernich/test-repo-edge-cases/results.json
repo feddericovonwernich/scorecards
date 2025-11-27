@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-26T20:32:54Z"
+      "last_discovered": "2025-11-27T01:43:06Z"
     },
     "links": [],
     "openapi": null
@@ -18,7 +18,7 @@
   "rank": "silver",
   "passed_checks": 5,
   "total_checks": 10,
-  "timestamp": "2025-11-26T20:33:53Z",
+  "timestamp": "2025-11-27T01:44:02Z",
   "checks_hash": "a4142c4339252998792d08d669d3680950a94d150b38c8000e99e55384d7d580",
   "checks_count": 11,
   "installed": false,
@@ -100,7 +100,7 @@
       "weight": 12,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "No OpenAPI specification file found in common locations\nLooked for: openapi.{yaml,yml,json}, swagger.{yaml,yml,json}\nIn directories: root, /api, /docs, /spec, /.openapi\n"
     },
@@ -124,7 +124,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
       "stderr": ""
     },
