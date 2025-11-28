@@ -45,7 +45,10 @@ export async function loadWorkflowRunsForService() {
     }
 
     const content = document.getElementById('service-workflows-content');
-    content.innerHTML = '<div class="loading">Loading workflow runs...</div>';
+    // Only show loading message on initial load, not on refresh (prevents blink)
+    if (!serviceWorkflowLoaded) {
+        content.innerHTML = '<div class="loading">Loading workflow runs...</div>';
+    }
 
     try {
         const response = await fetch(
