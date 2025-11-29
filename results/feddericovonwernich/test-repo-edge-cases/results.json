@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T21:09:33Z"
+      "last_discovered": "2025-11-29T21:18:18Z"
     },
     "links": [],
     "openapi": null
@@ -29,7 +29,7 @@
       "reason": "Internal library - no API"
     }
   ],
-  "timestamp": "2025-11-29T21:10:30Z",
+  "timestamp": "2025-11-29T21:19:14Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
@@ -87,7 +87,7 @@
       "weight": 20,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "Found tests: 2 file(s) in directories: spec\n",
       "stderr": ""
     },
