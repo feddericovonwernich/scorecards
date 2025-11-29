@@ -72,29 +72,6 @@
             flex-wrap: wrap;
         }
 
-        .env-selector {
-            padding: var(--space-2) var(--space-3);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            background: var(--color-surface);
-            color: var(--color-text);
-            font-size: var(--text-sm);
-            font-family: var(--font-family-primary);
-            cursor: pointer;
-            min-width: 150px;
-            transition: all var(--duration-fast) var(--ease-in-out-smooth);
-        }
-
-        .env-selector:hover {
-            border-color: var(--color-border-strong);
-        }
-
-        .env-selector:focus {
-            outline: none;
-            border-color: var(--color-accent);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
         .theme-toggle-btn {
             padding: var(--space-2) var(--space-3);
             background: var(--color-surface);
@@ -423,9 +400,6 @@
                 <p id="api-subtitle">Loading API specification...</p>
             </div>
             <div class="header-controls">
-                <select id="env-selector" class="env-selector" style="display:none;">
-                    <option value="">Select Environment</option>
-                </select>
                 <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle night mode" aria-label="Toggle night mode">
                     <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
@@ -466,7 +440,6 @@
 
         let serviceData = null;
         let swaggerUi = null;
-        let currentEnvironment = null;
 
         // Main initialization
         async function init() {
@@ -493,11 +466,6 @@
                 // Check if service has OpenAPI config
                 if (!serviceData.service.openapi) {
                     throw new Error('This service does not have OpenAPI configuration');
-                }
-
-                // Set up environment selector if environments are configured
-                if (serviceData.service.openapi.environments) {
-                    setupEnvironmentSelector(serviceData.service.openapi.environments);
                 }
 
                 // Find the OpenAPI spec file path and branch
@@ -541,37 +509,6 @@
             }
         }
 
-        // Setup environment selector
-        function setupEnvironmentSelector(environments) {
-            const selector = document.getElementById('env-selector');
-            selector.style.display = 'block';
-
-            // Add environment options
-            Object.entries(environments).forEach(([envName, envConfig], index) => {
-                const option = document.createElement('option');
-                option.value = envConfig.base_url;
-                option.textContent = `${envName.charAt(0).toUpperCase() + envName.slice(1)}${envConfig.description ? ' - ' + envConfig.description : ''}`;
-                selector.appendChild(option);
-
-                // Set first environment as default
-                if (index === 0) {
-                    currentEnvironment = envConfig.base_url;
-                    option.selected = true;
-                }
-            });
-
-            // Handle environment changes
-            selector.addEventListener('change', (e) => {
-                currentEnvironment = e.target.value;
-                if (swaggerUi && currentEnvironment) {
-                    // Update the Swagger UI with the new server URL
-                    swaggerUi.specActions.updateUrl(currentEnvironment);
-                    // Reload to apply changes
-                    location.reload();
-                }
-            });
-        }
-
         // Load Swagger UI with the OpenAPI spec
         async function loadSwaggerUI(specUrl) {
             try {
@@ -605,13 +542,7 @@
                     plugins: [
                         SwaggerUIBundle.plugins.DownloadUrl
                     ],
-                    layout: "StandaloneLayout",
-                    // Override servers if environment is selected
-                    ...(currentEnvironment ? {
-                        onComplete: () => {
-                            swaggerUi.specActions.updateUrl(currentEnvironment);
-                        }
-                    } : {})
+                    layout: "StandaloneLayout"
                 });
 
             } catch (error) {
