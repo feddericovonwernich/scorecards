@@ -86,6 +86,7 @@ build_registry_entry() {
     local -n prs_ref=$3
     local timestamp="$4"
     local check_results="${5:-"{}"}"  # Optional: compact check results map
+    local excluded_checks="${6:-"[]"}"  # Optional: excluded checks array
 
     # Extract values
     local org="${svc_ref[org]}"
@@ -138,6 +139,7 @@ build_registry_entry() {
         --argjson installed "$installed"
         --arg default_branch "$default_branch"
         --argjson check_results "$check_results"
+        --argjson excluded_checks "$excluded_checks"
     )
 
     local jq_filter
@@ -166,6 +168,7 @@ build_registry_entry() {
             checks_hash: $checks_hash,
             checks_count: $checks_count,
             check_results: $check_results,
+            excluded_checks: $excluded_checks,
             installed: $installed,
             default_branch: $default_branch,
             installation_pr: {
@@ -194,6 +197,7 @@ build_registry_entry() {
             checks_hash: $checks_hash,
             checks_count: $checks_count,
             check_results: $check_results,
+            excluded_checks: $excluded_checks,
             installed: $installed,
             default_branch: $default_branch
         }'
@@ -213,6 +217,7 @@ git_push_with_smart_retry() {
     local -n prs_ref=$7
     local timestamp="$8"
     local check_results="${9:-"{}"}"  # Optional: compact check results map
+    local excluded_checks="${10:-"[]"}"  # Optional: excluded checks array
 
     cd "$repo_path" || return 1
 
@@ -239,7 +244,7 @@ git_push_with_smart_retry() {
                     # Rebase successful - regenerate registry file
                     log_info "Rebase successful, regenerating registry entry..."
 
-                    build_registry_entry "$5" "$6" "$7" "$timestamp" "$check_results" > "$registry_file"
+                    build_registry_entry "$5" "$6" "$7" "$timestamp" "$check_results" "$excluded_checks" > "$registry_file"
 
                     git add "$registry_file"
                     git commit --amend --no-edit
@@ -387,9 +392,15 @@ update_catalog() {
         check_results=$(jq -c '[.checks[] | {(.check_id): .status}] | add // {}' "$output_dir/final-results.json" 2>/dev/null || echo '{}')
         log_debug "Extracted check_results: $check_results" >&2
 
+        # Extract excluded_checks from results.json
+        # Format: [{"check": "06-openapi-spec", "reason": "CLI tool - no HTTP API"}, ...]
+        local excluded_checks
+        excluded_checks=$(jq -c '.excluded_checks // []' "$output_dir/final-results.json" 2>/dev/null || echo '[]')
+        log_debug "Extracted excluded_checks: $excluded_checks" >&2
+
         # Build registry entry
         local registry_file="registry/$service_org/$service_repo.json"
-        build_registry_entry "$1" "$2" "$4" "$timestamp" "$check_results" > "$registry_file"
+        build_registry_entry "$1" "$2" "$4" "$timestamp" "$check_results" "$excluded_checks" > "$registry_file"
 
         # Commit and push
         git add results/ badges/ registry/
@@ -407,7 +418,7 @@ Commit: $(git rev-parse HEAD | head -c 7)"
 
             # Push with smart retry
             if ! git_push_with_smart_retry "$central_repo_dir" "$scorecards_branch" "$registry_file" "$work_dir" \
-                "$1" "$2" "$4" "$timestamp" "$check_results"; then
+                "$1" "$2" "$4" "$timestamp" "$check_results" "$excluded_checks"; then
                 log_error "Failed to push catalog updates"
                 return 1
             fi
