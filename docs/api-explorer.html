@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Explorer - Scorecards</title>
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            const THEME_KEY = 'theme';
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            const osPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (osPrefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #fafbfc;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        [data-theme="dark"] body {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e1e4e8;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .header {
+            background: #2d2d2d;
+            border-bottom-color: #404040;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            color: #24292e;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            color: #586069;
+            font-size: 0.9rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .env-selector {
+            padding: 8px 12px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .theme-toggle-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #24292e;
+        }
+
+        .theme-toggle-btn:hover {
+            background: #f6f8fa;
+            border-color: #d0d7de;
+        }
+
+        [data-theme="dark"] .theme-toggle-btn {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .theme-toggle-btn:hover {
+            background: var(--color-bg);
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: #0366d6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #0256c2;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #586069;
+        }
+
+        .error {
+            max-width: 600px;
+            margin: 60px auto;
+            padding: 30px;
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .error h2 {
+            color: #cb2431;
+            margin-bottom: 15px;
+        }
+
+        .error p {
+            color: #586069;
+            line-height: 1.6;
+        }
+
+        #swagger-ui {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Customize Swagger UI slightly to match our theme */
+        .swagger-ui .topbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1 id="api-title">API Explorer</h1>
+                <p id="api-subtitle">Loading API specification...</p>
+            </div>
+            <div class="header-controls">
+                <select id="env-selector" class="env-selector" style="display:none;">
+                    <option value="">Select Environment</option>
+                </select>
+                <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle night mode" aria-label="Toggle night mode">
+                    <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+                    </svg>
+                    <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="display: none;">
+                        <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+                    </svg>
+                </button>
+                <a href="./" class="back-btn">← Back to Catalog</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <div>Loading API specification...</div>
+    </div>
+
+    <div id="error" class="error" style="display:none;">
+        <h2>Failed to Load API</h2>
+        <p id="error-message"></p>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const org = urlParams.get('org');
+        const repo = urlParams.get('repo');
+
+        // Configuration
+        const REPO_OWNER = window.location.hostname.split('.')[0] || 'your-org';
+        const REPO_NAME = 'scorecards';
+        const BRANCH = 'catalog';
+        const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
+
+        let serviceData = null;
+        let swaggerUi = null;
+        let currentEnvironment = null;
+
+        // Main initialization
+        async function init() {
+            if (!org || !repo) {
+                showError('Missing parameters. Please specify org and repo in the URL.');
+                return;
+            }
+
+            try {
+                // Load service results to get OpenAPI config
+                const resultsUrl = `${RAW_BASE_URL}/results/${org}/${repo}/results.json?t=${Date.now()}`;
+                const response = await fetch(resultsUrl, { cache: 'no-cache' });
+
+                if (!response.ok) {
+                    throw new Error(`Service not found or results not available (${response.status})`);
+                }
+
+                serviceData = await response.json();
+
+                // Update header
+                document.getElementById('api-title').textContent = serviceData.service.name || `${org}/${repo}`;
+                document.getElementById('api-subtitle').textContent = `${org}/${repo} - OpenAPI Specification`;
+
+                // Check if service has OpenAPI config
+                if (!serviceData.service.openapi) {
+                    throw new Error('This service does not have OpenAPI configuration');
+                }
+
+                // Set up environment selector if environments are configured
+                if (serviceData.service.openapi.environments) {
+                    setupEnvironmentSelector(serviceData.service.openapi.environments);
+                }
+
+                // Find the OpenAPI spec file path and branch
+                const specPath = serviceData.service.openapi.spec_file || 'openapi.yaml';
+                const configuredBranch = serviceData.service.openapi.branch;
+
+                // Load the OpenAPI spec from the service repository
+                // Use configured branch if available, otherwise try common branch names
+                const branches = configuredBranch ? [configuredBranch] : ['main', 'master'];
+                let specUrl = null;
+                let lastError = null;
+
+                for (const branch of branches) {
+                    const url = `https://raw.githubusercontent.com/${org}/${repo}/${branch}/${specPath}`;
+                    try {
+                        const response = await fetch(url, { method: 'HEAD' });
+                        if (response.ok) {
+                            specUrl = url;
+                            break;
+                        }
+                    } catch (e) {
+                        lastError = e;
+                    }
+                }
+
+                if (!specUrl) {
+                    const branchInfo = configuredBranch
+                        ? `configured branch: ${configuredBranch}`
+                        : `tried branches: ${branches.join(', ')}`;
+                    throw new Error(`OpenAPI specification file not found at ${specPath} (${branchInfo})`);
+                }
+
+                // Initialize Swagger UI
+                await loadSwaggerUI(specUrl);
+
+                // Hide loading, show UI
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading API:', error);
+                showError(error.message);
+            }
+        }
+
+        // Setup environment selector
+        function setupEnvironmentSelector(environments) {
+            const selector = document.getElementById('env-selector');
+            selector.style.display = 'block';
+
+            // Add environment options
+            Object.entries(environments).forEach(([envName, envConfig], index) => {
+                const option = document.createElement('option');
+                option.value = envConfig.base_url;
+                option.textContent = `${envName.charAt(0).toUpperCase() + envName.slice(1)}${envConfig.description ? ' - ' + envConfig.description : ''}`;
+                selector.appendChild(option);
+
+                // Set first environment as default
+                if (index === 0) {
+                    currentEnvironment = envConfig.base_url;
+                    option.selected = true;
+                }
+            });
+
+            // Handle environment changes
+            selector.addEventListener('change', (e) => {
+                currentEnvironment = e.target.value;
+                if (swaggerUi && currentEnvironment) {
+                    // Update the Swagger UI with the new server URL
+                    swaggerUi.specActions.updateUrl(currentEnvironment);
+                    // Reload to apply changes
+                    location.reload();
+                }
+            });
+        }
+
+        // Load Swagger UI with the OpenAPI spec
+        async function loadSwaggerUI(specUrl) {
+            try {
+                // Fetch the spec first to validate it exists
+                const specResponse = await fetch(specUrl);
+                if (!specResponse.ok) {
+                    throw new Error(`OpenAPI specification file not found at ${specUrl}`);
+                }
+
+                const specContent = await specResponse.text();
+
+                // Parse spec to get the format (JSON or YAML)
+                let spec;
+                try {
+                    spec = JSON.parse(specContent);
+                } catch {
+                    // If not JSON, assume YAML - Swagger UI can handle it
+                    spec = specContent;
+                }
+
+                // Initialize Swagger UI
+                swaggerUi = SwaggerUIBundle({
+                    spec: typeof spec === 'string' ? undefined : spec,
+                    url: typeof spec === 'string' ? specUrl : undefined,
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIStandalonePreset
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "StandaloneLayout",
+                    // Override servers if environment is selected
+                    ...(currentEnvironment ? {
+                        onComplete: () => {
+                            swaggerUi.specActions.updateUrl(currentEnvironment);
+                        }
+                    } : {})
+                });
+
+            } catch (error) {
+                throw new Error(`Failed to load OpenAPI spec: ${error.message}`);
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        // Theme management
+        const THEME_KEY = 'theme';
+        const THEMES = { LIGHT: 'light', DARK: 'dark' };
+
+        function getOSPreference() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return THEMES.DARK;
+            }
+            return THEMES.LIGHT;
+        }
+
+        function getSavedTheme() {
+            const saved = localStorage.getItem(THEME_KEY);
+            if (saved === THEMES.DARK || saved === THEMES.LIGHT) {
+                return saved;
+            }
+            return getOSPreference();
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            if (theme === THEMES.DARK) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        function getCurrentTheme() {
+            return document.documentElement.getAttribute('data-theme') || THEMES.LIGHT;
+        }
+
+        function toggleTheme() {
+            const current = getCurrentTheme();
+            const newTheme = current === THEMES.DARK ? THEMES.LIGHT : THEMES.DARK;
+            applyTheme(newTheme);
+            localStorage.setItem(THEME_KEY, newTheme);
+            return newTheme;
+        }
+
+        function initTheme() {
+            const theme = getSavedTheme();
+            applyTheme(theme);
+
+            // Listen for OS preference changes
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (!saved) {
+                        const newTheme = e.matches ? THEMES.DARK : THEMES.LIGHT;
+                        applyTheme(newTheme);
+                    }
+                });
+            }
+
+            // Attach toggle button event listener
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleTheme);
+            }
+        }
+
+        // Initialize theme early
+        initTheme();
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+/**
+ * Check Filter Component Styles
+ * Dropdown for filtering services by check status
+ */
+
+/* Container */
+.check-filter-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown wrapper */
+.check-filter-dropdown {
+    position: relative;
+}
+
+/* Toggle button */
+.check-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.check-filter-toggle:hover {
+    background: var(--color-bg-tertiary);
+    border-color: var(--color-border-hover);
+}
+
+.check-filter-toggle.active {
+    background: var(--color-primary-bg);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.check-filter-toggle svg {
+    flex-shrink: 0;
+}
+
+/* Dropdown menu */
+.check-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 340px;
+    max-height: 450px;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.check-dropdown-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Header */
+.check-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.check-clear-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.check-clear-btn:hover {
+    background: var(--color-error-bg);
+    border-color: var(--color-error);
+    color: var(--color-error);
+}
+
+/* Search */
+.check-dropdown-search {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.check-dropdown-search input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+}
+
+.check-dropdown-search input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.check-dropdown-search input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Options container */
+.check-dropdown-options {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* Category */
+.check-category {
+    margin-bottom: 4px;
+}
+
+.check-category-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.check-category-toggle:hover {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+}
+
+.category-chevron {
+    transition: transform 0.2s ease;
+}
+
+.check-category:not(.collapsed) .category-chevron {
+    transform: rotate(90deg);
+}
+
+.category-count {
+    font-weight: 400;
+    color: var(--color-text-muted);
+}
+
+/* Category content */
+.check-category-content {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.check-category.collapsed .check-category-content {
+    max-height: 0;
+}
+
+/* Check option */
+.check-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px 8px 32px;
+    transition: background 0.15s ease;
+}
+
+.check-option:hover {
+    background: var(--color-bg-secondary);
+}
+
+.check-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 12px;
+}
+
+/* State toggle */
+.check-state-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--color-bg-tertiary);
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.state-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 24px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.state-btn:hover {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+}
+
+.state-btn.active {
+    background: var(--color-bg-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.state-btn.state-any.active {
+    color: var(--color-text-primary);
+}
+
+.state-btn.state-pass.active {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.state-btn.state-fail.active {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+.state-btn svg {
+    flex-shrink: 0;
+}
+
+/* Empty state */
+.check-empty-state {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .check-dropdown-menu {
+        width: calc(100vw - 32px);
+        max-width: 340px;
+        right: 0;
+        left: auto;
+    }
+
+    .check-option {
+        padding: 10px 12px 10px 24px;
+    }
+
+    .check-name {
+        font-size: 0.813rem;
+    }
+}
+
+/* Dark mode adjustments handled via CSS variables */
+
+/* ============================================
+   Check Adoption Dashboard & Team Modal Tab
+   ============================================ */
+
+/* Check adoption loading */
+.check-adoption-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px;
+    color: var(--color-text-muted);
+}
+
+/* Check adoption content */
+.check-adoption-content {
+    padding: 16px 0;
+}
+
+/* Check selector in modal */
+.check-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.check-selector label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.check-selector select,
+.check-selector-large select {
+    padding: 8px 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    min-width: 200px;
+}
+
+.check-selector select:focus,
+.check-selector-large select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Check info */
+.check-info {
+    margin-bottom: 16px;
+}
+
+.check-description {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Adoption progress */
+.adoption-progress {
+    margin-bottom: 24px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progress-label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+.progress-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.progress-bar-large {
+    height: 24px;
+    background: var(--color-bg-tertiary);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.progress-bar-large .progress-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.high {
+    background: var(--color-success);
+}
+
+.progress-fill.medium {
+    background: var(--color-warning, #f59e0b);
+}
+
+.progress-fill.low {
+    background: var(--color-error);
+}
+
+/* Adoption lists (passing/failing) */
+.adoption-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.adoption-column h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.adoption-column.passing h4 {
+    color: var(--color-success);
+}
+
+.adoption-column.failing h4 {
+    color: var(--color-error);
+}
+
+.adoption-service-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.adoption-service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.adoption-service-item:last-child {
+    border-bottom: none;
+}
+
+.adoption-service-item:hover {
+    background: var(--color-bg-secondary);
+}
+
+.adoption-service-item .service-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+}
+
+.adoption-service-item .service-score {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.empty-list {
+    padding: 16px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   Check Adoption Dashboard Modal
+   ============================================ */
+
+.check-adoption-modal-content {
+    max-width: 800px;
+    width: 90vw;
+}
+
+.adoption-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.check-selector-large {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.check-selector-large label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.check-selector-large select {
+    min-width: 280px;
+}
+
+.overall-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.overall-stat {
+    text-align: center;
+}
+
+.overall-stat .stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.overall-stat .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.check-description-box {
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.check-description-box strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-text-primary);
+}
+
+.check-description-box p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Adoption table */
+.adoption-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.adoption-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.adoption-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--color-bg-secondary);
+    z-index: 1;
+}
+
+.adoption-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    user-select: none;
+}
+
+.adoption-table th:hover {
+    background: var(--color-bg-tertiary);
+}
+
+.adoption-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.adoption-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.adoption-row:hover {
+    background: var(--color-bg-secondary);
+}
+
+.adoption-row:last-child td {
+    border-bottom: none;
+}
+
+.team-name-cell {
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+.adoption-cell {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.progress-cell {
+    width: 200px;
+}
+
+.progress-bar-inline {
+    height: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-inline .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.count-cell {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.empty-row {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: 24px !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .adoption-lists {
+        grid-template-columns: 1fr;
+    }
+
+    .adoption-dashboard-header {
+        flex-direction: column;
+    }
+
+    .check-selector-large select {
+        min-width: 100%;
+    }
+
+    .progress-cell {
+        width: 120px;
+    }
+}
