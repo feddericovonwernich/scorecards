@@ -9,26 +9,33 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T19:57:17Z"
+      "last_discovered": "2025-11-29T21:00:47Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 85,
-  "rank": "gold",
+  "score": 90,
+  "rank": "platinum",
   "passed_checks": 9,
-  "total_checks": 12,
-  "timestamp": "2025-11-29T19:58:15Z",
+  "total_checks": 11,
+  "excluded_count": 1,
+  "excluded_checks": [
+    {
+      "check": "08-api-environments",
+      "reason": "Uses different environment strategy"
+    }
+  ],
+  "timestamp": "2025-11-29T21:01:48Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
+      "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-29T16:57:06Z",
-      "last_commit_hash": "9285288"
+      "last_commit_date": "2025-11-29T18:00:36Z",
+      "last_commit_hash": "c276911"
     }
   ],
   "checks": [
@@ -89,7 +96,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (179 bytes)\n",
       "stderr": ""
     },
     {
@@ -122,11 +129,11 @@
       "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
       "category": "Documentation",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "excluded",
+      "exit_code": null,
       "duration": 0,
       "stdout": "",
-      "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
+      "stderr": ""
     },
     {
       "check_id": "09-scorecard-badge",
