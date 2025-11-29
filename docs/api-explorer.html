@@ -14,6 +14,7 @@
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
+    <link rel="stylesheet" type="text/css" href="css/base/variables.css">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
     <style>
         * {
@@ -23,27 +24,18 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #fafbfc;
+            font-family: var(--font-family-primary);
+            background: var(--color-bg);
+            color: var(--color-text);
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        [data-theme="dark"] body {
-            background: #1a1a1a;
-            color: #e0e0e0;
-        }
-
         .header {
-            background: white;
-            border-bottom: 1px solid #e1e4e8;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
             transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        [data-theme="dark"] .header {
-            background: #2d2d2d;
-            border-bottom-color: #404040;
         }
 
         .header-content {
@@ -62,14 +54,15 @@
         }
 
         .header-title h1 {
-            font-size: 1.5rem;
-            color: #24292e;
-            margin-bottom: 5px;
+            font-size: var(--text-xl);
+            color: var(--color-text);
+            margin-bottom: var(--space-1);
+            font-weight: var(--font-weight-semibold);
         }
 
         .header-title p {
-            color: #586069;
-            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            font-size: var(--text-sm);
         }
 
         .header-controls {
@@ -80,81 +73,89 @@
         }
 
         .env-selector {
-            padding: 8px 12px;
-            border: 1px solid #e1e4e8;
-            border-radius: 6px;
-            background: white;
-            font-size: 0.9rem;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: var(--text-sm);
+            font-family: var(--font-family-primary);
             cursor: pointer;
             min-width: 150px;
+            transition: all var(--duration-fast) var(--ease-in-out-smooth);
+        }
+
+        .env-selector:hover {
+            border-color: var(--color-border-strong);
+        }
+
+        .env-selector:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .theme-toggle-btn {
-            padding: 8px 12px;
-            background: white;
-            border: 1px solid #e1e4e8;
-            border-radius: 6px;
+            padding: var(--space-2) var(--space-3);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all var(--duration-fast) var(--ease-in-out-smooth);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #24292e;
+            color: var(--color-text-muted);
         }
 
         .theme-toggle-btn:hover {
-            background: #f6f8fa;
-            border-color: #d0d7de;
-        }
-
-        [data-theme="dark"] .theme-toggle-btn {
-            background: var(--color-surface);
-            border-color: var(--color-border);
+            background: var(--color-surface-secondary);
+            border-color: var(--color-border-strong);
             color: var(--color-text);
         }
 
-        [data-theme="dark"] .theme-toggle-btn:hover {
-            background: var(--color-bg);
-        }
-
         .back-btn {
-            padding: 8px 16px;
-            background: #0366d6;
+            padding: var(--space-2) var(--space-4);
+            background: var(--color-accent);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: var(--font-weight-medium);
+            font-family: var(--font-family-primary);
             display: inline-block;
-            transition: background 0.2s;
+            transition: all var(--duration-fast) var(--ease-in-out-smooth);
         }
 
         .back-btn:hover {
-            background: #0256c2;
+            background: var(--color-accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .loading {
             text-align: center;
-            padding: 60px 20px;
-            color: #586069;
+            padding: var(--space-12) var(--space-5);
+            color: var(--color-text-muted);
         }
 
         .error {
             max-width: 600px;
-            margin: 60px auto;
-            padding: 30px;
-            background: #fff;
-            border: 1px solid #e1e4e8;
-            border-radius: 8px;
+            margin: var(--space-12) auto;
+            padding: var(--space-6);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
             text-align: center;
         }
 
         .error h2 {
-            color: #cb2431;
-            margin-bottom: 15px;
+            color: var(--color-error);
+            margin-bottom: var(--space-4);
         }
 
         .error p {
-            color: #586069;
+            color: var(--color-text-muted);
             line-height: 1.6;
         }
 
@@ -163,9 +164,254 @@
             margin: 0 auto;
         }
 
-        /* Customize Swagger UI slightly to match our theme */
+        /* Customize Swagger UI to match our theme */
         .swagger-ui .topbar {
             display: none;
+        }
+
+        /* Swagger UI Dark Mode Overrides */
+        [data-theme="dark"] .swagger-ui {
+            background: var(--color-bg);
+        }
+
+        [data-theme="dark"] .swagger-ui .wrapper {
+            background: var(--color-bg);
+        }
+
+        /* Info section */
+        [data-theme="dark"] .swagger-ui .info .title,
+        [data-theme="dark"] .swagger-ui .info .title small {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .info .description,
+        [data-theme="dark"] .swagger-ui .info .description p,
+        [data-theme="dark"] .swagger-ui .info li,
+        [data-theme="dark"] .swagger-ui .info table,
+        [data-theme="dark"] .swagger-ui .info table thead tr th,
+        [data-theme="dark"] .swagger-ui .info table tbody tr td {
+            color: var(--color-text-muted);
+        }
+
+        /* Links */
+        [data-theme="dark"] .swagger-ui a.link,
+        [data-theme="dark"] .swagger-ui .info a {
+            color: var(--color-link);
+        }
+
+        /* Scheme container (server selector) */
+        [data-theme="dark"] .swagger-ui .scheme-container {
+            background: var(--color-surface);
+            box-shadow: none;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+        }
+
+        [data-theme="dark"] .swagger-ui .scheme-container .schemes > label {
+            color: var(--color-text);
+        }
+
+        /* Operation blocks (GET, POST, etc.) */
+        [data-theme="dark"] .swagger-ui .opblock-tag {
+            color: var(--color-text);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        [data-theme="dark"] .swagger-ui .opblock-tag:hover {
+            background: var(--color-surface);
+        }
+
+        [data-theme="dark"] .swagger-ui .opblock {
+            border-color: var(--color-border);
+            background: var(--color-surface);
+        }
+
+        [data-theme="dark"] .swagger-ui .opblock .opblock-summary-description {
+            color: var(--color-text-muted);
+        }
+
+        [data-theme="dark"] .swagger-ui .opblock .opblock-section-header {
+            background: var(--color-surface-secondary);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        [data-theme="dark"] .swagger-ui .opblock .opblock-section-header h4 {
+            color: var(--color-text);
+        }
+
+        /* Parameters and responses */
+        [data-theme="dark"] .swagger-ui .parameters-col_description,
+        [data-theme="dark"] .swagger-ui .response-col_description,
+        [data-theme="dark"] .swagger-ui table thead tr th,
+        [data-theme="dark"] .swagger-ui table thead tr td,
+        [data-theme="dark"] .swagger-ui .parameter__name,
+        [data-theme="dark"] .swagger-ui .parameter__type,
+        [data-theme="dark"] .swagger-ui .parameter__extension,
+        [data-theme="dark"] .swagger-ui .parameter__in {
+            color: var(--color-text-muted);
+        }
+
+        [data-theme="dark"] .swagger-ui .parameters-col_name {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .opblock-body pre.microlight {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        /* Models/Schemas section */
+        [data-theme="dark"] .swagger-ui section.models {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+        }
+
+        [data-theme="dark"] .swagger-ui section.models h4,
+        [data-theme="dark"] .swagger-ui section.models.is-open h4 {
+            color: var(--color-text);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        [data-theme="dark"] .swagger-ui .model-title {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .model {
+            color: var(--color-text-muted);
+        }
+
+        [data-theme="dark"] .swagger-ui .model-box {
+            background: var(--color-bg);
+        }
+
+        /* Buttons */
+        [data-theme="dark"] .swagger-ui .btn {
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .btn.authorize {
+            background: var(--color-success);
+            border-color: var(--color-success);
+            color: white;
+        }
+
+        [data-theme="dark"] .swagger-ui .btn.cancel {
+            border-color: var(--color-error);
+            color: var(--color-error);
+        }
+
+        /* Form inputs */
+        [data-theme="dark"] .swagger-ui input[type=text],
+        [data-theme="dark"] .swagger-ui input[type=password],
+        [data-theme="dark"] .swagger-ui input[type=email],
+        [data-theme="dark"] .swagger-ui textarea,
+        [data-theme="dark"] .swagger-ui select {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        /* Dialog/Modal */
+        [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+        }
+
+        [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-header h3 {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content {
+            color: var(--color-text-muted);
+        }
+
+        /* Response codes */
+        [data-theme="dark"] .swagger-ui .responses-inner {
+            background: var(--color-surface);
+        }
+
+        [data-theme="dark"] .swagger-ui .response .response-col_status {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .response .response-col_description {
+            color: var(--color-text-muted);
+        }
+
+        [data-theme="dark"] .swagger-ui .response .response-col_description__inner p {
+            color: var(--color-text-muted);
+        }
+
+        /* Tab panels */
+        [data-theme="dark"] .swagger-ui .tab li {
+            color: var(--color-text-muted);
+        }
+
+        [data-theme="dark"] .swagger-ui .tab li.active {
+            color: var(--color-text);
+        }
+
+        /* Copy to clipboard button */
+        [data-theme="dark"] .swagger-ui .copy-to-clipboard {
+            background: var(--color-surface);
+        }
+
+        /* Try it out button */
+        [data-theme="dark"] .swagger-ui .try-out__btn {
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui .try-out__btn:hover {
+            background: var(--color-surface-secondary);
+        }
+
+        /* Execute button */
+        [data-theme="dark"] .swagger-ui .execute {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+
+        [data-theme="dark"] .swagger-ui .execute:hover {
+            background: var(--color-accent-hover);
+        }
+
+        /* Markdown content */
+        [data-theme="dark"] .swagger-ui .markdown p,
+        [data-theme="dark"] .swagger-ui .markdown li,
+        [data-theme="dark"] .swagger-ui .renderedMarkdown p,
+        [data-theme="dark"] .swagger-ui .renderedMarkdown li {
+            color: var(--color-text-muted);
+        }
+
+        /* Expand/collapse arrows */
+        [data-theme="dark"] .swagger-ui .expand-operation svg,
+        [data-theme="dark"] .swagger-ui .expand-methods svg {
+            fill: var(--color-text-muted);
+        }
+
+        /* Loading indicator */
+        [data-theme="dark"] .swagger-ui .loading-container .loading:after {
+            border-color: var(--color-accent) transparent var(--color-accent) transparent;
+        }
+
+        /* Servers dropdown in dark mode */
+        [data-theme="dark"] .swagger-ui .servers > label select {
+            background: var(--color-bg);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        /* Model toggle arrow */
+        [data-theme="dark"] .swagger-ui .model-toggle:after {
+            border-color: var(--color-text-muted);
+        }
+
+        /* Authorization lock icon */
+        [data-theme="dark"] .swagger-ui .authorization__btn svg {
+            fill: var(--color-text-muted);
         }
     </style>
 </head>
