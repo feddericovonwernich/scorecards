@@ -130,6 +130,25 @@ else
 fi
 
 # ============================================================================
+# Parse Excluded Checks
+# ============================================================================
+
+EXCLUDED_CHECKS_JSON="[]"
+EXCLUDED_CHECK_IDS=""
+
+if [ "$HAS_CONFIG" = "true" ]; then
+    EXCLUDED_CHECKS_JSON=$(parse_excluded_checks "$GITHUB_WORKSPACE")
+    EXCLUDED_CHECK_IDS=$(echo "$EXCLUDED_CHECKS_JSON" | jq -r '[.[].check] | join(",")')
+
+    # Log excluded checks for visibility
+    EXCLUDED_COUNT=$(echo "$EXCLUDED_CHECKS_JSON" | jq 'length')
+    if [ "$EXCLUDED_COUNT" -gt 0 ]; then
+        log_info "Excluded checks: $EXCLUDED_COUNT"
+        echo "$EXCLUDED_CHECKS_JSON" | jq -r '.[] | "  - \(.check): \(.reason)"'
+    fi
+fi
+
+# ============================================================================
 # Team Discovery (manual config > CODEOWNERS > GitHub API)
 # ============================================================================
 
@@ -224,6 +243,7 @@ if ! docker run --rm \
     -v "$CHECKS_DIR:/host-checks:ro" \
     -v "$GITHUB_WORKSPACE:/workspace:ro" \
     -v "$OUTPUT_DIR:/output" \
+    -e "EXCLUDED_CHECKS=$EXCLUDED_CHECK_IDS" \
     scorecards-runner:latest \
     /host-checks /workspace /output/results.json; then
     die "Check execution failed" 1
@@ -360,6 +380,7 @@ declare -A score_context=(
     [rank]="$RANK"
     [passed_checks]="$PASSED_CHECKS"
     [total_checks]="$TOTAL_CHECKS"
+    [excluded_count]="$(echo "$EXCLUDED_CHECKS_JSON" | jq 'length')"
     [checks_hash]="$CHECKS_HASH"
     [checks_count]="$CHECKS_COUNT"
     [installed]="$INSTALLED"
@@ -391,7 +412,8 @@ echo
 # Build final results using context arrays
 FINAL_RESULTS=$(build_results_json \
     service_context score_context "$TIMESTAMP" \
-    "$CONTRIBUTORS_JSON" "$CHECKS_JSON" "$LINKS_JSON" "$OPENAPI_JSON")
+    "$CONTRIBUTORS_JSON" "$CHECKS_JSON" "$LINKS_JSON" "$OPENAPI_JSON" \
+    "$EXCLUDED_CHECKS_JSON")
 
 echo "$FINAL_RESULTS" | jq '.' > "$OUTPUT_DIR/final-results.json"
 

@@ -46,9 +46,11 @@ test.describe('Check Adoption Dashboard Modal', () => {
     const statsRow = page.locator('.adoption-stats-row');
     await expect(statsRow).toBeVisible();
 
-    // Verify stat cards are present
+    // Verify stat cards are present (2 minimum, 3 when exclusions exist)
     const statCards = page.locator('.adoption-stat-card');
-    await expect(statCards).toHaveCount(2);
+    const cardCount = await statCards.count();
+    expect(cardCount).toBeGreaterThanOrEqual(2);
+    expect(cardCount).toBeLessThanOrEqual(3);
 
     // Verify stat values are visible
     await expect(page.locator('.adoption-stat-value').first()).toBeVisible();
@@ -149,15 +151,16 @@ test.describe('Check Adoption Dashboard Modal', () => {
     const table = page.locator('.adoption-table');
     await expect(table).toBeVisible();
 
-    // Verify header row has correct columns
+    // Verify header row has correct columns (5 including Excl. column)
     const headers = table.locator('thead th');
-    await expect(headers).toHaveCount(4);
+    await expect(headers).toHaveCount(5);
 
     // Verify headers text
     await expect(headers.nth(0)).toContainText('Team');
     await expect(headers.nth(1)).toContainText('Adoption');
     await expect(headers.nth(2)).toContainText('Progress');
     await expect(headers.nth(3)).toContainText('Passing');
+    await expect(headers.nth(4)).toContainText('Excl.');
 
     // Verify at least one data row exists
     const rows = page.locator('.adoption-row');

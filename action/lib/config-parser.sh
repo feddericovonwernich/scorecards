@@ -215,6 +215,61 @@ parse_openapi_config() {
     parse_yaml_field "$config_file" "openapi" "null"
 }
 
+# Parse excluded_checks from config
+# Returns JSON: [{ "check": "01-readme", "reason": "N/A for internal libraries" }, ...]
+parse_excluded_checks() {
+    local repo_path="$1"
+    local config_file="$repo_path/.scorecard/config.yml"
+
+    if [ ! -f "$config_file" ]; then
+        echo "[]"
+        return 0
+    fi
+
+    if ! command -v python3 &> /dev/null; then
+        log_warning "Python not available, cannot parse excluded_checks" >&2
+        echo "[]"
+        return 1
+    fi
+
+    python3 -c "
+import yaml, json, sys
+
+try:
+    with open('$config_file', 'r') as f:
+        config = yaml.safe_load(f) or {}
+
+    excluded = config.get('excluded_checks', [])
+
+    # Validate structure and require reason
+    valid_exclusions = []
+    for item in excluded:
+        if isinstance(item, dict) and 'check' in item and 'reason' in item:
+            if item['reason'] and str(item['reason']).strip():
+                valid_exclusions.append({
+                    'check': str(item['check']),
+                    'reason': str(item['reason']).strip()
+                })
+            else:
+                print(f\"Warning: Excluded check '{item.get('check')}' missing required reason, ignoring\", file=sys.stderr)
+        else:
+            print(f\"Warning: Invalid exclusion format, ignoring: {item}\", file=sys.stderr)
+
+    print(json.dumps(valid_exclusions))
+except Exception as e:
+    print('[]')
+" 2>/dev/null || echo "[]"
+}
+
+# Get comma-separated list of excluded check IDs (for passing to check runner)
+get_excluded_check_ids() {
+    local repo_path="$1"
+    local exclusions
+    exclusions=$(parse_excluded_checks "$repo_path")
+
+    echo "$exclusions" | jq -r '[.[].check] | join(",")'
+}
+
 # Check if workflow is installed
 check_workflow_installed() {
     local repo_path="$1"

@@ -31,6 +31,22 @@ echo "Running scorecards..."
 echo "Checks directory: $CHECKS_DIR"
 echo "Repository path: $REPO_PATH"
 echo "Output file: $OUTPUT_FILE"
+
+# Parse excluded checks from environment variable (comma-separated list)
+EXCLUDED_CHECKS="${EXCLUDED_CHECKS:-}"
+declare -A EXCLUDED_MAP
+
+if [ -n "$EXCLUDED_CHECKS" ]; then
+    echo "Excluded checks: $EXCLUDED_CHECKS"
+    IFS=',' read -ra EXCLUDED_ARRAY <<< "$EXCLUDED_CHECKS"
+    for check_id in "${EXCLUDED_ARRAY[@]}"; do
+        # Trim whitespace
+        check_id=$(echo "$check_id" | xargs)
+        if [ -n "$check_id" ]; then
+            EXCLUDED_MAP["$check_id"]=1
+        fi
+    done
+fi
 echo
 
 # Initialize results array
@@ -52,7 +68,7 @@ passed_checks=0
 while IFS= read -r check_dir; do
     check_name=$(basename "$check_dir")
 
-    # Read metadata
+    # Read metadata first (needed for excluded checks too)
     metadata_file="$check_dir/metadata.json"
     if [ ! -f "$metadata_file" ]; then
         echo -e "${YELLOW}Warning: No metadata.json found for $check_name, skipping${NC}"
@@ -65,6 +81,35 @@ while IFS= read -r check_dir; do
     weight=$(jq -r '.weight // 10' "$metadata_file")
     timeout=$(jq -r '.timeout // 30' "$metadata_file")
     category=$(jq -r '.category // "general"' "$metadata_file")
+
+    # Check if this check is excluded
+    if [ -n "${EXCLUDED_MAP[$check_name]:-}" ]; then
+        echo -e "${YELLOW}SKIP${NC} $name (excluded)"
+
+        # Build excluded result object
+        result=$(jq -n \
+            --arg check_id "$check_name" \
+            --arg name "$name" \
+            --arg description "$description" \
+            --arg category "$category" \
+            --argjson weight "$weight" \
+            '{
+                check_id: $check_id,
+                name: $name,
+                description: $description,
+                category: $category,
+                weight: $weight,
+                status: "excluded",
+                exit_code: null,
+                duration: 0,
+                stdout: "",
+                stderr: ""
+            }')
+
+        # Append to results array
+        results=$(echo "$results" | jq --argjson result "$result" '. + [$result]')
+        continue
+    fi
 
     # Find check script
     check_script=""

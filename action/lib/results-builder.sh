@@ -11,6 +11,7 @@ build_results_json() {
     local checks_json="$5"
     local links_json="${6:-"[]"}"
     local openapi_json="${7:-null}"
+    local excluded_checks_json="${8:-"[]"}"
 
     # Extract values
     local service_org="${svc_ref[org]}"
@@ -25,6 +26,7 @@ build_results_json() {
     local rank="${scr_ref[rank]}"
     local passed_checks="${scr_ref[passed_checks]}"
     local total_checks="${scr_ref[total_checks]}"
+    local excluded_count="${scr_ref[excluded_count]:-0}"
     local checks_hash="${scr_ref[checks_hash]}"
     local checks_count="${scr_ref[checks_count]}"
     local installed="${scr_ref[installed]}"
@@ -32,6 +34,7 @@ build_results_json() {
     log_debug "[build_results_json] Extracted values:" >&2
     log_debug "  score=[$score], rank=[$rank]" >&2
     log_debug "  passed_checks=[$passed_checks], total_checks=[$total_checks]" >&2
+    log_debug "  excluded_count=[$excluded_count]" >&2
     log_debug "  checks_hash=[$checks_hash]" >&2
     log_debug "  checks_count=[$checks_count] (length: ${#checks_count})" >&2
     log_debug "  installed=[$installed]" >&2
@@ -39,6 +42,7 @@ build_results_json() {
     log_debug "  checks_json length: ${#checks_json}" >&2
     log_debug "  links_json length: ${#links_json}" >&2
     log_debug "  openapi_json length: ${#openapi_json}" >&2
+    log_debug "  excluded_checks_json length: ${#excluded_checks_json}" >&2
 
     # Build the complete results JSON
     # Note: team is now an object with primary, all, source, last_discovered
@@ -54,6 +58,8 @@ build_results_json() {
         --arg rank "$rank" \
         --argjson passed_checks "$passed_checks" \
         --argjson total_checks "$total_checks" \
+        --argjson excluded_count "$excluded_count" \
+        --argjson excluded_checks "$excluded_checks_json" \
         --arg timestamp "$timestamp" \
         --arg checks_hash "$checks_hash" \
         --argjson checks_count "$checks_count" \
@@ -80,6 +86,8 @@ build_results_json() {
             rank: $rank,
             passed_checks: $passed_checks,
             total_checks: $total_checks,
+            excluded_count: $excluded_count,
+            excluded_checks: $excluded_checks,
             timestamp: $timestamp,
             checks_hash: $checks_hash,
             checks_count: $checks_count,
