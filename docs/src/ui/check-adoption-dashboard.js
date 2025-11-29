@@ -5,7 +5,7 @@
 
 import { showModal, hideModal, setupModalHandlers } from './modals.js';
 import { loadChecks } from '../api/checks.js';
-import { calculateCheckAdoptionByTeam, sortTeamsByAdoption } from '../utils/check-statistics.js';
+import { calculateCheckAdoptionByTeam, sortTeamsByAdoption, calculateOverallCheckAdoption } from '../utils/check-statistics.js';
 import { escapeHtml } from '../utils/formatting.js';
 import { getIcon } from '../config/icons.js';
 
@@ -110,7 +110,7 @@ function renderDashboard() {
         </div>
     `).join('');
 
-    // Build team rows
+    // Build team rows with excluded column
     const teamRows = sortedTeams.map(team => {
         const progressClass = team.percentage >= 80 ? 'high' : team.percentage >= 50 ? 'medium' : 'low';
         const isNoTeam = team.teamName === 'No Team';
@@ -118,6 +118,8 @@ function renderDashboard() {
         // For 0%, show an empty state indicator
         const progressWidth = team.percentage === 0 ? '0' : team.percentage;
         const progressFillClass = team.percentage === 0 ? 'progress-fill none' : `progress-fill ${progressClass}`;
+        const excludedCount = team.excluded || 0;
+        const activeTotal = team.activeTotal || (team.total - excludedCount);
         return `
             <tr class="${rowClass}" onclick="window.showTeamDetail('${escapeHtml(team.teamName)}')">
                 <td class="team-name-cell">${escapeHtml(team.teamName)}</td>
@@ -127,15 +129,15 @@ function renderDashboard() {
                         <div class="${progressFillClass}" style="width: ${progressWidth}%"></div>
                     </div>
                 </td>
-                <td class="count-cell">${team.passing}/${team.total}</td>
+                <td class="count-cell">${team.passing}/${activeTotal}</td>
+                <td class="excluded-cell ${excludedCount > 0 ? 'has-excluded' : ''}">${excludedCount > 0 ? excludedCount : '-'}</td>
             </tr>
         `;
     }).join('');
 
-    // Calculate overall stats
-    const totalServices = currentServices.length;
-    const passingTotal = currentServices.filter(s => s.check_results?.[selectedCheckId] === 'pass').length;
-    const overallPercentage = totalServices > 0 ? Math.round((passingTotal / totalServices) * 100) : 0;
+    // Calculate overall stats using the new function that handles exclusions
+    const overallStats = calculateOverallCheckAdoption(currentServices, selectedCheckId);
+    const { total: totalServices, activeTotal, passing: passingTotal, excluded: excludedTotal, percentage: overallPercentage } = overallStats;
 
     content.innerHTML = `
         <div class="adoption-dashboard-header">
@@ -163,9 +165,15 @@ function renderDashboard() {
                     <span class="adoption-stat-label">Overall Adoption</span>
                 </div>
                 <div class="adoption-stat-card">
-                    <span class="adoption-stat-value">${passingTotal}/${totalServices}</span>
+                    <span class="adoption-stat-value">${passingTotal}/${activeTotal}</span>
                     <span class="adoption-stat-label">Services Passing</span>
                 </div>
+                ${excludedTotal > 0 ? `
+                <div class="adoption-stat-card excluded">
+                    <span class="adoption-stat-value">${excludedTotal}</span>
+                    <span class="adoption-stat-label">Excluded</span>
+                </div>
+                ` : ''}
             </div>
         </div>
 
@@ -188,10 +196,11 @@ function renderDashboard() {
                         </th>
                         <th>Progress</th>
                         <th>Passing</th>
+                        <th>Excl.</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${teamRows || '<tr><td colspan="4" class="empty-row">No teams found</td></tr>'}
+                    ${teamRows || '<tr><td colspan="5" class="empty-row">No teams found</td></tr>'}
                 </tbody>
             </table>
         </div>

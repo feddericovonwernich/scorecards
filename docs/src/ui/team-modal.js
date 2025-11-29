@@ -295,7 +295,7 @@ function renderCheckAdoptionContent(section, checks) {
     // Calculate adoption for selected check
     const teamStats = calculateCheckAdoptionByTeam(services, selectedCheckId);
     const currentTeamName = services[0] ? (getTeamName(services[0]) || 'No Team') : 'No Team';
-    const stats = teamStats[currentTeamName] || { passing: 0, failing: 0, total: 0, percentage: 0, services: [] };
+    const stats = teamStats[currentTeamName] || { passing: 0, failing: 0, excluded: 0, total: 0, activeTotal: 0, percentage: 0, services: [] };
 
     // Build check selector options
     const checkOptions = checks.map(check => `
@@ -306,9 +306,10 @@ function renderCheckAdoptionContent(section, checks) {
         </div>
     `).join('');
 
-    // Build passing/failing service lists
+    // Build passing/failing/excluded service lists
     const passingServices = stats.services.filter(s => s.checkStatus === 'pass');
-    const failingServices = stats.services.filter(s => s.checkStatus !== 'pass');
+    const failingServices = stats.services.filter(s => s.checkStatus === 'fail');
+    const excludedServices = stats.services.filter(s => s.checkStatus === 'excluded');
 
     const passingList = passingServices.length > 0
         ? passingServices.map(s => `
@@ -327,6 +328,18 @@ function renderCheckAdoptionContent(section, checks) {
             </div>
         `).join('')
         : '<div class="empty-list">No failing services</div>';
+
+    const excludedList = excludedServices.length > 0
+        ? excludedServices.map(s => `
+            <div class="adoption-service-item excluded" onclick="window.showServiceDetail('${s.org}', '${s.repo}')">
+                <span class="service-name">${escapeHtml(s.name)}</span>
+                <span class="exclusion-reason" title="${escapeHtml(s.exclusionReason || 'Excluded')}">${escapeHtml(s.exclusionReason || 'Excluded')}</span>
+            </div>
+        `).join('')
+        : '<div class="empty-list">No excluded services</div>';
+
+    // Calculate active services for progress display
+    const activeTotal = stats.activeTotal || (stats.total - (stats.excluded || 0));
 
     section.innerHTML = `
         <div class="check-adoption-content">
@@ -356,14 +369,17 @@ function renderCheckAdoptionContent(section, checks) {
             <div class="adoption-progress">
                 <div class="progress-header">
                     <span class="progress-label">Adoption Rate</span>
-                    <span class="progress-value">${stats.percentage}% (${stats.passing}/${stats.total} services)</span>
+                    <span class="progress-value">
+                        ${stats.percentage}% (${stats.passing}/${activeTotal} active)
+                        ${excludedServices.length > 0 ? `<span class="excluded-note">${excludedServices.length} excluded</span>` : ''}
+                    </span>
                 </div>
                 <div class="progress-bar-large">
                     <div class="progress-fill ${stats.percentage >= 80 ? 'high' : stats.percentage >= 50 ? 'medium' : 'low'}" style="width: ${stats.percentage}%"></div>
                 </div>
             </div>
 
-            <div class="adoption-lists">
+            <div class="adoption-lists ${excludedServices.length > 0 ? 'three-columns' : ''}">
                 <div class="adoption-column passing">
                     <h4>Passing (${passingServices.length})</h4>
                     <div class="adoption-service-list">
@@ -376,6 +392,14 @@ function renderCheckAdoptionContent(section, checks) {
                         ${failingList}
                     </div>
                 </div>
+                ${excludedServices.length > 0 ? `
+                <div class="adoption-column excluded">
+                    <h4>Excluded (${excludedServices.length})</h4>
+                    <div class="adoption-service-list excluded-list">
+                        ${excludedList}
+                    </div>
+                </div>
+                ` : ''}
             </div>
         </div>
     `;

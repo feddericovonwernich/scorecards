@@ -1263,3 +1263,99 @@
         gap: var(--space-2);
     }
 }
+
+/* ==============================================
+   EXCLUDED CHECK STYLING
+   ============================================== */
+
+/* Three-column layout for adoption lists */
+.adoption-lists.three-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+    .adoption-lists.three-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Excluded column header styling */
+.adoption-column.excluded h4 {
+    color: var(--color-warning);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Excluded service item styling */
+.adoption-service-item.excluded {
+    border-left: 3px solid var(--color-warning);
+    background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.adoption-service-item.excluded:hover {
+    background: var(--color-warning-hover, rgba(245, 158, 11, 0.15));
+}
+
+.adoption-service-item.excluded .service-name {
+    font-weight: var(--font-weight-medium);
+}
+
+/* Exclusion reason display */
+.exclusion-reason {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-top: var(--space-1);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Excluded service list container */
+.adoption-service-list.excluded-list {
+    border-color: var(--color-warning);
+}
+
+/* Excluded note in progress header */
+.excluded-note {
+    font-size: var(--text-xs);
+    color: var(--color-warning);
+    background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    margin-left: var(--space-2);
+}
+
+/* Excluded cell in adoption table */
+.excluded-cell {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+.excluded-cell.has-excluded {
+    color: var(--color-warning);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Excluded stat card styling */
+.adoption-stat-card.excluded .adoption-stat-value {
+    color: var(--color-warning);
+}
+
+/* Override for dark mode */
+:root.dark-mode .adoption-service-item.excluded {
+    background: var(--color-warning-bg, rgba(245, 158, 11, 0.08));
+}
+
+:root.dark-mode .adoption-service-item.excluded:hover {
+    background: var(--color-warning-hover, rgba(245, 158, 11, 0.12));
+}
