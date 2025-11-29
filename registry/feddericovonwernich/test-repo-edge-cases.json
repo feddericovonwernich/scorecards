@@ -8,13 +8,13 @@
       "backend"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-11-29T15:59:06Z",
+    "last_discovered": "2025-11-29T19:57:34Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "backend"
   },
-  "score": 68,
+  "score": 74,
   "rank": "silver",
-  "last_updated": "2025-11-29T16:00:01Z",
+  "last_updated": "2025-11-29T19:58:27Z",
   "has_api": false,
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
@@ -23,7 +23,7 @@
     "02-license": "pass",
     "03-ci-config": "pass",
     "04-tests": "pass",
-    "05-scorecard-config": "fail",
+    "05-scorecard-config": "pass",
     "06-openapi-spec": "fail",
     "07-openapi-quality": "fail",
     "08-api-environments": "pass",
@@ -32,11 +32,11 @@
     "11-codeowners": "pass",
     "12-codeowners-quality": "pass"
   },
-  "installed": false,
+  "installed": true,
   "default_branch": "main",
   "installation_pr": {
     "number": 1,
-    "state": "OPEN",
+    "state": "MERGED",
     "url": "https://github.com/feddericovonwernich/test-repo-edge-cases/pull/1"
   }
 }
