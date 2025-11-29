@@ -296,6 +296,15 @@ function renderCheckOptionCard(check) {
                             </svg>
                             <span class="check-option-stat-value">${stats.failing}</span> failing
                         </span>
+                        ${stats.excluded > 0 ? `
+                        <span class="check-option-stat excluded">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                <line x1="3" y1="13" x2="13" y2="3" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            <span class="check-option-stat-value">${stats.excluded}</span> excluded
+                        </span>
+                        ` : ''}
                         <span class="check-option-progress">
                             <span class="check-option-progress-bar">
                                 <span class="check-option-progress-fill ${progressClass}" style="width: ${stats.percentage}%"></span>

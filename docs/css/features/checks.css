@@ -24,6 +24,27 @@
     border-left-color: var(--color-error);
 }
 
+.check-result.excluded {
+    background: var(--color-warning-bg, #FFFBEB);
+    border-left-color: var(--color-warning, #F59E0B);
+}
+
+.check-result.excluded .check-name {
+    color: var(--color-warning, #F59E0B);
+}
+
+.check-excluded-notice {
+    font-size: var(--text-sm);
+    color: var(--color-warning, #F59E0B);
+    margin-bottom: var(--space-2);
+}
+
+.excluded-count {
+    font-size: var(--text-xs);
+    color: var(--color-warning, #F59E0B);
+    font-weight: var(--font-weight-normal);
+}
+
 .check-name {
     font-family: var(--font-family-primary);
     font-size: var(--text-base);

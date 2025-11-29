@@ -1175,6 +1175,10 @@
     color: var(--color-error);
 }
 
+.check-option-stat.excluded {
+    color: var(--color-warning, #F59E0B);
+}
+
 .check-option-stat-value {
     font-weight: 600;
 }

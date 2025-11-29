@@ -247,24 +247,44 @@ function groupChecksByCategory(checks) {
 }
 
 /**
+ * Gets the status icon for a check
+ * @param {string} status - Check status (pass, fail, excluded)
+ * @returns {string} Status icon character
+ */
+function getStatusIcon(status) {
+    switch (status) {
+        case 'pass': return '✓';
+        case 'excluded': return '⊘';
+        default: return '✗';
+    }
+}
+
+/**
  * Renders a single check result
  * @param {Object} check - Check result object
  * @returns {string} HTML for check result
  */
 function renderCheck(check) {
+    const isExcluded = check.status === 'excluded';
+
     return `
         <div class="check-result ${check.status}">
             <div class="check-name">
-                ${check.status === 'pass' ? '✓' : '✗'} ${escapeHtml(check.name)}
+                ${getStatusIcon(check.status)} ${escapeHtml(check.name)}
             </div>
             <div class="check-description">${escapeHtml(check.description)}</div>
-            ${check.stdout.trim() ? `
+            ${isExcluded ? `
+                <div class="check-excluded-notice">
+                    <em>Excluded from scoring</em>
+                </div>
+            ` : ''}
+            ${check.stdout && check.stdout.trim() ? `
                 <div class="check-output">
                     <strong>Output:</strong><br>
                     ${escapeHtml(check.stdout.trim())}
                 </div>
             ` : ''}
-            ${check.stderr.trim() && check.status === 'fail' ? `
+            ${check.stderr && check.stderr.trim() && check.status === 'fail' ? `
                 <div class="check-output check-output-error">
                     <strong>Error:</strong><br>
                     ${escapeHtml(check.stderr.trim())}
@@ -290,8 +310,9 @@ function renderChecksTab(checks) {
             <div class="check-categories">
                 ${Object.entries(categorizedChecks).map(([category, categoryChecks]) => {
                     const passCount = categoryChecks.filter(c => c.status === 'pass').length;
-                    const totalCount = categoryChecks.length;
-                    const allPassed = passCount === totalCount;
+                    const excludedCount = categoryChecks.filter(c => c.status === 'excluded').length;
+                    const activeCount = categoryChecks.length - excludedCount;
+                    const allPassed = passCount === activeCount && activeCount > 0;
 
                     return `
                         <details class="check-category" open>
@@ -299,7 +320,7 @@ function renderChecksTab(checks) {
                                 <span class="category-arrow">▼</span>
                                 <span class="category-name">${category}</span>
                                 <span class="category-stats ${allPassed ? 'all-passed' : 'has-failures'}">
-                                    ${passCount}/${totalCount} passed
+                                    ${passCount}/${activeCount} passed${excludedCount > 0 ? ` <span class="excluded-count">(${excludedCount} excluded)</span>` : ''}
                                 </span>
                             </summary>
                             <div class="check-category-content">
