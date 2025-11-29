@@ -4,15 +4,16 @@
         font-size: 2rem;
     }
 
-    /* Header buttons - position at top corner, well above title */
-    header .container {
-        padding-top: 60px;
-    }
-
+    /* Floating header buttons - smaller on mobile */
     .theme-toggle-btn,
     .settings-btn {
-        top: var(--space-2);
+        top: var(--space-3);
+        right: var(--space-3);
         padding: var(--space-2);
+    }
+
+    .theme-toggle-btn {
+        right: calc(var(--space-3) + 44px);
     }
 
     .theme-toggle-btn svg,

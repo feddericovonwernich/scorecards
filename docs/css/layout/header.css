@@ -65,11 +65,12 @@ header h1 svg {
     letter-spacing: var(--tracking-wide);
 }
 
-/* Header Icon Buttons - Glass Effect */
+/* Header Icon Buttons - Floating Glass Effect */
 .theme-toggle-btn,
 .settings-btn {
-    position: absolute;
-    top: var(--space-5);
+    position: fixed;
+    top: var(--space-4);
+    z-index: 9998;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
@@ -85,11 +86,11 @@ header h1 svg {
 }
 
 .theme-toggle-btn {
-    right: calc(var(--space-5) + 52px);
+    right: calc(var(--space-4) + 52px);
 }
 
 .settings-btn {
-    right: var(--space-5);
+    right: var(--space-4);
 }
 
 .theme-toggle-btn:hover,
