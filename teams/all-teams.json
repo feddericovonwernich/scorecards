@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-11-29T16:01:32Z",
+  "generated_at": "2025-11-29T16:02:42Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -56,13 +56,13 @@
       "github_slug": "platform",
       "auto_created": "2025-11-29T16:00:02Z",
       "statistics": {
-        "service_count": 2,
-        "average_score": 73.5,
+        "service_count": 3,
+        "average_score": 63.6,
         "rank_distribution": {
           "platinum": 0,
           "gold": 1,
           "silver": 1,
-          "bronze": 0
+          "bronze": 1
         },
         "stale_count": 0,
         "installed_count": 0
