@@ -7,6 +7,7 @@ import { showModal, hideModal, setupModalHandlers } from './modals.js';
 import { loadChecks } from '../api/checks.js';
 import { calculateCheckAdoptionByTeam, sortTeamsByAdoption } from '../utils/check-statistics.js';
 import { escapeHtml } from '../utils/formatting.js';
+import { getIcon } from '../config/icons.js';
 
 const MODAL_ID = 'check-adoption-modal';
 
@@ -36,9 +37,15 @@ function createModalIfNeeded() {
     modal.className = 'modal hidden';
     modal.innerHTML = `
         <div class="modal-content check-adoption-modal-content">
-            <button class="modal-close" onclick="window.closeCheckAdoptionDashboard()">&times;</button>
-            <h2>Check Adoption Dashboard</h2>
-            <div id="check-adoption-dashboard-content"></div>
+            <div class="modal-header">
+                <h2>Check Adoption Dashboard</h2>
+                <button class="modal-close" aria-label="Close" onclick="window.closeCheckAdoptionDashboard()">
+                    ${getIcon('xMark', { size: 20 })}
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="check-adoption-dashboard-content"></div>
+            </div>
         </div>
     `;
     document.body.appendChild(modal);
@@ -103,13 +110,18 @@ function renderDashboard() {
     // Build team rows
     const teamRows = sortedTeams.map(team => {
         const progressClass = team.percentage >= 80 ? 'high' : team.percentage >= 50 ? 'medium' : 'low';
+        const isNoTeam = team.teamName === 'No Team';
+        const rowClass = isNoTeam ? 'adoption-row no-team' : 'adoption-row';
+        // For 0%, show an empty state indicator
+        const progressWidth = team.percentage === 0 ? '0' : team.percentage;
+        const progressFillClass = team.percentage === 0 ? 'progress-fill none' : `progress-fill ${progressClass}`;
         return `
-            <tr class="adoption-row" onclick="window.showTeamDetail('${escapeHtml(team.teamName)}')">
+            <tr class="${rowClass}" onclick="window.showTeamDetail('${escapeHtml(team.teamName)}')">
                 <td class="team-name-cell">${escapeHtml(team.teamName)}</td>
                 <td class="adoption-cell">${team.percentage}%</td>
                 <td class="progress-cell">
                     <div class="progress-bar-inline">
-                        <div class="progress-fill ${progressClass}" style="width: ${team.percentage}%"></div>
+                        <div class="${progressFillClass}" style="width: ${progressWidth}%"></div>
                     </div>
                 </td>
                 <td class="count-cell">${team.passing}/${team.total}</td>
@@ -130,14 +142,14 @@ function renderDashboard() {
                     ${checkOptions}
                 </select>
             </div>
-            <div class="overall-stats">
-                <div class="overall-stat">
-                    <span class="stat-value">${overallPercentage}%</span>
-                    <span class="stat-label">Overall Adoption</span>
+            <div class="adoption-stats-row">
+                <div class="adoption-stat-card">
+                    <span class="adoption-stat-value">${overallPercentage}%</span>
+                    <span class="adoption-stat-label">Overall Adoption</span>
                 </div>
-                <div class="overall-stat">
-                    <span class="stat-value">${passingTotal}/${totalServices}</span>
-                    <span class="stat-label">Services Passing</span>
+                <div class="adoption-stat-card">
+                    <span class="adoption-stat-value">${passingTotal}/${totalServices}</span>
+                    <span class="adoption-stat-label">Services Passing</span>
                 </div>
             </div>
         </div>
@@ -151,13 +163,13 @@ function renderDashboard() {
             <table class="adoption-table">
                 <thead>
                     <tr>
-                        <th onclick="window.sortAdoptionTable('name')">
+                        <th class="sortable" onclick="window.sortAdoptionTable('name')">
                             Team
-                            ${currentSort.by === 'name' ? (currentSort.direction === 'asc' ? '↑' : '↓') : ''}
+                            <span class="sort-indicator">${currentSort.by === 'name' ? (currentSort.direction === 'asc' ? '↑' : '↓') : ''}</span>
                         </th>
-                        <th onclick="window.sortAdoptionTable('percentage')">
+                        <th class="sortable" onclick="window.sortAdoptionTable('percentage')">
                             Adoption
-                            ${currentSort.by === 'percentage' ? (currentSort.direction === 'asc' ? '↑' : '↓') : ''}
+                            <span class="sort-indicator">${currentSort.by === 'percentage' ? (currentSort.direction === 'asc' ? '↑' : '↓') : ''}</span>
                         </th>
                         <th>Progress</th>
                         <th>Passing</th>
