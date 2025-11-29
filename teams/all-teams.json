@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-11-29T21:54:36Z",
+  "generated_at": "2025-11-29T22:43:14Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -13,7 +13,7 @@
       "auto_created": "2025-11-29T16:00:02Z",
       "statistics": {
         "service_count": 3,
-        "average_score": 75.3,
+        "average_score": 74.0,
         "rank_distribution": {
           "platinum": 0,
           "gold": 2,
