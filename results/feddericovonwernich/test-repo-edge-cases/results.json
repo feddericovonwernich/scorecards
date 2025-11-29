@@ -9,26 +9,37 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T19:57:34Z"
+      "last_discovered": "2025-11-29T21:01:12Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 74,
-  "rank": "silver",
+  "score": 89,
+  "rank": "gold",
   "passed_checks": 8,
-  "total_checks": 12,
-  "timestamp": "2025-11-29T19:58:27Z",
+  "total_checks": 10,
+  "excluded_count": 2,
+  "excluded_checks": [
+    {
+      "check": "06-openapi-spec",
+      "reason": "Internal library - no API"
+    },
+    {
+      "check": "07-openapi-quality",
+      "reason": "Internal library - no API"
+    }
+  ],
+  "timestamp": "2025-11-29T21:02:04Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
+      "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-29T16:57:25Z",
-      "last_commit_hash": "6f645df"
+      "last_commit_date": "2025-11-29T18:00:58Z",
+      "last_commit_hash": "43c7b58"
     }
   ],
   "checks": [
@@ -89,7 +100,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (81 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (240 bytes)\n",
       "stderr": ""
     },
     {
@@ -98,11 +109,11 @@
       "description": "Checks that the repository has an OpenAPI/Swagger specification file and that it is valid. Validates syntax and structure of API documentation.",
       "category": "Documentation",
       "weight": 12,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "excluded",
+      "exit_code": null,
       "duration": 0,
       "stdout": "",
-      "stderr": "No OpenAPI specification file found in common locations\nLooked for: openapi.{yaml,yml,json}, swagger.{yaml,yml,json}\nIn directories: root, /api, /docs, /spec, /.openapi\n"
+      "stderr": ""
     },
     {
       "check_id": "07-openapi-quality",
@@ -110,11 +121,11 @@
       "description": "Evaluates the completeness and quality of the OpenAPI specification. Checks for descriptions, examples, schemas, and other documentation best practices.",
       "category": "Documentation",
       "weight": 10,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "excluded",
+      "exit_code": null,
       "duration": 0,
       "stdout": "",
-      "stderr": "No OpenAPI specification file found - cannot assess quality\nThis check requires a valid OpenAPI file (checked by 06-openapi-spec)\n"
+      "stderr": ""
     },
     {
       "check_id": "08-api-environments",
