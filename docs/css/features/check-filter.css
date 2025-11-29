@@ -756,7 +756,11 @@
     border-radius: 8px;
     margin-bottom: var(--space-3);
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, margin-bottom 0.15s ease;
+}
+
+.check-category-section.collapsed .check-category-header {
+    margin-bottom: 0;
 }
 
 .check-category-header:hover {
