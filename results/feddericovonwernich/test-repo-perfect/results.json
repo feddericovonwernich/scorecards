@@ -9,23 +9,23 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T21:53:29Z"
+      "last_discovered": "2025-11-29T23:17:55Z"
     },
     "links": [],
     "openapi": {
       "spec_file": "openapi.yaml",
       "environments": {
-        "production": {
-          "base_url": "https://api.example.com/v1",
-          "description": "Production server"
+        "development": {
+          "base_url": "http://localhost:8000",
+          "description": "Development server"
         },
         "staging": {
           "base_url": "https://staging-api.example.com/v1",
           "description": "Staging server"
         },
-        "development": {
-          "base_url": "http://localhost:8000",
-          "description": "Development server"
+        "production": {
+          "base_url": "https://api.example.com/v1",
+          "description": "Production server"
         }
       }
     }
@@ -36,7 +36,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-11-29T21:54:25Z",
+  "timestamp": "2025-11-29T23:18:46Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
@@ -45,8 +45,8 @@
       "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-29T18:53:16Z",
-      "last_commit_hash": "f8e5a99"
+      "last_commit_date": "2025-11-29T20:17:39Z",
+      "last_commit_hash": "d339189"
     }
   ],
   "checks": [
@@ -143,7 +143,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "API environment configuration found for OpenAPI spec: openapi.yaml\nConfigured environments: 3\n  • production: https://api.example.com/v1 - Production server\n  • staging: https://staging-api.example.com/v1 - Staging server\n  • development: http://localhost:8000 - Development server\nSpec file reference: openapi.yaml\n",
+      "stdout": "API environment configuration found for OpenAPI spec: openapi.yaml\nConfigured environments: 3\n  • development: http://localhost:8000 - Development server\n  • staging: https://staging-api.example.com/v1 - Staging server\n  • production: https://api.example.com/v1 - Production server\nSpec file reference: openapi.yaml\n",
       "stderr": ""
     },
     {
