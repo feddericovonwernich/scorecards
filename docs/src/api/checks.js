@@ -22,7 +22,7 @@ export async function loadChecks() {
     }
 
     try {
-        const response = await fetchWithHybridAuth('all-checks.json');
+        const { response } = await fetchWithHybridAuth('all-checks.json');
         if (!response.ok) {
             throw new Error(`Failed to fetch all-checks.json: ${response.status}`);
         }

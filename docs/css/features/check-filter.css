@@ -20,10 +20,10 @@
     align-items: center;
     gap: 4px;
     padding: 8px 12px;
-    background: var(--color-bg-secondary);
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    color: var(--color-text-primary);
+    color: var(--color-text);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -31,14 +31,14 @@
 }
 
 .check-filter-toggle:hover {
-    background: var(--color-bg-tertiary);
-    border-color: var(--color-border-hover);
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-strong);
 }
 
 .check-filter-toggle.active {
-    background: var(--color-primary-bg);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+    background: var(--color-active-bg);
+    border-color: var(--color-active-border);
+    color: var(--color-accent);
 }
 
 .check-filter-toggle svg {
