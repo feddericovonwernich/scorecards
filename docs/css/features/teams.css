@@ -467,6 +467,8 @@
 .team-create-btn:hover,
 .create-btn:hover {
     background: var(--color-accent-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 /* ==============================================

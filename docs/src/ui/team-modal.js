@@ -15,6 +15,7 @@ import { calculateCheckAdoptionByTeam } from '../utils/check-statistics.js';
 // State for check adoption tab
 let currentTeamServices = [];
 let selectedCheckId = null;
+let teamCheckDropdownOpen = false;
 
 /**
  * Render GitHub team section HTML
@@ -298,9 +299,11 @@ function renderCheckAdoptionContent(section, checks) {
 
     // Build check selector options
     const checkOptions = checks.map(check => `
-        <option value="${check.id}" ${check.id === selectedCheckId ? 'selected' : ''}>
+        <div class="check-selector-option ${check.id === selectedCheckId ? 'selected' : ''}"
+             data-check-id="${check.id}"
+             onclick="window.selectTeamCheck('${check.id}')">
             ${escapeHtml(check.name)}
-        </option>
+        </div>
     `).join('');
 
     // Build passing/failing service lists
@@ -328,10 +331,22 @@ function renderCheckAdoptionContent(section, checks) {
     section.innerHTML = `
         <div class="check-adoption-content">
             <div class="check-selector">
-                <label for="team-check-select">Select Check:</label>
-                <select id="team-check-select" onchange="window.changeTeamCheck(this.value)">
-                    ${checkOptions}
-                </select>
+                <label>Select Check:</label>
+                <div class="check-selector-dropdown">
+                    <button class="check-selector-toggle" onclick="window.toggleTeamCheckDropdown()">
+                        <span class="check-selector-text">${escapeHtml(selectedCheck.name)}</span>
+                        ${getIcon('chevronDown', { size: 16 })}
+                    </button>
+                    <div class="check-selector-menu" id="team-check-selector-menu">
+                        <div class="check-selector-search">
+                            <input type="text" placeholder="Search checks..."
+                                   oninput="window.filterTeamCheckOptions(this.value)">
+                        </div>
+                        <div class="check-selector-options">
+                            ${checkOptions}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="check-info">
@@ -374,8 +389,84 @@ export function changeTeamCheck(checkId) {
     loadCheckAdoptionTab();
 }
 
-// Expose to window
+/**
+ * Toggle team check dropdown
+ */
+export function toggleTeamCheckDropdown() {
+    const menu = document.getElementById('team-check-selector-menu');
+    if (!menu) return;
+
+    teamCheckDropdownOpen = !teamCheckDropdownOpen;
+    menu.classList.toggle('open', teamCheckDropdownOpen);
+
+    if (teamCheckDropdownOpen) {
+        // Focus search input
+        const searchInput = menu.querySelector('input');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        // Reset filter
+        filterTeamCheckOptions('');
+
+        // Add click-outside listener
+        setTimeout(() => {
+            document.addEventListener('click', handleClickOutsideTeamCheckDropdown);
+        }, 0);
+    } else {
+        document.removeEventListener('click', handleClickOutsideTeamCheckDropdown);
+    }
+}
+
+/**
+ * Handle click outside team check dropdown
+ */
+function handleClickOutsideTeamCheckDropdown(e) {
+    const dropdown = document.querySelector('#team-check-selector-menu')?.closest('.check-selector-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        closeTeamCheckDropdown();
+    }
+}
+
+/**
+ * Close team check dropdown
+ */
+function closeTeamCheckDropdown() {
+    const menu = document.getElementById('team-check-selector-menu');
+    if (menu) {
+        menu.classList.remove('open');
+        teamCheckDropdownOpen = false;
+    }
+    document.removeEventListener('click', handleClickOutsideTeamCheckDropdown);
+}
+
+/**
+ * Select check from team dropdown
+ */
+export function selectTeamCheck(checkId) {
+    selectedCheckId = checkId;
+    closeTeamCheckDropdown();
+    loadCheckAdoptionTab();
+}
+
+/**
+ * Filter team check options by search query
+ */
+export function filterTeamCheckOptions(query) {
+    const options = document.querySelectorAll('#team-check-selector-menu .check-selector-option');
+    const lowerQuery = query.toLowerCase();
+
+    options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        option.style.display = text.includes(lowerQuery) ? '' : 'none';
+    });
+}
+
+// Expose dropdown functions to window
 window.changeTeamCheck = changeTeamCheck;
+window.toggleTeamCheckDropdown = toggleTeamCheckDropdown;
+window.selectTeamCheck = selectTeamCheck;
+window.filterTeamCheckOptions = filterTeamCheckOptions;
 
 /**
  * Close team detail modal

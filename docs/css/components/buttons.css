@@ -254,8 +254,8 @@
 
 .trigger-btn:hover:not(:disabled) {
     background: #D97706;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .trigger-btn:active:not(:disabled) {
@@ -274,7 +274,7 @@
 
 .trigger-btn.trigger-btn-accent:hover:not(:disabled) {
     background: var(--color-accent-hover);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: var(--shadow-lg), 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 /* Icon-only trigger button */
@@ -292,8 +292,8 @@
 /* Bulk trigger button */
 .trigger-btn-bulk {
     background: var(--color-accent);
-    padding: var(--space-3) var(--space-5);
-    font-weight: var(--font-weight-semibold);
+    padding: var(--space-2) var(--space-4);
+    font-weight: var(--font-weight-medium);
     border-radius: var(--radius-lg);
 }
 
