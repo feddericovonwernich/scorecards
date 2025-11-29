@@ -110,12 +110,9 @@ function renderToggleButton() {
         <div class="check-filter-dropdown">
             <button class="check-filter-toggle ${hasSelection ? 'active' : ''}" onclick="window.openCheckFilterModal()">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
-                    <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm9.78-2.22-4.78 4.78-2.28-2.28a.75.75 0 0 0-1.06 1.06l2.75 2.75a.752.752 0 0 0 1.079-.02l5.25-5.25a.75.75 0 1 0-1.06-1.06Z"></path>
+                    <path d="M.75 3h14.5a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1 0-1.5ZM3 7.75A.75.75 0 0 1 3.75 7h8.5a.75.75 0 0 1 0 1.5h-8.5A.75.75 0 0 1 3 7.75Zm3 4a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path>
                 </svg>
-                Checks${hasSelection ? ` (${activeCount})` : ''}
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="margin-left: 6px;">
-                    <path d="M4.427 7.427a.75.75 0 0 1 1.06 0L8 9.94l2.513-2.513a.75.75 0 0 1 1.06 1.06l-3.043 3.043a.75.75 0 0 1-1.06 0L4.427 8.487a.75.75 0 0 1 0-1.06Z"></path>
-                </svg>
+                Check Filter${hasSelection ? ` (${activeCount})` : ''}
             </button>
         </div>
     `;
