@@ -61,38 +61,75 @@ test.describe('Check Adoption Dashboard Modal', () => {
     await expect(page.locator('.adoption-stat-label').filter({ hasText: 'Services Passing' })).toBeVisible();
   });
 
-  test('check selector is visible and functional', async ({ page }) => {
-    // Verify selector exists
-    const selector = page.locator('#adoption-check-select');
-    await expect(selector).toBeVisible();
+  test('check selector dropdown is visible and functional', async ({ page }) => {
+    // Verify dropdown toggle button exists
+    const toggle = page.locator('.check-selector-toggle');
+    await expect(toggle).toBeVisible();
 
     // Verify label exists
     await expect(page.locator('.check-selector-large label')).toBeVisible();
 
-    // Verify selector has options
-    const optionCount = await selector.locator('option').count();
+    // Click toggle to open dropdown
+    await toggle.click();
+
+    // Verify menu is visible
+    await expect(page.locator('.check-selector-menu.open')).toBeVisible();
+
+    // Verify search input is visible
+    await expect(page.locator('.check-selector-search input')).toBeVisible();
+
+    // Verify options are visible
+    const options = page.locator('.check-selector-option');
+    const optionCount = await options.count();
     expect(optionCount).toBeGreaterThan(0);
   });
 
+  test('check selector search filters options', async ({ page }) => {
+    // Open dropdown
+    await page.locator('.check-selector-toggle').click();
+    await expect(page.locator('.check-selector-menu.open')).toBeVisible();
+
+    // Type in search to filter
+    await page.locator('.check-selector-search input').fill('License');
+    await page.waitForTimeout(100);
+
+    // Verify only matching options are visible
+    const visibleOptions = page.locator('.check-selector-option:visible');
+    const count = await visibleOptions.count();
+    expect(count).toBeLessThan(13); // Should filter down from all options
+  });
+
   test('check selector changes update the dashboard', async ({ page }) => {
-    const selector = page.locator('#adoption-check-select');
+    // Get initial check name from toggle button
+    const initialCheckName = await page.locator('.check-selector-text').textContent();
 
-    // Get initial check name from description box
-    const initialCheckName = await page.locator('.check-description-box strong').textContent();
+    // Open dropdown and select second option
+    await page.locator('.check-selector-toggle').click();
+    await page.locator('.check-selector-option').nth(1).click();
+    await page.waitForTimeout(300);
 
-    // Get all options
-    const optionCount = await selector.locator('option').count();
+    // Verify dropdown closed
+    await expect(page.locator('.check-selector-menu.open')).not.toBeVisible();
 
-    // If there are multiple options, select a different one
-    if (optionCount > 1) {
-      // Select the second option (index 1)
-      await selector.selectOption({ index: 1 });
-      await page.waitForTimeout(300);
+    // Verify the selection changed
+    const newCheckName = await page.locator('.check-selector-text').textContent();
+    expect(newCheckName).not.toBe(initialCheckName);
 
-      // Verify the description box updated (should have different text)
-      const newCheckName = await page.locator('.check-description-box strong').textContent();
-      expect(newCheckName).not.toBe(initialCheckName);
-    }
+    // Verify the description box updated
+    const descriptionTitle = await page.locator('.check-description-box strong').textContent();
+    expect(descriptionTitle).toBe(newCheckName);
+  });
+
+  test('clicking outside closes dropdown', async ({ page }) => {
+    // Open dropdown
+    await page.locator('.check-selector-toggle').click();
+    await expect(page.locator('.check-selector-menu.open')).toBeVisible();
+
+    // Click outside (on the table)
+    await page.locator('.adoption-table').click();
+
+    // Verify dropdown closed
+    await expect(page.locator('.check-selector-menu.open')).not.toBeVisible();
   });
 
   test('description box displays check information', async ({ page }) => {

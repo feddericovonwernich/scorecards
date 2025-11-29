@@ -16,6 +16,7 @@ let currentServices = [];
 let selectedCheckId = null;
 let currentSort = { by: 'percentage', direction: 'desc' };
 let checksData = null;
+let dropdownOpen = false;
 
 /**
  * Initialize check adoption dashboard
@@ -100,11 +101,13 @@ function renderDashboard() {
     const teamStats = calculateCheckAdoptionByTeam(currentServices, selectedCheckId);
     const sortedTeams = sortTeamsByAdoption(teamStats, currentSort.direction);
 
-    // Build check selector
+    // Build check selector options
     const checkOptions = checks.map(check => `
-        <option value="${check.id}" ${check.id === selectedCheckId ? 'selected' : ''}>
+        <div class="check-selector-option ${check.id === selectedCheckId ? 'selected' : ''}"
+             data-check-id="${check.id}"
+             onclick="window.selectCheckFromDropdown('${check.id}')">
             ${escapeHtml(check.name)}
-        </option>
+        </div>
     `).join('');
 
     // Build team rows
@@ -137,10 +140,22 @@ function renderDashboard() {
     content.innerHTML = `
         <div class="adoption-dashboard-header">
             <div class="check-selector-large">
-                <label for="adoption-check-select">Select Check:</label>
-                <select id="adoption-check-select" onchange="window.changeAdoptionCheck(this.value)">
-                    ${checkOptions}
-                </select>
+                <label>Select Check:</label>
+                <div class="check-selector-dropdown">
+                    <button class="check-selector-toggle" onclick="window.toggleCheckSelectorDropdown()">
+                        <span class="check-selector-text">${escapeHtml(selectedCheck.name)}</span>
+                        ${getIcon('chevronDown', { size: 16 })}
+                    </button>
+                    <div class="check-selector-menu" id="check-selector-menu">
+                        <div class="check-selector-search">
+                            <input type="text" placeholder="Search checks..."
+                                   oninput="window.filterCheckSelectorOptions(this.value)">
+                        </div>
+                        <div class="check-selector-options">
+                            ${checkOptions}
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="adoption-stats-row">
                 <div class="adoption-stat-card">
@@ -184,7 +199,80 @@ function renderDashboard() {
 }
 
 /**
- * Change selected check
+ * Toggle check selector dropdown
+ */
+export function toggleCheckSelectorDropdown() {
+    const menu = document.getElementById('check-selector-menu');
+    if (!menu) return;
+
+    dropdownOpen = !dropdownOpen;
+    menu.classList.toggle('open', dropdownOpen);
+
+    if (dropdownOpen) {
+        // Focus search input
+        const searchInput = menu.querySelector('input');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        // Reset filter
+        filterCheckSelectorOptions('');
+
+        // Add click-outside listener
+        setTimeout(() => {
+            document.addEventListener('click', handleClickOutsideCheckSelector);
+        }, 0);
+    } else {
+        document.removeEventListener('click', handleClickOutsideCheckSelector);
+    }
+}
+
+/**
+ * Handle click outside dropdown
+ */
+function handleClickOutsideCheckSelector(e) {
+    const dropdown = document.querySelector('.check-selector-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        closeCheckSelectorDropdown();
+    }
+}
+
+/**
+ * Close dropdown
+ */
+function closeCheckSelectorDropdown() {
+    const menu = document.getElementById('check-selector-menu');
+    if (menu) {
+        menu.classList.remove('open');
+        dropdownOpen = false;
+    }
+    document.removeEventListener('click', handleClickOutsideCheckSelector);
+}
+
+/**
+ * Select check from dropdown
+ */
+export function selectCheckFromDropdown(checkId) {
+    selectedCheckId = checkId;
+    closeCheckSelectorDropdown();
+    renderDashboard();
+}
+
+/**
+ * Filter check selector options
+ */
+export function filterCheckSelectorOptions(query) {
+    const options = document.querySelectorAll('.check-selector-option');
+    const lowerQuery = query.toLowerCase();
+
+    options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        option.style.display = text.includes(lowerQuery) ? '' : 'none';
+    });
+}
+
+/**
+ * Change selected check (legacy - kept for compatibility)
  */
 export function changeAdoptionCheck(checkId) {
     selectedCheckId = checkId;
@@ -209,3 +297,6 @@ window.openCheckAdoptionDashboard = openCheckAdoptionDashboard;
 window.closeCheckAdoptionDashboard = closeCheckAdoptionDashboard;
 window.changeAdoptionCheck = changeAdoptionCheck;
 window.sortAdoptionTable = sortAdoptionTable;
+window.toggleCheckSelectorDropdown = toggleCheckSelectorDropdown;
+window.selectCheckFromDropdown = selectCheckFromDropdown;
+window.filterCheckSelectorOptions = filterCheckSelectorOptions;
