@@ -64,6 +64,7 @@ function openApiExplorer(org, repo) {
 // installService() - window.installService (via main.js)
 // triggerBulkWorkflows() - window.triggerBulkWorkflows (via main.js)
 // handleBulkTrigger() - window.handleBulkTrigger (via main.js)
+// handleBulkTriggerAll() - window.handleBulkTriggerAll (via main.js)
 
 // Legacy wrapper functions for backward compatibility
 function getGitHubToken() {

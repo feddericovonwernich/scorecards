@@ -302,6 +302,16 @@
     box-shadow: var(--shadow-lg), 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
+/* Neutral trigger button (for on-demand non-stale runs) */
+.trigger-btn-neutral {
+    background: var(--color-text-secondary);
+}
+
+.trigger-btn-neutral:hover:not(:disabled) {
+    background: var(--color-text-muted);
+    box-shadow: var(--shadow-lg);
+}
+
 /* ==============================================
    WIDGET BUTTONS
    ============================================== */

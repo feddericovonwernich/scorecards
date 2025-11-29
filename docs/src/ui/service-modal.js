@@ -52,13 +52,42 @@ function renderStalenessWarning(isStale, canTrigger, org, repo) {
 }
 
 /**
+ * Renders on-demand trigger button for non-stale installed services
+ * @param {boolean} isInstalled - Whether service is installed
+ * @param {boolean} isStale - Whether service is stale
+ * @param {string} org - Organization name
+ * @param {string} repo - Repository name
+ * @returns {string} HTML for on-demand trigger button
+ */
+function renderOnDemandTrigger(isInstalled, isStale, org, repo) {
+    // Only show for installed services that are NOT stale
+    // (Stale services get the trigger button in the staleness warning instead)
+    if (!isInstalled || isStale) return '';
+
+    return `
+        <button
+            id="modal-trigger-btn"
+            class="trigger-btn trigger-btn-neutral"
+            onclick="triggerServiceWorkflow('${escapeHtml(org)}', '${escapeHtml(repo)}', this)"
+            title="Run scorecard workflow on-demand">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+            </svg>
+            Run Scorecard
+        </button>
+    `;
+}
+
+/**
  * Renders modal header with title, org/repo, and action buttons
  * @param {Object} data - Service data
  * @param {string} org - Organization name
  * @param {string} repo - Repository name
+ * @param {boolean} isInstalled - Whether service is installed
+ * @param {boolean} isStale - Whether service is stale
  * @returns {string} HTML for modal header
  */
-function renderModalHeader(data, org, repo) {
+function renderModalHeader(data, org, repo, isInstalled, isStale) {
     return `
         <div class="rank-badge modal-header-badge ${data.rank}">
             ${capitalize(data.rank)}
@@ -88,6 +117,7 @@ function renderModalHeader(data, org, repo) {
                 </svg>
                 Refresh Data
             </button>
+            ${renderOnDemandTrigger(isInstalled, isStale, org, repo)}
             ${!data.installed && data.installation_pr && data.installation_pr.state === 'OPEN' ? `
             <a href="${escapeHtml(data.installation_pr.url)}"
                target="_blank"
@@ -485,7 +515,7 @@ function renderWorkflowsTab() {
  * @returns {string} Complete modal HTML content
  */
 function composeModalContent(data, org, repo, isStale, canTrigger) {
-    return renderModalHeader(data, org, repo) +
+    return renderModalHeader(data, org, repo, data.installed, isStale) +
         renderStalenessWarning(isStale, canTrigger, org, repo) +
         renderModalStats(data) +
         renderTabs(data) +
