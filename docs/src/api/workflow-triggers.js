@@ -225,7 +225,7 @@ export async function triggerBulkWorkflows(services, buttonElement) {
 }
 
 /**
- * Handle bulk trigger button click
+ * Handle bulk trigger button click (stale services only)
  * @param {Event} event - Click event
  */
 export function handleBulkTrigger(event) {
@@ -243,5 +243,24 @@ export function handleBulkTrigger(event) {
 
     if (confirm(`This will trigger scorecard workflows for ${staleServices.length} stale service${staleServices.length !== 1 ? 's' : ''}.\n\nContinue?`)) {
         triggerBulkWorkflows(staleServices, event.currentTarget);
+    }
+}
+
+/**
+ * Handle bulk trigger all button click (all installed services)
+ * @param {Event} event - Click event
+ */
+export function handleBulkTriggerAll(event) {
+    event.preventDefault();
+
+    const installedServices = window.allServices.filter(s => s.installed);
+
+    if (installedServices.length === 0) {
+        showToast('No installed services to trigger', 'info');
+        return;
+    }
+
+    if (confirm(`This will trigger scorecard workflows for ALL ${installedServices.length} installed service${installedServices.length !== 1 ? 's' : ''}.\n\nThis may take a while. Continue?`)) {
+        triggerBulkWorkflows(installedServices, event.currentTarget);
     }
 }

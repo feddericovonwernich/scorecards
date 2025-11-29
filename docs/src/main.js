@@ -279,6 +279,7 @@ window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
 window.installService = workflowTriggers.installService;
 window.triggerBulkWorkflows = workflowTriggers.triggerBulkWorkflows;
 window.handleBulkTrigger = workflowTriggers.handleBulkTrigger;
+window.handleBulkTriggerAll = workflowTriggers.handleBulkTriggerAll;
 
 // Application initialization
 window.filterAndRenderServices = appInit.filterAndRenderServices;
