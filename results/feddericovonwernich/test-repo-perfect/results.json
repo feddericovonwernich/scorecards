@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T21:00:47Z"
+      "last_discovered": "2025-11-29T21:09:30Z"
     },
     "links": [],
     "openapi": null
@@ -25,7 +25,7 @@
       "reason": "Uses different environment strategy"
     }
   ],
-  "timestamp": "2025-11-29T21:01:48Z",
+  "timestamp": "2025-11-29T21:10:25Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
