@@ -152,6 +152,9 @@ function renderModalHeader(data, org, repo, isInstalled, isStale) {
  * @returns {string} HTML for modal stats
  */
 function renderModalStats(data) {
+    // Count excluded checks from checks array
+    const excludedCount = data.checks ? data.checks.filter(c => c.status === 'excluded').length : 0;
+
     return `
         <div class="modal-stats-container">
             <div class="modal-stat-item">
@@ -162,6 +165,12 @@ function renderModalStats(data) {
                 <div class="modal-stat-value">${data.passed_checks}/${data.total_checks}</div>
                 <div class="modal-stat-label">Checks Passed</div>
             </div>
+            ${excludedCount > 0 ? `
+            <div class="modal-stat-item">
+                <div class="modal-stat-value modal-stat-excluded">${excludedCount}</div>
+                <div class="modal-stat-label">Excluded</div>
+            </div>
+            ` : ''}
         </div>
 
         ${getTeamName(data.service) ? `<p><strong>Team:</strong> ${escapeHtml(getTeamName(data.service))}</p>` : ''}
