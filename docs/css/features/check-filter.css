@@ -650,3 +650,309 @@
         width: 120px;
     }
 }
+
+/* ============================================
+   Check Filter Modal
+   ============================================ */
+
+.check-filter-modal-content {
+    max-width: 700px;
+    width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.check-filter-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-6) var(--space-8);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.check-filter-modal-header h2 {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+.check-filter-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-8) var(--space-8);
+}
+
+/* Modal search section */
+.check-filter-search-section {
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+    padding: var(--space-4) 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-4);
+}
+
+.check-filter-search-section input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+}
+
+.check-filter-search-section input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.check-filter-search-section input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Active filter summary */
+.check-filter-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    margin-top: var(--space-3);
+    font-size: 0.875rem;
+}
+
+.check-filter-summary-count {
+    color: var(--color-text-secondary);
+}
+
+.check-filter-summary-count strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+/* Modal category section */
+.check-category-section {
+    margin-bottom: var(--space-6);
+}
+
+.check-category-section:last-child {
+    margin-bottom: 0;
+}
+
+.check-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    margin-bottom: var(--space-3);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.check-category-header:hover {
+    background: var(--color-bg-tertiary);
+}
+
+.check-category-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.check-category-header-left svg {
+    transition: transform 0.2s ease;
+    color: var(--color-text-muted);
+}
+
+.check-category-section:not(.collapsed) .check-category-header-left svg {
+    transform: rotate(90deg);
+}
+
+.check-category-header-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+}
+
+.check-category-header-count {
+    font-weight: 400;
+    color: var(--color-text-muted);
+    margin-left: var(--space-2);
+}
+
+.check-category-header-stats {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.check-category-content {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.check-category-section.collapsed .check-category-content {
+    max-height: 0;
+}
+
+/* Modal check option card */
+.check-option-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: var(--space-3);
+    background: var(--color-surface);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.check-option-card:last-child {
+    margin-bottom: 0;
+}
+
+.check-option-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-sm);
+}
+
+.check-option-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.check-option-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.check-option-description {
+    font-size: 0.813rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--space-3);
+}
+
+.check-option-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: 0.75rem;
+}
+
+.check-option-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.check-option-stat.passing {
+    color: var(--color-success);
+}
+
+.check-option-stat.failing {
+    color: var(--color-error);
+}
+
+.check-option-stat-value {
+    font-weight: 600;
+}
+
+.check-option-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.check-option-progress-bar {
+    width: 60px;
+    height: 6px;
+    background: var(--color-bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.check-option-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.check-option-progress-fill.high {
+    background: var(--color-success);
+}
+
+.check-option-progress-fill.medium {
+    background: var(--color-warning, #f59e0b);
+}
+
+.check-option-progress-fill.low {
+    background: var(--color-error);
+}
+
+.check-option-progress-text {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    min-width: 32px;
+    text-align: right;
+}
+
+/* Modal check toggle - reuse existing styles but adjust */
+.check-option-card .check-state-toggle {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Modal empty state */
+.check-filter-empty {
+    padding: var(--space-10);
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+/* Modal responsive */
+@media (max-width: 640px) {
+    .check-filter-modal-content {
+        width: 95vw;
+        max-height: 90vh;
+    }
+
+    .check-filter-modal-header {
+        padding: var(--space-4) var(--space-5);
+    }
+
+    .check-filter-modal-body {
+        padding: var(--space-3) var(--space-5) var(--space-5);
+    }
+
+    .check-option-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .check-option-card .check-state-toggle {
+        align-self: flex-end;
+        margin-top: var(--space-2);
+    }
+
+    .check-option-stats {
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+}

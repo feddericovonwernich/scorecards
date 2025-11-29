@@ -13,7 +13,7 @@ import { getCssVar } from './utils/css.js';
 import { initTeamFilter, updateTeamFilter, filterByTeam } from './ui/team-filter.js';
 import { initTeamDashboard } from './ui/team-dashboard.js';
 import { getTeamName } from './utils/team-statistics.js';
-import { initCheckFilter, updateCheckFilter, filterByChecks } from './ui/check-filter.js';
+import { initCheckFilter, updateCheckFilter, filterByChecks, setServicesForStats } from './ui/check-filter.js';
 import { initCheckAdoptionDashboard } from './ui/check-adoption-dashboard.js';
 
 /**
@@ -131,6 +131,9 @@ export async function refreshData() {
         // Update check filter with new data
         updateCheckFilter();
 
+        // Update services for check filter stats
+        setServicesForStats(services);
+
         // Update UI
         updateStats();
         filterAndRenderServices();
@@ -200,6 +203,9 @@ export async function initializeApp() {
         initCheckFilter(() => {
             filterAndRenderServices();
         });
+
+        // Set services for check filter stats
+        setServicesForStats(services);
 
         // Initialize team dashboard
         initTeamDashboard(isServiceStale);

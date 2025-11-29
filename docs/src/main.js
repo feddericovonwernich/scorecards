@@ -262,6 +262,9 @@ window.filterByChecks = checkFilter.filterByChecks;
 window.getCheckFilterState = checkFilter.getCheckFilterState;
 window.setCheckFilterState = checkFilter.setCheckFilterState;
 window.getActiveFilterCount = checkFilter.getActiveFilterCount;
+window.setServicesForStats = checkFilter.setServicesForStats;
+window.openCheckFilterModal = checkFilter.openCheckFilterModal;
+window.closeCheckFilterModal = checkFilter.closeCheckFilterModal;
 
 // Check adoption dashboard functions
 window.initCheckAdoptionDashboard = checkAdoptionDashboard.initCheckAdoptionDashboard;

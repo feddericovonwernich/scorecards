@@ -1,17 +1,24 @@
 /**
  * Check Filter Component
- * Multi-select dropdown for filtering services by check status
+ * Modal dialog for filtering services by check status
  * Each check can be set to: any (null), must pass ('pass'), or must fail ('fail')
  */
 
-import { loadChecks, getChecksByCategory } from '../api/checks.js';
-import { getActiveCheckFilterCount, filterByCheckCriteria } from '../utils/check-statistics.js';
+import { loadChecks, getChecksByCategory, getAllChecks } from '../api/checks.js';
+import { getActiveCheckFilterCount, filterByCheckCriteria, calculateOverallCheckAdoption } from '../utils/check-statistics.js';
+import { showModal, hideModal, setupModalHandlers } from './modals.js';
+import { escapeHtml } from '../utils/formatting.js';
+
+// Constants
+const CHECK_FILTER_MODAL_ID = 'check-filter-modal';
 
 // State
 let checkFilters = new Map(); // checkId -> 'pass'|'fail'|null
 let checksData = null;
 let onFilterChange = null;
 let searchQuery = '';
+let allServices = []; // For calculating adoption stats
+let adoptionStatsCache = new Map(); // checkId -> { passing, failing, total, percentage }
 
 /**
  * Initialize the check filter
@@ -21,6 +28,7 @@ export async function initCheckFilter(onChange) {
     onFilterChange = onChange;
     checkFilters.clear();
     searchQuery = '';
+    adoptionStatsCache.clear();
 
     // Load checks metadata
     try {
@@ -30,7 +38,11 @@ export async function initCheckFilter(onChange) {
         checksData = { checks: [], categories: [] };
     }
 
-    renderCheckFilter();
+    // Create modal if needed
+    createModalIfNeeded();
+
+    // Render the toggle button
+    renderToggleButton();
 }
 
 /**
@@ -39,26 +51,64 @@ export async function initCheckFilter(onChange) {
 export async function updateCheckFilter() {
     try {
         checksData = await loadChecks();
-        renderCheckFilter();
+        adoptionStatsCache.clear(); // Clear cache when checks update
+        renderToggleButton();
     } catch (error) {
         console.error('Failed to update checks filter:', error);
     }
 }
 
 /**
- * Render the check filter dropdown
+ * Set services data for adoption stats calculation
+ * @param {Array<Object>} services - All services
  */
-function renderCheckFilter() {
+export function setServicesForStats(services) {
+    allServices = services || [];
+    adoptionStatsCache.clear(); // Clear cache when services update
+}
+
+/**
+ * Create the modal element if it doesn't exist
+ */
+function createModalIfNeeded() {
+    if (document.getElementById(CHECK_FILTER_MODAL_ID)) {
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = CHECK_FILTER_MODAL_ID;
+    modal.className = 'modal hidden';
+    modal.innerHTML = `
+        <div class="modal-content check-filter-modal-content">
+            <div class="check-filter-modal-header">
+                <h2>Filter by Check</h2>
+                <button class="modal-close" onclick="window.closeCheckFilterModal()">&times;</button>
+            </div>
+            <div class="check-filter-modal-body">
+                <div id="check-filter-modal-content"></div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    setupModalHandlers(CHECK_FILTER_MODAL_ID, () => {
+        // Optional: callback when modal closes
+    });
+}
+
+/**
+ * Render the toggle button in the container
+ */
+function renderToggleButton() {
     const container = document.getElementById('check-filter-container');
     if (!container) return;
 
     const activeCount = getActiveCheckFilterCount(checkFilters);
     const hasSelection = activeCount > 0;
-    const checksByCategory = getChecksByCategory();
 
     container.innerHTML = `
         <div class="check-filter-dropdown">
-            <button class="check-filter-toggle ${hasSelection ? 'active' : ''}" onclick="window.toggleCheckDropdown()">
+            <button class="check-filter-toggle ${hasSelection ? 'active' : ''}" onclick="window.openCheckFilterModal()">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
                     <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm9.78-2.22-4.78 4.78-2.28-2.28a.75.75 0 0 0-1.06 1.06l2.75 2.75a.752.752 0 0 0 1.079-.02l5.25-5.25a.75.75 0 1 0-1.06-1.06Z"></path>
                 </svg>
@@ -67,18 +117,96 @@ function renderCheckFilter() {
                     <path d="M4.427 7.427a.75.75 0 0 1 1.06 0L8 9.94l2.513-2.513a.75.75 0 0 1 1.06 1.06l-3.043 3.043a.75.75 0 0 1-1.06 0L4.427 8.487a.75.75 0 0 1 0-1.06Z"></path>
                 </svg>
             </button>
-            <div class="check-dropdown-menu" id="check-dropdown-menu">
-                <div class="check-dropdown-header">
-                    <span>Filter by Check</span>
-                    ${hasSelection ? `<button class="check-clear-btn" onclick="window.clearCheckFilter(event)">Clear</button>` : ''}
+        </div>
+    `;
+}
+
+/**
+ * Open the check filter modal
+ */
+export function openCheckFilterModal() {
+    createModalIfNeeded();
+
+    // Calculate adoption stats for all checks when modal opens
+    calculateAllAdoptionStats();
+
+    // Render modal content
+    renderModalContent();
+
+    // Show modal
+    showModal(CHECK_FILTER_MODAL_ID);
+
+    // Focus search input
+    setTimeout(() => {
+        const searchInput = document.getElementById('check-filter-search');
+        if (searchInput) {
+            searchInput.focus();
+        }
+    }, 100);
+}
+
+/**
+ * Close the check filter modal
+ */
+export function closeCheckFilterModal() {
+    hideModal(CHECK_FILTER_MODAL_ID);
+}
+
+/**
+ * Calculate adoption stats for all checks
+ */
+function calculateAllAdoptionStats() {
+    if (!allServices.length || !checksData?.checks) {
+        return;
+    }
+
+    adoptionStatsCache.clear();
+
+    for (const check of checksData.checks) {
+        const stats = calculateOverallCheckAdoption(allServices, check.id);
+        adoptionStatsCache.set(check.id, stats);
+    }
+}
+
+/**
+ * Get adoption stats for a check
+ * @param {string} checkId - Check ID
+ * @returns {Object} { passing, failing, total, percentage }
+ */
+function getAdoptionStats(checkId) {
+    return adoptionStatsCache.get(checkId) || { passing: 0, failing: 0, total: 0, percentage: 0 };
+}
+
+/**
+ * Render the modal content
+ */
+function renderModalContent() {
+    const contentContainer = document.getElementById('check-filter-modal-content');
+    if (!contentContainer) return;
+
+    const activeCount = getActiveCheckFilterCount(checkFilters);
+    const checksByCategory = getChecksByCategory();
+
+    contentContainer.innerHTML = `
+        <div class="check-filter-search-section">
+            <input
+                type="text"
+                id="check-filter-search"
+                placeholder="Search checks by name or description..."
+                value="${escapeHtml(searchQuery)}"
+                oninput="window.filterCheckOptions(this.value)"
+            >
+            ${activeCount > 0 ? `
+                <div class="check-filter-summary">
+                    <span class="check-filter-summary-count">
+                        <strong>${activeCount}</strong> filter${activeCount !== 1 ? 's' : ''} active
+                    </span>
+                    <button class="check-clear-btn" onclick="window.clearCheckFilter(event)">Clear all</button>
                 </div>
-                <div class="check-dropdown-search">
-                    <input type="text" placeholder="Search checks..." id="check-search-input" value="${searchQuery}" oninput="window.filterCheckOptions(this.value)">
-                </div>
-                <div class="check-dropdown-options" id="check-dropdown-options">
-                    ${renderCheckCategories(checksByCategory)}
-                </div>
-            </div>
+            ` : ''}
+        </div>
+        <div id="check-filter-categories">
+            ${renderCheckCategories(checksByCategory)}
         </div>
     `;
 }
@@ -90,24 +218,41 @@ function renderCheckCategories(checksByCategory) {
     const categories = Object.keys(checksByCategory);
 
     if (categories.length === 0) {
-        return '<div class="check-empty-state">No checks available</div>';
+        return '<div class="check-filter-empty">No checks available</div>';
     }
 
     return categories.map(category => {
         const checks = checksByCategory[category];
         const categoryId = category.toLowerCase().replace(/\s+/g, '-');
 
+        // Calculate category-level stats
+        let categoryPassing = 0;
+        let categoryTotal = 0;
+        checks.forEach(check => {
+            const stats = getAdoptionStats(check.id);
+            categoryPassing += stats.passing;
+            categoryTotal += stats.total;
+        });
+        const categoryAvgPassing = categoryTotal > 0
+            ? Math.round((categoryPassing / categoryTotal) * 100)
+            : 0;
+
         return `
-            <div class="check-category" data-category="${categoryId}">
-                <button class="check-category-toggle" onclick="window.toggleCheckCategory('${categoryId}')">
-                    <svg class="category-chevron" width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z"></path>
-                    </svg>
-                    ${category}
-                    <span class="category-count">(${checks.length})</span>
-                </button>
+            <div class="check-category-section" data-category="${categoryId}">
+                <div class="check-category-header" onclick="window.toggleCheckCategory('${categoryId}')">
+                    <div class="check-category-header-left">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z"></path>
+                        </svg>
+                        <span class="check-category-header-title">${escapeHtml(category)}</span>
+                        <span class="check-category-header-count">(${checks.length})</span>
+                    </div>
+                    ${allServices.length > 0 ? `
+                        <span class="check-category-header-stats">${categoryAvgPassing}% avg adoption</span>
+                    ` : ''}
+                </div>
                 <div class="check-category-content" id="check-category-${categoryId}">
-                    ${checks.map(check => renderCheckOption(check)).join('')}
+                    ${checks.map(check => renderCheckOptionCard(check)).join('')}
                 </div>
             </div>
         `;
@@ -115,20 +260,54 @@ function renderCheckCategories(checksByCategory) {
 }
 
 /**
- * Render a single check option with 3-state toggle
+ * Render a single check option card with description and stats
  */
-function renderCheckOption(check) {
+function renderCheckOptionCard(check) {
     const currentState = checkFilters.get(check.id) || null;
+    const stats = getAdoptionStats(check.id);
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery ||
         check.name.toLowerCase().includes(searchLower) ||
-        check.id.toLowerCase().includes(searchLower);
+        check.id.toLowerCase().includes(searchLower) ||
+        (check.description || '').toLowerCase().includes(searchLower);
 
     const display = matchesSearch ? '' : 'display: none;';
 
+    // Determine progress bar class
+    let progressClass = 'low';
+    if (stats.percentage >= 75) progressClass = 'high';
+    else if (stats.percentage >= 40) progressClass = 'medium';
+
     return `
-        <div class="check-option" data-check-id="${check.id}" style="${display}">
-            <span class="check-name" title="${check.description || check.name}">${check.name}</span>
+        <div class="check-option-card" data-check-id="${check.id}" style="${display}">
+            <div class="check-option-info">
+                <div class="check-option-name">${escapeHtml(check.name)}</div>
+                ${check.description ? `
+                    <div class="check-option-description">${escapeHtml(check.description)}</div>
+                ` : ''}
+                ${allServices.length > 0 ? `
+                    <div class="check-option-stats">
+                        <span class="check-option-stat passing">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
+                            </svg>
+                            <span class="check-option-stat-value">${stats.passing}</span> passing
+                        </span>
+                        <span class="check-option-stat failing">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path>
+                            </svg>
+                            <span class="check-option-stat-value">${stats.failing}</span> failing
+                        </span>
+                        <span class="check-option-progress">
+                            <span class="check-option-progress-bar">
+                                <span class="check-option-progress-fill ${progressClass}" style="width: ${stats.percentage}%"></span>
+                            </span>
+                            <span class="check-option-progress-text">${stats.percentage}%</span>
+                        </span>
+                    </div>
+                ` : ''}
+            </div>
             <div class="check-state-toggle">
                 <button
                     class="state-btn state-any ${currentState === null ? 'active' : ''}"
@@ -158,53 +337,12 @@ function renderCheckOption(check) {
 }
 
 /**
- * Toggle dropdown visibility
- */
-export function toggleCheckDropdown() {
-    const menu = document.getElementById('check-dropdown-menu');
-    if (menu) {
-        menu.classList.toggle('open');
-
-        if (menu.classList.contains('open')) {
-            // Focus search input when opened
-            const searchInput = document.getElementById('check-search-input');
-            if (searchInput) {
-                searchInput.focus();
-            }
-
-            // Add click outside listener
-            setTimeout(() => {
-                document.addEventListener('click', handleClickOutside);
-            }, 0);
-        } else {
-            document.removeEventListener('click', handleClickOutside);
-        }
-    }
-}
-
-/**
- * Handle click outside dropdown
- */
-function handleClickOutside(e) {
-    const dropdown = document.querySelector('.check-filter-dropdown');
-    if (dropdown && !dropdown.contains(e.target)) {
-        const menu = document.getElementById('check-dropdown-menu');
-        if (menu) {
-            menu.classList.remove('open');
-        }
-        document.removeEventListener('click', handleClickOutside);
-    }
-}
-
-/**
  * Toggle category expanded/collapsed
  */
 export function toggleCheckCategory(categoryId) {
-    const content = document.getElementById(`check-category-${categoryId}`);
-    const category = content?.closest('.check-category');
-
-    if (content && category) {
-        category.classList.toggle('collapsed');
+    const section = document.querySelector(`.check-category-section[data-category="${categoryId}"]`);
+    if (section) {
+        section.classList.toggle('collapsed');
     }
 }
 
@@ -222,7 +360,8 @@ export function setCheckState(checkId, state) {
 
     // Update just the button states without full re-render
     updateCheckOptionUI(checkId, state);
-    updateToggleButton();
+    updateFilterSummary();
+    renderToggleButton(); // Update the toggle button to show count
     notifyFilterChange();
 }
 
@@ -230,7 +369,7 @@ export function setCheckState(checkId, state) {
  * Update check option UI without full re-render
  */
 function updateCheckOptionUI(checkId, state) {
-    const option = document.querySelector(`.check-option[data-check-id="${checkId}"]`);
+    const option = document.querySelector(`.check-option-card[data-check-id="${checkId}"]`);
     if (option) {
         option.querySelectorAll('.state-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -244,35 +383,32 @@ function updateCheckOptionUI(checkId, state) {
 }
 
 /**
- * Update toggle button state
+ * Update filter summary in modal
  */
-function updateToggleButton() {
-    const toggle = document.querySelector('.check-filter-toggle');
+function updateFilterSummary() {
+    const searchSection = document.querySelector('.check-filter-search-section');
+    if (!searchSection) return;
+
     const activeCount = getActiveCheckFilterCount(checkFilters);
+    const existingSummary = searchSection.querySelector('.check-filter-summary');
 
-    if (toggle) {
-        toggle.classList.toggle('active', activeCount > 0);
+    if (activeCount > 0) {
+        const summaryHtml = `
+            <div class="check-filter-summary">
+                <span class="check-filter-summary-count">
+                    <strong>${activeCount}</strong> filter${activeCount !== 1 ? 's' : ''} active
+                </span>
+                <button class="check-clear-btn" onclick="window.clearCheckFilter(event)">Clear all</button>
+            </div>
+        `;
 
-        // Update button text
-        toggle.innerHTML = toggle.innerHTML.replace(
-            /Checks(\s*\(\d+\))?/,
-            `Checks${activeCount > 0 ? ` (${activeCount})` : ''}`
-        );
-    }
-
-    // Update header clear button
-    const header = document.querySelector('.check-dropdown-header');
-    if (header) {
-        const existingBtn = header.querySelector('.check-clear-btn');
-        if (activeCount > 0 && !existingBtn) {
-            const btn = document.createElement('button');
-            btn.className = 'check-clear-btn';
-            btn.textContent = 'Clear';
-            btn.onclick = (e) => window.clearCheckFilter(e);
-            header.appendChild(btn);
-        } else if (activeCount === 0 && existingBtn) {
-            existingBtn.remove();
+        if (existingSummary) {
+            existingSummary.outerHTML = summaryHtml;
+        } else {
+            searchSection.insertAdjacentHTML('beforeend', summaryHtml);
         }
+    } else if (existingSummary) {
+        existingSummary.remove();
     }
 }
 
@@ -281,18 +417,24 @@ function updateToggleButton() {
  */
 export function filterCheckOptions(query) {
     searchQuery = query.toLowerCase();
-    const options = document.querySelectorAll('.check-option');
+    const options = document.querySelectorAll('.check-option-card');
 
     options.forEach(option => {
-        const checkName = option.querySelector('.check-name').textContent.toLowerCase();
-        const checkId = option.dataset.checkId.toLowerCase();
-        const matches = checkName.includes(searchQuery) || checkId.includes(searchQuery);
-        option.style.display = matches ? '' : 'none';
+        const checkId = option.dataset.checkId;
+        const check = checksData?.checks?.find(c => c.id === checkId);
+        if (!check) return;
+
+        const matchesSearch = !searchQuery ||
+            check.name.toLowerCase().includes(searchQuery) ||
+            check.id.toLowerCase().includes(searchQuery) ||
+            (check.description || '').toLowerCase().includes(searchQuery);
+
+        option.style.display = matchesSearch ? '' : 'none';
     });
 
     // Show categories that have visible options
-    document.querySelectorAll('.check-category').forEach(category => {
-        const visibleOptions = category.querySelectorAll('.check-option:not([style*="display: none"])');
+    document.querySelectorAll('.check-category-section').forEach(category => {
+        const visibleOptions = category.querySelectorAll('.check-option-card:not([style*="display: none"])');
         category.style.display = visibleOptions.length > 0 ? '' : 'none';
     });
 }
@@ -308,14 +450,15 @@ export function clearCheckFilter(e) {
     checkFilters.clear();
 
     // Update all buttons
-    document.querySelectorAll('.check-option').forEach(option => {
+    document.querySelectorAll('.check-option-card').forEach(option => {
         option.querySelectorAll('.state-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         option.querySelector('.state-any')?.classList.add('active');
     });
 
-    updateToggleButton();
+    updateFilterSummary();
+    renderToggleButton();
     notifyFilterChange();
 }
 
@@ -351,7 +494,7 @@ export function getCheckFilterState() {
  */
 export function setCheckFilterState(filters) {
     checkFilters = new Map(filters);
-    renderCheckFilter();
+    renderToggleButton();
     notifyFilterChange();
 }
 
@@ -364,7 +507,8 @@ export function getActiveFilterCount() {
 }
 
 // Expose functions to window for onclick handlers
-window.toggleCheckDropdown = toggleCheckDropdown;
+window.openCheckFilterModal = openCheckFilterModal;
+window.closeCheckFilterModal = closeCheckFilterModal;
 window.toggleCheckCategory = toggleCheckCategory;
 window.setCheckState = setCheckState;
 window.filterCheckOptions = filterCheckOptions;
