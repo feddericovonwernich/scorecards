@@ -4,6 +4,22 @@
         font-size: 2rem;
     }
 
+    /* Header buttons - prevent overlap with title on mobile */
+    header .container {
+        padding-top: 48px;
+    }
+
+    .theme-toggle-btn,
+    .settings-btn {
+        padding: var(--space-2);
+    }
+
+    .theme-toggle-btn svg,
+    .settings-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .stats {
         grid-template-columns: repeat(2, 1fr);
     }
