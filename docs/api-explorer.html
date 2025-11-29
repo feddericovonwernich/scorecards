@@ -390,6 +390,99 @@
         [data-theme="dark"] .swagger-ui .authorization__btn svg {
             fill: var(--color-text-muted);
         }
+
+        /* =============================================
+           JSON Syntax Highlighting (Microlight) - VS Code Dark+
+           ============================================= */
+        [data-theme="dark"] .swagger-ui .microlight {
+            background: #1e1e1e !important;
+        }
+
+        [data-theme="dark"] .swagger-ui .microlight .cm-string {
+            color: #ce9178 !important; /* Warm orange for strings */
+        }
+
+        [data-theme="dark"] .swagger-ui .microlight .cm-property {
+            color: #9cdcfe !important; /* Light blue for property names */
+        }
+
+        [data-theme="dark"] .swagger-ui .microlight .cm-number {
+            color: #b5cea8 !important; /* Light green for numbers */
+        }
+
+        [data-theme="dark"] .swagger-ui .microlight .cm-keyword,
+        [data-theme="dark"] .swagger-ui .microlight .cm-atom {
+            color: #569cd6 !important; /* Blue for keywords/booleans */
+        }
+
+        [data-theme="dark"] .swagger-ui .microlight .cm-punctuation,
+        [data-theme="dark"] .swagger-ui .microlight .cm-bracket {
+            color: #d4d4d4 !important; /* Light gray for brackets/punctuation */
+        }
+
+        /* =============================================
+           Table Header Contrast
+           ============================================= */
+        [data-theme="dark"] .swagger-ui table thead tr th,
+        [data-theme="dark"] .swagger-ui table thead tr td {
+            color: var(--color-text-secondary) !important;
+        }
+
+        [data-theme="dark"] .swagger-ui .col_header {
+            color: var(--color-text-secondary) !important;
+        }
+
+        /* =============================================
+           Parameter Descriptions
+           ============================================= */
+        [data-theme="dark"] .swagger-ui .parameter__default,
+        [data-theme="dark"] .swagger-ui .parameter__example {
+            color: var(--color-text-secondary);
+        }
+
+        /* "Controls Accept header" text */
+        [data-theme="dark"] .swagger-ui .response-control-media-type__accept-message {
+            color: var(--color-text-secondary);
+        }
+
+        /* =============================================
+           Response Section Improvements
+           ============================================= */
+        [data-theme="dark"] .swagger-ui .response-col_description .response-col_description__inner {
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .swagger-ui .response-controls {
+            color: var(--color-text-secondary);
+        }
+
+        /* =============================================
+           Model/Schema Names
+           ============================================= */
+        [data-theme="dark"] .swagger-ui .model-box-control {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .swagger-ui section.models .model-container {
+            background: var(--color-surface);
+        }
+
+        /* =============================================
+           Input Field Contrast Fix
+           ============================================= */
+        [data-theme="dark"] .swagger-ui input[disabled],
+        [data-theme="dark"] .swagger-ui input[type="text"][disabled] {
+            color: var(--color-text-secondary) !important;
+            -webkit-text-fill-color: var(--color-text-secondary) !important;
+            opacity: 1;
+        }
+
+        /* =============================================
+           Validation Badge
+           ============================================= */
+        [data-theme="dark"] .swagger-ui .info hgroup.main a[target="_blank"]:has(img[alt*="validator"]) {
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
