@@ -8,13 +8,13 @@
       "backend"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-11-29T21:18:18Z",
+    "last_discovered": "2025-11-29T22:42:05Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "backend"
   },
-  "score": 89,
+  "score": 85,
   "rank": "gold",
-  "last_updated": "2025-11-29T21:19:14Z",
+  "last_updated": "2025-11-29T22:43:02Z",
   "has_api": false,
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
@@ -24,24 +24,15 @@
     "03-ci-config": "pass",
     "04-tests": "pass",
     "05-scorecard-config": "pass",
-    "06-openapi-spec": "excluded",
-    "07-openapi-quality": "excluded",
-    "08-api-environments": "pass",
+    "06-openapi-spec": "pass",
+    "07-openapi-quality": "pass",
+    "08-api-environments": "fail",
     "09-scorecard-badge": "fail",
     "10-scorecard-config-quality": "fail",
     "11-codeowners": "pass",
     "12-codeowners-quality": "pass"
   },
-  "excluded_checks": [
-    {
-      "check": "06-openapi-spec",
-      "reason": "Internal library - no API"
-    },
-    {
-      "check": "07-openapi-quality",
-      "reason": "Internal library - no API"
-    }
-  ],
+  "excluded_checks": [],
   "installed": true,
   "default_branch": "main",
   "installation_pr": {

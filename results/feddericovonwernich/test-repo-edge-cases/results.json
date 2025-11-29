@@ -9,27 +9,18 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T21:18:18Z"
+      "last_discovered": "2025-11-29T22:42:05Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 89,
+  "score": 85,
   "rank": "gold",
-  "passed_checks": 8,
-  "total_checks": 10,
-  "excluded_count": 2,
-  "excluded_checks": [
-    {
-      "check": "06-openapi-spec",
-      "reason": "Internal library - no API"
-    },
-    {
-      "check": "07-openapi-quality",
-      "reason": "Internal library - no API"
-    }
-  ],
-  "timestamp": "2025-11-29T21:19:14Z",
+  "passed_checks": 9,
+  "total_checks": 12,
+  "excluded_count": 0,
+  "excluded_checks": [],
+  "timestamp": "2025-11-29T22:43:02Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
@@ -38,8 +29,8 @@
       "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-29T18:00:58Z",
-      "last_commit_hash": "43c7b58"
+      "last_commit_date": "2025-11-29T19:41:40Z",
+      "last_commit_hash": "2b82f67"
     }
   ],
   "checks": [
@@ -100,7 +91,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (240 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (164 bytes)\n",
       "stderr": ""
     },
     {
@@ -109,10 +100,10 @@
       "description": "Checks that the repository has an OpenAPI/Swagger specification file and that it is valid. Validates syntax and structure of API documentation.",
       "category": "Documentation",
       "weight": 12,
-      "status": "excluded",
-      "exit_code": null,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
+      "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
     {
@@ -121,10 +112,10 @@
       "description": "Evaluates the completeness and quality of the OpenAPI specification. Checks for descriptions, examples, schemas, and other documentation best practices.",
       "category": "Documentation",
       "weight": 10,
-      "status": "excluded",
-      "exit_code": null,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
+      "stdout": "OpenAPI Quality Score: 98/100\n\nQuality Metrics:\n  Info: ✓ description, ✓ contact, ✓ license\n  Operations: 4 total\n    - 4/4 (100%) with descriptions\n    - 4/4 (100%) with tags\n    - 2/4 (50%) with examples\n  Parameters: 3/3 (100%) with descriptions\n  Responses: 9/9 (100%) with descriptions\n  Schemas: 4/4 (100%) with descriptions\n  Security: ✓ defined, ✓ applied\n\nQuality score meets threshold (60+)\n",
       "stderr": ""
     },
     {
@@ -133,11 +124,11 @@
       "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
       "category": "Documentation",
       "weight": 8,
-      "status": "pass",
-      "exit_code": 0,
+      "status": "fail",
+      "exit_code": 1,
       "duration": 0,
-      "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
-      "stderr": ""
+      "stdout": "",
+      "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
     },
     {
       "check_id": "09-scorecard-badge",
