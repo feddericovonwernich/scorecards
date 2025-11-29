@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T21:52:42Z"
+      "last_discovered": "2025-11-29T21:53:29Z"
     },
     "links": [],
     "openapi": {
@@ -36,7 +36,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-11-29T21:53:34Z",
+  "timestamp": "2025-11-29T21:54:25Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": true,
@@ -45,8 +45,8 @@
       "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-11-29T18:52:26Z",
-      "last_commit_hash": "f5a8ca5"
+      "last_commit_date": "2025-11-29T18:53:16Z",
+      "last_commit_hash": "f8e5a99"
     }
   ],
   "checks": [
@@ -95,7 +95,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Found tests: 6 file(s) in directories: tests\n",
+      "stdout": "Found tests: 7 file(s) in directories: tests\n",
       "stderr": ""
     },
     {
@@ -118,7 +118,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
