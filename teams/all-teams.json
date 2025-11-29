@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-11-29T19:59:01Z",
+  "generated_at": "2025-11-29T21:02:07Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -13,11 +13,11 @@
       "auto_created": "2025-11-29T16:00:02Z",
       "statistics": {
         "service_count": 3,
-        "average_score": 65.3,
+        "average_score": 75.3,
         "rank_distribution": {
           "platinum": 0,
-          "gold": 0,
-          "silver": 2,
+          "gold": 2,
+          "silver": 0,
           "bronze": 1
         },
         "stale_count": 0,
@@ -57,10 +57,10 @@
       "auto_created": "2025-11-29T16:00:02Z",
       "statistics": {
         "service_count": 3,
-        "average_score": 65.6,
+        "average_score": 67.3,
         "rank_distribution": {
-          "platinum": 0,
-          "gold": 1,
+          "platinum": 1,
+          "gold": 0,
           "silver": 1,
           "bronze": 1
         },
