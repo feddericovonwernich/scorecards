@@ -1,0 +1,180 @@
+{
+  "service": {
+    "org": "feddericovonwernich",
+    "repo": "test-repo-no-docs",
+    "name": "test-repo-no-docs",
+    "team": {
+      "primary": "backend",
+      "all": [
+        "backend"
+      ],
+      "source": "codeowners",
+      "last_discovered": "2025-11-29T15:58:58Z"
+    },
+    "links": [],
+    "openapi": null
+  },
+  "score": 48,
+  "rank": "bronze",
+  "passed_checks": 5,
+  "total_checks": 12,
+  "timestamp": "2025-11-29T15:59:51Z",
+  "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
+  "checks_count": 13,
+  "installed": false,
+  "recent_contributors": [
+    {
+      "name": "Federico von Wernich",
+      "email": "feddericovonwernich@gmail.com",
+      "commit_count": 1,
+      "last_commit_date": "2025-11-29T12:56:52Z",
+      "last_commit_hash": "91753a4"
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "01-readme",
+      "name": "README Documentation",
+      "description": "Checks that the repository has a README file with meaningful content. A good README helps users understand what the project is and how to use it.",
+      "category": "Documentation",
+      "weight": 15,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "No README file found\n"
+    },
+    {
+      "check_id": "02-license",
+      "name": "License File",
+      "description": "Checks that the repository has a LICENSE file. Open source licenses clarify how others can use, modify, and distribute your code.",
+      "category": "Configuration & Compliance",
+      "weight": 12,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "No LICENSE file found\n"
+    },
+    {
+      "check_id": "03-ci-config",
+      "name": "CI Configuration",
+      "description": "Checks that the repository has continuous integration configured. CI helps catch bugs early and ensures code quality.",
+      "category": "Testing & CI",
+      "weight": 18,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, test.yml)\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "04-tests",
+      "name": "Test Coverage",
+      "description": "Checks that the repository has test files. Tests ensure code reliability and help prevent regressions.",
+      "category": "Testing & CI",
+      "weight": 20,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "Found tests: 3 file(s) in directories: tests\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "05-scorecard-config",
+      "name": "Scorecard Configuration",
+      "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
+      "category": "Scorecards Setup",
+      "weight": 8,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+    },
+    {
+      "check_id": "06-openapi-spec",
+      "name": "OpenAPI Specification",
+      "description": "Checks that the repository has an OpenAPI/Swagger specification file and that it is valid. Validates syntax and structure of API documentation.",
+      "category": "Documentation",
+      "weight": 12,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "No OpenAPI specification file found in common locations\nLooked for: openapi.{yaml,yml,json}, swagger.{yaml,yml,json}\nIn directories: root, /api, /docs, /spec, /.openapi\n"
+    },
+    {
+      "check_id": "07-openapi-quality",
+      "name": "OpenAPI Quality",
+      "description": "Evaluates the completeness and quality of the OpenAPI specification. Checks for descriptions, examples, schemas, and other documentation best practices.",
+      "category": "Documentation",
+      "weight": 10,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "No OpenAPI specification file found - cannot assess quality\nThis check requires a valid OpenAPI file (checked by 06-openapi-spec)\n"
+    },
+    {
+      "check_id": "08-api-environments",
+      "name": "API Environment Configuration",
+      "description": "Checks that API services with OpenAPI specifications have environment configuration defined. Ensures deployment environments and base URLs are documented for API testing.",
+      "category": "Documentation",
+      "weight": 8,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "09-scorecard-badge",
+      "name": "Scorecard Badge",
+      "description": "Checks that the README displays scorecard badges. Badges promote transparency and help users quickly assess repository quality.",
+      "category": "Scorecards Setup",
+      "weight": 5,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": "No README file found to check for badges\n"
+    },
+    {
+      "check_id": "10-scorecard-config-quality",
+      "name": "Scorecard Config Quality",
+      "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
+      "category": "Scorecards Setup",
+      "weight": 7,
+      "status": "fail",
+      "exit_code": 1,
+      "duration": 0,
+      "stdout": "",
+      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+    },
+    {
+      "check_id": "11-codeowners",
+      "name": "CODEOWNERS File",
+      "description": "Checks that the repository has a CODEOWNERS file. CODEOWNERS enables automated code review assignment and clarifies maintenance responsibilities.",
+      "category": "Configuration & Compliance",
+      "weight": 8,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "CODEOWNERS file found: .github/CODEOWNERS (1 ownership rule)\n",
+      "stderr": ""
+    },
+    {
+      "check_id": "12-codeowners-quality",
+      "name": "CODEOWNERS Quality",
+      "description": "Validates that the CODEOWNERS file contains valid syntax with properly formatted ownership rules. Ensures code review automation will work correctly.",
+      "category": "Configuration & Compliance",
+      "weight": 10,
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "CODEOWNERS syntax validated: .github/CODEOWNERS\n  1 ownership rule\n  1 unique owner\n  - * -> @feddericovonwernich-org/backend\n",
+      "stderr": ""
+    }
+  ]
+}

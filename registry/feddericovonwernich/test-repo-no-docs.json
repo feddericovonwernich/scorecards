@@ -1,0 +1,42 @@
+{
+  "org": "feddericovonwernich",
+  "repo": "test-repo-no-docs",
+  "name": "test-repo-no-docs",
+  "team": {
+    "primary": "backend",
+    "all": [
+      "backend"
+    ],
+    "source": "codeowners",
+    "last_discovered": "2025-11-29T15:58:58Z",
+    "github_org": "feddericovonwernich-org",
+    "github_slug": "backend"
+  },
+  "score": 48,
+  "rank": "bronze",
+  "last_updated": "2025-11-29T15:59:51Z",
+  "has_api": false,
+  "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
+  "checks_count": 13,
+  "check_results": {
+    "01-readme": "fail",
+    "02-license": "fail",
+    "03-ci-config": "pass",
+    "04-tests": "pass",
+    "05-scorecard-config": "fail",
+    "06-openapi-spec": "fail",
+    "07-openapi-quality": "fail",
+    "08-api-environments": "pass",
+    "09-scorecard-badge": "fail",
+    "10-scorecard-config-quality": "fail",
+    "11-codeowners": "pass",
+    "12-codeowners-quality": "pass"
+  },
+  "installed": false,
+  "default_branch": "main",
+  "installation_pr": {
+    "number": 1,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-no-docs/pull/1"
+  }
+}
