@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T15:58:53Z"
+      "last_discovered": "2025-11-30T01:39:19Z"
     },
     "links": [],
     "openapi": null
@@ -18,7 +18,9 @@
   "rank": "bronze",
   "passed_checks": 5,
   "total_checks": 12,
-  "timestamp": "2025-11-29T15:59:51Z",
+  "excluded_count": 0,
+  "excluded_checks": [],
+  "timestamp": "2025-11-30T01:40:11Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": false,

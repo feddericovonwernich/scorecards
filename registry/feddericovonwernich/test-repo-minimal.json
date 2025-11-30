@@ -8,13 +8,13 @@
       "platform"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-11-29T15:58:53Z",
+    "last_discovered": "2025-11-30T01:39:19Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "platform"
   },
   "score": 44,
   "rank": "bronze",
-  "last_updated": "2025-11-29T15:59:51Z",
+  "last_updated": "2025-11-30T01:40:11Z",
   "has_api": false,
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
@@ -32,6 +32,7 @@
     "11-codeowners": "pass",
     "12-codeowners-quality": "pass"
   },
+  "excluded_checks": [],
   "installed": false,
   "default_branch": "main",
   "installation_pr": {
