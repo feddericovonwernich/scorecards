@@ -99,7 +99,15 @@ function renderDashboard() {
 
     // Calculate adoption by team for selected check
     const teamStats = calculateCheckAdoptionByTeam(currentServices, selectedCheckId);
-    const sortedTeams = sortTeamsByAdoption(teamStats, currentSort.direction);
+    let sortedTeams = sortTeamsByAdoption(teamStats, currentSort.direction);
+
+    // Apply name sorting if selected
+    if (currentSort.by === 'name') {
+        sortedTeams.sort((a, b) => {
+            const comparison = a.teamName.localeCompare(b.teamName);
+            return currentSort.direction === 'desc' ? -comparison : comparison;
+        });
+    }
 
     // Build check selector options
     const checkOptions = checks.map(check => `
