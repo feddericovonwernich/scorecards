@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-11-29T15:59:18Z"
+      "last_discovered": "2025-11-30T00:58:05Z"
     },
     "links": [],
     "openapi": null
@@ -18,7 +18,9 @@
   "rank": "silver",
   "passed_checks": 7,
   "total_checks": 12,
-  "timestamp": "2025-11-29T16:00:13Z",
+  "excluded_count": 0,
+  "excluded_checks": [],
+  "timestamp": "2025-11-30T00:59:00Z",
   "checks_hash": "dd8fd61156889b33f892ceea157615d94c0db1a988f3e6a40c0d601d4d4e661f",
   "checks_count": 13,
   "installed": false,
@@ -52,7 +54,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "LICENSE file found: LICENSE (1073 chars, detected: MIT)\n",
       "stderr": ""
     },
@@ -112,7 +114,7 @@
       "weight": 10,
       "status": "fail",
       "exit_code": 1,
-      "duration": 0,
+      "duration": 1,
       "stdout": "",
       "stderr": "No OpenAPI specification file found - cannot assess quality\nThis check requires a valid OpenAPI file (checked by 06-openapi-spec)\n"
     },
@@ -172,7 +174,7 @@
       "weight": 10,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "CODEOWNERS syntax validated: .github/CODEOWNERS\n  1 ownership rule\n  1 unique owner\n  - * -> @feddericovonwernich-org/platform\n",
       "stderr": ""
     }
