@@ -178,7 +178,7 @@
 
         /* Scheme container (server selector) */
         [data-theme="dark"] .swagger-ui .scheme-container {
-            background: var(--color-surface);
+            background: transparent;
             box-shadow: none;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-md);
@@ -272,6 +272,10 @@
             background: var(--color-success);
             border-color: var(--color-success);
             color: white;
+        }
+
+        [data-theme="dark"] .swagger-ui .btn.authorize svg {
+            fill: #064e3b;
         }
 
         [data-theme="dark"] .swagger-ui .btn.cancel {
@@ -374,11 +378,44 @@
             border-color: var(--color-accent) transparent var(--color-accent) transparent;
         }
 
-        /* Servers dropdown in dark mode */
+        /* Servers dropdown in dark mode - enhanced styling */
         [data-theme="dark"] .swagger-ui .servers > label select {
-            background: var(--color-bg);
-            border-color: var(--color-border);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
             color: var(--color-text);
+            padding: 8px 32px 8px 12px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%2371717A'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%2371717A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            min-width: 200px;
+            transition: border-color var(--duration-fast) var(--ease-in-out-smooth),
+                        box-shadow var(--duration-fast) var(--ease-in-out-smooth);
+        }
+
+        [data-theme="dark"] .swagger-ui .servers > label select:hover {
+            border-color: var(--color-border-strong);
+        }
+
+        [data-theme="dark"] .swagger-ui .servers > label select:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px var(--color-accent-light);
+        }
+
+        [data-theme="dark"] .swagger-ui .servers > label select option {
+            background: var(--color-surface);
+            color: var(--color-text);
+            padding: 8px 12px;
+        }
+
+        [data-theme="dark"] .swagger-ui .servers > label select option:hover,
+        [data-theme="dark"] .swagger-ui .servers > label select option:focus {
+            background: var(--color-surface-secondary);
         }
 
         /* Model toggle arrow */
@@ -433,7 +470,7 @@
         const repo = urlParams.get('repo');
 
         // Configuration
-        const REPO_OWNER = window.location.hostname.split('.')[0] || 'your-org';
+        const REPO_OWNER = urlParams.get('catalog_owner') || window.location.hostname.split('.')[0] || 'your-org';
         const REPO_NAME = 'scorecards';
         const BRANCH = 'catalog';
         const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
