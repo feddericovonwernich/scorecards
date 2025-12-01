@@ -1,0 +1,21 @@
+[project]
+name = "scorecards"
+version = "1.0.0"
+description = "Automated quality scoring for service repositories"
+requires-python = ">=3.9"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit/python"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]

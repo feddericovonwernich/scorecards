@@ -1,7 +1,9 @@
 // Scorecards Catalog App
 // Note: Repository configuration moved to src/api/registry.js
+// Note: Centralized state available in src/services/state.js
 
-// State (defined on window for access from ES6 modules)
+// Legacy state (defined on window for backward compatibility)
+// New code should use: import { getState, setState } from './src/services/state.js';
 window.allServices = [];
 window.filteredServices = [];
 window.activeFilters = new Map(); // Multi-select filters: filter -> 'include' | 'exclude'
@@ -83,6 +85,7 @@ function clearGitHubToken() {
 // Toast notification function - moved to src/ui/toast.js
 
 // Service Modal Workflow State (exposed to ES6 modules via window)
+// New code should use: import { updateServiceModal } from './src/services/state.js';
 window.currentServiceOrg = null;
 window.currentServiceRepo = null;
 window.serviceWorkflowRuns = [];

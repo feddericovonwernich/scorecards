@@ -74,8 +74,8 @@
     /* Text Hierarchy */
     --color-text: #18181B;
     --color-text-secondary: #52525B;
-    --color-text-muted: #71717A;
-    --color-text-placeholder: #A1A1AA;
+    --color-text-muted: #6B6B6B;
+    --color-text-placeholder: #737373;
 
     /* Borders */
     --color-border: rgba(0, 0, 0, 0.08);
@@ -97,8 +97,8 @@
     --color-bronze-text: #C2410C;
 
     /* Accent */
-    --color-accent: #3B82F6;
-    --color-accent-hover: #2563EB;
+    --color-accent: #2563EB;
+    --color-accent-hover: #1D4ED8;
     --color-accent-light: rgba(59, 130, 246, 0.1);
 
     /* Links */

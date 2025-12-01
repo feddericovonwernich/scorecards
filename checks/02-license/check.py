@@ -1,52 +1,117 @@
 #!/usr/bin/env python3
-"""Check: LICENSE file existence"""
+"""Check: LICENSE file existence and validity."""
+from __future__ import annotations
+
 import os
 import sys
 from pathlib import Path
-
-repo_path = Path(os.environ.get('SCORECARD_REPO_PATH', '.'))
+from typing import Optional, List, Tuple
 
 # Common license file names (case-insensitive)
-license_names = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'COPYING', 'COPYING.txt']
+LICENSE_NAMES: List[str] = [
+    'LICENSE', 'LICENSE.txt', 'LICENSE.md',
+    'COPYING', 'COPYING.txt'
+]
 
-license_file = None
-for name in license_names:
-    # Check case-insensitive
-    for file in repo_path.glob('*'):
-        if file.name.upper() == name.upper():
-            license_file = file
-            break
-    if license_file:
-        break
+MIN_LICENSE_LENGTH: int = 100
 
-if not license_file:
-    print("No LICENSE file found", file=sys.stderr)
-    sys.exit(1)
 
-# Check that license has content (at least 100 characters)
-content = license_file.read_text(errors='ignore')
-char_count = len(content.strip())
+def find_license_file(repo_path: Path) -> Optional[Path]:
+    """
+    Find license file in repository (case-insensitive).
 
-if char_count < 100:
-    print(f"LICENSE file found but too short ({char_count} chars, need at least 100)", file=sys.stderr)
-    sys.exit(1)
+    Args:
+        repo_path: Path to repository root
 
-# Try to detect common licenses
-license_type = "Unknown"
-content_upper = content.upper()
-if "MIT LICENSE" in content_upper:
-    license_type = "MIT"
-elif "APACHE LICENSE" in content_upper:
-    license_type = "Apache"
-elif "GNU GENERAL PUBLIC LICENSE" in content_upper:
-    if "VERSION 3" in content_upper:
-        license_type = "GPL-3.0"
-    elif "VERSION 2" in content_upper:
-        license_type = "GPL-2.0"
+    Returns:
+        Path to license file if found, None otherwise
+    """
+    for name in LICENSE_NAMES:
+        for file in repo_path.glob('*'):
+            if file.name.upper() == name.upper():
+                return file
+    return None
+
+
+def read_license_content(license_path: Path) -> str:
+    """
+    Read license file content safely.
+
+    Args:
+        license_path: Path to license file
+
+    Returns:
+        File content as string
+    """
+    return license_path.read_text(errors='ignore')
+
+
+def detect_license_type(content: str) -> str:
+    """
+    Detect license type from content.
+
+    Args:
+        content: License file content
+
+    Returns:
+        Detected license type name
+    """
+    content_upper = content.upper()
+
+    if "MIT LICENSE" in content_upper:
+        return "MIT"
+    elif "APACHE LICENSE" in content_upper:
+        return "Apache"
+    elif "GNU GENERAL PUBLIC LICENSE" in content_upper:
+        if "VERSION 3" in content_upper:
+            return "GPL-3.0"
+        elif "VERSION 2" in content_upper:
+            return "GPL-2.0"
+        else:
+            return "GPL"
+    elif "BSD LICENSE" in content_upper:
+        return "BSD"
+
+    return "Unknown"
+
+
+def check_license(repo_path: Path) -> Tuple[bool, str]:
+    """
+    Run license check on repository.
+
+    Args:
+        repo_path: Path to repository root
+
+    Returns:
+        Tuple of (passed, message)
+    """
+    license_file = find_license_file(repo_path)
+
+    if license_file is None:
+        return False, "No LICENSE file found"
+
+    content = read_license_content(license_file)
+    char_count = len(content.strip())
+
+    if char_count < MIN_LICENSE_LENGTH:
+        return False, f"LICENSE file found but too short ({char_count} chars, need at least {MIN_LICENSE_LENGTH})"
+
+    license_type = detect_license_type(content)
+    return True, f"LICENSE file found: {license_file.name} ({char_count} chars, detected: {license_type})"
+
+
+def main() -> None:
+    """Main entry point."""
+    repo_path = Path(os.environ.get('SCORECARD_REPO_PATH', '.'))
+    passed, message = check_license(repo_path)
+
+    if passed:
+        print(message)
+        sys.exit(0)
     else:
-        license_type = "GPL"
-elif "BSD LICENSE" in content_upper:
-    license_type = "BSD"
+        print(message, file=sys.stderr)
+        sys.exit(1)
 
-print(f"LICENSE file found: {license_file.name} ({char_count} chars, detected: {license_type})")
-sys.exit(0)
+
+if __name__ == '__main__':
+    main()
