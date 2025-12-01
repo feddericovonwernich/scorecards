@@ -1,0 +1,170 @@
+/* ==============================================
+   FORM ELEMENTS - Premium Design
+   ============================================== */
+
+/* ==============================================
+   SEARCH BOX
+   ============================================== */
+
+.search-box {
+    flex: 1;
+    min-width: 250px;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-base);
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.search-box::placeholder {
+    color: var(--color-text-placeholder);
+}
+
+.search-box:hover {
+    border-color: var(--color-border-strong);
+}
+
+.search-box:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+/* ==============================================
+   SELECT DROPDOWNS
+   ============================================== */
+
+.sort-select,
+select {
+    padding: var(--space-3) var(--space-4);
+    padding-right: var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2371717A' d='M6 8.825L1.175 4 2.238 2.938 6 6.7 9.763 2.937 10.825 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.sort-select:hover,
+select:hover {
+    border-color: var(--color-border-strong);
+}
+
+.sort-select:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+/* ==============================================
+   TEXT INPUTS (PAT, etc.)
+   ============================================== */
+
+#github-pat-input,
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family-mono);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-3);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+#github-pat-input::placeholder,
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: var(--color-text-placeholder);
+}
+
+#github-pat-input:hover,
+input[type="text"]:hover,
+input[type="password"]:hover {
+    border-color: var(--color-border-strong);
+}
+
+#github-pat-input:focus,
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+/* ==============================================
+   WIDGET INTERVAL SELECT
+   ============================================== */
+
+.widget-interval-select {
+    padding: var(--space-2) var(--space-3);
+    padding-right: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2371717A' d='M5 7.354L.646 3 1.354 2.293 5 5.94 8.646 2.293 9.354 3z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+.widget-interval-select:hover {
+    background-color: var(--color-surface-secondary);
+    border-color: var(--color-border-strong);
+}
+
+.widget-interval-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-light);
+}
+
+/* ==============================================
+   LABELS
+   ============================================== */
+
+label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}
+
+/* ==============================================
+   FORM GROUPS
+   ============================================== */
+
+.form-group {
+    margin-bottom: var(--space-4);
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
+}

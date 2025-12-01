@@ -1,0 +1,176 @@
+/* ==============================================
+   CHECK RESULTS - Premium Design
+   ============================================== */
+
+.check-result {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-3);
+    border-left: 4px solid;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-result:hover {
+    transform: translateX(4px);
+}
+
+.check-result.pass {
+    background: var(--color-check-pass-bg);
+    border-left-color: var(--color-success);
+}
+
+.check-result.fail {
+    background: var(--color-check-fail-bg);
+    border-left-color: var(--color-error);
+}
+
+.check-result.excluded {
+    background: var(--color-warning-bg, #FFFBEB);
+    border-left-color: var(--color-warning, #F59E0B);
+}
+
+.check-result.excluded .check-name {
+    color: var(--color-warning, #F59E0B);
+}
+
+.check-excluded-notice {
+    font-size: var(--text-sm);
+    color: var(--color-warning, #F59E0B);
+    margin-bottom: var(--space-2);
+}
+
+.excluded-count {
+    font-size: var(--text-xs);
+    color: var(--color-warning, #F59E0B);
+    font-weight: var(--font-weight-normal);
+}
+
+.check-name {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-1);
+    color: var(--color-text);
+}
+
+.check-description {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+    line-height: var(--leading-relaxed);
+}
+
+.check-output {
+    font-family: var(--font-family-mono);
+    font-size: var(--text-sm);
+    background: var(--color-surface-tertiary);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    margin-top: var(--space-2);
+    border: 1px solid var(--color-border);
+    overflow-x: auto;
+}
+
+/* ==============================================
+   CHECK CATEGORY PANELS - Accordion Style
+   ============================================== */
+
+.check-categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.check-category {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-normal) var(--ease-in-out-smooth);
+}
+
+.check-category:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.check-category-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-category-header-bg);
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    list-style: none;
+    transition: background var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-category-header:hover {
+    background: var(--color-category-header-hover);
+}
+
+.check-category-header::-webkit-details-marker {
+    display: none;
+}
+
+.category-arrow {
+    font-size: var(--text-sm);
+    transition: transform var(--duration-fast) var(--ease-out-expo);
+    color: var(--color-text-muted);
+    width: 16px;
+    text-align: center;
+}
+
+.check-category:not([open]) .category-arrow {
+    transform: rotate(-90deg);
+}
+
+.category-name {
+    flex: 1;
+    color: var(--color-text);
+}
+
+/* Category Stats Badge */
+.category-stats {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+}
+
+.category-stats.all-passed {
+    background: var(--color-category-stats-pass-bg);
+    color: var(--color-category-stats-pass-text);
+}
+
+.category-stats.has-failures {
+    background: var(--color-category-stats-fail-bg);
+    color: var(--color-category-stats-fail-text);
+}
+
+/* Category Content */
+.check-category-content {
+    padding: var(--space-4);
+    animation: expandIn var(--duration-normal) var(--ease-out-expo);
+}
+
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.check-category-content .check-result:last-child {
+    margin-bottom: 0;
+}

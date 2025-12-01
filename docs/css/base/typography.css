@@ -1,0 +1,53 @@
+/* ==============================================
+   BASE TYPOGRAPHY
+   ============================================== */
+
+body {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-regular);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: var(--leading-normal);
+    letter-spacing: var(--tracking-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text);
+}
+
+/* Monospace / Code */
+code, pre, .mono {
+    font-family: var(--font-family-mono);
+    font-size: 0.9em;
+}
+
+/* Links */
+a {
+    color: var(--color-link);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+a:hover {
+    color: var(--color-link-hover);
+}
+
+/* Small / Muted text */
+small, .text-muted {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+/* Selection */
+::selection {
+    background-color: var(--color-accent-light);
+    color: var(--color-text);
+}

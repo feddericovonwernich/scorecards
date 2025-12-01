@@ -1,0 +1,147 @@
+/* ==============================================
+   FLOATING CONTROLS - Bottom-right control row
+   ============================================== */
+
+/* Container - horizontal row at bottom-right */
+.floating-controls {
+    position: fixed;
+    bottom: var(--space-5);
+    right: var(--space-5);
+    z-index: 9999;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+/* ==============================================
+   BASE CIRCULAR BUTTON (56px)
+   ============================================== */
+
+.floating-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+    position: relative;
+}
+
+.floating-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* ==============================================
+   THEME & SETTINGS BUTTONS - Surface style
+   ============================================== */
+
+.floating-btn--theme,
+.floating-btn--settings {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    box-shadow: var(--shadow-lg);
+}
+
+.floating-btn--theme:hover,
+.floating-btn--settings:hover {
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: var(--shadow-xl);
+}
+
+.floating-btn--theme:active,
+.floating-btn--settings:active {
+    transform: translateY(-1px) scale(1);
+}
+
+/* Settings with PAT loaded */
+.floating-btn--settings.has-token {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.floating-btn--settings.has-token:hover {
+    background: rgba(16, 185, 129, 0.25);
+}
+
+/* ==============================================
+   WIDGET TOGGLE BUTTON - Accent color
+   ============================================== */
+
+.floating-btn--widget {
+    background: var(--color-accent);
+    color: white;
+    box-shadow: var(--shadow-lg), 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+.floating-btn--widget:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: var(--shadow-xl), 0 8px 30px rgba(59, 130, 246, 0.5);
+}
+
+.floating-btn--widget:active {
+    transform: translateY(-1px) scale(1);
+}
+
+.floating-btn--widget.active {
+    background: var(--color-accent-hover);
+}
+
+/* ==============================================
+   WIDGET BADGE
+   ============================================== */
+
+.floating-btn .widget-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--color-error);
+    color: white;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-bold);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.floating-btn .widget-badge:empty,
+.floating-btn .widget-badge[data-count="0"] {
+    display: none;
+}
+
+/* ==============================================
+   MOBILE RESPONSIVE
+   ============================================== */
+
+@media (max-width: 480px) {
+    .floating-controls {
+        bottom: 16px;
+        right: 16px;
+        gap: var(--space-2);
+    }
+
+    .floating-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .floating-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+}

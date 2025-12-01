@@ -1,0 +1,160 @@
+/* ==============================================
+   BADGES - Premium Subtle Accent Design
+   ============================================== */
+
+/* Service Badges - Utility badges */
+.service-badges {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.badge-api,
+.badge-stale,
+.badge-installed {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.badge-api {
+    background: var(--color-info-bg);
+    color: var(--color-link);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.badge-stale {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    border: 1px solid var(--color-warning-border);
+}
+
+.badge-installed {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8B5CF6;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Dark theme adjustments for service badges */
+[data-theme="dark"] .badge-api {
+    background: rgba(96, 165, 250, 0.15);
+    color: var(--color-link);
+    border-color: rgba(96, 165, 250, 0.3);
+}
+
+[data-theme="dark"] .badge-stale {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .badge-installed {
+    background: rgba(167, 139, 250, 0.15);
+    color: #A78BFA;
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+/* ==============================================
+   RANK BADGES - Subtle Color Accents
+   ============================================== */
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    margin-bottom: var(--space-3);
+    transition: all var(--duration-normal) var(--ease-in-out-smooth);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Platinum - Sky blue accent */
+.rank-badge.platinum {
+    background: var(--color-platinum-bg);
+    color: var(--color-platinum-text);
+    border: 1px solid var(--color-platinum);
+}
+
+/* Gold - Warm amber accent */
+.rank-badge.gold {
+    background: var(--color-gold-bg);
+    color: var(--color-gold-text);
+    border: 1px solid var(--color-gold);
+}
+
+/* Silver - Neutral gray accent */
+.rank-badge.silver {
+    background: var(--color-silver-bg);
+    color: var(--color-silver-text);
+    border: 1px solid var(--color-silver);
+}
+
+/* Bronze - Warm orange accent */
+.rank-badge.bronze {
+    background: var(--color-bronze-bg);
+    color: var(--color-bronze-text);
+    border: 1px solid var(--color-bronze);
+}
+
+/* ==============================================
+   WIDGET BADGE - Notification indicator
+   ============================================== */
+
+.widget-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--color-error);
+    color: white;
+    border-radius: var(--radius-full);
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-bold);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.widget-badge.visible {
+    display: flex;
+}
+
+/* ==============================================
+   FILTER COUNT BADGE
+   ============================================== */
+
+.filter-count {
+    background: rgba(0, 0, 0, 0.08);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-full);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    min-width: 20px;
+    text-align: center;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+[data-theme="dark"] .filter-count {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.widget-filter-btn.active .filter-count {
+    background: rgba(255, 255, 255, 0.25);
+}

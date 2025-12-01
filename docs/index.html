@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scorecards Catalog</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            const THEME_KEY = 'theme';
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            const osPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (osPrefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <!-- Elegant Top Strip -->
+    <div class="header-strip"></div>
+
+    <!-- Compact Header Bar -->
+    <header class="header-bar">
+        <div class="header-brand">
+            <!-- Custom Scorecards Logo: 3 stacked cards (pass/fail/pass) -->
+            <svg class="header-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Back card (pass) - furthest right/down -->
+                <rect x="12" y="8" width="14" height="18" rx="2" fill="#1e3a5f" stroke="#38BDF8" stroke-width="1"/>
+                <path d="M16 14l2 2 3-3" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <!-- Middle card (fail) - red -->
+                <rect x="9" y="6" width="14" height="18" rx="2" fill="#4a1e1e" stroke="#f87171" stroke-width="1"/>
+                <path d="M18 12l-4 4M14 12l4 4" stroke="#f87171" stroke-width="1.5" stroke-linecap="round"/>
+
+                <!-- Front card (pass) - closest -->
+                <rect x="6" y="4" width="14" height="18" rx="2" fill="#0f2942" stroke="#0EA5E9" stroke-width="1.2"/>
+                <path d="M10 11l2 2 4-4" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="header-title">Scorecards</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- View Tabs -->
+        <nav class="view-tabs">
+            <button class="view-tab active" data-view="services">
+                <svg class="tab-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
+                Services
+            </button>
+            <button class="view-tab" data-view="teams">
+                <svg class="tab-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                </svg>
+                Teams
+            </button>
+        </nav>
+
+        <!-- Services View -->
+        <div id="services-view" class="view-content active">
+        <!-- Stats Section -->
+        <section class="stats services-stats">
+            <div class="stat-card non-filterable">
+                <div class="stat-value" id="total-services">-</div>
+                <div class="stat-label">Total Services</div>
+            </div>
+            <div class="stat-card non-filterable">
+                <div class="stat-value" id="avg-score">-</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card filterable filter-api" data-filter="has-api">
+                <div class="stat-value" id="api-count">-</div>
+                <div class="stat-label">With API</div>
+            </div>
+            <div class="stat-card filterable filter-stale" data-filter="stale">
+                <div class="stat-value" id="stale-count">-</div>
+                <div class="stat-label">Stale</div>
+            </div>
+            <div class="stat-card filterable filter-installed" data-filter="installed">
+                <div class="stat-value" id="installed-count">-</div>
+                <div class="stat-label">Installed</div>
+            </div>
+            <div class="stat-card filterable rank-platinum" data-filter="platinum">
+                <div class="stat-value" id="platinum-count">-</div>
+                <div class="stat-label">Platinum</div>
+            </div>
+            <div class="stat-card filterable rank-gold" data-filter="gold">
+                <div class="stat-value" id="gold-count">-</div>
+                <div class="stat-label">Gold</div>
+            </div>
+            <div class="stat-card filterable rank-silver" data-filter="silver">
+                <div class="stat-value" id="silver-count">-</div>
+                <div class="stat-label">Silver</div>
+            </div>
+            <div class="stat-card filterable rank-bronze" data-filter="bronze">
+                <div class="stat-value" id="bronze-count">-</div>
+                <div class="stat-label">Bronze</div>
+            </div>
+        </section>
+
+        <!-- Controls -->
+        <section class="controls">
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search services..."
+                class="search-box"
+            >
+            <select id="sort-select" class="sort-select" aria-label="Sort by">
+                <option value="score-desc">Score: High to Low</option>
+                <option value="score-asc">Score: Low to High</option>
+                <option value="name-asc">Name: A to Z</option>
+                <option value="name-desc">Name: Z to A</option>
+                <option value="updated-desc">Recently Updated</option>
+            </select>
+            <button id="refresh-btn" class="refresh-btn" onclick="refreshData()" title="Re-fetch service data from catalog. Use GitHub PAT in settings to bypass CDN cache and get real-time data.">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                </svg>
+                Refresh Data
+            </button>
+            <button id="bulk-trigger-btn" class="trigger-btn trigger-btn-bulk" onclick="handleBulkTrigger(event)">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                </svg>
+                Re-run All Stale
+            </button>
+            <button id="bulk-trigger-all-btn" class="trigger-btn trigger-btn-neutral" onclick="handleBulkTriggerAll(event)" title="Trigger scorecard workflow for all installed services">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                </svg>
+                Re-run All Installed
+            </button>
+            <div id="team-filter-container" class="team-filter-container"></div>
+            <div id="check-filter-container" class="check-filter-container"></div>
+        </section>
+
+        <!-- Services Grid -->
+        <section id="services-grid" class="services-grid">
+            <div class="loading">Loading services...</div>
+        </section>
+        </div><!-- End services-view -->
+
+        <!-- Teams View -->
+        <div id="teams-view" class="view-content">
+            <!-- Teams Stats -->
+            <section class="stats teams-stats">
+                <div class="stat-card non-filterable">
+                    <div class="stat-value" id="teams-total-teams">-</div>
+                    <div class="stat-label">Total Teams</div>
+                </div>
+                <div class="stat-card non-filterable">
+                    <div class="stat-value" id="teams-avg-score">-</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-card non-filterable">
+                    <div class="stat-value" id="teams-total-services">-</div>
+                    <div class="stat-label">Total Services</div>
+                </div>
+                <div class="stat-card non-filterable">
+                    <div class="stat-value" id="teams-no-team">-</div>
+                    <div class="stat-label">No Team</div>
+                </div>
+                <div class="stat-card filterable teams-filter rank-platinum" data-filter="platinum">
+                    <div class="stat-value" id="teams-platinum-count">-</div>
+                    <div class="stat-label">Platinum</div>
+                </div>
+                <div class="stat-card filterable teams-filter rank-gold" data-filter="gold">
+                    <div class="stat-value" id="teams-gold-count">-</div>
+                    <div class="stat-label">Gold</div>
+                </div>
+                <div class="stat-card filterable teams-filter rank-silver" data-filter="silver">
+                    <div class="stat-value" id="teams-silver-count">-</div>
+                    <div class="stat-label">Silver</div>
+                </div>
+                <div class="stat-card filterable teams-filter rank-bronze" data-filter="bronze">
+                    <div class="stat-value" id="teams-bronze-count">-</div>
+                    <div class="stat-label">Bronze</div>
+                </div>
+            </section>
+
+            <!-- Teams Controls -->
+            <section class="controls teams-controls">
+                <input
+                    type="text"
+                    id="teams-search-input"
+                    placeholder="Search teams..."
+                    class="search-box"
+                >
+                <select id="teams-sort-select" class="sort-select">
+                    <option value="score-desc">Score: High to Low</option>
+                    <option value="score-asc">Score: Low to High</option>
+                    <option value="services-desc">Services: High to Low</option>
+                    <option value="services-asc">Services: Low to High</option>
+                    <option value="name-asc">Name: A to Z</option>
+                    <option value="name-desc">Name: Z to A</option>
+                </select>
+                <button id="teams-refresh-btn" class="refresh-btn" onclick="refreshTeamsView()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                        <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                    </svg>
+                    Refresh Data
+                </button>
+                <button class="create-btn" onclick="openCreateTeamModal()">+ Create Team</button>
+                <button class="trigger-btn trigger-btn-accent" onclick="openCheckAdoptionDashboard(window.allServices)" title="View check adoption rates across all teams">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                        <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm9.78-2.22-4.78 4.78-2.28-2.28a.75.75 0 0 0-1.06 1.06l2.75 2.75a.752.752 0 0 0 1.079-.02l5.25-5.25a.75.75 0 1 0-1.06-1.06Z"></path>
+                    </svg>
+                    Check Adoption
+                </button>
+            </section>
+
+            <!-- Teams Grid -->
+            <section id="teams-grid" class="teams-grid">
+                <div class="loading">Loading teams...</div>
+            </section>
+        </div><!-- End teams-view -->
+
+        <!-- Service Detail Modal -->
+        <div id="service-modal" class="modal hidden">
+            <div class="modal-content">
+                <button class="modal-close">&times;</button>
+                <div id="service-detail"></div>
+            </div>
+        </div>
+
+        <!-- Team Dashboard Modal (legacy - to be deprecated) -->
+        <div id="team-dashboard-modal" class="modal hidden">
+            <div class="modal-content">
+                <button class="modal-close" onclick="window.closeTeamDashboard()">&times;</button>
+                <h2>Team Dashboard</h2>
+                <div id="team-dashboard-content"></div>
+            </div>
+        </div>
+
+        <!-- Team Detail Modal -->
+        <div id="team-modal" class="modal hidden">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeTeamModal()">&times;</button>
+                <div id="team-detail"></div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content settings-modal-content">
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+                <h2>Settings</h2>
+
+                <div class="setting-section">
+                    <h3>GitHub Personal Access Token</h3>
+                    <p>Provide a GitHub PAT to use the GitHub API for faster updates and workflow triggering.</p>
+
+                    <div class="current-mode">
+                        Current mode: <strong id="mode-indicator">Public CDN (slower, no rate limits)</strong>
+                    </div>
+
+                    <div class="pat-input-section">
+                        <label for="github-pat-input">Personal Access Token</label>
+                        <input
+                            type="password"
+                            id="github-pat-input"
+                            placeholder="ghp_xxxxxxxxxxxx"
+                            autocomplete="off"
+                        >
+                        <div class="pat-actions">
+                            <button onclick="savePAT()" class="save-btn">Save Token</button>
+                            <button onclick="clearPAT()" class="clear-btn">Clear Token</button>
+                        </div>
+
+                        <div class="help-text">
+                            <strong>How to create a PAT:</strong>
+                            <ol>
+                                <li>Go to <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings → Personal access tokens</a></li>
+                                <li>Generate new token (classic)</li>
+                                <li>Select scopes:
+                                    <ul>
+                                        <li><code>workflow</code> - Required for triggering scorecards</li>
+                                        <li>Or leave empty for read-only (faster API access only)</li>
+                                    </ul>
+                                </li>
+                                <li>Copy and paste here</li>
+                            </ol>
+
+                            <strong>Benefits with PAT:</strong>
+                            <ul>
+                                <li>Faster PR status updates (~30s vs 3-5 min)</li>
+                                <li>Bypasses CDN cache for real-time data</li>
+                                <li>5,000 requests/hour limit (vs 60 without)</li>
+                                <li>Ability to trigger scorecard workflows</li>
+                            </ul>
+
+                            <strong>Security:</strong>
+                            <ul>
+                                <li>Token stored in memory only (lost on page refresh)</li>
+                                <li>Never sent to any server except GitHub</li>
+                                <li>You can clear it anytime</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="setting-section">
+                        <h3>Rate Limit Status</h3>
+                        <div id="rate-limit-info">
+                            <div>Remaining: <span id="rate-limit-remaining">-</span></div>
+                            <div>Limit: <span id="rate-limit-limit">-</span></div>
+                            <div>Resets at: <span id="rate-limit-reset">-</span></div>
+                        </div>
+                        <button onclick="checkRateLimit()" class="check-btn">Check Rate Limit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <!-- Scorecards Logo -->
+                <svg class="footer-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Back card (pass) - furthest right/down -->
+                    <rect x="12" y="8" width="14" height="18" rx="2" fill="#1e3a5f" stroke="#38BDF8" stroke-width="1"/>
+                    <path d="M16 14l2 2 3-3" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Middle card (fail) - red -->
+                    <rect x="9" y="6" width="14" height="18" rx="2" fill="#4a1e1e" stroke="#f87171" stroke-width="1"/>
+                    <path d="M18 12l-4 4M14 12l4 4" stroke="#f87171" stroke-width="1.5" stroke-linecap="round"/>
+                    <!-- Front card (pass) - closest -->
+                    <rect x="6" y="4" width="14" height="18" rx="2" fill="#0f2942" stroke="#0EA5E9" stroke-width="1.2"/>
+                    <path d="M10 11l2 2 4-4" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p>Powered by Scorecards | <a href="https://github.com/feddericovonwernich/scorecards" target="_blank" rel="noopener">Documentation</a></p>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer Gradient Strip -->
+    <div class="footer-strip"></div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Floating Controls - Bottom Right -->
+    <div class="floating-controls">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="floating-btn floating-btn--theme" title="Toggle night mode" aria-label="Toggle night mode">
+            <svg id="theme-icon-sun" width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+            </svg>
+            <svg id="theme-icon-moon" width="24" height="24" viewBox="0 0 16 16" fill="currentColor" style="display: none;">
+                <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+            </svg>
+        </button>
+
+        <!-- Settings -->
+        <button id="settings-btn" class="floating-btn floating-btn--settings" onclick="openSettings()" title="Settings" aria-label="Settings">
+            <svg id="settings-icon" width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+                <path class="unlocked-icon" d="M5.5 4a2.5 2.5 0 0 1 4.607-1.346.75.75 0 1 0 1.264-.808A4 4 0 0 0 4 4v1.5H3A1.5 1.5 0 0 0 1.5 7v7A1.5 1.5 0 0 0 3 15.5h10a1.5 1.5 0 0 0 1.5-1.5V7A1.5 1.5 0 0 0 13 5.5h-7V4Z"></path>
+                <path class="locked-icon" style="display: none;" d="M4 4a4 4 0 0 1 8 0v2h.25c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 12.25 15h-8.5A1.75 1.75 0 0 1 2 13.25v-5.5C2 6.784 2.784 6 3.75 6H4Zm8.25 3.5h-8.5a.25.25 0 0 0-.25.25v5.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25ZM10.5 6V4a2.5 2.5 0 1 0-5 0v2Z"></path>
+            </svg>
+        </button>
+
+        <!-- GitHub Actions Widget Toggle -->
+        <button id="widget-toggle" class="floating-btn floating-btn--widget" onclick="toggleActionsWidget()" title="Show GitHub Actions" aria-label="Show GitHub Actions">
+            <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm7-3.25v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.75.75 0 0 1 7 8.25v-3.5a.75.75 0 0 1 1.5 0Z"></path>
+            </svg>
+            <span class="widget-badge" id="widget-badge">0</span>
+        </button>
+    </div>
+
+    <!-- Widget Sidebar -->
+    <div id="widget-sidebar" class="widget-sidebar">
+            <div class="widget-header">
+                <h3>
+                    <a href="#" id="widget-actions-link" class="widget-title-link" target="_blank" rel="noopener noreferrer" title="View on GitHub">
+                        GitHub Actions
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle; margin-left: 4px;">
+                            <path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"></path>
+                        </svg>
+                    </a>
+                </h3>
+                <div class="widget-header-actions">
+                    <select id="widget-interval-select" class="widget-interval-select" onchange="changePollingInterval()" title="Auto-refresh interval">
+                        <option value="15000">15s</option>
+                        <option value="30000" selected>30s</option>
+                        <option value="60000">1m</option>
+                        <option value="120000">2m</option>
+                        <option value="300000">5m</option>
+                        <option value="0">Off</option>
+                    </select>
+                    <button id="widget-refresh" class="widget-refresh-btn" onclick="refreshActionsWidget()" title="Refresh">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
+                        </svg>
+                    </button>
+                    <button class="widget-close-btn" onclick="toggleActionsWidget()">×</button>
+                </div>
+            </div>
+
+            <div class="widget-filters">
+                <button class="widget-filter-btn active" data-status="all" onclick="filterActions('all')">
+                    All <span class="filter-count" id="count-all">0</span>
+                </button>
+                <button class="widget-filter-btn" data-status="in_progress" onclick="filterActions('in_progress')">
+                    Running <span class="filter-count" id="count-running">0</span>
+                </button>
+                <button class="widget-filter-btn" data-status="queued" onclick="filterActions('queued')">
+                    Queued <span class="filter-count" id="count-queued">0</span>
+                </button>
+                <button class="widget-filter-btn" data-status="completed" onclick="filterActions('completed')">
+                    Completed <span class="filter-count" id="count-completed">0</span>
+                </button>
+            </div>
+
+            <div id="widget-content" class="widget-content">
+                <div class="widget-empty">
+                    <p>Configure GitHub PAT in settings to view workflow runs</p>
+                </div>
+            </div>
+    </div>
+
+    <!-- ES6 Modules (loaded first) -->
+    <script type="module" src="src/main.js?v=3"></script>
+
+    <!-- Main application (uses modules via window.ScorecardModules) -->
+    <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+/* ==============================================
+   SCORECARDS CATALOG - DESIGN TOKENS
+   Modern Luxury/Premium Aesthetic
+   ============================================== */
+
+:root {
+    /* ===========================================
+       TYPOGRAPHY
+       =========================================== */
+    --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-family-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    /* Font Weights */
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Type Scale */
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.25rem;      /* 20px */
+    --text-2xl: 1.5rem;      /* 24px */
+    --text-3xl: 1.875rem;    /* 30px */
+    --text-4xl: 2.25rem;     /* 36px */
+
+    /* Letter Spacing */
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.025em;
+    --tracking-widest: 0.1em;
+
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+
+    /* ===========================================
+       SPACING
+       =========================================== */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-12: 3rem;     /* 48px */
+
+    /* ===========================================
+       BORDER RADIUS
+       =========================================== */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+
+    /* ===========================================
+       COLORS - LIGHT THEME
+       =========================================== */
+
+    /* Backgrounds */
+    --color-bg: #FAFAFA;
+    --color-surface: #FFFFFF;
+    --color-surface-secondary: #F9FAFB;
+    --color-surface-tertiary: #F4F4F5;
+    --color-surface-hover: rgba(0, 0, 0, 0.02);
+
+    /* Text Hierarchy */
+    --color-text: #18181B;
+    --color-text-secondary: #52525B;
+    --color-text-muted: #6B6B6B;
+    --color-text-placeholder: #737373;
+
+    /* Borders */
+    --color-border: rgba(0, 0, 0, 0.08);
+    --color-border-secondary: rgba(0, 0, 0, 0.05);
+    --color-border-strong: rgba(0, 0, 0, 0.12);
+
+    /* Rank Colors - Subtle Accents */
+    --color-platinum: #0EA5E9;
+    --color-platinum-bg: #F0F9FF;
+    --color-platinum-text: #0369A1;
+    --color-gold: #EAB308;
+    --color-gold-bg: #FEFCE8;
+    --color-gold-text: #A16207;
+    --color-silver: #6B7280;
+    --color-silver-bg: #F9FAFB;
+    --color-silver-text: #4B5563;
+    --color-bronze: #EA580C;
+    --color-bronze-bg: #FFF7ED;
+    --color-bronze-text: #C2410C;
+
+    /* Accent */
+    --color-accent: #2563EB;
+    --color-accent-hover: #1D4ED8;
+    --color-accent-light: rgba(59, 130, 246, 0.1);
+
+    /* Links */
+    --color-link: #2563EB;
+    --color-link-hover: #1D4ED8;
+
+    /* Semantic Colors */
+    --color-success: #10B981;
+    --color-success-light: rgba(16, 185, 129, 0.1);
+    --color-success-bg: #ECFDF5;
+    --color-error: #EF4444;
+    --color-error-light: rgba(239, 68, 68, 0.1);
+    --color-error-bg: #FEF2F2;
+    --color-warning: #F59E0B;
+    --color-warning-light: rgba(245, 158, 11, 0.1);
+    --color-warning-bg: #FFFBEB;
+    --color-warning-text: #92400E;
+    --color-warning-border: #F59E0B;
+    --color-info: #3B82F6;
+    --color-info-bg: #EFF6FF;
+
+    /* Header */
+    --color-header-bg: #09090B;
+    --color-header-text: #FAFAFA;
+
+    /* Shadows - Refined Depth */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+    /* Legacy shadow variables (for compatibility) */
+    --color-shadow: rgba(0, 0, 0, 0.06);
+    --color-shadow-hover: rgba(0, 0, 0, 0.1);
+
+    /* Active/Selected States */
+    --color-active-bg: rgba(59, 130, 246, 0.08);
+    --color-active-border: #3B82F6;
+    --color-exclude-bg: rgba(239, 68, 68, 0.08);
+    --color-exclude-border: #EF4444;
+
+    /* Check States */
+    --color-check-pass-bg: #ECFDF5;
+    --color-check-fail-bg: #FEF2F2;
+
+    /* Category Headers */
+    --color-category-header-bg: #F9FAFB;
+    --color-category-header-hover: #F4F4F5;
+    --color-category-stats-pass-bg: rgba(16, 185, 129, 0.1);
+    --color-category-stats-pass-text: #059669;
+    --color-category-stats-fail-bg: rgba(245, 158, 11, 0.1);
+    --color-category-stats-fail-text: #D97706;
+
+    /* Button State Colors (for JS usage) */
+    --color-success-btn: #10B981;
+    --color-error-btn: #EF4444;
+    --color-copy-success: #10B981;
+    --color-copy-default: #3B82F6;
+    --color-link-btn: #2563EB;
+    --color-link-btn-hover: #1D4ED8;
+    --color-text-error: #DC2626;
+
+    /* ===========================================
+       ANIMATION
+       =========================================== */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 400ms;
+}
+
+/* ==============================================
+   DARK THEME - Rich Premium Dark
+   ============================================== */
+[data-theme="dark"] {
+    /* Backgrounds - Deep blacks */
+    --color-bg: #09090B;
+    --color-surface: #18181B;
+    --color-surface-secondary: #27272A;
+    --color-surface-tertiary: #3F3F46;
+    --color-surface-hover: rgba(255, 255, 255, 0.04);
+
+    /* Text Hierarchy */
+    --color-text: #FAFAFA;
+    --color-text-secondary: #A1A1AA;
+    --color-text-muted: #71717A;
+    --color-text-placeholder: #52525B;
+
+    /* Borders */
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-secondary: rgba(255, 255, 255, 0.06);
+    --color-border-strong: rgba(255, 255, 255, 0.15);
+
+    /* Rank Colors - Luminous in dark mode */
+    --color-platinum: #38BDF8;
+    --color-platinum-bg: rgba(56, 189, 248, 0.15);
+    --color-platinum-text: #7DD3FC;
+    --color-gold: #FACC15;
+    --color-gold-bg: rgba(250, 204, 21, 0.15);
+    --color-gold-text: #FDE047;
+    --color-silver: #9CA3AF;
+    --color-silver-bg: rgba(156, 163, 175, 0.15);
+    --color-silver-text: #D1D5DB;
+    --color-bronze: #FB923C;
+    --color-bronze-bg: rgba(251, 146, 60, 0.15);
+    --color-bronze-text: #FDBA74;
+
+    /* Accent - Brighter for dark mode */
+    --color-accent: #60A5FA;
+    --color-accent-hover: #3B82F6;
+    --color-accent-light: rgba(96, 165, 250, 0.15);
+
+    /* Links */
+    --color-link: #60A5FA;
+    --color-link-hover: #93C5FD;
+
+    /* Semantic Colors */
+    --color-success: #34D399;
+    --color-success-light: rgba(52, 211, 153, 0.15);
+    --color-success-bg: rgba(16, 185, 129, 0.15);
+    --color-error: #F87171;
+    --color-error-light: rgba(248, 113, 113, 0.15);
+    --color-error-bg: rgba(239, 68, 68, 0.15);
+    --color-warning: #FBBF24;
+    --color-warning-light: rgba(251, 191, 36, 0.15);
+    --color-warning-bg: rgba(245, 158, 11, 0.15);
+    --color-warning-text: #FDE047;
+    --color-warning-border: #FBBF24;
+    --color-info: #60A5FA;
+    --color-info-bg: rgba(59, 130, 246, 0.15);
+
+    /* Header */
+    --color-header-bg: #000000;
+
+    /* Shadows - More pronounced */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+
+    /* Legacy shadow variables */
+    --color-shadow: rgba(0, 0, 0, 0.4);
+    --color-shadow-hover: rgba(0, 0, 0, 0.5);
+
+    /* Active/Selected States */
+    --color-active-bg: rgba(96, 165, 250, 0.15);
+    --color-active-border: #60A5FA;
+    --color-exclude-bg: rgba(248, 113, 113, 0.15);
+    --color-exclude-border: #F87171;
+
+    /* Check States */
+    --color-check-pass-bg: rgba(16, 185, 129, 0.15);
+    --color-check-fail-bg: rgba(239, 68, 68, 0.15);
+
+    /* Category Headers */
+    --color-category-header-bg: #27272A;
+    --color-category-header-hover: #3F3F46;
+    --color-category-stats-pass-bg: rgba(52, 211, 153, 0.15);
+    --color-category-stats-pass-text: #34D399;
+    --color-category-stats-fail-bg: rgba(251, 191, 36, 0.15);
+    --color-category-stats-fail-text: #FBBF24;
+
+    /* Button State Colors - Dark theme */
+    --color-success-btn: #34D399;
+    --color-error-btn: #F87171;
+    --color-copy-success: #34D399;
+    --color-copy-default: #60A5FA;
+    --color-link-btn: #60A5FA;
+    --color-link-btn-hover: #93C5FD;
+    --color-text-error: #F87171;
+}

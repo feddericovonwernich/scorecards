@@ -1,0 +1,443 @@
+name: Consolidate Registry
+
+on:
+  push:
+    branches:
+      - catalog
+    paths:
+      - 'registry/**/*.json'
+      - '!registry/all-services.json'
+      - 'teams/**/*.json'
+      - '!teams/all-teams.json'
+  workflow_dispatch:
+
+# Prevent multiple consolidations from running concurrently
+# Cancel in-progress runs when new changes arrive
+concurrency:
+  group: consolidate-registry
+  cancel-in-progress: true
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout catalog branch
+        uses: actions/checkout@v4
+        with:
+          ref: catalog
+          token: ${{ secrets.SCORECARDS_CATALOG_TOKEN || secrets.SCORECARDS_WORKFLOW_TOKEN }}
+
+      - name: Consolidate service registry files
+        run: |
+          # Find all registry files except all-services.json and services.json
+          registry_files=$(find registry -name '*.json' -not -name 'all-services.json' -not -name 'services.json' | sort)
+
+          if [ -z "$registry_files" ]; then
+            echo "No registry files found"
+            exit 0
+          fi
+
+          # Count services
+          service_count=$(echo "$registry_files" | wc -l)
+
+          # Create consolidated JSON using jq
+          echo "{" > registry/all-services.json
+          echo '  "services": [' >> registry/all-services.json
+
+          first=true
+          for file in $registry_files; do
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> registry/all-services.json
+            fi
+            cat "$file" | jq -c '.' | sed 's/^/    /' >> registry/all-services.json
+          done
+
+          echo "" >> registry/all-services.json
+          echo "  ]," >> registry/all-services.json
+          echo "  \"generated_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"," >> registry/all-services.json
+          echo "  \"count\": $service_count" >> registry/all-services.json
+          echo "}" >> registry/all-services.json
+
+          echo "Consolidated $service_count services"
+
+      - name: Build team alias index and discover new teams
+        run: |
+          # Ensure teams directory exists
+          mkdir -p teams
+
+          # Build alias index from existing team files
+          echo "Building team alias index..."
+          declare -A alias_to_team
+          declare -A known_teams
+
+          # Read existing team files
+          for team_file in teams/*.json; do
+            [ -f "$team_file" ] || continue
+            [ "$(basename "$team_file")" = "all-teams.json" ] && continue
+
+            team_id=$(basename "$team_file" .json)
+            known_teams["$team_id"]=1
+
+            # Extract aliases from team file
+            aliases=$(jq -r '.aliases // [] | .[]' "$team_file" 2>/dev/null || echo "")
+            for alias in $aliases; do
+              alias_to_team["$alias"]="$team_id"
+            done
+          done
+
+          echo "Found ${#known_teams[@]} existing teams"
+
+          # Normalize team name to ID
+          normalize_team_id() {
+            echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-'
+          }
+
+          # Discover teams from services
+          echo "Discovering teams from services..."
+          registry_files=$(find registry -name '*.json' -not -name 'all-services.json' -not -name 'services.json' | sort)
+
+          new_teams_created=0
+          for file in $registry_files; do
+            # Extract team info (handle both string and object formats)
+            team_json=$(jq -c '.team // null' "$file" 2>/dev/null)
+
+            if [ "$team_json" = "null" ] || [ -z "$team_json" ]; then
+              continue
+            fi
+
+            # Get all teams from the service
+            if echo "$team_json" | jq -e 'type == "string"' > /dev/null 2>&1; then
+              # Old string format
+              team_names=$(echo "$team_json" | jq -r '.')
+            else
+              # New object format
+              team_names=$(echo "$team_json" | jq -r '.all // [.primary] | .[] // empty')
+            fi
+
+            for team_name in $team_names; do
+              [ -z "$team_name" ] && continue
+
+              # Normalize team ID
+              team_id=$(normalize_team_id "$team_name")
+              [ -z "$team_id" ] && continue
+
+              # Check if team exists or matches an alias
+              if [ -n "${known_teams[$team_id]}" ]; then
+                continue
+              fi
+              if [ -n "${alias_to_team[$team_name]}" ]; then
+                continue
+              fi
+
+              # Create new team skeleton
+              team_file="teams/${team_id}.json"
+              if [ ! -f "$team_file" ]; then
+                echo "Creating new team: $team_id"
+
+                # Extract github_org and github_slug from team_json (if present)
+                github_org=""
+                github_slug=""
+                if echo "$team_json" | jq -e 'type == "object"' > /dev/null 2>&1; then
+                  github_org=$(echo "$team_json" | jq -r '.github_org // empty')
+                  github_slug=$(echo "$team_json" | jq -r '.github_slug // empty')
+                fi
+
+                jq -n \
+                  --arg id "$team_id" \
+                  --arg name "$team_name" \
+                  --arg github_org "$github_org" \
+                  --arg github_slug "$github_slug" \
+                  --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                  '{
+                    id: $id,
+                    name: $name,
+                    description: null,
+                    aliases: [],
+                    metadata: {},
+                    github_org: (if $github_org != "" then $github_org else null end),
+                    github_slug: (if $github_slug != "" then $github_slug else null end),
+                    auto_created: $timestamp
+                  }' > "$team_file"
+
+                known_teams["$team_id"]=1
+                new_teams_created=$((new_teams_created + 1))
+              fi
+            done
+          done
+
+          echo "Created $new_teams_created new team files"
+
+      - name: Generate all-checks.json metadata
+        run: |
+          # Generate consolidated check metadata from checks/*/metadata.json
+          echo "Generating all-checks.json..."
+
+          # Check if we have the checks directory (it's on main branch, not catalog)
+          # We need to fetch it from the default branch
+          git fetch origin main --depth=1 || git fetch origin master --depth=1 || true
+
+          # Create temp directory for checks metadata
+          mkdir -p /tmp/checks-metadata
+
+          # Try to get checks from main/master branch
+          if git show origin/main:checks/ > /dev/null 2>&1; then
+            checks_ref="origin/main"
+          elif git show origin/master:checks/ > /dev/null 2>&1; then
+            checks_ref="origin/master"
+          else
+            echo "Could not find checks directory on main or master branch"
+            # Create minimal all-checks.json
+            jq -n '{
+              version: "1.0.0",
+              generated_at: (now | todate),
+              checks: [],
+              categories: []
+            }' > all-checks.json
+            exit 0
+          fi
+
+          echo "Using checks from $checks_ref"
+
+          # Get list of check directories
+          check_dirs=$(git ls-tree --name-only "$checks_ref" checks/ | sort)
+
+          # Build checks array
+          checks_json="[]"
+          categories_set=""
+
+          for check_dir in $check_dirs; do
+            check_id=$(basename "$check_dir")
+
+            # Skip if not a directory with metadata
+            if ! git show "$checks_ref:$check_dir/metadata.json" > /dev/null 2>&1; then
+              continue
+            fi
+
+            # Read metadata
+            metadata=$(git show "$checks_ref:$check_dir/metadata.json")
+
+            # Extract fields and add check_id
+            check_json=$(echo "$metadata" | jq --arg id "$check_id" '{
+              id: $id,
+              name: .name,
+              description: .description,
+              category: .category,
+              weight: .weight
+            }')
+
+            # Add to checks array
+            checks_json=$(echo "$checks_json" | jq --argjson check "$check_json" '. + [$check]')
+
+            # Track category
+            category=$(echo "$metadata" | jq -r '.category')
+            if [ -n "$category" ] && [[ ! "$categories_set" =~ "$category" ]]; then
+              categories_set="$categories_set|$category"
+            fi
+          done
+
+          # Build categories array (ordered)
+          categories_json='["Scorecards Setup", "Documentation", "Testing & CI", "Configuration & Compliance"]'
+
+          # Sort checks by id
+          checks_json=$(echo "$checks_json" | jq 'sort_by(.id)')
+
+          # Build final all-checks.json
+          jq -n \
+            --arg version "1.0.0" \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson checks "$checks_json" \
+            --argjson categories "$categories_json" \
+            '{
+              version: $version,
+              generated_at: $generated_at,
+              checks: $checks,
+              categories: $categories,
+              count: ($checks | length)
+            }' > all-checks.json
+
+          checks_count=$(echo "$checks_json" | jq 'length')
+          echo "Generated all-checks.json with $checks_count checks"
+
+      - name: Generate all-teams.json with statistics
+        run: |
+          # Collect all team files
+          team_files=$(find teams -maxdepth 1 -name '*.json' -not -name 'all-teams.json' | sort)
+
+          if [ -z "$team_files" ]; then
+            echo "No team files found"
+            # Create empty all-teams.json
+            jq -n '{
+              version: "1.0.0",
+              generated_at: (now | todate),
+              teams: {},
+              count: 0,
+              aliases: {}
+            }' > teams/all-teams.json
+            exit 0
+          fi
+
+          # Build team statistics from services
+          echo "Calculating team statistics..."
+
+          # Create temporary file for team stats
+          stats_file=$(mktemp)
+          echo "{}" > "$stats_file"
+
+          # Process each service and accumulate stats
+          registry_files=$(find registry -name '*.json' -not -name 'all-services.json' -not -name 'services.json' | sort)
+
+          for file in $registry_files; do
+            # Extract team info
+            team_json=$(jq -c '.team // null' "$file" 2>/dev/null)
+
+            if [ "$team_json" = "null" ] || [ -z "$team_json" ]; then
+              continue
+            fi
+
+            # Get primary team (handle both formats)
+            if echo "$team_json" | jq -e 'type == "string"' > /dev/null 2>&1; then
+              primary_team=$(echo "$team_json" | jq -r '.')
+            else
+              primary_team=$(echo "$team_json" | jq -r '.primary // empty')
+            fi
+
+            [ -z "$primary_team" ] && continue
+
+            # Normalize team ID
+            team_id=$(echo "$primary_team" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-')
+            [ -z "$team_id" ] && continue
+
+            # Extract service metrics
+            score=$(jq -r '.score // 0' "$file")
+            rank=$(jq -r '.rank // "bronze"' "$file")
+            installed=$(jq -r '.installed // false' "$file")
+
+            # Calculate staleness (30 days)
+            last_updated=$(jq -r '.last_updated // ""' "$file")
+            is_stale="false"
+            if [ -n "$last_updated" ]; then
+              last_epoch=$(date -d "$last_updated" +%s 2>/dev/null || echo 0)
+              now_epoch=$(date +%s)
+              days_old=$(( (now_epoch - last_epoch) / 86400 ))
+              if [ $days_old -gt 30 ]; then
+                is_stale="true"
+              fi
+            fi
+
+            # Update stats for this team
+            current_stats=$(jq -c --arg id "$team_id" '.[$id] // {
+              service_count: 0,
+              total_score: 0,
+              rank_distribution: {"platinum": 0, "gold": 0, "silver": 0, "bronze": 0},
+              stale_count: 0,
+              installed_count: 0
+            }' "$stats_file")
+
+            updated_stats=$(echo "$current_stats" | jq \
+              --argjson score "$score" \
+              --arg rank "$rank" \
+              --argjson installed "$installed" \
+              --argjson is_stale "$is_stale" \
+              '{
+                service_count: (.service_count + 1),
+                total_score: (.total_score + $score),
+                rank_distribution: (.rank_distribution | .[$rank] = ((.[$rank] // 0) + 1)),
+                stale_count: (.stale_count + (if $is_stale then 1 else 0 end)),
+                installed_count: (.installed_count + (if $installed then 1 else 0 end))
+              }')
+
+            # Write back to stats file
+            jq --arg id "$team_id" --argjson stats "$updated_stats" '.[$id] = $stats' "$stats_file" > "${stats_file}.tmp"
+            mv "${stats_file}.tmp" "$stats_file"
+          done
+
+          # Build all-teams.json
+          echo "Building all-teams.json..."
+
+          teams_json="{}"
+          aliases_json="{}"
+          team_count=0
+
+          for team_file in $team_files; do
+            team_id=$(basename "$team_file" .json)
+            team_data=$(cat "$team_file")
+
+            # Get stats for this team
+            team_stats=$(jq -c --arg id "$team_id" '.[$id] // {
+              service_count: 0,
+              total_score: 0,
+              rank_distribution: {},
+              stale_count: 0,
+              installed_count: 0
+            }' "$stats_file")
+
+            # Calculate average score
+            service_count=$(echo "$team_stats" | jq '.service_count')
+            total_score=$(echo "$team_stats" | jq '.total_score')
+            if [ "$service_count" -gt 0 ]; then
+              avg_score=$(echo "scale=1; $total_score / $service_count" | bc)
+            else
+              avg_score="0"
+            fi
+
+            # Build statistics object
+            statistics=$(echo "$team_stats" | jq --argjson avg "$avg_score" '{
+              service_count: .service_count,
+              average_score: $avg,
+              rank_distribution: .rank_distribution,
+              stale_count: .stale_count,
+              installed_count: .installed_count
+            }')
+
+            # Add team to teams_json with statistics
+            team_with_stats=$(echo "$team_data" | jq --argjson stats "$statistics" '. + {statistics: $stats}')
+            teams_json=$(echo "$teams_json" | jq --arg id "$team_id" --argjson team "$team_with_stats" '.[$id] = $team')
+
+            # Add aliases to index
+            aliases=$(echo "$team_data" | jq -r '.aliases // [] | .[]')
+            for alias in $aliases; do
+              aliases_json=$(echo "$aliases_json" | jq --arg alias "$alias" --arg id "$team_id" '.[$alias] = $id')
+            done
+
+            team_count=$((team_count + 1))
+          done
+
+          # Write final all-teams.json
+          jq -n \
+            --arg version "1.0.0" \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson teams "$teams_json" \
+            --argjson count "$team_count" \
+            --argjson aliases "$aliases_json" \
+            '{
+              version: $version,
+              generated_at: $generated_at,
+              teams: $teams,
+              count: $count,
+              aliases: $aliases
+            }' > teams/all-teams.json
+
+          echo "Generated all-teams.json with $team_count teams"
+          rm -f "$stats_file"
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          # Check if any files are modified
+          if [ -n "$(git status --porcelain registry/ teams/ all-checks.json 2>/dev/null)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add registry/all-services.json teams/ all-checks.json
+          git commit -m "Update consolidated registry, teams, and checks [skip ci]"
+          git push

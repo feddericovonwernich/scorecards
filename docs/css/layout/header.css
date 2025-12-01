@@ -1,0 +1,123 @@
+/* ==============================================
+   HEADER - Elegant Top Strip Design
+   ============================================== */
+
+/* Platinum Gradient Strip - Brand Accent */
+.header-strip {
+    height: 4px;
+    background: linear-gradient(
+        90deg,
+        #0EA5E9 0%,
+        #38BDF8 25%,
+        #7DD3FC 50%,
+        #38BDF8 75%,
+        #0EA5E9 100%
+    );
+    position: relative;
+    z-index: 100;
+}
+
+/* Add subtle shimmer animation */
+.header-strip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+    );
+    animation: shimmer 8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { left: -100%; }
+    50% { left: 100%; }
+}
+
+/* Compact Header Bar */
+.header-bar {
+    height: 52px;
+    background: linear-gradient(
+        180deg,
+        rgba(9, 9, 11, 0.98) 0%,
+        rgba(9, 9, 11, 0.95) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 99;
+}
+
+/* Brand Container */
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+/* Custom Logo */
+.header-logo {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.header-brand:hover .header-logo {
+    transform: scale(1.05);
+}
+
+/* Title */
+.header-title {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-header-text);
+    letter-spacing: var(--tracking-tight);
+    user-select: none;
+}
+
+/* Dark theme adjustments (header stays dark in both themes) */
+[data-theme="light"] .header-bar,
+[data-theme="dark"] .header-bar {
+    background: linear-gradient(
+        180deg,
+        rgba(9, 9, 11, 0.98) 0%,
+        rgba(9, 9, 11, 0.95) 100%
+    );
+}
+
+[data-theme="light"] .header-title,
+[data-theme="dark"] .header-title {
+    color: #FAFAFA;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .header-bar {
+        padding: 0 var(--space-4);
+        height: 48px;
+    }
+
+    .header-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .header-title {
+        font-size: var(--text-lg);
+    }
+
+    .header-strip {
+        height: 3px;
+    }
+}
