@@ -3,7 +3,11 @@
 ## Core Principles
 
 ### DRY Configuration
-Never hardcode magic values (timeouts, API params, thresholds, workflow names, etc.). Configuration lives in `docs/src/config/` - explore that directory to discover available constants, settings, and helper functions.
+Never hardcode magic values (timeouts, API params, thresholds, workflow names, etc.). Configuration lives in:
+- `docs/src/config/` - Frontend JavaScript config
+- `action/config/` - Bash script config (scoring thresholds, etc.)
+
+Explore these directories to discover available constants, settings, and helper functions.
 
 ### DRY Styling
 Never hardcode colors in JavaScript. Use CSS variables from `docs/css/base/variables.css` via the `getCssVar()` utility in `docs/src/utils/css.js`.
@@ -41,3 +45,4 @@ When adding code, follow this structure:
 Detailed guidelines auto-load from `.claude/rules/` when working on relevant files:
 - `frontend.md` - Loaded for `docs/src/**` (config details, utilities, examples)
 - `checks.md` - Loaded for `checks/**` (script structure, exit codes)
+- `bash.md` - Loaded for `**/*.sh` (strict mode, quoting, shared utilities)

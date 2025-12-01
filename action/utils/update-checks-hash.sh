@@ -7,7 +7,7 @@
 #   update-checks-hash.sh           - Full workflow (generate + commit to catalog)
 #   update-checks-hash.sh --hash-only - Just output the hash to stdout
 
-set -e
+set -euo pipefail
 
 # Parse arguments
 HASH_ONLY=0
@@ -28,7 +28,7 @@ ACTION_DIR="$(dirname "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname "$ACTION_DIR")"
 CHECKS_DIR="$REPO_ROOT/checks"
 
-if [ $HASH_ONLY -eq 0 ]; then
+if [ "$HASH_ONLY" -eq 0 ]; then
     echo -e "${BLUE}Updating checks hash on catalog branch...${NC}"
     echo
 fi
@@ -46,7 +46,7 @@ fi
 # Generate Checks Hash
 # ============================================================================
 
-if [ $HASH_ONLY -eq 0 ]; then
+if [ "$HASH_ONLY" -eq 0 ]; then
     echo "Generating hash from checks directory: $CHECKS_DIR"
 fi
 
@@ -87,7 +87,7 @@ done
 CHECKS_HASH=$(echo -n "$CHECK_HASHES" | sha256sum | awk '{print $1}')
 
 # If hash-only mode, just output the hash and exit
-if [ $HASH_ONLY -eq 1 ]; then
+if [ "$HASH_ONLY" -eq 1 ]; then
     echo "$CHECKS_HASH"
     exit 0
 fi
@@ -153,7 +153,7 @@ echo -e "${BLUE}Returning to $ORIGINAL_BRANCH branch...${NC}"
 git checkout "$ORIGINAL_BRANCH"
 
 # Restore stashed changes if any
-if [ $STASHED -eq 1 ]; then
+if [ "$STASHED" -eq 1 ]; then
     echo "Restoring stashed changes..."
     git stash pop
 fi

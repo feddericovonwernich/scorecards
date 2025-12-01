@@ -11,11 +11,13 @@ import { openSettings } from './settings.js';
 import { getIcon } from '../config/icons.js';
 import { loadChecks, getAllChecks } from '../api/checks.js';
 import { calculateCheckAdoptionByTeam } from '../utils/check-statistics.js';
+import { createTabManager } from './modals/shared/tab-manager.js';
 
 // State for check adoption tab
 let currentTeamServices = [];
 let selectedCheckId = null;
 let teamCheckDropdownOpen = false;
+let teamTabManager = null;
 
 /**
  * Render GitHub team section HTML
@@ -223,6 +225,17 @@ export async function showTeamModal(teamName) {
     // Store team services for check adoption tab
     currentTeamServices = teamServices;
 
+    // Initialize tab manager for team modal
+    teamTabManager = createTabManager({
+        containerId: 'team-modal',
+        tabButtonSelector: '.tab-btn',
+        tabContentSelector: '.team-tab-content',
+        getTabContentId: (tabName) => `team-tab-${tabName}`,
+        onActivate: {
+            adoption: loadCheckAdoptionTab
+        }
+    });
+
     modal.classList.remove('hidden');
 
     // Fetch GitHub team members asynchronously if team is linked
@@ -240,19 +253,8 @@ export async function showTeamModal(teamName) {
  * @param {string} tabName - Tab to switch to ('services', 'distribution', 'adoption', or 'github')
  */
 export function switchTeamModalTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('#team-modal .tab-btn').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.tab === tabName);
-    });
-
-    // Update tab content
-    document.querySelectorAll('#team-modal .team-tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === `team-tab-${tabName}`);
-    });
-
-    // Load check adoption data when switching to adoption tab
-    if (tabName === 'adoption') {
-        loadCheckAdoptionTab();
+    if (teamTabManager) {
+        teamTabManager.switchTab(tabName);
     }
 }
 

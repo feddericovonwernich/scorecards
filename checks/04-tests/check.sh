@@ -1,6 +1,6 @@
 #!/bin/bash
 # Check: Test files existence
-set -e
+set -euo pipefail
 
 REPO_PATH="${SCORECARD_REPO_PATH:-.}"
 
@@ -45,7 +45,7 @@ for pattern in "${test_patterns[@]}"; do
     done < <(find "$REPO_PATH" -maxdepth 3 -type f -name "$pattern" -print0 2>/dev/null || true)
 done
 
-if [ $found_test_files -eq 0 ]; then
+if [ "$found_test_files" -eq 0 ]; then
     echo "No test files or directories found" >&2
     exit 1
 fi

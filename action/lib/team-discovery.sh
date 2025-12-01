@@ -1,6 +1,7 @@
 #!/bin/bash
 # Team discovery utilities
 # Discovers team ownership from CODEOWNERS files and GitHub Teams API
+set -euo pipefail
 
 # Find CODEOWNERS file in standard locations
 # Returns: path to CODEOWNERS file or empty string

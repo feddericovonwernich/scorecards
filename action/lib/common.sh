@@ -1,5 +1,6 @@
 #!/bin/bash
 # Common utilities for action scripts
+set -euo pipefail
 
 # Color codes
 export RED='\033[0;31m'

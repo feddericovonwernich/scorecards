@@ -1,5 +1,6 @@
 #!/bin/bash
 # GitHub API operations
+set -euo pipefail
 
 # Get PR information from GitHub
 get_pr_info() {

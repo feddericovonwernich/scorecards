@@ -1,5 +1,6 @@
 #!/bin/bash
 # Results reporting and JSON generation
+set -euo pipefail
 
 # Build complete results JSON
 build_results_json() {

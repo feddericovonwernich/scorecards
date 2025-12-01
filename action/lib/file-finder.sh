@@ -1,40 +1,23 @@
 #!/bin/bash
 # File finding utilities
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/file-utils.sh"
 
 # Find README file
 find_readme() {
-    local repo_path="${1:-.}"
-    local readme_file=""
-
-    for name in README.md readme.md README README.txt readme.txt; do
-        if [ -f "$repo_path/$name" ]; then
-            readme_file="$name"
-            break
-        fi
-    done
-
-    echo "$readme_file"
+    find_file "${1:-.}" README.md readme.md README README.txt readme.txt || echo ""
 }
 
 # Find LICENSE file
 find_license() {
-    local repo_path="${1:-.}"
-    local license_file=""
-
-    for name in LICENSE LICENSE.txt LICENSE.md COPYING COPYING.txt; do
-        if [ -f "$repo_path/$name" ]; then
-            license_file="$name"
-            break
-        fi
-    done
-
-    echo "$license_file"
+    find_file "${1:-.}" LICENSE LICENSE.txt LICENSE.md COPYING COPYING.txt || echo ""
 }
 
 # Find OpenAPI spec file
 find_openapi_spec() {
     local repo_path="${1:-.}"
-    local spec_file=""
 
     local paths=(
         "openapi.yaml"
@@ -63,20 +46,12 @@ find_openapi_spec() {
         ".openapi/openapi.json"
     )
 
-    for path in "${paths[@]}"; do
-        if [ -f "$repo_path/$path" ]; then
-            spec_file="$path"
-            break
-        fi
-    done
-
-    echo "$spec_file"
+    find_file "$repo_path" "${paths[@]}" || echo ""
 }
 
 # Find CI config file
 find_ci_config() {
     local repo_path="${1:-.}"
-    local ci_file=""
 
     local paths=(
         ".github/workflows"
@@ -90,12 +65,5 @@ find_ci_config() {
         "bitbucket-pipelines.yml"
     )
 
-    for path in "${paths[@]}"; do
-        if [ -e "$repo_path/$path" ]; then
-            ci_file="$path"
-            break
-        fi
-    done
-
-    echo "$ci_file"
+    find_path "$repo_path" "${paths[@]}" || echo ""
 }

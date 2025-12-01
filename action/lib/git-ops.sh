@@ -1,5 +1,9 @@
 #!/bin/bash
 # Git operations with smart retry logic
+set -euo pipefail
+
+# Source json-builders for reusable jq filters
+source "$(dirname "${BASH_SOURCE[0]}")/json-builders.sh"
 
 # Clone repository with retry
 git_clone_with_retry() {
@@ -142,6 +146,7 @@ build_registry_entry() {
         --argjson excluded_checks "$excluded_checks"
     )
 
+    # Build jq filter using centralized constants from json-builders.sh
     local jq_filter
     if [ -n "$pr_number" ] && [ -n "$pr_state" ] && [ -n "$pr_url" ]; then
         jq_args+=(
@@ -149,58 +154,10 @@ build_registry_entry() {
             --arg pr_state "$pr_state"
             --arg pr_url "$pr_url"
         )
-        jq_filter='{
-            org: $org,
-            repo: $repo,
-            name: $name,
-            team: (if $team_primary != "" then {
-                primary: $team_primary,
-                all: $team_all,
-                source: $team_source,
-                last_discovered: (if $team_discovered_at != "" then $team_discovered_at else null end),
-                github_org: (if $team_github_org != "" then $team_github_org else null end),
-                github_slug: (if $team_github_slug != "" then $team_github_slug else null end)
-            } else null end),
-            score: $score,
-            rank: $rank,
-            last_updated: $timestamp,
-            has_api: $has_api,
-            checks_hash: $checks_hash,
-            checks_count: $checks_count,
-            check_results: $check_results,
-            excluded_checks: $excluded_checks,
-            installed: $installed,
-            default_branch: $default_branch,
-            installation_pr: {
-                number: $pr_number,
-                state: $pr_state,
-                url: $pr_url
-            }
-        }'
+        # Combine base filter with PR portion
+        jq_filter="${JQ_REGISTRY_BASE_FILTER%\}}${JQ_REGISTRY_PR_PORTION}}"
     else
-        jq_filter='{
-            org: $org,
-            repo: $repo,
-            name: $name,
-            team: (if $team_primary != "" then {
-                primary: $team_primary,
-                all: $team_all,
-                source: $team_source,
-                last_discovered: (if $team_discovered_at != "" then $team_discovered_at else null end),
-                github_org: (if $team_github_org != "" then $team_github_org else null end),
-                github_slug: (if $team_github_slug != "" then $team_github_slug else null end)
-            } else null end),
-            score: $score,
-            rank: $rank,
-            last_updated: $timestamp,
-            has_api: $has_api,
-            checks_hash: $checks_hash,
-            checks_count: $checks_count,
-            check_results: $check_results,
-            excluded_checks: $excluded_checks,
-            installed: $installed,
-            default_branch: $default_branch
-        }'
+        jq_filter="$JQ_REGISTRY_BASE_FILTER"
     fi
 
     jq "${jq_args[@]}" "$jq_filter"
@@ -225,7 +182,7 @@ git_push_with_smart_retry() {
     local retry_count=0
     local push_success=false
 
-    while [ $retry_count -lt $max_retries ]; do
+    while [ "$retry_count" -lt "$max_retries" ]; do
         if git push origin "$branch" > "$work_dir/git-push.log" 2>&1; then
             log_success "Results committed to central repository"
             push_success=true
@@ -233,7 +190,7 @@ git_push_with_smart_retry() {
         else
             retry_count=$((retry_count + 1))
 
-            if [ $retry_count -lt $max_retries ]; then
+            if [ "$retry_count" -lt "$max_retries" ]; then
                 log_warning "Push failed (attempt $retry_count/$max_retries)"
 
                 # Fetch latest changes and rebase
@@ -254,7 +211,7 @@ git_push_with_smart_retry() {
                     local jitter=$((RANDOM % 6))
                     local backoff=$((base_backoff + jitter))
                     log_info "Retrying in ${backoff}s (attempt $((retry_count + 1))/$max_retries)..."
-                    sleep $backoff
+                    sleep "$backoff"
                 else
                     log_warning "Rebase failed"
                     cat "$work_dir/git-rebase.log"

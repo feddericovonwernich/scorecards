@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Scorecards Reset Script
 # Clears catalog branch and removes installed scorecard files from test repos

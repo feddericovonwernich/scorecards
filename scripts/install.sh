@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Scorecards Installation Script
 # This script sets up a new scorecards instance in your GitHub organization or account

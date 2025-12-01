@@ -1,5 +1,6 @@
 #!/bin/bash
 # Contributor analysis from git history
+set -euo pipefail
 
 # Analyze recent contributors
 analyze_contributors() {

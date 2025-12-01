@@ -1,6 +1,6 @@
 #!/bin/bash
 # Check: Scorecard Badge in README
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../../action/lib/file-finder.sh"
@@ -24,7 +24,7 @@ score_badges=$(echo "$readme_content" | grep -c "img.shields.io/endpoint.*catalo
 rank_badges=$(echo "$readme_content" | grep -c "img.shields.io/endpoint.*catalog/badges.*rank\.json" || true)
 total_badges=$((score_badges + rank_badges))
 
-if [ $total_badges -eq 0 ]; then
+if [ "$total_badges" -eq 0 ]; then
     echo "No scorecard badges found in $readme_file" >&2
     echo "Expected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)" >&2
     exit 1
@@ -32,11 +32,11 @@ fi
 
 # Build success message
 message="Found scorecard badge(s) in $readme_file:"
-if [ $score_badges -gt 0 ]; then
+if [ "$score_badges" -gt 0 ]; then
     message="$message $score_badges score badge(s)"
 fi
-if [ $rank_badges -gt 0 ]; then
-    if [ $score_badges -gt 0 ]; then
+if [ "$rank_badges" -gt 0 ]; then
+    if [ "$score_badges" -gt 0 ]; then
         message="$message and"
     fi
     message="$message $rank_badges rank badge(s)"

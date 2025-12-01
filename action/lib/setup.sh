@@ -1,5 +1,6 @@
 #!/bin/bash
 # Setup and environment initialization
+set -euo pipefail
 
 # Setup cleanup trap for temporary directories
 setup_cleanup_trap() {

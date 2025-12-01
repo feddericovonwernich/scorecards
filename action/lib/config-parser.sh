@@ -1,5 +1,6 @@
 #!/bin/bash
 # Configuration file parsing
+set -euo pipefail
 
 # Parse YAML field from config file
 # Usage: parse_yaml_field "config.yml" "service.links" "[]"

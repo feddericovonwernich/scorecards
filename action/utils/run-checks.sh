@@ -2,6 +2,9 @@
 # Check Runner - Executes all checks and generates results
 set -euo pipefail
 
+# Source common utilities for colors and logging
+source /action/lib/common.sh
+
 # Usage: run-checks.sh <checks_dir> <repo_path> <output_file>
 HOST_CHECKS_DIR="${1:-/host-checks}"
 REPO_PATH="${2:-/workspace}"
@@ -20,12 +23,6 @@ fi
 
 # Now use /checks for the rest of the script (where the symlink exists)
 CHECKS_DIR="/checks"
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
 
 echo "Running scorecards..."
 echo "Checks directory: $CHECKS_DIR"
@@ -156,7 +153,7 @@ while IFS= read -r check_dir; do
     else
         exit_code=$?
         # timeout command returns 124 on timeout
-        if [ $exit_code -eq 124 ]; then
+        if [ "$exit_code" -eq 124 ]; then
             echo "TIMEOUT (>${timeout}s)" > "$output_stderr"
         fi
     fi
@@ -172,7 +169,7 @@ while IFS= read -r check_dir; do
     rm -f "$output_stdout" "$output_stderr"
 
     # Determine pass/fail
-    if [ $exit_code -eq 0 ]; then
+    if [ "$exit_code" -eq 0 ]; then
         status="pass"
         passed_checks=$((passed_checks + 1))
         echo -e "${GREEN}PASS${NC} (${duration}s)"

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Scorecards Catalog Branch Reset Script
 # This script resets the catalog branch to a clean state

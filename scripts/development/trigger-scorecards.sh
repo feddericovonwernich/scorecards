@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Scorecards Trigger Script
 # Triggers scorecard workflows on all test repositories

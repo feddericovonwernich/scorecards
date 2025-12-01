@@ -1,7 +1,6 @@
 #!/bin/bash
 # Install testing dependencies
-
-set -e
+set -euo pipefail
 
 echo "Installing testing dependencies..."
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Check: Scorecard configuration file existence and validity
-set -e
+set -euo pipefail
 
 REPO_PATH="${SCORECARD_REPO_PATH:-.}"
 CONFIG_FILE="$REPO_PATH/.scorecard/config.yml"

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "@config/*": ["docs/src/config/*"],
+      "@utils/*": ["docs/src/utils/*"],
+      "@ui/*": ["docs/src/ui/*"],
+      "@api/*": ["docs/src/api/*"],
+      "@services/*": ["docs/src/services/*"],
+      "@types": ["docs/src/types/index.js"]
+    }
+  },
+  "include": [
+    "docs/src/**/*.js",
+    "docs/src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "docs/lib/**",
+    "tests/**"
+  ]
+}

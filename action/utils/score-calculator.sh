@@ -2,6 +2,9 @@
 # Score Calculator - Calculates weighted score and rank from check results
 set -euo pipefail
 
+# Source scoring configuration for rank/color functions
+source "$(dirname "${BASH_SOURCE[0]}")/../config/scoring.sh"
+
 # Usage: score-calculator.sh <results_file> <output_file>
 RESULTS_FILE="${1:-results.json}"
 OUTPUT_FILE="${2:-score.json}"
@@ -36,33 +39,10 @@ excluded_count=$(echo "$calculation" | jq -r '.excluded_count')
 total_weight=$(echo "$calculation" | jq -r '.total_weight')
 passed_weight=$(echo "$calculation" | jq -r '.passed_weight')
 
-# Determine rank based on score
-if [ "$score" -ge 90 ]; then
-    rank="platinum"
-    rank_color="blue"
-elif [ "$score" -ge 75 ]; then
-    rank="gold"
-    rank_color="yellow"
-elif [ "$score" -ge 50 ]; then
-    rank="silver"
-    rank_color="lightgrey"
-else
-    rank="bronze"
-    rank_color="orange"
-fi
-
-# Determine score color (gradient from red to green)
-if [ "$score" -ge 80 ]; then
-    score_color="brightgreen"
-elif [ "$score" -ge 60 ]; then
-    score_color="green"
-elif [ "$score" -ge 40 ]; then
-    score_color="yellow"
-elif [ "$score" -ge 20 ]; then
-    score_color="orange"
-else
-    score_color="red"
-fi
+# Determine rank and colors using centralized scoring config
+rank=$(get_rank "$score")
+rank_color=$(get_rank_color "$rank")
+score_color=$(get_score_color "$score")
 
 # Create output JSON
 output=$(jq -n \
