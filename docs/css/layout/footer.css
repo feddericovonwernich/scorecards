@@ -1,17 +1,55 @@
-/* Footer */
+/* ==============================================
+   FOOTER - Matches Header Dark Style
+   ============================================== */
+
 footer {
-    background: var(--color-surface);
-    padding: 30px 20px;
+    background: linear-gradient(
+        180deg,
+        rgba(9, 9, 11, 0.95) 0%,
+        rgba(9, 9, 11, 0.98) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: var(--color-header-text);
+    padding: var(--space-6) var(--space-6);
     text-align: center;
-    border-top: 1px solid var(--color-border);
-    margin-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: var(--space-10);
+}
+
+footer p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-sm);
+    margin: 0;
 }
 
 footer a {
-    color: var(--color-accent);
+    color: var(--color-platinum);
     text-decoration: none;
+    transition: color var(--duration-fast) ease;
 }
 
 footer a:hover {
+    color: var(--color-platinum-text);
     text-decoration: underline;
+}
+
+/* Ensure footer text stays light in both themes */
+[data-theme="light"] footer,
+[data-theme="dark"] footer {
+    background: linear-gradient(
+        180deg,
+        rgba(9, 9, 11, 0.95) 0%,
+        rgba(9, 9, 11, 0.98) 100%
+    );
+}
+
+[data-theme="light"] footer p,
+[data-theme="dark"] footer p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="light"] footer a,
+[data-theme="dark"] footer a {
+    color: #38BDF8;
 }
