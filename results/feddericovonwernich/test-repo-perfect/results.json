@@ -9,28 +9,28 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-01T23:45:15Z"
+      "last_discovered": "2025-12-01T23:52:04Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 79,
+  "score": 85,
   "rank": "gold",
-  "passed_checks": 8,
+  "passed_checks": 9,
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-01T23:46:17Z",
+  "timestamp": "2025-12-01T23:53:03Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
+      "name": "feddericovonwernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:43:35Z",
-      "last_commit_hash": "a09ee22"
+      "last_commit_date": "2025-12-01T20:51:53Z",
+      "last_commit_hash": "c01c92f"
     }
   ],
   "checks": [
@@ -54,7 +54,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "LICENSE file found: LICENSE (1079 chars, detected: MIT)\n",
       "stderr": ""
     },
@@ -67,7 +67,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -88,11 +88,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "Scorecards Setup",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
+      "stderr": ""
     },
     {
       "check_id": "06-openapi-spec",
@@ -102,7 +102,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
@@ -128,7 +128,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": "OpenAPI specification found (openapi.yaml), but no .scorecard/config.yml exists\nCreate .scorecard/config.yml with openapi.environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n      staging:\n        base_url: \"https://staging-api.example.com\"\n"
+      "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
     },
     {
       "check_id": "09-scorecard-badge",
@@ -152,7 +152,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     },
     {
       "check_id": "11-codeowners",
