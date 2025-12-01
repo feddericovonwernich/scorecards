@@ -9,28 +9,28 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-01T23:45:42Z"
+      "last_discovered": "2025-12-01T23:52:27Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 68,
+  "score": 74,
   "rank": "silver",
-  "passed_checks": 7,
+  "passed_checks": 8,
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-01T23:46:38Z",
+  "timestamp": "2025-12-01T23:53:21Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
+      "name": "feddericovonwernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:43:35Z",
-      "last_commit_hash": "d3d1c81"
+      "last_commit_date": "2025-12-01T20:52:12Z",
+      "last_commit_hash": "0d366bf"
     }
   ],
   "checks": [
@@ -67,7 +67,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -88,11 +88,11 @@
       "description": "Checks that the repository has a .scorecard/config.yml file with service metadata. This improves service discoverability in the catalog with team info, descriptions, and useful links.",
       "category": "Scorecards Setup",
       "weight": 8,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": ".scorecard/config.yml not found - consider adding service metadata for better catalog discoverability\n"
+      "stdout": "Scorecard config found: .scorecard/config.yml (83 bytes)\n",
+      "stderr": ""
     },
     {
       "check_id": "06-openapi-spec",
@@ -102,7 +102,7 @@
       "weight": 12,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "No OpenAPI specification file found in common locations\nLooked for: openapi.{yaml,yml,json}, swagger.{yaml,yml,json}\nIn directories: root, /api, /docs, /spec, /.openapi\n"
     },
@@ -152,7 +152,7 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": ".scorecard/config.yml not found\nThis check validates config quality - create the config file first\n(Check 05 validates existence, this check validates meaningful content)\n"
+      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     },
     {
       "check_id": "11-codeowners",
@@ -162,7 +162,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "CODEOWNERS file found: .github/CODEOWNERS (1 ownership rule)\n",
       "stderr": ""
     },
