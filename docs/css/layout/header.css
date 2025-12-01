@@ -1,66 +1,123 @@
 /* ==============================================
-   HEADER - Premium Dark Glass Effect
+   HEADER - Elegant Top Strip Design
    ============================================== */
 
-header {
-    background: linear-gradient(180deg,
+/* Platinum Gradient Strip - Brand Accent */
+.header-strip {
+    height: 4px;
+    background: linear-gradient(
+        90deg,
+        #0EA5E9 0%,
+        #38BDF8 25%,
+        #7DD3FC 50%,
+        #38BDF8 75%,
+        #0EA5E9 100%
+    );
+    position: relative;
+    z-index: 100;
+}
+
+/* Add subtle shimmer animation */
+.header-strip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+    );
+    animation: shimmer 8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { left: -100%; }
+    50% { left: 100%; }
+}
+
+/* Compact Header Bar */
+.header-bar {
+    height: 52px;
+    background: linear-gradient(
+        180deg,
         rgba(9, 9, 11, 0.98) 0%,
         rgba(9, 9, 11, 0.95) 100%
     );
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    color: var(--color-header-text);
-    padding: var(--space-12) var(--space-6);
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    position: relative;
-    overflow: hidden;
-    transition: background-color 0.3s ease;
-}
-
-/* Subtle gradient overlay for depth */
-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(
-        ellipse 80% 50% at 50% -20%,
-        rgba(59, 130, 246, 0.08) 0%,
-        transparent 60%
-    );
-    pointer-events: none;
-}
-
-header .container {
-    position: relative;
-    z-index: 1;
-}
-
-header h1 {
-    font-family: var(--font-family-primary);
-    font-size: var(--text-4xl);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: var(--tracking-tight);
-    margin-bottom: var(--space-3);
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 0 var(--space-6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 99;
+}
+
+/* Brand Container */
+.header-brand {
+    display: flex;
+    align-items: center;
     gap: var(--space-3);
-    color: var(--color-header-text);
 }
 
-header h1 svg {
-    opacity: 0.9;
+/* Custom Logo */
+.header-logo {
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
+    transition: transform var(--duration-normal) var(--ease-out-expo);
 }
 
-.subtitle {
+.header-brand:hover .header-logo {
+    transform: scale(1.05);
+}
+
+/* Title */
+.header-title {
     font-family: var(--font-family-primary);
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    color: rgba(255, 255, 255, 0.7);
-    letter-spacing: var(--tracking-wide);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-header-text);
+    letter-spacing: var(--tracking-tight);
+    user-select: none;
+}
+
+/* Dark theme adjustments (header stays dark in both themes) */
+[data-theme="light"] .header-bar,
+[data-theme="dark"] .header-bar {
+    background: linear-gradient(
+        180deg,
+        rgba(9, 9, 11, 0.98) 0%,
+        rgba(9, 9, 11, 0.95) 100%
+    );
+}
+
+[data-theme="light"] .header-title,
+[data-theme="dark"] .header-title {
+    color: #FAFAFA;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .header-bar {
+        padding: 0 var(--space-4);
+        height: 48px;
+    }
+
+    .header-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .header-title {
+        font-size: var(--text-lg);
+    }
+
+    .header-strip {
+        height: 3px;
+    }
 }
