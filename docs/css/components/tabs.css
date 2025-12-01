@@ -2,23 +2,46 @@
    VIEW TABS - Premium Segmented Control
    ============================================== */
 
+/* Tab icon styling */
+.tab-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: transform var(--duration-normal) var(--ease-out-expo),
+                color var(--duration-normal) var(--ease-out-expo);
+}
+
+/* Enhanced container with subtle gradient border */
 .view-tabs {
+    position: relative;
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-2);
     margin-top: var(--space-8);
     margin-bottom: var(--space-6);
     background: var(--color-surface-secondary);
     border-radius: var(--radius-xl);
-    padding: var(--space-1);
-    border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-sm), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: var(--space-2);
+    border: 1px solid transparent;
+    background-image:
+        linear-gradient(var(--color-surface-secondary), var(--color-surface-secondary)),
+        linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.1), transparent);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        var(--shadow-md),
+        0 0 20px rgba(59, 130, 246, 0.08);
 }
 
+/* Tab button with flexbox for icon + text */
 .view-tab {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
     padding: var(--space-4) var(--space-6);
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     border-radius: var(--radius-lg);
     color: var(--color-text-muted);
     font-family: var(--font-family-primary);
@@ -30,29 +53,57 @@
     position: relative;
 }
 
-.view-tab:hover {
+/* Hover state */
+.view-tab:hover:not(.active) {
     color: var(--color-text-secondary);
     background: var(--color-surface-hover);
+    border-color: var(--color-border);
 }
 
+.view-tab:hover .tab-icon {
+    transform: scale(1.1);
+}
+
+/* Active state with gradient border and glow */
 .view-tab.active {
     color: var(--color-text);
     background: var(--color-surface);
-    box-shadow: var(--shadow-md);
+    border: 1px solid transparent;
+    background-image:
+        linear-gradient(var(--color-surface), var(--color-surface)),
+        linear-gradient(135deg, var(--color-accent), rgba(59, 130, 246, 0.5));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        var(--shadow-lg),
+        0 4px 16px rgba(59, 130, 246, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Dark theme enhancement */
+/* Icon color for active state */
+.view-tab.active .tab-icon {
+    color: var(--color-accent);
+}
+
+/* Dark theme enhancements */
 [data-theme="dark"] .view-tabs {
-    background: rgba(39, 39, 42, 0.8);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background-image:
+        linear-gradient(rgba(39, 39, 42, 0.95), rgba(39, 39, 42, 0.95)),
+        linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1), transparent);
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .view-tab.active {
-    background: var(--color-surface);
-    box-shadow: var(--shadow-md),
-                0 0 0 1px rgba(96, 165, 250, 0.3);
+    background-image:
+        linear-gradient(var(--color-surface), var(--color-surface)),
+        linear-gradient(135deg, var(--color-accent), rgba(59, 130, 246, 0.4));
+    box-shadow:
+        var(--shadow-lg),
+        0 4px 20px rgba(59, 130, 246, 0.25),
+        0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 
 /* ==============================================
