@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-12-01T23:48:14Z",
+  "generated_at": "2025-12-01T23:51:55Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -19,6 +19,28 @@
           "gold": 1,
           "silver": 1,
           "bronze": 1
+        },
+        "stale_count": 0,
+        "installed_count": 0
+      }
+    },
+    "frontend": {
+      "id": "frontend",
+      "name": "frontend",
+      "description": null,
+      "aliases": [],
+      "metadata": {},
+      "github_org": "feddericovonwernich-org",
+      "github_slug": "frontend",
+      "auto_created": "2025-12-01T23:51:54Z",
+      "statistics": {
+        "service_count": 1,
+        "average_score": 68.0,
+        "rank_distribution": {
+          "platinum": 0,
+          "gold": 0,
+          "silver": 1,
+          "bronze": 0
         },
         "stale_count": 0,
         "installed_count": 0
@@ -47,6 +69,6 @@
       }
     }
   },
-  "count": 2,
+  "count": 3,
   "aliases": {}
 }
