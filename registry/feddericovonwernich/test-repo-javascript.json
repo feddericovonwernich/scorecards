@@ -1,0 +1,43 @@
+{
+  "org": "feddericovonwernich",
+  "repo": "test-repo-javascript",
+  "name": "test-repo-javascript",
+  "team": {
+    "primary": "frontend",
+    "all": [
+      "frontend"
+    ],
+    "source": "codeowners",
+    "last_discovered": "2025-12-01T23:50:51Z",
+    "github_org": "feddericovonwernich-org",
+    "github_slug": "frontend"
+  },
+  "score": 68,
+  "rank": "silver",
+  "last_updated": "2025-12-01T23:51:46Z",
+  "has_api": false,
+  "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
+  "checks_count": 13,
+  "check_results": {
+    "01-readme": "pass",
+    "02-license": "pass",
+    "03-ci-config": "pass",
+    "04-tests": "pass",
+    "05-scorecard-config": "fail",
+    "06-openapi-spec": "fail",
+    "07-openapi-quality": "fail",
+    "08-api-environments": "pass",
+    "09-scorecard-badge": "fail",
+    "10-scorecard-config-quality": "fail",
+    "11-codeowners": "pass",
+    "12-codeowners-quality": "pass"
+  },
+  "excluded_checks": [],
+  "installed": false,
+  "default_branch": "main",
+  "installation_pr": {
+    "number": 1,
+    "state": "OPEN",
+    "url": "https://github.com/feddericovonwernich/test-repo-javascript/pull/1"
+  }
+}
