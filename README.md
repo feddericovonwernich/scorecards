@@ -149,4 +149,4 @@ See the [Check Development Guide](documentation/guides/check-development-guide.m
 
 ## License
 
-MIT
+[PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0/) - Free to use, but you cannot use this software to compete with Scorecards or offer it as a competing service.

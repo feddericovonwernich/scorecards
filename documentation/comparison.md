@@ -70,7 +70,7 @@ Scorecards is a lightweight, GitHub-native quality measurement tool.
 
 - **Zero infrastructure** - Runs entirely on GitHub Actions and Pages
 - **5-minute setup** - One installation script, immediate results
-- **Free** - No licensing costs, uses existing GitHub infrastructure
+- **Free for internal use** - No licensing costs for using it within your organization
 - **Non-blocking** - Encourages improvement without failing CI
 - **Works out-of-the-box** - No per-service configuration required
 - **Focused scope** - Does one thing well: quality measurement
@@ -110,9 +110,9 @@ We're honest about what Scorecards doesn't do:
 | **Documentation** | TechDocs | Built-in | No |
 | **Integrations** | 100+ plugins | 50+ built-in | GitHub only |
 | **RBAC/Compliance** | Configurable | Enterprise-grade | GitHub permissions |
-| **Annual cost** | $300K-$600K* | $50K-$250K+ | Free |
+| **Annual cost** | $300K-$600K* | $50K-$250K+ | Free* |
 
-*Backstage cost estimate includes engineering time for setup and maintenance.
+*Backstage cost estimate includes engineering time for setup and maintenance. Scorecards is free for internal use under the [PolyForm Shield License](https://polyformproject.org/licenses/shield/1.0.0/) which prohibits using it to build competing products.
 
 ---
 
@@ -141,7 +141,7 @@ We're honest about what Scorecards doesn't do:
 - Are evaluating whether you need an enterprise tool
 - Use GitHub and want to leverage existing infrastructure
 - Need a focused tool that does one thing well
-- Have budget constraints or want a free solution
+- Want a free solution for internal quality measurement
 
 ---
 
