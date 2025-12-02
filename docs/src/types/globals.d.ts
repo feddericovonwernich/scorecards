@@ -131,6 +131,12 @@ declare global {
     handleHashChange: () => void;
     setupEventListeners: () => void;
 
+    // ============= React Integration Flags =============
+    // These flags indicate when React is managing specific UI elements
+    // Vanilla JS code should check these before rendering
+    __REACT_MANAGES_SERVICES_GRID?: boolean;
+    __REACT_MANAGES_TEAMS_GRID?: boolean;
+
     // ============= Additional Window Functions =============
     // Using index signature for flexibility with other window functions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -31,10 +31,20 @@ function renderTeamLink(service: ServiceData): string {
 /**
  * Renders the services grid with filtered services
  * Uses global variables: filteredServices, currentChecksHash
+ *
+ * Note: When React is managing the grid, this function is a no-op.
+ * React components use portals to render into the grid element.
  */
 export function renderServices(): void {
+  // Skip if React is managing the services grid
+  if (window.__REACT_MANAGES_SERVICES_GRID) {
+    return;
+  }
+
   const grid = document.getElementById('services-grid');
-  if (!grid) {return;}
+  if (!grid) {
+    return;
+  }
 
   const services = window.filteredServices || filteredServices;
   const checksHash = window.currentChecksHash ?? currentChecksHash;

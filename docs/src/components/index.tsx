@@ -9,6 +9,7 @@
  */
 
 import { createRoot } from 'react-dom/client';
+import { createPortal } from 'react-dom';
 import { StrictMode, useEffect } from 'react';
 import {
   ToastContainer,
@@ -16,6 +17,8 @@ import {
   setGlobalToastHandler,
   type ToastType,
 } from './ui/index.js';
+import { ServiceGridContainer } from './containers/ServiceGridContainer.js';
+import { TeamGridContainer } from './containers/TeamGridContainer.js';
 
 // ============================================================================
 // Toast Queue - handles toasts that arrive before React mounts
@@ -38,10 +41,38 @@ function setReactMounted() {
 // App Component
 // ============================================================================
 
+// Portal target elements - set during initialization when DOM is ready
+let servicesGridEl: HTMLElement | null = null;
+let teamsGridEl: HTMLElement | null = null;
+
+/**
+ * Initialize portal targets (called when DOM is ready)
+ */
+function initPortalTargets(): void {
+  servicesGridEl = document.getElementById('services-grid');
+  teamsGridEl = document.getElementById('teams-grid');
+
+  // Set flags to tell vanilla JS that React is managing these grids
+  // This prevents vanilla JS from overwriting React's rendered content
+  if (servicesGridEl) {
+    window.__REACT_MANAGES_SERVICES_GRID = true;
+    servicesGridEl.innerHTML = '';
+  }
+  if (teamsGridEl) {
+    window.__REACT_MANAGES_TEAMS_GRID = true;
+    teamsGridEl.innerHTML = '';
+  }
+}
+
+interface AppProps {
+  servicesGrid: HTMLElement | null;
+  teamsGrid: HTMLElement | null;
+}
+
 /**
  * Main App component that orchestrates React islands
  */
-function App() {
+function App({ servicesGrid, teamsGrid }: AppProps) {
   const { toasts, showToast, dismissToast } = useToast();
 
   // Register global toast handler for vanilla JS bridge
@@ -66,7 +97,21 @@ function App() {
   }, [showToast]);
 
   return (
-    <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+    <>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Service Grid Portal */}
+      {servicesGrid && createPortal(
+        <ServiceGridContainer />,
+        servicesGrid
+      )}
+
+      {/* Team Grid Portal */}
+      {teamsGrid && createPortal(
+        <TeamGridContainer />,
+        teamsGrid
+      )}
+    </>
   );
 }
 
@@ -85,6 +130,9 @@ export function initReact(): void {
     return;
   }
 
+  // Initialize portal targets now that DOM is ready
+  initPortalTargets();
+
   // Set up initial window.showToast that queues toasts until React mounts
   if (!window.showToast) {
     window.showToast = (message: string, type?: ToastType | string) => {
@@ -100,7 +148,7 @@ export function initReact(): void {
 
   root.render(
     <StrictMode>
-      <App />
+      <App servicesGrid={servicesGridEl} teamsGrid={teamsGridEl} />
     </StrictMode>
   );
 }
@@ -116,3 +164,12 @@ if (typeof document !== 'undefined') {
 
 // Re-export UI components for use in other React components
 export * from './ui/index.js';
+
+// Re-export feature components
+export * from './features/index.js';
+
+// Re-export container components
+export * from './containers/index.js';
+
+// Re-export hooks
+export * from './hooks/index.js';

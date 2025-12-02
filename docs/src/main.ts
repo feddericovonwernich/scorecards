@@ -407,8 +407,10 @@ async function initTeamsView(): Promise<void> {
     return;
   }
 
-  // Show loading state
-  grid.innerHTML = '<div class="loading">Loading teams...</div>';
+  // Show loading state (skip if React is managing the grid)
+  if (!window.__REACT_MANAGES_TEAMS_GRID) {
+    grid.innerHTML = '<div class="loading">Loading teams...</div>';
+  }
 
   try {
     // Load teams data (services should already be loaded)
@@ -533,8 +535,16 @@ function updateTeamsStats(teams: TeamWithStats[], services: ServiceData[]): void
 
 /**
  * Render teams grid
+ *
+ * Note: When React is managing the grid, this function is a no-op.
+ * React components use portals to render into the grid element.
  */
 function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void {
+  // Skip if React is managing the teams grid
+  if (window.__REACT_MANAGES_TEAMS_GRID) {
+    return;
+  }
+
   const grid = document.getElementById('teams-grid');
   if (!grid) {
     return;

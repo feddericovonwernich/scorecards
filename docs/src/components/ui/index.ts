@@ -30,3 +30,11 @@ export {
   StatCardGroup,
 } from './StatCard.js';
 export type { FilterType, FilterState } from './StatCard.js';
+
+// FilterButton
+export {
+  FilterButton,
+  FilterButtonGroup,
+  WORKFLOW_FILTER_OPTIONS,
+  createWorkflowFilterOptions,
+} from './FilterButton.js';
