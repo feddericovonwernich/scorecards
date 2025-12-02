@@ -333,9 +333,39 @@ async function initTeamsView() {
         // Load teams data (services should already be loaded)
         const services = window.allServices || [];
 
-        // Calculate team data from services
-        const teamData = teamStatistics.calculateTeamStats(services);
-        window.allTeams = Object.values(teamData);
+        // Load teams from registry (includes teams with 0 services)
+        let teamsData = null;
+        try {
+            const { teams } = await registry.loadTeams();
+            teamsData = teams;
+        } catch (error) {
+            console.warn('Failed to load teams registry:', error);
+        }
+
+        // Calculate stats from services
+        const calculatedStats = teamStatistics.calculateTeamStats(services);
+
+        // Merge registry data with calculated stats
+        let teamData;
+        if (teamsData) {
+            teamData = teamStatistics.mergeTeamDataWithStats(teamsData, calculatedStats);
+        } else {
+            // Fallback: use service-derived teams only
+            teamData = Object.fromEntries(
+                Object.entries(calculatedStats).map(([name, stats]) => [
+                    name.toLowerCase().replace(/\s+/g, '-'),
+                    { id: name.toLowerCase().replace(/\s+/g, '-'), name, statistics: stats }
+                ])
+            );
+        }
+
+        // Flatten statistics for rendering compatibility
+        window.allTeams = Object.values(teamData).map(t => ({
+            ...t,
+            ...t.statistics,
+            // Flatten metadata for slack_channel access
+            slack_channel: t.metadata?.slack_channel || null,
+        }));
 
         // Update teams stats
         updateTeamsStats(window.allTeams, services);
