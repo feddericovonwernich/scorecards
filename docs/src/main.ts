@@ -89,6 +89,33 @@ import * as appInit from './app-init.js';
 
 // Window types are defined in types/globals.d.ts
 
+// ============================================================================
+// Initialize Global State (previously in app.js)
+// These window properties must be initialized before any other code runs
+// ============================================================================
+window.allServices = [];
+window.filteredServices = [];
+window.activeFilters = new Map();
+window.currentSort = 'score-desc';
+window.searchQuery = '';
+window.currentChecksHash = null;
+window.checksHashTimestamp = 0;
+window.currentView = 'services';
+window.allTeams = [];
+window.filteredTeams = [];
+window.teamsSort = 'score-desc';
+window.teamsSearchQuery = '';
+window.teamsActiveFilters = new Map();
+window.githubPAT = null;
+window.currentServiceOrg = null;
+window.currentServiceRepo = null;
+window.serviceWorkflowRuns = [];
+window.serviceWorkflowFilterStatus = 'all';
+window.serviceWorkflowPollInterval = null;
+window.serviceWorkflowPollIntervalTime = 30000;
+window.serviceWorkflowLoaded = false;
+window.serviceDurationUpdateInterval = null;
+
 // Export modules to window for backward compatibility with app.js
 // This allows the existing app.js to use the modular functions
 const ScorecardModules = {
@@ -172,6 +199,12 @@ window.getIcon = icons.getIcon;
 
 // Clipboard utilities
 window.copyBadgeCode = clipboard.copyBadgeCode;
+
+// API Explorer
+window.openApiExplorer = function (org: string, repo: string): void {
+  const explorerUrl = `api-explorer.html?org=${encodeURIComponent(org)}&repo=${encodeURIComponent(repo)}`;
+  window.open(explorerUrl, '_blank');
+};
 
 // Toast notifications
 window.showToast = toast.showToast;
