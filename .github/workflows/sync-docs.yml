@@ -29,11 +29,26 @@ jobs:
           path: catalog-repo
           token: ${{ secrets.SCORECARDS_CATALOG_TOKEN || secrets.SCORECARDS_WORKFLOW_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: main-repo/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: main-repo
+
+      - name: Build catalog UI
+        run: npm run build
+        working-directory: main-repo
+
       - name: Sync catalog UI files
         run: |
-          # Sync entire docs directory from main to catalog branch
-          # The catalog branch serves these files via GitHub Pages from /docs directory
-          rsync -av --delete main-repo/docs/ catalog-repo/docs/
+          # Sync built files from dist/ to catalog branch docs/
+          # Vite compiles TypeScript to JavaScript in docs/dist/
+          rsync -av --delete main-repo/docs/dist/ catalog-repo/docs/
 
       - name: Commit and push to catalog
         run: |
