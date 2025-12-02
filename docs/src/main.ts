@@ -38,6 +38,9 @@ interface TeamWithStats {
   statistics?: TeamStatsBase;
 }
 
+// React components entry point
+import './components/index.js';
+
 // Config modules
 import * as constants from './config/constants.js';
 import * as icons from './config/icons.js';

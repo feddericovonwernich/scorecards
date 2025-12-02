@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   // Root is the docs directory
@@ -26,24 +27,28 @@ export default defineConfig({
       '@services': resolve(__dirname, 'src/services'),
       '@types': resolve(__dirname, 'src/types/index'),
     },
-    // Allow importing .ts files without extension and resolve .js to .ts
-    extensions: ['.ts', '.js', '.mjs', '.json'],
+    // Allow importing .ts/.tsx files without extension and resolve .js to .ts/.tsx
+    extensions: ['.tsx', '.ts', '.js', '.mjs', '.json'],
   },
 
-  // Esbuild options for TypeScript
-  esbuild: {
-    // Allow .js files to contain TypeScript/JSX
-    loader: 'ts',
-  },
-
-  // Plugin to rewrite .js imports to .ts during development
+  // Plugins
   plugins: [
+    // React plugin for JSX transformation and Fast Refresh
+    react(),
+    // Plugin to rewrite .js imports to .ts/.tsx during development
     {
       name: 'resolve-js-to-ts',
       enforce: 'pre',
-      resolveId(source, importer) {
+      async resolveId(source, importer) {
         // Only process relative imports ending in .js
         if (source.endsWith('.js') && (source.startsWith('./') || source.startsWith('../'))) {
+          // Try .tsx first, then .ts
+          const tsxPath = source.replace(/\.js$/, '.tsx');
+          const tsxResolved = await this.resolve(tsxPath, importer, { skipSelf: true });
+          if (tsxResolved) {
+            return tsxResolved;
+          }
+
           const tsPath = source.replace(/\.js$/, '.ts');
           return this.resolve(tsPath, importer, { skipSelf: true });
         }
