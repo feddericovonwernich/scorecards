@@ -27,10 +27,10 @@ jobs:
   scorecards:
     name: Run Scorecards
     # Call the reusable installation workflow from the scorecards repository
-    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+    uses: feddericovonwernich-org/scorecards/.github/workflows/install.yml@main
     with:
       # Optional: Override the default scorecards repository
-      scorecards-repo: 'feddericovonwernich/scorecards'
+      scorecards-repo: 'feddericovonwernich-org/scorecards'
 
       # Optional: Override the default branch for results (default: 'catalog')
       scorecards-branch: 'catalog'

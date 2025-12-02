@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Scorecards
-        uses: feddericovonwernich/scorecards/action@main
+        uses: feddericovonwernich-org/scorecards/action@main
         with:
           github-token: ${{ secrets.SCORECARDS_PAT }}
           scorecards-repo: 'your-org/scorecards'  # Replace with YOUR organization's scorecards repo
@@ -74,7 +74,7 @@ Once you've added the workflow and secret, push to your default branch. The scor
 ### Step 4: View Your Results
 
 After the first run:
-1. Visit the [Scorecards Catalog](https://feddericovonwernich.github.io/scorecards/)
+1. Visit the [Scorecards Catalog](https://feddericovonwernich-org.github.io/scorecards/)
 2. Find your service in the list
 3. See your score, rank, and detailed check results
 
@@ -182,7 +182,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Scorecards (PR Check)
-        uses: feddericovonwernich/scorecards/action@main
+        uses: feddericovonwernich-org/scorecards/action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Don't set scorecards-repo to avoid committing on PRs
@@ -197,7 +197,7 @@ Access scorecard results in subsequent workflow steps:
 ```yaml
 - name: Run Scorecards
   id: scorecard
-  uses: feddericovonwernich/scorecards/action@main
+  uses: feddericovonwernich-org/scorecards/action@main
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 

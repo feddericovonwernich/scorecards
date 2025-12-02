@@ -7,7 +7,7 @@ on:
         description: 'Central scorecards repository (owner/repo)'
         required: false
         type: string
-        default: 'feddericovonwernich/scorecards'
+        default: 'feddericovonwernich-org/scorecards'
       scorecards-branch:
         description: 'Branch to commit results to in central repo'
         required: false
@@ -106,7 +106,7 @@ jobs:
           mkdir -p .github/workflows
 
           # Copy template and customize it
-          sed -e "s|feddericovonwernich/scorecards|${{ inputs.scorecards-repo }}|g" \
+          sed -e "s|feddericovonwernich-org/scorecards|${{ inputs.scorecards-repo }}|g" \
               -e "s|scorecards-branch: 'catalog'|scorecards-branch: '${{ inputs.scorecards-branch }}'|g" \
               .scorecards-tmp/documentation/examples/scorecard-workflow-template.yml > .github/workflows/scorecards.yml
 
@@ -271,7 +271,7 @@ jobs:
       - name: Run Scorecards Action
         if: steps.cache.outputs.cache-hit != 'true'
         id: scorecards
-        uses: feddericovonwernich/scorecards/action@main
+        uses: feddericovonwernich-org/scorecards/action@main
         with:
           github-token: ${{ secrets.scorecards-catalog-token }}
           scorecards-repo: ${{ inputs.scorecards-repo }}

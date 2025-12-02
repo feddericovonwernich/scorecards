@@ -18,7 +18,7 @@ The quickest way to get started:
 
 ```bash
 export GITHUB_TOKEN=your_github_pat
-curl -fsSL https://raw.githubusercontent.com/feddericovonwernich/scorecards/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/feddericovonwernich-org/scorecards/main/scripts/install.sh | bash
 ```
 
 The installation script will:

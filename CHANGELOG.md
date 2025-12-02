@@ -35,5 +35,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal permission requirements documented
 - Secure token storage via GitHub Secrets
 
-[unreleased]: https://github.com/feddericovonwernich/scorecards/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/feddericovonwernich/scorecards/releases/tag/v1.0.0
+[unreleased]: https://github.com/feddericovonwernich-org/scorecards/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/feddericovonwernich-org/scorecards/releases/tag/v1.0.0

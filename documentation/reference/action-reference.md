@@ -16,7 +16,7 @@ Technical specification for the Scorecards GitHub Action.
 
 ```yaml
 - name: Run Scorecards
-  uses: feddericovonwernich/scorecards/action@main
+  uses: feddericovonwernich-org/scorecards/action@main
   with:
     github-token: ${{ secrets.SCORECARDS_PAT }}
     scorecards-repo: 'your-org/scorecards'
@@ -38,7 +38,7 @@ Technical specification for the Scorecards GitHub Action.
 ```yaml
 - name: Run Scorecards
   id: scorecard
-  uses: feddericovonwernich/scorecards/action@main
+  uses: feddericovonwernich-org/scorecards/action@main
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 
