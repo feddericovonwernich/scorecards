@@ -11,7 +11,7 @@ set -euo pipefail
 
 # Parse arguments
 HASH_ONLY=0
-if [ "$1" = "--hash-only" ]; then
+if [ "${1:-}" = "--hash-only" ]; then
     HASH_ONLY=1
 fi
 

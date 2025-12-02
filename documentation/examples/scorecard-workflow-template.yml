@@ -19,11 +19,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Scorecards Action
-        uses: feddericovonwernich/scorecards/action@main
+        uses: feddericovonwernich-org/scorecards/action@main
         id: scorecards
         with:
           github-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
-          scorecards-repo: 'feddericovonwernich/scorecards'
+          scorecards-repo: 'feddericovonwernich-org/scorecards'
           scorecards-branch: 'catalog'
 
       - name: Display Results

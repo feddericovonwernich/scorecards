@@ -112,7 +112,7 @@ The Scorecards system uses 8 workflows across three categories:
 **Inputs:**
 - `org` (required) - Organization/user name
 - `repo` (required) - Repository name
-- `scorecards-repo` (optional) - Central scorecards repository (default: 'feddericovonwernich/scorecards')
+- `scorecards-repo` (optional) - Central scorecards repository (default: 'feddericovonwernich-org/scorecards')
 - `scorecards-branch` (optional) - Branch for results (default: 'catalog')
 
 **Purpose:** Creates a pull request in a target service repository to install scorecards.
@@ -217,7 +217,7 @@ The Scorecards system uses 8 workflows across three categories:
 
 1. **scorecard** - Runs scorecards action
    - Checks out service repository
-   - Runs scorecards action (`feddericovonwernich/scorecards/action@main`)
+   - Runs scorecards action (`feddericovonwernich-org/scorecards/action@main`)
    - Displays results in GitHub Step Summary
    - Uploads results as artifact
 
@@ -340,7 +340,7 @@ For detailed workflow interactions and data flows, see:
 ```yaml
 jobs:
   scorecards:
-    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
+    uses: feddericovonwernich-org/scorecards/.github/workflows/install.yml@main
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
@@ -363,7 +363,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: feddericovonwernich/scorecards/action@main
+      - uses: feddericovonwernich-org/scorecards/action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```

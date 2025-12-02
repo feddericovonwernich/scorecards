@@ -12,7 +12,7 @@ Measure service quality against configurable standards and make results visible 
 
 ```bash
 export GITHUB_TOKEN=your_github_pat
-curl -fsSL https://raw.githubusercontent.com/feddericovonwernich/scorecards/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/feddericovonwernich-org/scorecards/main/scripts/install.sh | bash
 ```
 
 This creates a repository with GitHub Actions, catalog UI on GitHub Pages, and results storage. Services get scored immediately with no additional configuration required.
@@ -114,7 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Scorecards
-        uses: feddericovonwernich/scorecards/action@main
+        uses: feddericovonwernich-org/scorecards/action@main
         with:
           github-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
           scorecards-repo: 'your-org/scorecards'
