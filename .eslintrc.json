@@ -1,44 +1,73 @@
 {
-  "env": {
-    "browser": true,
-    "es2021": true,
-    "node": true,
-    "jest": true
-  },
-  "extends": ["eslint:recommended"],
-  "parserOptions": {
-    "ecmaVersion": "latest",
-    "sourceType": "module"
-  },
-  "globals": {
-    "RAW_BASE_URL": "readonly",
-    "REPO_OWNER": "readonly",
-    "REPO_NAME": "readonly",
-    "allServices": "writable",
-    "currentChecksHash": "writable",
-    "filteredServices": "writable",
-    "currentServiceOrg": "writable",
-    "currentServiceRepo": "writable",
-    "serviceWorkflowLoaded": "writable",
-    "serviceWorkflowRuns": "writable",
-    "serviceWorkflowFilterStatus": "writable",
-    "serviceWorkflowPollInterval": "writable",
-    "serviceWorkflowPollIntervalTime": "writable",
-    "serviceDurationUpdateInterval": "writable",
-    "fetchWithHybridAuth": "readonly",
-    "showToast": "readonly",
-    "loadWorkflowRunsForService": "readonly"
-  },
-  "rules": {
-    "indent": ["error", 4],
-    "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single", { "avoidEscape": true }],
-    "semi": ["error", "always"],
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "no-console": ["error", { "allow": ["warn", "error"] }],
-    "prefer-const": "error",
-    "no-var": "error",
-    "eqeqeq": ["error", "always"],
-    "curly": ["error", "all"]
-  }
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "node": true,
+        "jest": true
+    },
+    "ignorePatterns": ["docs/dist/**", "node_modules/**"],
+    "extends": ["eslint:recommended"],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "globals": {
+        "RAW_BASE_URL": "readonly",
+        "REPO_OWNER": "readonly",
+        "REPO_NAME": "readonly",
+        "allServices": "writable",
+        "currentChecksHash": "writable",
+        "filteredServices": "writable",
+        "currentServiceOrg": "writable",
+        "currentServiceRepo": "writable",
+        "serviceWorkflowLoaded": "writable",
+        "serviceWorkflowRuns": "writable",
+        "serviceWorkflowFilterStatus": "writable",
+        "serviceWorkflowPollInterval": "writable",
+        "serviceWorkflowPollIntervalTime": "writable",
+        "serviceDurationUpdateInterval": "writable",
+        "fetchWithHybridAuth": "readonly",
+        "showToast": "readonly",
+        "loadWorkflowRunsForService": "readonly"
+    },
+    "rules": {
+        "indent": ["error", 4],
+        "linebreak-style": ["error", "unix"],
+        "quotes": ["error", "single", { "avoidEscape": true }],
+        "semi": ["error", "always"],
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+        "no-console": ["error", { "allow": ["warn", "error"] }],
+        "prefer-const": "error",
+        "no-var": "error",
+        "eqeqeq": ["error", "always"],
+        "curly": ["error", "all"]
+    },
+    "overrides": [
+        {
+            "files": ["**/*.ts"],
+            "parser": "@typescript-eslint/parser",
+            "plugins": ["@typescript-eslint"],
+            "extends": [
+                "eslint:recommended",
+                "plugin:@typescript-eslint/recommended"
+            ],
+            "rules": {
+                "indent": ["error", 2],
+                "no-unused-vars": "off",
+                "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }]
+            }
+        },
+        {
+            "files": ["**/*.d.ts"],
+            "rules": {
+                "@typescript-eslint/no-explicit-any": "off"
+            }
+        },
+        {
+            "files": ["**/api/*.ts", "**/ui/actions-widget.ts"],
+            "rules": {
+                "no-console": "off"
+            }
+        }
+    ]
 }

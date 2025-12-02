@@ -1,13 +1,24 @@
 {
   "compilerOptions": {
+    // JavaScript interop (allow gradual migration)
     "allowJs": true,
     "checkJs": false,
+
+    // Strictness (enable as we migrate)
+    "strict": false,
     "strictNullChecks": false,
     "noImplicitAny": false,
+
+    // Module settings
     "target": "ES2020",
     "module": "ES2020",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+
+    // Path aliases
     "baseUrl": ".",
     "paths": {
       "@config/*": ["docs/src/config/*"],
@@ -15,16 +26,22 @@
       "@ui/*": ["docs/src/ui/*"],
       "@api/*": ["docs/src/api/*"],
       "@services/*": ["docs/src/services/*"],
-      "@types": ["docs/src/types/index.js"]
-    }
+      "@types": ["docs/src/types/index.ts"]
+    },
+
+    // Output settings (Vite handles actual output)
+    "noEmit": true,
+    "declaration": false
   },
   "include": [
     "docs/src/**/*.js",
-    "docs/src/types/**/*.d.ts"
+    "docs/src/**/*.ts",
+    "docs/vite.config.ts"
   ],
   "exclude": [
     "node_modules",
     "docs/lib/**",
+    "docs/dist/**",
     "tests/**"
   ]
 }

@@ -47,12 +47,12 @@ window.githubPAT = null;
 // Utility Functions
 // escapeHtml(), capitalize(), formatDate() - moved to src/utils/formatting.js
 
-// Open API Explorer
-function openApiExplorer(org, repo) {
+// Open API Explorer (exposed to window for onclick handlers)
+window.openApiExplorer = function(org, repo) {
     // Open API explorer in a new window with the service org and repo as query params
     const explorerUrl = `api-explorer.html?org=${encodeURIComponent(org)}&repo=${encodeURIComponent(repo)}`;
     window.open(explorerUrl, '_blank');
-}
+};
 
 // Fallback clipboard copy for non-HTTPS contexts or older browsers
 // Clipboard functions (fallbackCopyToClipboard, copyBadgeCode) - moved to src/utils/clipboard.js
@@ -68,14 +68,7 @@ function openApiExplorer(org, repo) {
 // handleBulkTrigger() - window.handleBulkTrigger (via main.js)
 // handleBulkTriggerAll() - window.handleBulkTriggerAll (via main.js)
 
-// Legacy wrapper functions for backward compatibility
-function getGitHubToken() {
-    return window.getGitHubToken();
-}
-
-function clearGitHubToken() {
-    window.clearGitHubToken();
-}
+// Legacy wrapper functions removed - use window.getGitHubToken and window.clearGitHubToken directly
 
 // ============================================================================
 // Toast Notification System
