@@ -16,6 +16,9 @@ set -euo pipefail
 #   GITHUB_TOKEN           - Required: GitHub PAT with repo and workflow permissions
 #   SCORECARDS_SOURCE_REPO - Optional: Override the template repository URL
 #                            (defaults to https://github.com/feddericovonwernich/scorecards.git)
+#   SCORECARDS_TARGET_REPO - Optional: Target repository (e.g., "org/repo") for non-interactive mode
+#   SCORECARDS_REPO_PRIVATE - Optional: "true" or "false" for repository visibility (default: prompt)
+#   SCORECARDS_AUTO_CONFIRM - Optional: "true" to skip confirmations (non-interactive mode)
 
 # Colors for output (use $'...' for actual escape characters)
 RED=$'\033[0;31m'
@@ -95,13 +98,19 @@ print_success "GitHub token is valid"
 GITHUB_USER=$(gh api user -q .login)
 print_success "Authenticated as: $GITHUB_USER"
 
-# Step 2: Interactive setup
+# Step 2: Repository Setup
 print_header "Step 2: Repository Setup"
 
-echo "Enter the repository name for your scorecards instance."
-echo "Format: 'org/repo' or just 'repo' (for personal account)"
-echo ""
-read -p "Repository: " REPO_INPUT < /dev/tty
+# Check for non-interactive mode
+if [ -n "${SCORECARDS_TARGET_REPO:-}" ]; then
+    REPO_INPUT="$SCORECARDS_TARGET_REPO"
+    print_info "Using target repository from environment: $REPO_INPUT"
+else
+    echo "Enter the repository name for your scorecards instance."
+    echo "Format: 'org/repo' or just 'repo' (for personal account)"
+    echo ""
+    read -p "Repository: " REPO_INPUT < /dev/tty
+fi
 
 # Parse org/repo
 if [[ "$REPO_INPUT" == *"/"* ]]; then
@@ -115,13 +124,17 @@ fi
 FULL_REPO="$REPO_OWNER/$REPO_NAME"
 print_info "Target repository: $FULL_REPO"
 
-# Confirm with user
-echo ""
-read -p "Is this correct? (y/n) " -n 1 -r < /dev/tty
-echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_error "Installation cancelled"
-    exit 1
+# Confirm with user (skip if auto-confirm is set)
+if [ "${SCORECARDS_AUTO_CONFIRM:-}" = "true" ]; then
+    print_info "Auto-confirm enabled, skipping confirmation"
+else
+    echo ""
+    read -p "Is this correct? (y/n) " -n 1 -r < /dev/tty
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_error "Installation cancelled"
+        exit 1
+    fi
 fi
 
 # Step 3: Check if repository exists
@@ -130,23 +143,39 @@ print_header "Step 3: Repository Validation"
 print_info "Checking if repository exists..."
 if gh repo view "$FULL_REPO" &> /dev/null; then
     print_warning "Repository $FULL_REPO already exists"
-    echo ""
-    read -p "Do you want to use this existing repository? (y/n) " -n 1 -r < /dev/tty
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_error "Installation cancelled"
-        exit 1
+    if [ "${SCORECARDS_AUTO_CONFIRM:-}" = "true" ]; then
+        print_info "Auto-confirm enabled, using existing repository"
+    else
+        echo ""
+        read -p "Do you want to use this existing repository? (y/n) " -n 1 -r < /dev/tty
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_error "Installation cancelled"
+            exit 1
+        fi
     fi
     REPO_EXISTS=true
 else
     print_info "Repository does not exist. Creating it..."
-    echo ""
-    read -p "Should this be a private repository? (y/n) " -n 1 -r < /dev/tty
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        VISIBILITY="--private"
+
+    # Determine visibility
+    if [ -n "${SCORECARDS_REPO_PRIVATE:-}" ]; then
+        if [ "${SCORECARDS_REPO_PRIVATE}" = "true" ]; then
+            VISIBILITY="--private"
+            print_info "Using private visibility from environment"
+        else
+            VISIBILITY="--public"
+            print_info "Using public visibility from environment"
+        fi
     else
-        VISIBILITY="--public"
+        echo ""
+        read -p "Should this be a private repository? (y/n) " -n 1 -r < /dev/tty
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            VISIBILITY="--private"
+        else
+            VISIBILITY="--public"
+        fi
     fi
 
     # Create repository
@@ -488,7 +517,22 @@ PAGES_URL="https://$REPO_OWNER.github.io/$REPO_NAME"
 print_info "Pages URL: $PAGES_URL"
 print_warning "Note: It may take a few minutes for Pages to deploy"
 
-# Step 9: Success message
+# Step 9: Trigger catalog UI build
+print_header "Step 9: Building Catalog UI"
+
+print_info "Triggering catalog UI build workflow..."
+if gh workflow run sync-docs.yml \
+    --repo "$FULL_REPO" \
+    --ref main 2>/dev/null; then
+    print_success "Catalog build workflow triggered"
+    print_info "The workflow will compile TypeScript and deploy the UI"
+    print_warning "Note: It may take 2-5 minutes for the UI to be ready"
+else
+    print_warning "Could not trigger build workflow automatically"
+    print_info "Manual fix: Go to Actions tab and run 'Sync Catalog UI to Catalog Branch'"
+fi
+
+# Step 10: Success message
 print_header "Installation Complete!"
 
 cat << EOF
