@@ -8,13 +8,13 @@
       "backend"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-12-02T00:47:23Z",
+    "last_discovered": "2025-12-03T00:46:16Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "backend"
   },
   "score": 54,
   "rank": "silver",
-  "last_updated": "2025-12-02T00:48:18Z",
+  "last_updated": "2025-12-03T00:47:17Z",
   "has_api": false,
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
