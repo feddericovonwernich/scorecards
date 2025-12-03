@@ -222,6 +222,11 @@ function App({
       }
     });
 
+    // Trigger teams initialization when switching to teams view
+    if (view === 'teams' && window.initTeamsView) {
+      window.initTeamsView();
+    }
+
     // Dispatch event for vanilla JS
     window.dispatchEvent(
       new CustomEvent('view-changed', { detail: { view } })
