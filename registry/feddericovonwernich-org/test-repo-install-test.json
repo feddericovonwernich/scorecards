@@ -8,13 +8,13 @@
       "platform"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-12-02T00:48:36Z",
+    "last_discovered": "2025-12-03T00:36:22Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "platform"
   },
-  "score": 74,
+  "score": 68,
   "rank": "silver",
-  "last_updated": "2025-12-02T00:49:35Z",
+  "last_updated": "2025-12-03T00:37:16Z",
   "has_api": false,
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
@@ -23,7 +23,7 @@
     "02-license": "pass",
     "03-ci-config": "pass",
     "04-tests": "pass",
-    "05-scorecard-config": "pass",
+    "05-scorecard-config": "fail",
     "06-openapi-spec": "fail",
     "07-openapi-quality": "fail",
     "08-api-environments": "pass",
@@ -33,11 +33,11 @@
     "12-codeowners-quality": "pass"
   },
   "excluded_checks": [],
-  "installed": true,
+  "installed": false,
   "default_branch": "main",
   "installation_pr": {
     "number": 1,
-    "state": "MERGED",
+    "state": "OPEN",
     "url": "https://github.com/feddericovonwernich-org/test-repo-install-test/pull/1"
   }
 }
