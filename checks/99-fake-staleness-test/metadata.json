@@ -1,8 +1,0 @@
-{
-  "id": "99-fake-staleness-test",
-  "name": "Fake Staleness Test",
-  "description": "Temporary check to test staleness feature. Will be removed after test.",
-  "category": "Testing",
-  "weight": 0,
-  "enabled": false
-}
