@@ -8,29 +8,34 @@
       "all": [
         "platform"
       ],
-      "source": "codeowners",
-      "last_discovered": "2025-12-05T02:00:39Z"
+      "source": "manual",
+      "last_discovered": "2025-12-06T00:42:01Z"
     },
-    "links": [],
+    "links": [
+      {
+        "name": "Documentation",
+        "url": "https://github.com/feddericovonwernich/test-repo-perfect#readme"
+      }
+    ],
     "openapi": null
   },
-  "score": 85,
-  "rank": "gold",
-  "passed_checks": 9,
+  "score": 94,
+  "rank": "platinum",
+  "passed_checks": 11,
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-05T02:01:36Z",
+  "timestamp": "2025-12-06T00:42:56Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
+      "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:51:53Z",
-      "last_commit_hash": "c01c92f"
+      "last_commit_date": "2025-12-05T21:38:13Z",
+      "last_commit_hash": "cfef947"
     }
   ],
   "checks": [
@@ -43,7 +48,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "README found: README.md (897 characters)\n",
+      "stdout": "README found: README.md (1256 characters)\n",
       "stderr": ""
     },
     {
@@ -91,7 +96,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (284 bytes)\n",
       "stderr": ""
     },
     {
@@ -114,7 +119,7 @@
       "weight": 10,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI Quality Score: 98/100\n\nQuality Metrics:\n  Info: ✓ description, ✓ contact, ✓ license\n  Operations: 4 total\n    - 4/4 (100%) with descriptions\n    - 4/4 (100%) with tags\n    - 2/4 (50%) with examples\n  Parameters: 3/3 (100%) with descriptions\n  Responses: 9/9 (100%) with descriptions\n  Schemas: 4/4 (100%) with descriptions\n  Security: ✓ defined, ✓ applied\n\nQuality score meets threshold (60+)\n",
       "stderr": ""
     },
@@ -136,11 +141,11 @@
       "description": "Checks that the README displays scorecard badges. Badges promote transparency and help users quickly assess repository quality.",
       "category": "Scorecards Setup",
       "weight": 5,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "No scorecard badges found in README.md\nExpected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)\n"
+      "stdout": "Found scorecard badge(s) in README.md: 1 score badge(s) and 1 rank badge(s)\n",
+      "stderr": ""
     },
     {
       "check_id": "10-scorecard-config-quality",
@@ -148,11 +153,11 @@
       "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
       "category": "Scorecards Setup",
       "weight": 7,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
+      "stdout": "Scorecard config has meaningful content:\n  • Team: platform\n  • Description: Reference implementation demonstrating all scorecards best practices for achievi...\n  • Links: 1 configured\n",
+      "stderr": ""
     },
     {
       "check_id": "11-codeowners",
