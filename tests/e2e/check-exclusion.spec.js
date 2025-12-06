@@ -35,10 +35,10 @@ test.describe('Check Exclusion Feature', () => {
       const modal = page.locator('#check-adoption-modal');
 
       // Select a check that has exclusions (OpenAPI Specification - check 06)
-      await modal.locator('.check-selector-toggle').click();
-      await modal.locator('.check-selector-search input').fill('OpenAPI Spec');
+      await modal.locator('.check-card-selected').click();
+      await modal.locator('.check-card-search input').fill('OpenAPI Spec');
       await page.waitForTimeout(100);
-      await modal.locator('.check-selector-option:visible').first().click();
+      await modal.locator('.check-card-option:visible').first().click();
       await page.waitForTimeout(300);
 
       // Verify excluded stat card appears
@@ -53,47 +53,66 @@ test.describe('Check Exclusion Feature', () => {
       const modal = page.locator('#check-adoption-modal');
 
       // Select OpenAPI Specification check which has exclusions in test-repo-edge-cases
-      await modal.locator('.check-selector-toggle').click();
-      await modal.locator('.check-selector-search input').fill('OpenAPI Spec');
-      await page.waitForTimeout(100);
-      await modal.locator('.check-selector-option:visible').first().click();
+      await modal.locator('.check-card-selected').click();
+      await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
+      await modal.locator('.check-card-search input').fill('OpenAPI Specification');
       await page.waitForTimeout(300);
+      const options = modal.locator('.check-card-option');
+      await expect(options.first()).toBeVisible({ timeout: 5000 });
+      await options.first().click();
+      await page.waitForTimeout(500);
+
+      // Wait for table to update
+      await expect(modal.locator('.adoption-table')).toBeVisible();
 
       // Find the frontend team row (test-repo-edge-cases has exclusions for this check)
       const frontendRow = modal.locator('.adoption-row').filter({ hasText: 'frontend' });
 
       if (await frontendRow.count() > 0) {
-        // Verify the excluded cell shows a count (not just a dash)
-        const excludedCell = frontendRow.locator('.excluded-cell');
+        // The excluded column is the 5th td with class 'adoption-cell',
+        // and has 'has-excluded' class when there are exclusions
+        const excludedCell = frontendRow.locator('.adoption-cell.has-excluded');
         await expect(excludedCell).toBeVisible();
-        // Should have has-excluded class when exclusions exist
-        await expect(excludedCell).toHaveClass(/has-excluded/);
+        // Verify the excluded-count span shows a number (not em-dash)
+        const excludedCount = excludedCell.locator('.excluded-count');
+        await expect(excludedCount).toBeVisible();
+        const text = await excludedCount.textContent();
+        expect(text).not.toBe('—');
       }
     });
 
     test('teams without exclusions show dash in Excl. column', async ({ page }) => {
       const modal = page.locator('#check-adoption-modal');
 
-      // Select a check (README) that may not have exclusions for some teams
-      await modal.locator('.check-selector-toggle').click();
-      await modal.locator('.check-selector-search input').fill('README');
-      await page.waitForTimeout(100);
-      await modal.locator('.check-selector-option:visible').first().click();
+      // Select README Documentation check that has no exclusions for any team
+      await modal.locator('.check-card-selected').click();
+      await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
+      await modal.locator('.check-card-search input').fill('README Documentation');
       await page.waitForTimeout(300);
+      const options = modal.locator('.check-card-option');
+      await expect(options.first()).toBeVisible({ timeout: 5000 });
+      await options.first().click();
+      await page.waitForTimeout(500);
 
-      // Find a row and check for dash in excluded cell when no exclusions
+      // Wait for table to update
+      await expect(modal.locator('.adoption-table')).toBeVisible();
+
+      // Find a row and check for em-dash in excluded cell when no exclusions
       const rows = modal.locator('.adoption-row');
+      await expect(rows.first()).toBeVisible({ timeout: 5000 });
       const rowCount = await rows.count();
 
-      // At least one row should have no exclusions and show "-"
+      // At least one row should have no exclusions and show em-dash "—"
       let foundDash = false;
       for (let i = 0; i < rowCount; i++) {
-        const excludedCell = rows.nth(i).locator('.excluded-cell');
-        const text = await excludedCell.textContent();
-        if (text?.trim() === '-') {
+        // The excluded-count span is inside the 5th adoption-cell td
+        const excludedCount = rows.nth(i).locator('.excluded-count');
+        const text = await excludedCount.textContent();
+        if (text?.trim() === '—') {
           foundDash = true;
-          // Verify it doesn't have has-excluded class
-          await expect(excludedCell).not.toHaveClass(/has-excluded/);
+          // Verify the parent cell doesn't have has-excluded class
+          const parentCell = rows.nth(i).locator('.adoption-cell').last();
+          await expect(parentCell).not.toHaveClass(/has-excluded/);
           break;
         }
       }
@@ -104,10 +123,10 @@ test.describe('Check Exclusion Feature', () => {
       const modal = page.locator('#check-adoption-modal');
 
       // Select a check with exclusions
-      await modal.locator('.check-selector-toggle').click();
-      await modal.locator('.check-selector-search input').fill('API Environment');
+      await modal.locator('.check-card-selected').click();
+      await modal.locator('.check-card-search input').fill('API Environment');
       await page.waitForTimeout(100);
-      await modal.locator('.check-selector-option:visible').first().click();
+      await modal.locator('.check-card-option:visible').first().click();
       await page.waitForTimeout(300);
 
       // Verify Services Passing stat card shows x/y format
@@ -286,10 +305,10 @@ test.describe('Check Exclusion - Dark Mode', () => {
     const modal = page.locator('#check-adoption-modal');
 
     // Select a check with exclusions
-    await modal.locator('.check-selector-toggle').click();
-    await modal.locator('.check-selector-search input').fill('OpenAPI Spec');
+    await modal.locator('.check-card-selected').click();
+    await modal.locator('.check-card-search input').fill('OpenAPI Spec');
     await page.waitForTimeout(100);
-    await modal.locator('.check-selector-option:visible').first().click();
+    await modal.locator('.check-card-option:visible').first().click();
     await page.waitForTimeout(300);
 
     // Verify excluded stat card is visible
@@ -298,8 +317,8 @@ test.describe('Check Exclusion - Dark Mode', () => {
       await expect(excludedStatCard).toBeVisible();
     }
 
-    // Verify excluded cells are visible
-    const excludedCells = modal.locator('.excluded-cell.has-excluded');
+    // Verify excluded cells are visible (React uses .adoption-cell.has-excluded)
+    const excludedCells = modal.locator('.adoption-cell.has-excluded');
     if (await excludedCells.count() > 0) {
       await expect(excludedCells.first()).toBeVisible();
     }

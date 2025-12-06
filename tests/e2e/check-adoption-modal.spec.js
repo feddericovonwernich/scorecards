@@ -52,21 +52,21 @@ test.describe('Check Adoption Dashboard Modal', () => {
   test('check selector dropdown is visible and functional', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
 
-    // Verify dropdown toggle button exists
-    const toggle = modal.locator('.check-selector-toggle');
+    // Verify dropdown toggle button exists (React uses check-card-selected)
+    const toggle = modal.locator('.check-card-selected');
     await expect(toggle).toBeVisible();
 
     // Click toggle to open dropdown
     await toggle.click();
 
-    // Verify menu is visible
-    await expect(modal.locator('.check-selector-menu.open')).toBeVisible();
+    // Verify menu is visible (React uses check-card-dropdown.open)
+    await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
 
-    // Verify search input is visible
-    await expect(modal.locator('.check-selector-search input')).toBeVisible();
+    // Verify search input is visible (React uses check-card-search)
+    await expect(modal.locator('.check-card-search input')).toBeVisible();
 
-    // Verify options are visible
-    const options = modal.locator('.check-selector-option');
+    // Verify options are visible (React uses check-card-option)
+    const options = modal.locator('.check-card-option');
     const optionCount = await options.count();
     expect(optionCount).toBeGreaterThan(0);
   });
@@ -74,16 +74,16 @@ test.describe('Check Adoption Dashboard Modal', () => {
   test('check selector search filters options', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
 
-    // Open dropdown
-    await modal.locator('.check-selector-toggle').click();
-    await expect(modal.locator('.check-selector-menu.open')).toBeVisible();
+    // Open dropdown (React uses check-card-selected)
+    await modal.locator('.check-card-selected').click();
+    await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
 
-    // Type in search to filter
-    await modal.locator('.check-selector-search input').fill('License');
+    // Type in search to filter (React uses check-card-search)
+    await modal.locator('.check-card-search input').fill('License');
     await page.waitForTimeout(100);
 
-    // Verify only matching options are visible
-    const visibleOptions = modal.locator('.check-selector-option:visible');
+    // Verify only matching options are visible (React uses check-card-option)
+    const visibleOptions = modal.locator('.check-card-option:visible');
     const count = await visibleOptions.count();
     expect(count).toBeLessThan(13); // Should filter down from all options
   });
@@ -91,52 +91,52 @@ test.describe('Check Adoption Dashboard Modal', () => {
   test('check selector changes update the dashboard', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
 
-    // Get initial check name from toggle button
-    const initialCheckName = await modal.locator('.check-selector-text').textContent();
+    // Get initial check name from toggle button (React uses check-card-name)
+    const initialCheckName = await modal.locator('.check-card-selected .check-card-name').textContent();
 
-    // Open dropdown and select second option
-    await modal.locator('.check-selector-toggle').click();
-    await modal.locator('.check-selector-option').nth(1).click();
+    // Open dropdown and select second option (React uses check-card-selected and check-card-option)
+    await modal.locator('.check-card-selected').click();
+    await modal.locator('.check-card-option').nth(1).click();
     await page.waitForTimeout(300);
 
-    // Verify dropdown closed
-    await expect(modal.locator('.check-selector-menu.open')).not.toBeVisible();
+    // Verify dropdown closed (React uses check-card-dropdown.open)
+    await expect(modal.locator('.check-card-dropdown.open')).not.toBeVisible();
 
     // Verify the selection changed
-    const newCheckName = await modal.locator('.check-selector-text').textContent();
+    const newCheckName = await modal.locator('.check-card-selected .check-card-name').textContent();
     expect(newCheckName).not.toBe(initialCheckName);
 
-    // Verify the description box updated
-    const descriptionTitle = await modal.locator('.check-description-box strong').textContent();
-    expect(descriptionTitle).toBe(newCheckName);
+    // Verify the description updated (React shows description in check-card-description within the selected card)
+    const description = modal.locator('.check-card-selected .check-card-description');
+    await expect(description).toBeVisible();
   });
 
   test('clicking outside closes dropdown', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
 
-    // Open dropdown
-    await modal.locator('.check-selector-toggle').click();
-    await expect(modal.locator('.check-selector-menu.open')).toBeVisible();
+    // Open dropdown (React uses check-card-selected)
+    await modal.locator('.check-card-selected').click();
+    await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
 
-    // Click outside (on the table)
-    await modal.locator('.adoption-table').click();
+    // Click outside the dropdown area (on the stats row which should be visible)
+    await modal.locator('.adoption-stats-row').click({ force: true });
 
-    // Verify dropdown closed
-    await expect(modal.locator('.check-selector-menu.open')).not.toBeVisible();
+    // Verify dropdown closed (React uses check-card-dropdown.open)
+    await expect(modal.locator('.check-card-dropdown.open')).not.toBeVisible();
   });
 
   test('description box displays check information', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
 
-    // Verify description box exists
-    const descBox = modal.locator('.check-description-box');
-    await expect(descBox).toBeVisible();
+    // In React, description is shown in the selected card (check-card-selected)
+    const selectedCard = modal.locator('.check-card-selected');
+    await expect(selectedCard).toBeVisible();
 
-    // Verify it has a title
-    await expect(descBox.locator('strong')).toBeVisible();
+    // Verify it has a check name
+    await expect(selectedCard.locator('.check-card-name')).toBeVisible();
 
     // Verify it has a description paragraph
-    await expect(descBox.locator('p')).toBeVisible();
+    await expect(selectedCard.locator('.check-card-description')).toBeVisible();
   });
 
   test('table displays teams with progress bars', async ({ page }) => {

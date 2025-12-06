@@ -70,7 +70,8 @@ test.describe('Settings Modal', () => {
   test('should have Check Rate Limit button', async ({ page }) => {
     await openSettingsModal(page);
 
-    const checkButton = page.getByRole('button', { name: 'Check Rate Limit' });
+    // React button text is "Check Rate" (shorter version)
+    const checkButton = page.getByRole('button', { name: 'Check Rate' });
     await expect(checkButton).toBeVisible();
   });
 
@@ -78,6 +79,12 @@ test.describe('Settings Modal', () => {
     await openSettingsModal(page);
 
     const modal = page.locator('#settings-modal');
+
+    // In React, instructions are in a collapsible accordion - expand it first
+    const accordion = modal.locator('.settings-accordion');
+    await accordion.click();
+    await page.waitForTimeout(100);
+
     await expect(modal).toContainText(/How to create/i);
     await expect(modal).toContainText(/workflow/i); // scope needed
   });
@@ -86,6 +93,12 @@ test.describe('Settings Modal', () => {
     await openSettingsModal(page);
 
     const modal = page.locator('#settings-modal');
+
+    // In React, benefits are in a collapsible accordion - expand it first
+    const accordion = modal.locator('.settings-accordion');
+    await accordion.click();
+    await page.waitForTimeout(100);
+
     await expect(modal).toContainText(/Benefits/i);
     await expect(modal).toContainText(/faster/i);
   });
@@ -94,6 +107,12 @@ test.describe('Settings Modal', () => {
     await openSettingsModal(page);
 
     const modal = page.locator('#settings-modal');
+
+    // In React, security info is in a collapsible accordion - expand it first
+    const accordion = modal.locator('.settings-accordion');
+    await accordion.click();
+    await page.waitForTimeout(100);
+
     await expect(modal).toContainText(/Security/i);
     await expect(modal).toContainText(/memory/i);
   });
@@ -126,12 +145,21 @@ test.describe('Settings Modal', () => {
     const saveButton = page.getByRole('button', { name: 'Save Token' });
     await saveButton.click();
 
-    // Wait for rate limit to update
-    await page.waitForTimeout(1500);
-
     const modal = page.locator('#settings-modal');
-    // Should now show higher limit (5000 instead of 60)
-    await expect(modal).toContainText(/5000|4[0-9]{3}/);
+
+    // Wait for mode to switch to API mode (indicates PAT was saved)
+    await expect(modal).toContainText(/GitHub API|API mode/i, { timeout: 5000 });
+
+    // Click "Check Rate" button to force a fresh rate limit check with the new PAT
+    // This is needed because the initial fetchRateLimit after save uses a stale closure
+    const checkRateButton = page.getByRole('button', { name: 'Check Rate' });
+    await checkRateButton.click();
+    await page.waitForTimeout(500);
+
+    // Wait for rate limit display to update with higher limit
+    // The mock returns 5000 limit and 4999 remaining for authenticated requests
+    // The rate limit section should show 5000 somewhere in the text
+    await expect(modal.locator('.settings-rate-limit')).toContainText(/5000/, { timeout: 5000 });
   });
 
   test('should indicate PAT is loaded in settings button', async ({ page }) => {

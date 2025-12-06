@@ -149,10 +149,17 @@ test.describe('Service Modal', () => {
     const workflowTab = page.getByRole('button', { name: 'Workflow Runs' });
     await workflowTab.click();
 
-    // The workflow tab should show some content (loading, error, empty, or runs list)
+    // The workflow tab should show some content
+    // Without PAT: shows empty state with "Configure Token" prompt (widget-empty)
+    // With PAT: shows workflows content (#service-workflows-content)
     const modal = page.locator('#service-modal');
-    const workflowContent = modal.locator('#service-workflows-content');
+    const workflowContent = modal.locator('#workflows-tab');
     await expect(workflowContent).toBeVisible();
+
+    // Either shows the content div or the empty state prompt
+    const hasContent = await modal.locator('#service-workflows-content').count() > 0;
+    const hasEmptyState = await modal.locator('.widget-empty').count() > 0;
+    expect(hasContent || hasEmptyState).toBe(true);
   });
 
   test('should have Badges tab', async ({ page }) => {
