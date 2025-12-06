@@ -1,0 +1,852 @@
+/* ============================================
+   Check Adoption Dashboard & Team Modal Tab
+   ============================================ */
+
+/* Check adoption loading */
+.check-adoption-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px;
+    color: var(--color-text-muted);
+}
+
+/* Check adoption content */
+.check-adoption-content {
+    padding: 16px 0;
+}
+
+/* Check card selector spacing in tab context */
+.check-adoption-content .check-card-selector {
+    margin-bottom: var(--space-6);
+}
+
+.check-adoption-content .check-card-selected {
+    overflow: hidden;
+}
+
+/* Check selector in modal */
+.check-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.check-selector label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.check-selector select,
+.check-selector-large select {
+    padding: 8px 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    min-width: 200px;
+}
+
+.check-selector select:focus,
+.check-selector-large select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Check info */
+.check-info {
+    margin-bottom: 16px;
+}
+
+.check-description {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Adoption progress */
+.adoption-progress {
+    margin-bottom: 24px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progress-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.progress-bar-large {
+    height: 24px;
+    background: var(--color-bg-tertiary);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.progress-bar-large .progress-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.high {
+    background: var(--color-success);
+}
+
+.progress-fill.medium {
+    background: var(--color-warning, #f59e0b);
+}
+
+.progress-fill.low {
+    background: var(--color-error);
+}
+
+/* Adoption lists (passing/failing) */
+.adoption-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.adoption-column h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.adoption-column.passing h4 {
+    color: var(--color-success);
+}
+
+.adoption-column.failing h4 {
+    color: var(--color-error);
+}
+
+.adoption-service-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.adoption-service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.adoption-service-item:last-child {
+    border-bottom: none;
+}
+
+.adoption-service-item:hover {
+    background: var(--color-bg-secondary);
+}
+
+.adoption-service-item .service-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+}
+
+.adoption-service-item .service-score {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.empty-list {
+    padding: 16px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   Check Adoption Dashboard Modal
+   ============================================ */
+
+.check-adoption-modal-content {
+    max-width: 800px;
+    width: 90vw;
+    padding: 0;
+}
+
+/* Modal Header */
+.check-adoption-modal-content .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-6) var(--space-8);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.check-adoption-modal-content .modal-header h2 {
+    margin: 0;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    letter-spacing: var(--tracking-tight);
+}
+
+.check-adoption-modal-content .modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-adoption-modal-content .modal-close:hover {
+    background: var(--color-surface-tertiary);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+
+.check-adoption-modal-content .modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Modal Body */
+.check-adoption-modal-content .modal-body {
+    padding: var(--space-6) var(--space-8) var(--space-8);
+}
+
+/* Dashboard Header */
+.adoption-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+}
+
+/* Check Selector */
+.check-selector-large {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.check-selector-large label {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+}
+
+.check-selector-large select {
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    min-width: 280px;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-selector-large select:hover {
+    border-color: var(--color-border-strong);
+}
+
+.check-selector-large select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+/* Custom Check Selector Dropdown */
+.check-selector-dropdown {
+    position: relative;
+    min-width: 280px;
+}
+
+.check-selector-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-selector-toggle:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-hover);
+}
+
+.check-selector-toggle:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.check-selector-toggle svg {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: transform var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-selector-dropdown:has(.check-selector-menu.open) .check-selector-toggle svg {
+    transform: rotate(180deg);
+}
+
+.check-selector-text {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Dropdown Menu */
+.check-selector-menu {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+    max-height: 320px;
+    display: flex;
+    flex-direction: column;
+}
+
+.check-selector-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Search Input */
+.check-selector-search {
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.check-selector-search input {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.check-selector-search input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.check-selector-search input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Options Container */
+.check-selector-options {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2);
+}
+
+/* Individual Option */
+.check-selector-option {
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.check-selector-option:hover {
+    background: var(--color-surface-hover);
+}
+
+.check-selector-option.selected {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Premium Stats Row */
+.adoption-stats-row {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--color-surface-secondary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.adoption-stat-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--duration-fast) var(--ease-out-expo),
+                box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+
+.adoption-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.adoption-stat-value {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+}
+
+.adoption-stat-value.success {
+    color: var(--color-success);
+}
+
+.adoption-stat-value.error {
+    color: var(--color-error);
+}
+
+.adoption-stat-value.muted {
+    color: var(--color-text-muted);
+}
+
+.adoption-stat-value.accent {
+    color: var(--color-accent);
+}
+
+.adoption-stat-label {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    margin-top: var(--space-2);
+}
+
+/* ==============================================
+   Check Adoption Modal - Close Button
+   ============================================== */
+
+/* Close button - positioned top-left corner (matches service modal) */
+#check-adoption-modal .modal-close {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+/* ==============================================
+   Check Card Selector
+   ============================================== */
+
+/* Header section with generous padding */
+.check-adoption-header {
+    padding: var(--space-8) var(--space-10);
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Title styling */
+.check-adoption-header h2 {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    margin: 0 0 var(--space-6) 0;
+}
+
+.check-card-selector {
+    position: relative;
+}
+
+/* Selected Card (Main Display) */
+.check-card-selected {
+    width: 100%;
+    padding: var(--space-5);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-accent);
+    border-radius: var(--radius-lg);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--duration-fast) ease;
+}
+
+.check-card-selected:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.check-card-selected.open {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+}
+
+.check-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.check-card-name {
+    font-family: var(--font-family-primary);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-base);
+    color: var(--color-text);
+}
+
+.check-card-category {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    background: var(--color-surface-tertiary);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+.check-card-chevron {
+    margin-left: auto;
+    color: var(--color-text-muted);
+    transition: transform var(--duration-fast) ease;
+    flex-shrink: 0;
+}
+
+.check-card-selected.open .check-card-chevron {
+    transform: rotate(180deg);
+}
+
+.check-card-description {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+}
+
+.check-card-placeholder {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+/* Dropdown */
+.check-card-dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    max-height: 400px;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity var(--duration-fast) ease, transform var(--duration-fast) ease, visibility var(--duration-fast) ease;
+    z-index: 100;
+}
+
+.check-card-dropdown.open {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Search Input */
+.check-card-search {
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface-secondary);
+}
+
+.check-card-search input {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.check-card-search input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.check-card-search input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Options Container */
+.check-card-options {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 320px;
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Individual Option - Floating Card Style */
+.check-card-option {
+    width: 100%;
+    padding: var(--space-4);
+    text-align: left;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-fast) ease;
+}
+
+.check-card-option:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.check-card-option.selected {
+    background: var(--color-accent-bg);
+    border-color: var(--color-accent);
+    border-left: 4px solid var(--color-accent);
+}
+
+.check-card-option-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.check-card-option-desc {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+}
+
+.check-card-empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Progress Bar Inline (Table) */
+.progress-bar-inline {
+    height: 12px;
+    background: var(--color-surface-tertiary);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-bar-inline .progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.bg-success {
+    background: var(--color-success);
+}
+
+.progress-fill.bg-warning {
+    background: var(--color-warning, #f59e0b);
+}
+
+.progress-fill.bg-error {
+    background: var(--color-error);
+}
+
+/* Table Styles */
+.adoption-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.adoption-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--color-surface-secondary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.adoption-table th {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.adoption-table th:first-child {
+    padding-left: var(--space-6);
+}
+
+.adoption-table th:hover {
+    color: var(--color-text);
+}
+
+.adoption-table tbody {
+    border-top: 1px solid var(--color-border);
+}
+
+.adoption-table tbody tr {
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Table Row Styles */
+.adoption-row {
+    transition: background-color var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.adoption-row:hover {
+    background: var(--color-surface-hover);
+}
+
+.adoption-row.no-team {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.adoption-cell {
+    padding: var(--space-4);
+    vertical-align: middle;
+}
+
+.adoption-cell:first-child {
+    padding-left: var(--space-6);
+}
+
+.team-name {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}
+
+.team-services {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
+}
+
+.adoption-percentage {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+.passing-count {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-success);
+}
+
+.excluded-count {
+    color: var(--color-text-muted);
+}
+
+.sort-indicator {
+    margin-left: var(--space-1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .adoption-lists {
+        grid-template-columns: 1fr;
+    }
+
+    .adoption-dashboard-header {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .adoption-stats-row {
+        gap: var(--space-6);
+    }
+
+    .check-selector-large select {
+        min-width: 100%;
+    }
+
+    .check-selector-dropdown {
+        min-width: 100%;
+    }
+
+    .check-adoption-modal-content .modal-header {
+        padding: var(--space-4) var(--space-5);
+    }
+
+    .check-adoption-modal-content .modal-body {
+        padding: var(--space-4) var(--space-5) var(--space-5);
+    }
+}

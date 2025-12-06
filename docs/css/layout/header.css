@@ -121,3 +121,75 @@
         height: 3px;
     }
 }
+
+/* ==============================================
+   HEADER - React Component Styles
+   ============================================== */
+
+/* React header strip - thin gradient line */
+.header-strip-react {
+    height: 4px;
+    position: relative;
+    z-index: 100;
+    background: linear-gradient(90deg, #0EA5E9, #7DD3FC, #0EA5E9);
+}
+
+/* React header bar */
+.header-bar-react {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-6);
+    position: relative;
+    z-index: 99;
+    background: linear-gradient(180deg, rgba(9, 9, 11, 0.98), rgba(9, 9, 11, 0.95));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* React header brand container */
+.header-brand-react {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.header-brand-react:hover .header-logo-react {
+    transform: scale(1.05);
+}
+
+/* React header logo */
+.header-logo-react {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+/* React header title */
+.header-title-react {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: #FAFAFA;
+    letter-spacing: var(--tracking-tight);
+    user-select: none;
+}
+
+/* Responsive React header */
+@media (max-width: 640px) {
+    .header-bar-react {
+        height: 48px;
+        padding: 0 var(--space-4);
+    }
+
+    .header-logo-react {
+        width: 28px;
+        height: 28px;
+    }
+
+    .header-title-react {
+        font-size: var(--text-lg);
+    }
+}

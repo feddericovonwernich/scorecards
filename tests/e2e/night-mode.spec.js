@@ -34,11 +34,15 @@ test.describe('Night Mode Theme Toggle', () => {
   });
 
   test('should show sun icon in light mode', async ({ page }) => {
-    const sunIcon = page.locator('#theme-icon-sun');
-    const moonIcon = page.locator('#theme-icon-moon');
+    // React component doesn't use IDs for icons - check SVG path content instead
+    const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
+    const svg = themeToggle.locator('svg');
 
-    await expect(sunIcon).toBeVisible();
-    await expect(moonIcon).not.toBeVisible();
+    // In light mode, the sun icon is shown (has specific path pattern)
+    await expect(svg).toBeVisible();
+    const pathD = await svg.locator('path').getAttribute('d');
+    // Sun icon path contains specific pattern
+    expect(pathD).toContain('8 12'); // Sun icon starts with circle pattern
   });
 
   test('should toggle to dark theme when button clicked', async ({ page }) => {
@@ -61,11 +65,12 @@ test.describe('Night Mode Theme Toggle', () => {
     await themeToggle.click();
     await page.waitForTimeout(100);
 
-    const sunIcon = page.locator('#theme-icon-sun');
-    const moonIcon = page.locator('#theme-icon-moon');
-
-    await expect(sunIcon).not.toBeVisible();
-    await expect(moonIcon).toBeVisible();
+    // React component shows moon icon when dark mode is active
+    const svg = themeToggle.locator('svg');
+    await expect(svg).toBeVisible();
+    const pathD = await svg.locator('path').getAttribute('d');
+    // Moon icon path contains specific pattern
+    expect(pathD).toContain('9.598'); // Moon icon starts with this pattern
   });
 
   test('should toggle back to light theme on second click', async ({ page }) => {
@@ -113,9 +118,12 @@ test.describe('Night Mode Theme Toggle', () => {
     const theme = await htmlElement.getAttribute('data-theme');
     expect(theme).toBe('dark');
 
-    // Moon icon should be visible
-    const moonIcon = page.locator('#theme-icon-moon');
-    await expect(moonIcon).toBeVisible();
+    // Moon icon should be visible (check via SVG path)
+    const reloadedToggle = page.getByRole('button', { name: /Toggle night mode/i });
+    const svg = reloadedToggle.locator('svg');
+    await expect(svg).toBeVisible();
+    const pathD = await svg.locator('path').getAttribute('d');
+    expect(pathD).toContain('9.598'); // Moon icon pattern
   });
 
   test('should apply dark theme styles to body', async ({ page }) => {
@@ -170,7 +178,8 @@ test.describe('Night Mode Theme Toggle', () => {
     await page.waitForTimeout(100);
 
     // Navigate to API explorer (with mock params)
-    await page.goto('/api-explorer.html?org=test&repo=test');
+    // Use relative path so it respects the baseURL (/scorecards/)
+    await page.goto('api-explorer.html?org=test&repo=test');
     await page.waitForTimeout(500);
 
     // Theme should be dark on API explorer
@@ -199,8 +208,8 @@ test.describe('Night Mode Theme Toggle', () => {
     await themeToggle.click();
     await page.waitForTimeout(100);
 
-    // Go to API explorer
-    await page.goto('/api-explorer.html?org=test&repo=test');
+    // Go to API explorer (relative path respects baseURL)
+    await page.goto('api-explorer.html?org=test&repo=test');
     await page.waitForTimeout(300);
 
     // Verify dark theme
@@ -235,25 +244,24 @@ test.describe('Night Mode Theme Toggle', () => {
 
   test('should update icon immediately after theme change', async ({ page }) => {
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
-    const sunIcon = page.locator('#theme-icon-sun');
-    const moonIcon = page.locator('#theme-icon-moon');
+    const svg = themeToggle.locator('svg');
 
-    // Initially sun visible
-    await expect(sunIcon).toBeVisible();
-    await expect(moonIcon).not.toBeVisible();
+    // Initially sun visible (check SVG path pattern)
+    let pathD = await svg.locator('path').getAttribute('d');
+    expect(pathD).toContain('8 12'); // Sun icon pattern
 
     // Click toggle
     await themeToggle.click();
 
-    // Icon should update immediately (no need to wait)
-    await expect(sunIcon).not.toBeVisible();
-    await expect(moonIcon).toBeVisible();
+    // Icon should update immediately to moon
+    pathD = await svg.locator('path').getAttribute('d');
+    expect(pathD).toContain('9.598'); // Moon icon pattern
 
     // Click again
     await themeToggle.click();
 
-    // Icon should switch back
-    await expect(sunIcon).toBeVisible();
-    await expect(moonIcon).not.toBeVisible();
+    // Icon should switch back to sun
+    pathD = await svg.locator('path').getAttribute('d');
+    expect(pathD).toContain('8 12'); // Sun icon pattern
   });
 });

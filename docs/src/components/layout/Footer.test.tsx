@@ -36,12 +36,15 @@ describe('Footer', () => {
 
   it('renders the footer logo', () => {
     render(<Footer />);
-    const logo = document.querySelector('.footer-logo');
+    // The logo is an SVG inside the footer
+    const footer = screen.getByRole('contentinfo');
+    const logo = footer.querySelector('svg');
     expect(logo).toBeInTheDocument();
   });
 
   it('renders the footer strip', () => {
     render(<Footer />);
+    // Footer strip has the footer-strip class for shimmer animation
     const strip = document.querySelector('.footer-strip');
     expect(strip).toBeInTheDocument();
   });

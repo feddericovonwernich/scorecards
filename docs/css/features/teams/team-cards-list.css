@@ -1,0 +1,183 @@
+/* ==============================================
+   TEAM CARD - LIST VARIANT
+   Horizontal layout for list view mode
+   ============================================== */
+
+/* Container: single column stack, full width */
+/* Using higher specificity to override base .teams-grid */
+.teams-grid.teams-grid--list {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+    grid-template-columns: none;
+}
+
+/* Each card takes full width */
+.teams-grid--list .team-card {
+    width: 100%;
+    max-width: none;
+}
+
+/* Card: 5-column grid for perfect vertical alignment */
+.team-card--list {
+    display: grid;
+    grid-template-columns:
+        minmax(120px, 200px)  /* Col 1: Team name - flexible */
+        90px                  /* Col 2: Rank badge - fixed */
+        minmax(200px, 1fr)    /* Col 3: Stats - flexible */
+        100px                 /* Col 4: Rank distribution - fixed */
+        130px;                /* Col 5: Progress bar - fixed */
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+}
+
+/* Header section (name + slack) */
+.team-card--list .team-card-header {
+    grid-column: 1;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.team-card--list .team-card-name {
+    font-size: var(--text-base);
+}
+
+/* Rank badge - second column */
+.team-card--list > .rank-badge {
+    grid-column: 2;
+    margin: 0;
+    justify-self: center;
+}
+
+/* Stats section - third column, inline */
+.team-card--list .team-card-stats {
+    grid-column: 3;
+    margin-bottom: 0;
+    display: flex;
+    gap: var(--space-5);
+    justify-content: flex-start;
+}
+
+.team-card--list .team-stat {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
+}
+
+.team-card--list .team-stat-value {
+    font-size: var(--text-base);
+}
+
+.team-card--list .team-stat-label {
+    font-size: var(--text-xs);
+    text-transform: none;
+}
+
+/* Mini rank badges - fourth column */
+.team-card--list .team-card-ranks {
+    grid-column: 4;
+    margin-bottom: 0;
+}
+
+/* Progress bar - fifth column, compact */
+.team-card--list .team-card-progress {
+    grid-column: 5;
+    min-width: 100px;
+    max-width: 150px;
+    margin-bottom: 0;
+}
+
+/* Hide description in list view */
+.team-card--list .team-card-description {
+    display: none;
+}
+
+/* Hide actions in list view (optional) */
+.team-card--list .team-card-actions {
+    display: none;
+}
+
+/* Hover effect - less dramatic for list items */
+.team-card--list:hover {
+    transform: translateY(-2px);
+}
+
+/* ==============================================
+   RESPONSIVE - Stack on smaller screens
+   ============================================== */
+
+@media (max-width: 1000px) {
+    .team-card--list {
+        grid-template-columns:
+            minmax(100px, 160px)  /* Col 1: Team name */
+            85px                  /* Col 2: Rank badge */
+            1fr                   /* Col 3: Stats */
+            90px;                 /* Col 4: Rank distribution */
+        gap: var(--space-3);
+    }
+
+    /* Hide progress bar on medium screens */
+    .team-card--list .team-card-progress {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .team-card--list {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto auto;
+        gap: var(--space-2) var(--space-3);
+    }
+
+    .team-card--list .team-card-header {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .team-card--list > .rank-badge {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .team-card--list .team-card-stats {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .team-card--list .team-card-ranks {
+        grid-column: 1 / -1;
+        grid-row: 3;
+    }
+}
+
+@media (max-width: 480px) {
+    .team-card--list {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .team-card--list .team-card-header,
+    .team-card--list > .rank-badge,
+    .team-card--list .team-card-stats,
+    .team-card--list .team-card-ranks {
+        grid-column: 1;
+    }
+
+    .team-card--list > .rank-badge {
+        grid-row: 2;
+        justify-self: start;
+    }
+
+    .team-card--list .team-card-stats {
+        grid-row: 3;
+        flex-wrap: wrap;
+    }
+
+    .team-card--list .team-card-ranks {
+        grid-row: 4;
+    }
+}

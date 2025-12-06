@@ -18,15 +18,17 @@ describe('Header', () => {
 
   it('renders the Scorecards logo', () => {
     render(<Header />);
-    // The logo is an SVG with class header-logo
-    const header = document.querySelector('.header-bar');
+    // The logo is an SVG inside the header
+    const header = screen.getByRole('banner');
     expect(header).toBeInTheDocument();
-    const logo = document.querySelector('.header-logo');
+    // Check SVG logo exists in the header
+    const logo = header.querySelector('svg');
     expect(logo).toBeInTheDocument();
   });
 
   it('renders the header strip', () => {
     render(<Header />);
+    // Header strip has the header-strip class for shimmer animation
     const strip = document.querySelector('.header-strip');
     expect(strip).toBeInTheDocument();
   });

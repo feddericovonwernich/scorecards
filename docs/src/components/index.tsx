@@ -22,6 +22,13 @@ import { TeamGridContainer } from './containers/TeamGridContainer.js';
 import { ServiceModal } from './features/ServiceModal/index.js';
 import { TeamModal } from './features/TeamModal/index.js';
 import { CheckFilterModal } from './features/CheckFilterModal/index.js';
+import { SettingsModal } from './features/SettingsModal/index.js';
+import { ActionsWidget } from './features/ActionsWidget/index.js';
+import { TeamDashboard } from './features/TeamDashboard/index.js';
+import { TeamEditModal } from './features/TeamEditModal/index.js';
+import { CheckAdoptionDashboard } from './features/CheckAdoptionDashboard/index.js';
+import { TeamFilterDropdownPortal } from './features/TeamFilterDropdown.js';
+import { CheckFilterTogglePortal } from './features/CheckFilterToggle.js';
 import {
   Header,
   Footer,
@@ -31,6 +38,7 @@ import {
 } from './layout/index.js';
 import type { CheckFilter } from '../types/index.js';
 import { useAppStore, selectCurrentView } from '../stores/index.js';
+import { useActionsWidget } from '../hooks/useWorkflowPolling.js';
 
 // ============================================================================
 // Toast Queue - handles toasts that arrive before React mounts
@@ -85,18 +93,9 @@ function initPortalTargets(): void {
     teamsGridEl.innerHTML = '';
   }
 
-  // Set flags for layout elements
-  if (headerEl) {
-    window.__REACT_MANAGES_HEADER = true;
-  }
-  if (footerEl) {
-    window.__REACT_MANAGES_FOOTER = true;
-  }
+  // Set flag for navigation (checked by vanilla JS in main.ts)
   if (navigationEl) {
     window.__REACT_MANAGES_NAVIGATION = true;
-  }
-  if (floatingControlsEl) {
-    window.__REACT_MANAGES_FLOATING_CONTROLS = true;
   }
 }
 
@@ -125,7 +124,21 @@ function App({
   // View state from Zustand store
   const activeView = useAppStore(selectCurrentView);
   const setCurrentView = useAppStore((state) => state.setCurrentView);
-  const [actionsBadgeCount, setActionsBadgeCount] = useState(0);
+
+  // Actions widget state and badge count from hook
+  const { runs: _runs, filterCounts } = useActionsWidget();
+  const actionsBadgeCount = filterCounts.in_progress + filterCounts.queued;
+
+  // Get toggle function from store (ActionsWidget manages its own open state internally)
+  const toggleActionsWidget = useAppStore((state) => state.toggleActionsWidget);
+
+  // New modal states
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [teamDashboardOpen, setTeamDashboardOpen] = useState(false);
+  const [checkAdoptionOpen, setCheckAdoptionOpen] = useState(false);
+  const [teamEditModalOpen, setTeamEditModalOpen] = useState(false);
+  const [teamEditMode, setTeamEditMode] = useState<'create' | 'edit'>('create');
+  const [teamEditId, setTeamEditId] = useState<string | undefined>(undefined);
 
   // Initialize view state from DOM on mount
   useEffect(() => {
@@ -244,20 +257,62 @@ function App({
     };
     window.addEventListener('vanilla-view-changed', handleVanillaViewChange);
 
-    // Listen for actions badge count updates
-    const handleBadgeUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent<{ count: number }>;
-      if (typeof customEvent.detail?.count === 'number') {
-        setActionsBadgeCount(customEvent.detail.count);
-      }
-    };
-    window.addEventListener('actions-badge-update', handleBadgeUpdate);
-
     return () => {
       window.removeEventListener('vanilla-view-changed', handleVanillaViewChange);
-      window.removeEventListener('actions-badge-update', handleBadgeUpdate);
     };
   }, [setCurrentView]);
+
+  // Listen for check filter modal open events (from CheckFilterToggle portal)
+  useEffect(() => {
+    const handleOpenCheckFilterModal = () => {
+      setCheckFilterModalOpen(true);
+    };
+    window.addEventListener('open-check-filter-modal', handleOpenCheckFilterModal);
+
+    return () => {
+      window.removeEventListener('open-check-filter-modal', handleOpenCheckFilterModal);
+    };
+  }, []);
+
+  // New modal handlers
+  const openSettingsModal = useCallback(() => {
+    setSettingsModalOpen(true);
+  }, []);
+
+  const closeSettingsModal = useCallback(() => {
+    setSettingsModalOpen(false);
+  }, []);
+
+  const openTeamDashboard = useCallback(() => {
+    setTeamDashboardOpen(true);
+  }, []);
+
+  const closeTeamDashboard = useCallback(() => {
+    setTeamDashboardOpen(false);
+  }, []);
+
+  const openCheckAdoptionDashboard = useCallback(() => {
+    setCheckAdoptionOpen(true);
+  }, []);
+
+  const closeCheckAdoptionDashboard = useCallback(() => {
+    setCheckAdoptionOpen(false);
+  }, []);
+
+  const openTeamEditModal = useCallback((mode: 'create' | 'edit', teamId?: string) => {
+    setTeamEditMode(mode);
+    setTeamEditId(teamId);
+    setTeamEditModalOpen(true);
+  }, []);
+
+  const closeTeamEditModal = useCallback(() => {
+    setTeamEditModalOpen(false);
+  }, []);
+
+  const handleTeamEditSave = useCallback((_teamId: string, _isCreate: boolean) => {
+    // Refresh team data after save
+    // The TeamEditModal already closes itself after successful save
+  }, []);
 
   // Register global toast handler for vanilla JS bridge
   useEffect(() => {
@@ -289,6 +344,11 @@ function App({
     const originalOpenCheckFilterModal = window.openCheckFilterModal;
     const originalCloseModal = window.closeModal;
     const originalCloseTeamModal = window.closeTeamModal;
+    const originalOpenSettings = window.openSettings;
+    const originalToggleActionsWidget = window.toggleActionsWidget;
+    const originalOpenTeamDashboard = window.openTeamDashboard;
+    const originalOpenTeamEditModal = window.openTeamEditModal;
+    const originalOpenCheckAdoptionDashboard = window.openCheckAdoptionDashboard;
 
     // Set React-managed modal openers
     window.showServiceDetail = async (org: string, repo: string) => {
@@ -315,9 +375,26 @@ function App({
       closeTeamModal();
     };
 
-    // Set flag to indicate React is managing modals
-    window.__REACT_MANAGES_SERVICE_MODAL = true;
-    window.__REACT_MANAGES_TEAM_MODAL = true;
+    // New modal openers
+    window.openSettings = () => {
+      openSettingsModal();
+    };
+
+    window.toggleActionsWidget = () => {
+      toggleActionsWidget();
+    };
+
+    window.openTeamDashboard = () => {
+      openTeamDashboard();
+    };
+
+    window.openTeamEditModal = (mode?: 'create' | 'edit', teamId?: string) => {
+      openTeamEditModal(mode || 'create', teamId);
+    };
+
+    window.openCheckAdoptionDashboard = () => {
+      openCheckAdoptionDashboard();
+    };
 
     return () => {
       // Restore original functions
@@ -327,8 +404,11 @@ function App({
       window.openCheckFilterModal = originalOpenCheckFilterModal;
       window.closeModal = originalCloseModal;
       window.closeTeamModal = originalCloseTeamModal;
-      window.__REACT_MANAGES_SERVICE_MODAL = false;
-      window.__REACT_MANAGES_TEAM_MODAL = false;
+      window.openSettings = originalOpenSettings;
+      window.toggleActionsWidget = originalToggleActionsWidget;
+      window.openTeamDashboard = originalOpenTeamDashboard;
+      window.openTeamEditModal = originalOpenTeamEditModal;
+      window.openCheckAdoptionDashboard = originalOpenCheckAdoptionDashboard;
     };
   }, [
     openServiceModal,
@@ -336,6 +416,11 @@ function App({
     openTeamModal,
     closeTeamModal,
     openCheckFilterModal,
+    openSettingsModal,
+    toggleActionsWidget,
+    openTeamDashboard,
+    openTeamEditModal,
+    openCheckAdoptionDashboard,
   ]);
 
   // Get current services for check filter
@@ -355,7 +440,11 @@ function App({
         )}
       {floatingControls &&
         createPortal(
-          <FloatingControls actionsBadgeCount={actionsBadgeCount} />,
+          <FloatingControls
+            actionsBadgeCount={actionsBadgeCount}
+            onSettingsClick={openSettingsModal}
+            onActionsWidgetClick={toggleActionsWidget}
+          />,
           floatingControls
         )}
 
@@ -388,6 +477,44 @@ function App({
         onFiltersChange={handleCheckFiltersChange}
         services={services}
       />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={closeSettingsModal}
+      />
+
+      {/* Actions Widget (sidebar) - manages its own state via Zustand */}
+      <ActionsWidget />
+
+      {/* Team Dashboard Modal */}
+      <TeamDashboard
+        isOpen={teamDashboardOpen}
+        onClose={closeTeamDashboard}
+        onCreateTeam={() => openTeamEditModal('create')}
+        onEditTeam={(teamId) => openTeamEditModal('edit', teamId)}
+      />
+
+      {/* Team Edit Modal */}
+      <TeamEditModal
+        isOpen={teamEditModalOpen}
+        onClose={closeTeamEditModal}
+        mode={teamEditMode}
+        teamId={teamEditId}
+        onSave={handleTeamEditSave}
+      />
+
+      {/* Check Adoption Dashboard Modal */}
+      <CheckAdoptionDashboard
+        isOpen={checkAdoptionOpen}
+        onClose={closeCheckAdoptionDashboard}
+      />
+
+      {/* Team Filter Dropdown Portal - renders into #team-filter-container */}
+      <TeamFilterDropdownPortal />
+
+      {/* Check Filter Toggle Portal - renders into #check-filter-container */}
+      <CheckFilterTogglePortal />
     </>
   );
 }
@@ -457,6 +584,3 @@ export * from './containers/index.js';
 
 // Re-export layout components
 export * from './layout/index.js';
-
-// Re-export hooks
-export * from './hooks/index.js';

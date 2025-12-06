@@ -4,10 +4,10 @@
     "allowJs": true,
     "checkJs": false,
 
-    // Strictness (enable as we migrate)
-    "strict": false,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
+    // Strictness - enabled for type safety
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
 
     // Module settings
     "target": "ES2020",
@@ -46,6 +46,8 @@
     "node_modules",
     "docs/lib/**",
     "docs/dist/**",
-    "tests/**"
+    "tests/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

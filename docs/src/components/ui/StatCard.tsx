@@ -3,8 +3,10 @@
  *
  * Displays a statistic with value and label.
  * Supports filterable cards that can be clicked to filter data.
+ * Uses CSS classes from cards.css for styling.
  */
 
+import { cn } from '../../utils/css.js';
 import type { RankType } from './Badge.js';
 
 export type FilterType = RankType | 'has-api' | 'stale' | 'installed';
@@ -29,24 +31,16 @@ interface StatCardProps {
   id?: string;
 }
 
-// Map filter types to CSS class prefixes
-function getFilterClass(filterType: FilterType): string {
-  switch (filterType) {
-  case 'platinum':
-  case 'gold':
-  case 'silver':
-  case 'bronze':
-    return `rank-${filterType}`;
-  case 'has-api':
-    return 'filter-api';
-  case 'stale':
-    return 'filter-stale';
-  case 'installed':
-    return 'filter-installed';
-  default:
-    return '';
-  }
-}
+// Map filter types to CSS class modifiers
+const FILTER_TYPE_TO_CLASS: Record<FilterType, string> = {
+  platinum: 'platinum',
+  gold: 'gold',
+  silver: 'silver',
+  bronze: 'bronze',
+  'has-api': 'api',
+  stale: 'stale',
+  installed: 'installed',
+};
 
 export function StatCard({
   value,
@@ -71,18 +65,21 @@ export function StatCard({
     }
   };
 
-  const classes = [
-    'stat-card',
-    filterable ? 'filterable' : 'non-filterable',
-    filterType ? getFilterClass(filterType) : '',
-    filterState === 'include' ? 'active' : '',
-    filterState === 'exclude' ? 'exclude' : '',
-    className,
-  ].filter(Boolean).join(' ');
+  const typeClass = filterType ? FILTER_TYPE_TO_CLASS[filterType] : null;
+  const isActive = filterState === 'include';
+  const isExcluded = filterState === 'exclude';
 
   return (
     <div
-      className={classes}
+      className={cn(
+        'stat-card',
+        'stat-card-react',
+        filterable && 'stat-card-react--filterable',
+        !filterable && 'stat-card-react--static',
+        isActive && typeClass && `stat-card-react--active-${typeClass}`,
+        isExcluded && 'stat-card-react--excluded',
+        className
+      )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role={filterable ? 'button' : undefined}
@@ -90,10 +87,17 @@ export function StatCard({
       data-filter={filterType}
       id={id}
     >
-      <div className="stat-value" id={id ? `${id}-value` : undefined}>
+      <div
+        className={cn(
+          'stat-value',
+          'stat-card-react__value',
+          isActive && typeClass && `stat-card-react__value--${typeClass}`
+        )}
+        id={id ? `${id}-value` : undefined}
+      >
         {value}
       </div>
-      <div className="stat-label">
+      <div className="stat-label stat-card-react__label">
         {label}
       </div>
     </div>
@@ -110,10 +114,16 @@ interface StatCardGroupProps {
 }
 
 export function StatCardGroup({ children, className = '', view = 'services' }: StatCardGroupProps) {
-  const viewClass = view === 'teams' ? 'teams-stats' : 'services-stats';
-
   return (
-    <section className={`stats ${viewClass} ${className}`}>
+    <section
+      className={cn(
+        view === 'services' ? 'services-stats' : 'teams-stats',
+        'stat-card-group',
+        view === 'services' && 'stat-card-group--services',
+        view === 'teams' && 'stat-card-group--teams',
+        className
+      )}
+    >
       {children}
     </section>
   );

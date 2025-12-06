@@ -18,6 +18,7 @@ import type {
   Contributor,
   WorkflowRun,
 } from '../../../types/index.js';
+import { useAppStore } from '../../../stores/appStore.js';
 
 // Types for service results data
 interface OpenAPIConfig {
@@ -186,8 +187,8 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
 
         setServiceData(results);
 
-        // Check staleness
-        const checksHash = window.currentChecksHash ?? null;
+        // Check staleness using Zustand store
+        const checksHash = useAppStore.getState().ui.checksHash;
         const isServiceStale =
           checksHash !== null && data.checks_hash !== checksHash;
         setIsStale(isServiceStale);
@@ -373,52 +374,59 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
     }
 
     const service = serviceData.service;
+    const checks = serviceData.checks || [];
+
+    // Calculate check stats
+    const passedChecks = checks.filter((c) => c.status === 'pass').length;
+    const totalChecks = checks.filter((c) => c.status !== 'excluded').length;
+    const excludedCount = checks.filter((c) => c.status === 'excluded').length;
 
     return (
-      <>
-        {/* Header */}
-        <div className="modal-header service-modal-header">
-          <div className="service-modal-title">
-            <div className={`rank-badge modal-header-badge ${service.rank}`}>
-              {capitalize(service.rank)}
-            </div>
-            <h2>{service.name}</h2>
-            <span className="service-org-repo">
-              {org}/{repo}
-            </span>
+      <div id="service-detail">
+        {/* Title row with badge */}
+        <div className="service-modal-title-row">
+          <h2>{service.name}</h2>
+          <div className={`rank-badge modal-header-badge ${service.rank}`}>
+            {capitalize(service.rank)}
           </div>
+        </div>
+        <p className="tab-section-description">
+          {org}/{repo}
+        </p>
 
-          <div className="service-modal-actions">
-            <a
-              href={`https://github.com/${org}/${repo}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="github-button"
-              title="View on GitHub"
-            >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-              </svg>
-            </a>
+        {/* Action buttons below title */}
+        <div className="service-modal-actions">
+          <a
+            href={`https://github.com/${org}/${repo}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="github-button"
+            title="View on GitHub"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            View on GitHub
+          </a>
+          <button
+            onClick={handleRefresh}
+            className="github-button"
+            title="Refresh data"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z" />
+            </svg>
+            Refresh Data
+          </button>
+          {isStale && service.installed && (
             <button
-              onClick={handleRefresh}
-              className="github-button"
-              title="Refresh data"
+              onClick={handleTriggerWorkflow}
+              className="github-button primary"
+              title="Re-run scorecard workflow"
             >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z" />
-              </svg>
+              Run Scorecard
             </button>
-            {isStale && service.installed && (
-              <button
-                onClick={handleTriggerWorkflow}
-                className="github-button primary"
-                title="Re-run scorecard workflow"
-              >
-                Run Scorecard
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Staleness warning */}
@@ -434,17 +442,31 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
           </div>
         )}
 
-        {/* Score display */}
+        {/* Stats display */}
         <div className="modal-stats-container">
           <div className="modal-stat-item">
             <div className="modal-stat-value">{service.score}</div>
             <div className="modal-stat-label">Score</div>
           </div>
+          <div className="modal-stat-item">
+            <div className="modal-stat-value">
+              {passedChecks}/{totalChecks}
+            </div>
+            <div className="modal-stat-label">Checks Passed</div>
+          </div>
+          {excludedCount > 0 && (
+            <div className="modal-stat-item">
+              <div className="modal-stat-value modal-stat-excluded">
+                {excludedCount}
+              </div>
+              <div className="modal-stat-label">Excluded</div>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
         <Tabs tabs={tabs} defaultTab="checks" showScrollArrows />
-      </>
+      </div>
     );
   };
 
@@ -454,6 +476,7 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
       onClose={onClose}
       className="service-modal-wrapper"
       contentClassName="service-modal-content"
+      testId="service-modal"
     >
       {renderContent()}
     </Modal>

@@ -42,6 +42,11 @@ export default defineConfig({
       async resolveId(source, importer) {
         // Only process relative imports ending in .js
         if (source.endsWith('.js') && (source.startsWith('./') || source.startsWith('../'))) {
+          // Skip Vite's internal dependency chunks and node_modules
+          if (importer && (importer.includes('node_modules/.vite') || importer.includes('node_modules'))) {
+            return null;
+          }
+
           // Try .tsx first, then .ts
           const tsxPath = source.replace(/\.js$/, '.tsx');
           const tsxResolved = await this.resolve(tsxPath, importer, { skipSelf: true });

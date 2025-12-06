@@ -30,7 +30,8 @@ test.describe('Accessibility', () => {
     test('service modal is keyboard navigable', async ({ page }) => {
         // Click first service card to open modal
         await page.click('.service-card');
-        await page.waitForSelector('#service-modal:not(.hidden)');
+        // React modals are either in DOM (visible) or not - wait for visible state
+        await page.waitForSelector('#service-modal', { state: 'visible' });
 
         const results = await new AxeBuilder({ page })
             .include('#service-modal')
@@ -106,8 +107,9 @@ test.describe('Accessibility', () => {
 
     test('settings modal is accessible', async ({ page }) => {
         // Open settings modal
-        await page.click('#settings-btn');
-        await page.waitForSelector('#settings-modal:not(.hidden)');
+        await page.getByRole('button', { name: 'Settings' }).click();
+        // React modals are either in DOM (visible) or not - wait for visible state
+        await page.waitForSelector('#settings-modal', { state: 'visible' });
 
         const results = await new AxeBuilder({ page })
             .include('#settings-modal')
@@ -148,12 +150,13 @@ test.describe('Accessibility', () => {
     test('escape key closes modal', async ({ page }) => {
         // Open service modal
         await page.click('.service-card');
-        await page.waitForSelector('#service-modal:not(.hidden)');
+        // React modals are either in DOM (visible) or not - wait for visible state
+        await page.waitForSelector('#service-modal', { state: 'visible' });
 
         // Press Escape
         await page.keyboard.press('Escape');
 
-        // Modal should be hidden
-        await expect(page.locator('#service-modal')).toHaveClass(/hidden/);
+        // In React, modal is removed from DOM when closed - wait for it to be hidden
+        await expect(page.locator('#service-modal')).toBeHidden();
     });
 });

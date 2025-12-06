@@ -2,7 +2,10 @@
  * Badge Components
  *
  * Reusable badge components for displaying ranks and status indicators.
+ * Uses CSS classes from badges.css for styling.
  */
+
+import { cn } from '../../utils/css.js';
 
 export type RankType = 'platinum' | 'gold' | 'silver' | 'bronze';
 export type UtilityBadgeType = 'api' | 'stale' | 'installed';
@@ -14,6 +17,7 @@ function capitalize(str: string): string {
 
 /**
  * RankBadge - Full rank badge (e.g., "PLATINUM", "GOLD")
+ * Uses CSS classes from badges.css for consistent styling
  */
 interface RankBadgeProps {
   rank: RankType;
@@ -22,15 +26,15 @@ interface RankBadgeProps {
 }
 
 export function RankBadge({ rank, className = '', isModalHeader = false }: RankBadgeProps) {
-  const classes = [
-    'rank-badge',
-    rank,
-    isModalHeader ? 'modal-header-badge' : '',
-    className,
-  ].filter(Boolean).join(' ');
-
   return (
-    <div className={classes}>
+    <div
+      className={cn(
+        'rank-badge',
+        rank,
+        isModalHeader && 'mb-0',
+        className
+      )}
+    >
       {capitalize(rank)}
     </div>
   );
@@ -46,14 +50,14 @@ interface MiniRankBadgeProps {
 }
 
 export function MiniRankBadge({ rank, count, className = '' }: MiniRankBadgeProps) {
-  const classes = [
-    'mini-rank-badge',
-    `rank-${rank}`,
-    className,
-  ].filter(Boolean).join(' ');
-
   return (
-    <span className={classes}>
+    <span
+      className={cn(
+        'mini-rank-badge',
+        `mini-rank-badge--${rank}`,
+        className
+      )}
+    >
       {count}
     </span>
   );
@@ -76,7 +80,7 @@ export function RankBadgeGroup({ distribution, className = '' }: RankBadgeGroupP
   }
 
   return (
-    <div className={`team-card-ranks ${className}`}>
+    <div className={cn('rank-badge-group', className)}>
       {visibleRanks.map((rank) => (
         <MiniRankBadge key={rank} rank={rank} count={distribution[rank]} />
       ))}
@@ -86,6 +90,7 @@ export function RankBadgeGroup({ distribution, className = '' }: RankBadgeGroupP
 
 /**
  * UtilityBadge - API, Stale, Installed badges
+ * Uses CSS classes from badges.css (.badge-api, .badge-stale, .badge-installed)
  */
 interface UtilityBadgeProps {
   type: UtilityBadgeType;
@@ -99,13 +104,8 @@ const UTILITY_BADGE_LABELS: Record<UtilityBadgeType, string> = {
 };
 
 export function UtilityBadge({ type, className = '' }: UtilityBadgeProps) {
-  const classes = [
-    `badge-${type}`,
-    className,
-  ].filter(Boolean).join(' ');
-
   return (
-    <span className={classes}>
+    <span className={cn(`badge-${type}`, className)}>
       {UTILITY_BADGE_LABELS[type]}
     </span>
   );
@@ -134,7 +134,7 @@ export function ServiceBadges({
   }
 
   return (
-    <div className={`service-badges ${className}`}>
+    <div className={cn('service-badges', className)}>
       {hasApi && <UtilityBadge type="api" />}
       {isStale && <UtilityBadge type="stale" />}
       {isInstalled && <UtilityBadge type="installed" />}
@@ -152,7 +152,7 @@ interface ScoreBadgeProps {
 
 export function ScoreBadge({ score, className = '' }: ScoreBadgeProps) {
   return (
-    <div className={`score-badge ${className}`}>
+    <div className={cn('score-badge-inline', className)}>
       {score}
     </div>
   );

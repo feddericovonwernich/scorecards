@@ -176,8 +176,8 @@ export async function openServiceModal(page, serviceName) {
  * @param {import('@playwright/test').Page} page
  */
 export async function closeServiceModal(page) {
-  await page.locator('#service-modal').getByRole('button', { name: '×' }).click();
-  // Wait for modal to close
+  await page.locator('#service-modal').getByRole('button', { name: 'Close modal' }).click();
+  // Wait for modal to close - React removes modal from DOM when closed
   await page.waitForSelector('#service-modal', { state: 'hidden' });
 }
 
@@ -195,7 +195,7 @@ export async function openSettingsModal(page) {
  * @param {import('@playwright/test').Page} page
  */
 export async function closeSettingsModal(page) {
-  await page.locator('#settings-modal').getByRole('button', { name: '×' }).click();
+  await page.locator('#settings-modal').getByRole('button', { name: 'Close modal' }).click();
   await page.waitForSelector('#settings-modal', { state: 'hidden' });
 }
 
@@ -229,6 +229,7 @@ export async function clearGitHubPAT(page) {
  * @param {string} label - e.g., "Total Services", "Average Score", etc.
  */
 export async function getStatValue(page, label) {
+  // StatCard component now uses .stat-card class with .stat-value for the value
   const statCard = page.locator('.stat-card').filter({ hasText: label });
   const value = await statCard.locator('.stat-value').textContent();
   return value.trim();
@@ -270,6 +271,95 @@ export async function clearSearch(page) {
  */
 export async function selectSort(page, option) {
   await page.locator('#sort-select').selectOption(option);
+}
+
+/**
+ * Switch to Teams view
+ * @param {import('@playwright/test').Page} page
+ */
+export async function switchToTeamsView(page) {
+  // React Navigation component uses button[data-view="teams"] without .view-tab class
+  await page.locator('[data-view="teams"]').click();
+  await page.waitForTimeout(300);
+}
+
+/**
+ * Switch to Services view
+ * @param {import('@playwright/test').Page} page
+ */
+export async function switchToServicesView(page) {
+  await page.locator('[data-view="services"]').click();
+  await page.waitForTimeout(300);
+}
+
+/**
+ * Open the Check Adoption Dashboard modal
+ * @param {import('@playwright/test').Page} page
+ */
+export async function openCheckAdoptionDashboard(page) {
+  // First switch to teams view
+  await switchToTeamsView(page);
+
+  // Click the Check Adoption button
+  const adoptionButton = page.getByRole('button', { name: 'Check Adoption' });
+  await adoptionButton.click();
+
+  // Wait for modal to open - React uses testId="check-adoption-modal"
+  await page.waitForSelector('#check-adoption-modal', { state: 'visible', timeout: 5000 });
+}
+
+/**
+ * Close the Check Adoption Dashboard modal
+ * @param {import('@playwright/test').Page} page
+ */
+export async function closeCheckAdoptionModal(page) {
+  await page.locator('#check-adoption-modal').getByRole('button', { name: 'Close modal' }).click();
+  await page.waitForSelector('#check-adoption-modal', { state: 'hidden' });
+}
+
+/**
+ * Open Team Modal by team name
+ * @param {import('@playwright/test').Page} page
+ * @param {string} teamName
+ */
+export async function openTeamModal(page, teamName) {
+  // Switch to teams view first
+  await switchToTeamsView(page);
+
+  // Click on the team card
+  await page.locator('.team-card').filter({ hasText: teamName }).click();
+
+  // Wait for modal
+  await page.waitForSelector('#team-modal', { state: 'visible', timeout: 5000 });
+}
+
+/**
+ * Close Team Modal
+ * @param {import('@playwright/test').Page} page
+ */
+export async function closeTeamModal(page) {
+  await page.locator('#team-modal').getByRole('button', { name: 'Close modal' }).click();
+  await page.waitForSelector('#team-modal', { state: 'hidden' });
+}
+
+/**
+ * Open Check Filter Modal
+ * @param {import('@playwright/test').Page} page
+ */
+export async function openCheckFilterModal(page) {
+  // Click on Check Filter button
+  const filterButton = page.getByRole('button', { name: /Check Filter/i });
+  await filterButton.click();
+  await page.waitForSelector('#check-filter-modal', { state: 'visible', timeout: 5000 });
+}
+
+/**
+ * Close Check Filter Modal
+ * @param {import('@playwright/test').Page} page
+ */
+export async function closeCheckFilterModal(page) {
+  await page.locator('#check-filter-modal').getByRole('button', { name: 'Close modal' }).click();
+  await page.waitForSelector('#check-filter-modal', { state: 'hidden' });
 }
 
 /**

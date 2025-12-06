@@ -22,17 +22,19 @@ describe('Navigation', () => {
   it('marks Services tab as active when activeView is services', () => {
     render(<Navigation activeView="services" onViewChange={mockOnViewChange} />);
     const servicesTab = screen.getByRole('button', { name: /Services/ });
-    expect(servicesTab).toHaveClass('active');
+    // Active state uses bg-accent class in Tailwind
+    expect(servicesTab).toHaveClass('bg-accent');
     const teamsTab = screen.getByRole('button', { name: /Teams/ });
-    expect(teamsTab).not.toHaveClass('active');
+    expect(teamsTab).not.toHaveClass('bg-accent');
   });
 
   it('marks Teams tab as active when activeView is teams', () => {
     render(<Navigation activeView="teams" onViewChange={mockOnViewChange} />);
     const servicesTab = screen.getByRole('button', { name: /Services/ });
-    expect(servicesTab).not.toHaveClass('active');
+    expect(servicesTab).not.toHaveClass('bg-accent');
     const teamsTab = screen.getByRole('button', { name: /Teams/ });
-    expect(teamsTab).toHaveClass('active');
+    // Active state uses bg-accent class in Tailwind
+    expect(teamsTab).toHaveClass('bg-accent');
   });
 
   it('calls onViewChange with "services" when Services tab is clicked', () => {

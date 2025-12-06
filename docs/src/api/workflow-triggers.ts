@@ -4,18 +4,83 @@
  */
 
 import { getToken, clearToken } from '../services/auth.js';
-import {
-  setButtonLoading,
-  setButtonSuccess,
-  setButtonError,
-  resetButton,
-} from '../ui/button-states.js';
-import { showToast } from '../ui/toast.js';
+import { showToastGlobal } from '../components/ui/Toast.js';
 import { DEPLOYMENT } from '../config/deployment.js';
 import { WORKFLOWS, getWorkflowDispatchUrl } from '../config/workflows.js';
 import type { ServiceData } from '../types/index.js';
 
 // Window types are defined in types/globals.d.ts
+
+// ============================================================================
+// Button State Utilities (inline versions of the deleted ui/button-states.ts)
+// ============================================================================
+
+// SVG icon strings for button states
+const REFRESH_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z" /></svg>';
+const CHECKMARK_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" /></svg>';
+const X_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" /></svg>';
+const SPINNING_REFRESH_ICON = '<svg class="spinning" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z" /></svg>';
+
+/**
+ * Set button to loading state
+ */
+function setButtonLoading(button: HTMLButtonElement, title = 'Triggering...'): void {
+  button.disabled = true;
+  button.dataset.originalHtml = button.innerHTML;
+  button.dataset.originalTitle = button.title;
+  button.dataset.originalBg = button.style.backgroundColor;
+  button.innerHTML = SPINNING_REFRESH_ICON;
+  button.title = title;
+}
+
+/**
+ * Set button to success state
+ */
+async function setButtonSuccess(button: HTMLButtonElement, title = '✓ Triggered Successfully'): Promise<void> {
+  button.innerHTML = CHECKMARK_ICON;
+  button.title = title;
+  button.style.backgroundColor = '#10b981'; // success green
+  button.classList.add('success');
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  resetButton(button);
+}
+
+/**
+ * Set button to error state
+ */
+async function setButtonError(button: HTMLButtonElement, title = '✗ Trigger Failed'): Promise<void> {
+  button.innerHTML = X_ICON;
+  button.title = title;
+  button.style.backgroundColor = '#ef4444'; // error red
+  button.classList.add('error');
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  resetButton(button);
+}
+
+/**
+ * Reset button to original state
+ */
+function resetButton(button: HTMLButtonElement): void {
+  button.disabled = false;
+  button.classList.remove('success', 'error');
+  button.style.backgroundColor = '';
+  if (button.dataset.originalHtml) {
+    button.innerHTML = button.dataset.originalHtml;
+    delete button.dataset.originalHtml;
+  }
+  if (button.dataset.originalTitle) {
+    button.title = button.dataset.originalTitle;
+    delete button.dataset.originalTitle;
+  }
+  if (button.dataset.originalBg) {
+    button.style.backgroundColor = button.dataset.originalBg;
+    delete button.dataset.originalBg;
+  }
+}
+
+// ============================================================================
+// Workflow Trigger Functions
+// ============================================================================
 
 // Get repo info from registry module
 const getRepoInfo = (): { owner: string; name: string } => {
@@ -37,11 +102,11 @@ export async function triggerServiceWorkflow(
   const token = getToken();
 
   if (!token) {
-    showToast(
+    showToastGlobal(
       'Please configure a GitHub PAT in Settings to trigger workflows',
       'warning'
     );
-    window.openSettings();
+    window.openSettings?.();
     return false;
   }
 
@@ -67,12 +132,12 @@ export async function triggerServiceWorkflow(
     );
 
     if (response.status === 204) {
-      showToast(`Scorecard workflow triggered for ${org}/${repo}`, 'success');
+      showToastGlobal(`Scorecard workflow triggered for ${org}/${repo}`, 'success');
       await setButtonSuccess(buttonElement, '✓ Triggered Successfully');
       return true;
     } else if (response.status === 401) {
       clearToken();
-      showToast(
+      showToastGlobal(
         'Invalid GitHub token. Please enter a valid token in Settings.',
         'error'
       );
@@ -81,7 +146,7 @@ export async function triggerServiceWorkflow(
     } else {
       const errorData = await response.json().catch(() => ({}));
       console.error('Failed to trigger workflow:', response.status, errorData);
-      showToast(
+      showToastGlobal(
         `Failed to trigger workflow: ${(errorData as { message?: string }).message || response.statusText}`,
         'error'
       );
@@ -90,7 +155,7 @@ export async function triggerServiceWorkflow(
     }
   } catch (error) {
     console.error('Error triggering workflow:', error);
-    showToast(
+    showToastGlobal(
       `Error triggering workflow: ${error instanceof Error ? error.message : String(error)}`,
       'error'
     );
@@ -110,7 +175,7 @@ export async function installService(
   const token = getToken();
 
   if (!token) {
-    showToast(
+    showToastGlobal(
       'GitHub token is required to create installation PRs',
       'error'
     );
@@ -139,13 +204,13 @@ export async function installService(
     );
 
     if (response.status === 204) {
-      showToast(
+      showToastGlobal(
         `Installation PR creation started for ${org}/${repo}`,
         'success'
       );
 
       setTimeout(() => {
-        showToast(
+        showToastGlobal(
           'Note: PR status will appear in the catalog in 3-5 minutes due to GitHub Pages deployment.',
           'info'
         );
@@ -158,11 +223,11 @@ export async function installService(
         setTimeout(async () => {
           try {
             await new Promise((resolve) => setTimeout(resolve, 5000));
-            showToast('Installation PR created! Refreshing...', 'success');
+            showToastGlobal('Installation PR created! Refreshing...', 'success');
 
             const modal = document.getElementById('service-modal');
             modal?.classList.add('hidden');
-            setTimeout(() => window.showServiceDetail(org, repo), 500);
+            setTimeout(() => window.showServiceDetail?.(org, repo), 500);
           } catch (error) {
             console.error('Error checking PR status:', error);
             resetButton(buttonElement);
@@ -173,7 +238,7 @@ export async function installService(
       return true;
     } else if (response.status === 401) {
       clearToken();
-      showToast(
+      showToastGlobal(
         'Invalid GitHub token. Please enter a valid token with workflow permissions.',
         'error'
       );
@@ -186,7 +251,7 @@ export async function installService(
         response.status,
         errorData
       );
-      showToast(
+      showToastGlobal(
         `Failed to create installation PR: ${(errorData as { message?: string }).message || response.statusText}`,
         'error'
       );
@@ -195,7 +260,7 @@ export async function installService(
     }
   } catch (error) {
     console.error('Error creating installation PR:', error);
-    showToast(
+    showToastGlobal(
       `Error creating installation PR: ${error instanceof Error ? error.message : String(error)}`,
       'error'
     );
@@ -214,7 +279,7 @@ export async function triggerBulkWorkflows(
   const token = getToken();
 
   if (!token) {
-    showToast('GitHub token is required to trigger workflows', 'error');
+    showToastGlobal('GitHub token is required to trigger workflows', 'error');
     return false;
   }
 
@@ -245,7 +310,7 @@ export async function triggerBulkWorkflows(
 
     if (response.status === 204) {
       const count = services.length;
-      showToast(
+      showToastGlobal(
         `Triggered workflows for ${count} service${count !== 1 ? 's' : ''}`,
         'success'
       );
@@ -256,7 +321,7 @@ export async function triggerBulkWorkflows(
       return true;
     } else if (response.status === 401) {
       clearToken();
-      showToast(
+      showToastGlobal(
         'Invalid GitHub token. Please enter a valid token in Settings.',
         'error'
       );
@@ -269,7 +334,7 @@ export async function triggerBulkWorkflows(
         response.status,
         errorData
       );
-      showToast(
+      showToastGlobal(
         `Failed to trigger workflows: ${(errorData as { message?: string }).message || response.statusText}`,
         'error'
       );
@@ -278,7 +343,7 @@ export async function triggerBulkWorkflows(
     }
   } catch (error) {
     console.error('Error triggering bulk workflows:', error);
-    showToast(
+    showToastGlobal(
       `Error triggering workflows: ${error instanceof Error ? error.message : String(error)}`,
       'error'
     );
@@ -299,7 +364,7 @@ export function handleBulkTrigger(event: Event): void {
   );
 
   if (staleServices.length === 0) {
-    showToast('No stale services to trigger', 'info');
+    showToastGlobal('No stale services to trigger', 'info');
     return;
   }
 
@@ -321,7 +386,7 @@ export function handleBulkTriggerAll(event: Event): void {
   const installedServices = window.allServices.filter((s) => s.installed);
 
   if (installedServices.length === 0) {
-    showToast('No installed services to trigger', 'info');
+    showToastGlobal('No installed services to trigger', 'info');
     return;
   }
 

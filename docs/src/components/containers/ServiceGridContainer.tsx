@@ -2,15 +2,17 @@
  * ServiceGridContainer
  *
  * React container that renders ServiceGrid using app state.
- * Bridges between vanilla JS state management and React rendering.
+ * Bridges between Zustand store and React rendering.
  */
 
+import { useCallback } from 'react';
 import { ServiceGrid } from '../features/ServiceCard.js';
 import {
-  useFilteredServices,
-  useChecksHash,
-  useServiceCallbacks,
-} from '../hooks/index.js';
+  useAppStore,
+  selectServicesFiltered,
+  selectChecksHash,
+  selectDisplayMode,
+} from '../../stores/appStore.js';
 import { isServiceStale } from '../../services/staleness.js';
 import type { ServiceData } from '../../types/index.js';
 
@@ -25,14 +27,27 @@ function checkServiceStale(service: ServiceData, checksHash: string | null): boo
  * Container component that manages state and renders ServiceGrid
  */
 export function ServiceGridContainer() {
-  const services = useFilteredServices();
-  const checksHash = useChecksHash();
-  const { handleCardClick, handleTeamClick, handleTriggerWorkflow } = useServiceCallbacks();
+  const services = useAppStore(selectServicesFiltered);
+  const checksHash = useAppStore(selectChecksHash);
+  const displayMode = useAppStore(selectDisplayMode);
+
+  const handleCardClick = useCallback((org: string, repo: string) => {
+    window.showServiceDetail?.(org, repo);
+  }, []);
+
+  const handleTeamClick = useCallback((teamName: string) => {
+    window.showTeamDetail?.(teamName);
+  }, []);
+
+  const handleTriggerWorkflow = useCallback((org: string, repo: string, button: HTMLButtonElement) => {
+    window.triggerServiceWorkflow?.(org, repo, button);
+  }, []);
 
   return (
     <ServiceGrid
       services={services}
       checksHash={checksHash}
+      variant={displayMode}
       isServiceStale={checkServiceStale}
       onCardClick={handleCardClick}
       onTeamClick={handleTeamClick}

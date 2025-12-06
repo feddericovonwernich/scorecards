@@ -116,3 +116,69 @@ footer a:hover {
         height: 3px;
     }
 }
+
+/* ==============================================
+   FOOTER - React Component Styles
+   ============================================== */
+
+.footer-react {
+    padding: var(--space-4) 0;
+    background: linear-gradient(180deg, rgba(9, 9, 11, 0.98), rgba(9, 9, 11, 0.95));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-react__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+}
+
+.footer-react__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+}
+
+.footer-react__logo {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity var(--duration-normal);
+}
+
+.footer-react__logo:hover {
+    opacity: 1;
+}
+
+.footer-react__text {
+    font-size: var(--text-sm);
+    color: #A1A1AA;
+}
+
+.footer-react__link {
+    color: var(--color-link);
+    text-decoration: none;
+    transition: color var(--duration-fast);
+}
+
+.footer-react__link:hover {
+    color: var(--color-link-hover);
+}
+
+/* Footer gradient strip - React version */
+.footer-strip-react {
+    height: 4px;
+    position: relative;
+    background: linear-gradient(90deg, #0EA5E9, #7DD3FC, #0EA5E9);
+}
+
+/* Responsive React footer */
+@media (max-width: 640px) {
+    .footer-react__container {
+        padding: 0 var(--space-4);
+    }
+}

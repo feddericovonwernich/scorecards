@@ -3,9 +3,11 @@
  *
  * Displays temporary notification messages that auto-dismiss.
  * Supports multiple toast types: info, success, error, warning.
+ * Uses CSS classes from toast.css for styling.
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { cn } from '../../utils/css.js';
 
 export type ToastType = 'info' | 'success' | 'error' | 'warning';
 
@@ -47,9 +49,64 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   }, [toast.id, onDismiss]);
 
   return (
-    <div className={`toast toast-${toast.type}${isVisible ? ' show' : ''}`}>
-      <span className="toast-icon">{TOAST_ICONS[toast.type]}</span>
-      <span className="toast-message">{toast.message}</span>
+    <div
+      className={cn(
+        'toast',
+        'toast-react',
+        `toast-react--${toast.type}`,
+        isVisible ? 'toast-react--visible' : 'toast-react--hidden'
+      )}
+    >
+      <span className="toast-react__icon">
+        {TOAST_ICONS[toast.type]}
+      </span>
+      <span className="toast-react__message">{toast.message}</span>
+    </div>
+  );
+}
+
+/**
+ * Standalone Toast component for use in modals
+ * Auto-dismisses after 5 seconds
+ */
+export interface ToastProps {
+  message: string;
+  type: ToastType;
+  onClose: () => void;
+}
+
+export function Toast({ message, type, onClose }: ToastProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger enter animation
+    const showTimer = setTimeout(() => setIsVisible(true), 10);
+
+    // Auto-dismiss after 5 seconds
+    const dismissTimer = setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(() => onClose(), 300);
+    }, 5000);
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(dismissTimer);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className={cn(
+        'toast',
+        'toast-react',
+        `toast-react--${type}`,
+        isVisible ? 'toast-react--visible' : 'toast-react--hidden'
+      )}
+    >
+      <span className="toast-react__icon">
+        {TOAST_ICONS[type]}
+      </span>
+      <span className="toast-react__message">{message}</span>
     </div>
   );
 }

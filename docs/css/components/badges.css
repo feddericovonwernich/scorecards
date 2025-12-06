@@ -62,8 +62,48 @@
 }
 
 /* ==============================================
-   RANK BADGES - Subtle Color Accents
+   RANK BADGES - Progressive Tier Glow System
+   Higher tiers = More prominent glow
    ============================================== */
+
+/* Breathing animation for platinum badges */
+@keyframes platinum-glow {
+    0%, 100% {
+        filter: brightness(1);
+        box-shadow:
+            0 0 8px rgba(14, 165, 233, 0.6),
+            0 0 20px rgba(14, 165, 233, 0.4),
+            0 0 35px rgba(14, 165, 233, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    50% {
+        filter: brightness(1.05);
+        box-shadow:
+            0 0 10px rgba(14, 165, 233, 0.7),
+            0 0 25px rgba(14, 165, 233, 0.5),
+            0 0 45px rgba(14, 165, 233, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+}
+
+@keyframes platinum-glow-dark {
+    0%, 100% {
+        filter: brightness(1);
+        box-shadow:
+            0 0 10px rgba(56, 189, 248, 0.7),
+            0 0 25px rgba(56, 189, 248, 0.5),
+            0 0 45px rgba(56, 189, 248, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    50% {
+        filter: brightness(1.08);
+        box-shadow:
+            0 0 12px rgba(56, 189, 248, 0.8),
+            0 0 30px rgba(56, 189, 248, 0.6),
+            0 0 55px rgba(56, 189, 248, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+}
 
 .rank-badge {
     display: inline-flex;
@@ -71,41 +111,85 @@
     font-family: var(--font-family-primary);
     font-size: var(--text-xs);
     font-weight: var(--font-weight-semibold);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-full);
     text-transform: uppercase;
     letter-spacing: var(--tracking-widest);
     margin-bottom: var(--space-3);
     transition: all var(--duration-normal) var(--ease-in-out-smooth);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Platinum - Sky blue accent */
+/* Platinum - Elite tier with triple-layer glow + breathing animation */
 .rank-badge.platinum {
     background: var(--color-platinum-bg);
     color: var(--color-platinum-text);
     border: 1px solid var(--color-platinum);
+    box-shadow:
+        0 0 8px rgba(14, 165, 233, 0.6),
+        0 0 20px rgba(14, 165, 233, 0.4),
+        0 0 35px rgba(14, 165, 233, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    animation: platinum-glow 3s ease-in-out infinite;
 }
 
-/* Gold - Warm amber accent */
+/* Gold - Prestigious tier with dual-layer warm glow */
 .rank-badge.gold {
     background: var(--color-gold-bg);
     color: var(--color-gold-text);
     border: 1px solid var(--color-gold);
+    box-shadow:
+        0 0 6px rgba(234, 179, 8, 0.5),
+        0 0 16px rgba(234, 179, 8, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* Silver - Neutral gray accent */
+/* Silver - Refined tier with subtle metallic glow */
 .rank-badge.silver {
     background: var(--color-silver-bg);
     color: var(--color-silver-text);
     border: 1px solid var(--color-silver);
+    box-shadow:
+        0 0 8px rgba(107, 114, 128, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Bronze - Warm orange accent */
+/* Bronze - Entry tier with minimal understated glow */
 .rank-badge.bronze {
     background: var(--color-bronze-bg);
     color: var(--color-bronze-text);
     border: 1px solid var(--color-bronze);
+    box-shadow:
+        0 0 4px rgba(234, 88, 12, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Dark theme - Enhanced glows for dark backgrounds */
+[data-theme="dark"] .rank-badge.platinum {
+    box-shadow:
+        0 0 10px rgba(56, 189, 248, 0.7),
+        0 0 25px rgba(56, 189, 248, 0.5),
+        0 0 45px rgba(56, 189, 248, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    animation: platinum-glow-dark 3s ease-in-out infinite;
+}
+
+[data-theme="dark"] .rank-badge.gold {
+    box-shadow:
+        0 0 8px rgba(250, 204, 21, 0.6),
+        0 0 20px rgba(250, 204, 21, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .rank-badge.silver {
+    box-shadow:
+        0 0 10px rgba(156, 163, 175, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .rank-badge.bronze {
+    box-shadow:
+        0 0 6px rgba(251, 146, 60, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ==============================================
@@ -157,4 +241,110 @@
 
 .widget-filter-btn.active .filter-count {
     background: rgba(255, 255, 255, 0.25);
+}
+
+/* ==============================================
+   MINI RANK BADGES - For team cards (React)
+   ============================================== */
+
+.mini-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-full);
+    border: 1px solid;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+/* Mini badges with scaled-down glow effects (~50% intensity) */
+.mini-rank-badge--platinum {
+    background: var(--color-platinum-bg);
+    color: var(--color-platinum-text);
+    border-color: var(--color-platinum);
+    box-shadow:
+        0 0 4px rgba(14, 165, 233, 0.4),
+        0 0 10px rgba(14, 165, 233, 0.2);
+}
+
+.mini-rank-badge--gold {
+    background: var(--color-gold-bg);
+    color: var(--color-gold-text);
+    border-color: var(--color-gold);
+    box-shadow:
+        0 0 3px rgba(234, 179, 8, 0.35),
+        0 0 8px rgba(234, 179, 8, 0.15);
+}
+
+.mini-rank-badge--silver {
+    background: var(--color-silver-bg);
+    color: var(--color-silver-text);
+    border-color: var(--color-silver);
+    box-shadow: 0 0 4px rgba(107, 114, 128, 0.2);
+}
+
+.mini-rank-badge--bronze {
+    background: var(--color-bronze-bg);
+    color: var(--color-bronze-text);
+    border-color: var(--color-bronze);
+    box-shadow: 0 0 2px rgba(234, 88, 12, 0.15);
+}
+
+/* Dark theme mini badges */
+[data-theme="dark"] .mini-rank-badge--platinum {
+    box-shadow:
+        0 0 5px rgba(56, 189, 248, 0.5),
+        0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="dark"] .mini-rank-badge--gold {
+    box-shadow:
+        0 0 4px rgba(250, 204, 21, 0.45),
+        0 0 10px rgba(250, 204, 21, 0.2);
+}
+
+[data-theme="dark"] .mini-rank-badge--silver {
+    box-shadow: 0 0 5px rgba(156, 163, 175, 0.25);
+}
+
+[data-theme="dark"] .mini-rank-badge--bronze {
+    box-shadow: 0 0 3px rgba(251, 146, 60, 0.2);
+}
+
+/* ==============================================
+   RANK BADGE GROUP (React)
+   ============================================== */
+
+.rank-badge-group {
+    display: flex;
+    gap: var(--space-1);
+}
+
+/* ==============================================
+   SCORE BADGE (React)
+   ============================================== */
+
+.score-badge-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+}
+
+/* ==============================================
+   SERVICE BADGES CONTAINER (React)
+   ============================================== */
+
+.service-badges-container {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
 }

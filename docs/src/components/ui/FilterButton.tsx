@@ -3,7 +3,10 @@
  *
  * A toggle button used for filtering lists and grids.
  * Supports active/inactive states and optional count badges.
+ * Uses CSS classes from filter-button.css for styling.
  */
+
+import { cn } from '../../utils/css.js';
 
 interface FilterButtonProps {
   /** Button label text */
@@ -32,21 +35,21 @@ export function FilterButton({
     onClick?.(status);
   };
 
-  const classes = [
-    'widget-filter-btn',
-    isActive ? 'active' : '',
-    className,
-  ].filter(Boolean).join(' ');
-
   return (
     <button
-      className={classes}
+      className={cn(
+        'filter-btn',
+        isActive && 'filter-btn--active',
+        className
+      )}
       data-status={status}
       onClick={handleClick}
     >
       {label}
       {count !== undefined && (
-        <span className="filter-count">{count}</span>
+        <span className="filter-btn__count">
+          {count}
+        </span>
       )}
     </button>
   );
@@ -75,7 +78,7 @@ export function FilterButtonGroup({
   className = '',
 }: FilterButtonGroupProps) {
   return (
-    <div className={`widget-filters ${className}`}>
+    <div className={cn('filter-btn-group', className)}>
       {options.map((option) => (
         <FilterButton
           key={option.status}

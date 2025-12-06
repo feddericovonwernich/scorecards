@@ -1,7 +1,17 @@
 /**
  * CSS Utilities
- * Helper functions for CSS variable access in JavaScript
+ * Helper functions for CSS variable access and class name merging
  */
+
+import { clsx, type ClassValue } from 'clsx';
+
+/**
+ * Utility for conditionally joining class names together
+ * Used for conditional CSS class application
+ */
+export function cn(...inputs: ClassValue[]): string {
+  return clsx(inputs);
+}
 
 /**
  * Get computed CSS variable value

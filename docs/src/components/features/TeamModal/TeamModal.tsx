@@ -10,25 +10,13 @@ import { ServicesTab } from './tabs/ServicesTab.js';
 import { DistributionTab } from './tabs/DistributionTab.js';
 import { CheckAdoptionTab } from './tabs/CheckAdoptionTab.js';
 import { GitHubTab } from './tabs/GitHubTab.js';
-import type { ServiceData, RankName, TeamMember } from '../../../types/index.js';
+import type { ServiceData, RankName, TeamMember, TeamWithStats as BaseTeamWithStats } from '../../../types/index.js';
 
-// Team data interface
-interface TeamWithStats {
-  id?: string;
-  name: string;
-  description?: string;
-  slug?: string;
-  github_org?: string;
-  github_slug?: string;
-  serviceCount: number;
-  averageScore: number;
-  installedCount: number;
-  staleCount: number;
-  rankDistribution: Record<string, number>;
-  slack_channel?: string;
+// Extend the base TeamWithStats type for use in this modal
+type TeamWithStats = BaseTeamWithStats & {
   oncall_rotation?: string;
   aliases?: string[];
-}
+};
 
 export interface TeamModalProps {
   isOpen: boolean;
@@ -90,7 +78,12 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
             '../../../utils/team-statistics.js'
           );
           const stats = calculateTeamStats(allServices);
-          window.allTeams = Object.values(stats);
+          // Convert TeamStatsEntry[] to TeamWithStats[] (null -> undefined)
+          window.allTeams = Object.values(stats).map(s => ({
+            ...s,
+            github_org: s.github_org ?? undefined,
+            github_slug: s.github_slug ?? undefined,
+          }));
         }
 
         // Find team
@@ -155,7 +148,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
   const handleEditClick = useCallback(() => {
     if (!teamData) {return;}
     const teamId = teamData.id || teamData.name.toLowerCase().replace(/\s+/g, '-');
-    window.openTeamEditModal?.(teamId);
+    window.openTeamEditModal?.('edit', teamId);
   }, [teamData]);
 
   // Build tabs
@@ -178,8 +171,8 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
         label: 'Distribution',
         content: (
           <DistributionTab
-            rankDistribution={teamData.rankDistribution}
-            serviceCount={teamData.serviceCount}
+            rankDistribution={teamData.rankDistribution ?? {}}
+            serviceCount={teamData.serviceCount ?? 0}
           />
         ),
       },
@@ -236,28 +229,30 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
       return <div className="empty-state">Team not found</div>;
     }
 
-    const dominantRank = getDominantRank(teamData.rankDistribution);
+    const dominantRank = getDominantRank(teamData.rankDistribution ?? {});
     const teamId =
       teamData.id || teamData.name.toLowerCase().replace(/\s+/g, '-');
 
     return (
       <>
-        {/* Header */}
-        <div className={`rank-badge modal-header-badge ${dominantRank}`}>
-          {capitalize(dominantRank)}
+        {/* Header - title row with badge */}
+        <div className="service-modal-title-row">
+          <h2>
+            {teamData.name}
+            <button
+              className="edit-icon-btn"
+              onClick={handleEditClick}
+              title="Edit Team"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z" />
+              </svg>
+            </button>
+          </h2>
+          <div className={`rank-badge modal-header-badge ${dominantRank}`}>
+            {capitalize(dominantRank)}
+          </div>
         </div>
-        <h2>
-          {teamData.name}
-          <button
-            className="edit-icon-btn"
-            onClick={handleEditClick}
-            title="Edit Team"
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z" />
-            </svg>
-          </button>
-        </h2>
 
         {/* Metadata */}
         <div className="team-metadata">
@@ -294,7 +289,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
             <span className="stat-label">Installed</span>
           </div>
           <div
-            className={`team-modal-stat ${teamData.staleCount > 0 ? 'warning' : ''}`}
+            className={`team-modal-stat ${(teamData.staleCount ?? 0) > 0 ? 'warning' : ''}`}
           >
             <span className="stat-value">{teamData.staleCount || 0}</span>
             <span className="stat-label">Stale</span>
@@ -345,6 +340,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
       onClose={onClose}
       className="team-modal-wrapper"
       contentClassName="team-modal-content"
+      testId="team-modal"
     >
       <div id="team-detail">{renderContent()}</div>
     </Modal>

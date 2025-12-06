@@ -1,0 +1,173 @@
+/* ==============================================
+   TEAM FILTER DROPDOWN
+   ============================================== */
+
+.team-filter-container {
+    position: relative;
+}
+
+.team-filter-dropdown {
+    position: relative;
+}
+
+.team-filter-toggle {
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.team-filter-toggle:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-strong);
+}
+
+.team-filter-toggle.active {
+    background: var(--color-active-bg);
+    border-color: var(--color-active-border);
+    color: var(--color-accent);
+}
+
+.team-dropdown-menu {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    min-width: 280px;
+    max-width: 320px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+}
+
+.team-dropdown-menu.open {
+    display: block;
+    animation: fadeInDown var(--duration-fast) var(--ease-out-expo);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.team-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+.team-clear-btn {
+    padding: var(--space-1) var(--space-2);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    background: transparent;
+    border: none;
+    color: var(--color-link);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.team-clear-btn:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+}
+
+.team-dropdown-search {
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.team-dropdown-search input {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+}
+
+.team-dropdown-search input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-light);
+}
+
+.team-dropdown-options {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: var(--space-2) 0;
+}
+
+.team-option {
+    display: flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.team-option:hover {
+    background: var(--color-surface-hover);
+}
+
+.team-option.selected {
+    background: var(--color-active-bg);
+}
+
+.team-option input[type="checkbox"] {
+    margin-right: var(--space-3);
+    cursor: pointer;
+}
+
+.team-option .team-name {
+    flex: 1;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.team-option .team-name.no-team {
+    font-style: italic;
+    color: var(--color-text-muted);
+}
+
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
+
+@media (max-width: 768px) {
+    .team-dropdown-menu {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: none;
+        border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+        max-height: 70vh;
+    }
+}

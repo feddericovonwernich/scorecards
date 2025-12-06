@@ -86,9 +86,10 @@ describe('FloatingControls', () => {
     expect(() => fireEvent.click(actionsBtn)).not.toThrow();
   });
 
-  it('has proper container class', () => {
+  it('has proper container positioning', () => {
     render(<FloatingControls />);
-    const container = document.querySelector('.floating-controls');
+    // Container is fixed positioned in bottom-right corner with Tailwind
+    const container = document.querySelector('.fixed.bottom-6.right-6');
     expect(container).toBeInTheDocument();
   });
 });

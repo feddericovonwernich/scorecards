@@ -8,45 +8,13 @@
 
 import type {
   ServiceData,
-  WorkflowRun,
   ToastType,
   ViewType,
+  TeamWithStats,
 } from './index.js';
 
 // Filter state type
 type FilterState = 'include' | 'exclude';
-
-// Base statistics interface covering both TeamStatistics and TeamStatsEntry
-interface TeamStatsBase {
-  serviceCount: number;
-  averageScore: number;
-  installedCount: number;
-  staleCount: number;
-  rankDistribution: Record<string, number>;
-  name?: string;
-  github_org?: string | null;
-  github_slug?: string | null;
-}
-
-// TeamWithStats - extended team data for UI
-interface TeamWithStats {
-  id?: string;
-  name: string;
-  description?: string;
-  slug?: string;
-  github_org?: string;
-  github_slug?: string;
-  serviceCount?: number;
-  averageScore?: number;
-  installedCount?: number;
-  staleCount?: number;
-  rankDistribution?: Record<string, number>;
-  slack_channel?: string | null;
-  metadata?: {
-    slack_channel?: string;
-  };
-  statistics?: TeamStatsBase;
-}
 
 declare global {
   interface Window {
@@ -75,15 +43,7 @@ declare global {
     teamsSort: string;
     teamsActiveFilters: Map<string, FilterState>;
 
-    // ============= Service Modal State =============
-    currentServiceOrg: string | null;
-    currentServiceRepo: string | null;
-    serviceWorkflowRuns: WorkflowRun[];
-    serviceWorkflowFilterStatus: string;
-    serviceWorkflowPollInterval: ReturnType<typeof setInterval> | null;
-    serviceWorkflowPollIntervalTime: number;
-    serviceWorkflowLoaded: boolean;
-    serviceDurationUpdateInterval: ReturnType<typeof setInterval> | null;
+    // Note: Service modal state is managed by Zustand store (serviceModal slice)
 
     // ============= Auth State =============
     githubPAT: string | null;
@@ -135,17 +95,27 @@ declare global {
     openCheckFilterModal: () => void;
     closeCheckFilterModal: () => void;
 
+    // Settings Modal
+    openSettings: () => void;
+
+    // Actions Widget
+    toggleActionsWidget: () => void;
+
+    // Team Dashboard
+    openTeamDashboard: () => void;
+
+    // Team Edit Modal
+    openTeamEditModal: (mode?: 'create' | 'edit', teamId?: string) => void;
+
+    // Check Adoption Dashboard
+    openCheckAdoptionDashboard: () => void;
+
     // ============= React Integration Flags =============
     // These flags indicate when React is managing specific UI elements
-    // Vanilla JS code should check these before rendering
+    // Vanilla JS code checks these before rendering to avoid conflicts
     __REACT_MANAGES_SERVICES_GRID?: boolean;
     __REACT_MANAGES_TEAMS_GRID?: boolean;
-    __REACT_MANAGES_SERVICE_MODAL?: boolean;
-    __REACT_MANAGES_TEAM_MODAL?: boolean;
-    __REACT_MANAGES_HEADER?: boolean;
-    __REACT_MANAGES_FOOTER?: boolean;
     __REACT_MANAGES_NAVIGATION?: boolean;
-    __REACT_MANAGES_FLOATING_CONTROLS?: boolean;
 
     // ============= Additional Window Functions =============
     // Using index signature for flexibility with other window functions

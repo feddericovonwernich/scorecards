@@ -17,7 +17,7 @@ test.describe('Catalog Page', () => {
 
   test('should load and display correct title', async ({ page }) => {
     await expect(page).toHaveTitle('Scorecards Catalog');
-    await expect(page.locator('.header-title')).toContainText('Scorecards');
+    await expect(page.locator('header')).toContainText('Scorecards');
   });
 
   test('should display correct dashboard stats', async ({ page }) => {

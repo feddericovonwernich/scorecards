@@ -374,10 +374,11 @@ export function CheckFilterModal({
       className="check-filter-modal-wrapper"
       contentClassName="check-filter-modal-content"
       showCloseButton={false}
+      testId="check-filter-modal"
     >
       <div className="check-filter-modal-header">
         <h2>Filter by Check</h2>
-        <button className="modal-close" onClick={onClose}>
+        <button className="modal-close" onClick={onClose} aria-label="Close modal">
           &times;
         </button>
       </div>

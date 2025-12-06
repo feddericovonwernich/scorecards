@@ -15,7 +15,7 @@ test.describe('Reload Button', () => {
   test.beforeEach(async ({ page }) => {
     await mockCatalogRequests(page);
     await mockWorkflowDispatch(page); // Mock workflow dispatch API (success by default)
-    await page.goto('http://localhost:8080');
+    await page.goto('/');
     await waitForCatalogLoad(page);
   });
 
@@ -194,7 +194,7 @@ test.describe('Reload Button', () => {
   test('should show error state on API failure', async ({ page }) => {
     // Re-mock API to return error, then re-navigate
     await mockWorkflowDispatch(page, { status: 500 });
-    await page.goto('http://localhost:8080');
+    await page.goto('/');
     await waitForCatalogLoad(page);
 
     await setGitHubPAT(page, 'test-token-12345');

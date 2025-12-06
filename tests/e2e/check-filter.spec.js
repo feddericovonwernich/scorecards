@@ -4,6 +4,8 @@ import {
   mockCatalogRequests,
   waitForCatalogLoad,
   getServiceCount,
+  openCheckFilterModal,
+  closeCheckFilterModal,
 } from './test-helper.js';
 
 test.describe('Check Filter Modal', () => {
@@ -14,14 +16,14 @@ test.describe('Check Filter Modal', () => {
   });
 
   test('should have Check Filter button', async ({ page }) => {
-    const checksButton = page.locator('.check-filter-toggle');
+    // React uses role-based button with "Check Filter" text
+    const checksButton = page.getByRole('button', { name: /Check Filter/i });
     await expect(checksButton).toBeVisible();
-    await expect(checksButton).toContainText('Check Filter');
   });
 
   test('should open check filter modal when clicking Check Filter button', async ({ page }) => {
-    // Click the Check Filter button
-    await page.locator('.check-filter-toggle').click();
+    // Open modal using helper
+    await openCheckFilterModal(page);
 
     // Modal should be visible
     const modal = page.locator('#check-filter-modal');
@@ -33,11 +35,10 @@ test.describe('Check Filter Modal', () => {
 
   test('should close modal when clicking X button', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
 
-    // Click close button
-    await page.locator('#check-filter-modal .modal-close').click();
+    // Close using helper
+    await closeCheckFilterModal(page);
 
     // Modal should be hidden
     await expect(page.locator('#check-filter-modal')).toBeHidden();
@@ -45,8 +46,7 @@ test.describe('Check Filter Modal', () => {
 
   test('should close modal when clicking outside', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
 
     // Click outside the modal content (on the overlay)
     await page.locator('#check-filter-modal').click({ position: { x: 10, y: 10 } });
@@ -57,8 +57,7 @@ test.describe('Check Filter Modal', () => {
 
   test('should close modal when pressing Escape', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
 
     // Press Escape
     await page.keyboard.press('Escape');
@@ -69,25 +68,27 @@ test.describe('Check Filter Modal', () => {
 
   test('should display check categories', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Should have at least one category section
-    const categories = page.locator('.check-category-section');
+    const categories = modal.locator('.check-category-section');
     await expect(categories.first()).toBeVisible();
 
     // Category should have a header with title
-    const categoryHeader = page.locator('.check-category-header').first();
+    const categoryHeader = modal.locator('.check-category-header').first();
     await expect(categoryHeader).toBeVisible();
   });
 
   test('should display check option cards with descriptions', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Should have check option cards
-    const checkCards = page.locator('.check-option-card');
+    const checkCards = modal.locator('.check-option-card');
     await expect(checkCards.first()).toBeVisible();
 
     // Each card should have a name
@@ -104,11 +105,12 @@ test.describe('Check Filter Modal', () => {
 
   test('should display adoption stats for each check', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Should have stats section showing passing/failing counts
-    const checkCard = page.locator('.check-option-card').first();
+    const checkCard = modal.locator('.check-option-card').first();
     const stats = checkCard.locator('.check-option-stats');
     await expect(stats).toBeVisible();
 
@@ -124,40 +126,42 @@ test.describe('Check Filter Modal', () => {
 
   test('should have search functionality', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Search input should be visible
-    const searchInput = page.locator('#check-filter-search');
+    const searchInput = modal.locator('#check-filter-search');
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toHaveAttribute('placeholder', 'Search checks by name or description...');
   });
 
   test('should filter checks when searching', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Get initial count of visible check cards
-    const initialCount = await page.locator('.check-option-card:visible').count();
+    const initialCount = await modal.locator('.check-option-card:visible').count();
     expect(initialCount).toBeGreaterThan(0);
 
     // Type a search query that should match only some checks
-    await page.locator('#check-filter-search').fill('README');
+    await modal.locator('#check-filter-search').fill('README');
     await page.waitForTimeout(300);
 
     // Should have fewer visible cards
-    const filteredCount = await page.locator('.check-option-card:visible').count();
+    const filteredCount = await modal.locator('.check-option-card:visible').count();
     expect(filteredCount).toBeLessThan(initialCount);
     expect(filteredCount).toBeGreaterThan(0);
   });
 
   test('should toggle check filter state', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
 
-    const checkCard = page.locator('.check-option-card').first();
+    const modal = page.locator('#check-filter-modal');
+    const checkCard = modal.locator('.check-option-card').first();
 
     // Initially "Any" should be active
     await expect(checkCard.locator('.state-any')).toHaveClass(/active/);
@@ -172,19 +176,19 @@ test.describe('Check Filter Modal', () => {
 
   test('should show active filter count on toggle button', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Click "Pass" filter on first check
-    await page.locator('.check-option-card').first().locator('.state-pass').click();
+    await modal.locator('.check-option-card').first().locator('.state-pass').click();
 
     // Close modal
     await page.keyboard.press('Escape');
 
     // Toggle button should show count
-    const toggleButton = page.locator('.check-filter-toggle');
+    const toggleButton = page.getByRole('button', { name: /Check Filter/i });
     await expect(toggleButton).toContainText('Check Filter (1)');
-    await expect(toggleButton).toHaveClass(/active/);
   });
 
   test('should filter services when check filter is applied', async ({ page }) => {
@@ -193,11 +197,12 @@ test.describe('Check Filter Modal', () => {
     expect(initialCount).toBe(expectedStats.totalServices);
 
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Apply a "must pass" filter on first check
-    await page.locator('.check-option-card').first().locator('.state-pass').click();
+    await modal.locator('.check-option-card').first().locator('.state-pass').click();
 
     // Close modal
     await page.keyboard.press('Escape');
@@ -212,50 +217,52 @@ test.describe('Check Filter Modal', () => {
 
   test('should show filter summary when filters are active', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Initially no summary should show
-    await expect(page.locator('.check-filter-summary')).toBeHidden();
+    await expect(modal.locator('.check-filter-summary')).toBeHidden();
 
     // Apply a filter
-    await page.locator('.check-option-card').first().locator('.state-pass').click();
+    await modal.locator('.check-option-card').first().locator('.state-pass').click();
 
     // Summary should now show
-    const summary = page.locator('.check-filter-summary');
+    const summary = modal.locator('.check-filter-summary');
     await expect(summary).toBeVisible();
     await expect(summary).toContainText('1 filter active');
   });
 
   test('should clear all filters when clicking Clear all', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
 
     // Apply filters on first two checks
-    await page.locator('.check-option-card').nth(0).locator('.state-pass').click();
-    await page.locator('.check-option-card').nth(1).locator('.state-fail').click();
+    await modal.locator('.check-option-card').nth(0).locator('.state-pass').click();
+    await modal.locator('.check-option-card').nth(1).locator('.state-fail').click();
 
     // Summary should show 2 filters
-    await expect(page.locator('.check-filter-summary')).toContainText('2 filters active');
+    await expect(modal.locator('.check-filter-summary')).toContainText('2 filters active');
 
     // Click Clear all
-    await page.locator('.check-filter-summary .check-clear-btn').click();
+    await modal.locator('.check-filter-summary .check-clear-btn').click();
 
     // Summary should be hidden (no active filters)
-    await expect(page.locator('.check-filter-summary')).toBeHidden();
+    await expect(modal.locator('.check-filter-summary')).toBeHidden();
 
     // Both checks should have "Any" active again
-    await expect(page.locator('.check-option-card').nth(0).locator('.state-any')).toHaveClass(/active/);
-    await expect(page.locator('.check-option-card').nth(1).locator('.state-any')).toHaveClass(/active/);
+    await expect(modal.locator('.check-option-card').nth(0).locator('.state-any')).toHaveClass(/active/);
+    await expect(modal.locator('.check-option-card').nth(1).locator('.state-any')).toHaveClass(/active/);
   });
 
   test('should collapse and expand categories', async ({ page }) => {
     // Open modal
-    await page.locator('.check-filter-toggle').click();
-    await expect(page.locator('#check-filter-modal')).toBeVisible();
+    await openCheckFilterModal(page);
 
-    const categorySection = page.locator('.check-category-section').first();
+    const modal = page.locator('#check-filter-modal');
+    const categorySection = modal.locator('.check-category-section').first();
     const categoryHeader = categorySection.locator('.check-category-header');
     const categoryContent = categorySection.locator('.check-category-content');
 

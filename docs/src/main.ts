@@ -1,44 +1,15 @@
 /**
  * Main Application Entry Point
  * Imports all ES6 modules and initializes the application
+ *
+ * Note: UI components have been migrated to React (see components/index.tsx)
+ * This file now serves as a thin shell that initializes React and provides
+ * window globals for any remaining vanilla JS code.
  */
 
-import type { ServiceData, ViewType, TeamRegistryEntry } from './types/index.js';
+import type { ServiceData, ViewType, TeamRegistryEntry, TeamWithStats } from './types/index.js';
 
-// Base statistics interface that covers both TeamStatistics and TeamStatsEntry
-interface TeamStatsBase {
-  serviceCount: number;
-  averageScore: number;
-  installedCount: number;
-  staleCount: number;
-  rankDistribution: Record<string, number>;
-  name?: string;
-  github_org?: string | null;
-  github_slug?: string | null;
-}
-
-// Local type definition matching the one in globals.d.ts for window.allTeams
-// This is needed because the globals.d.ts definition is inside declare global {}
-interface TeamWithStats {
-  id?: string;
-  name: string;
-  description?: string;
-  slug?: string;
-  github_org?: string;
-  github_slug?: string;
-  serviceCount?: number;
-  averageScore?: number;
-  installedCount?: number;
-  staleCount?: number;
-  rankDistribution?: Record<string, number>;
-  slack_channel?: string | null;
-  metadata?: {
-    slack_channel?: string;
-  };
-  statistics?: TeamStatsBase;
-}
-
-// React components entry point
+// React components entry point - this is where all UI rendering happens
 import './components/index.js';
 
 // Config modules
@@ -57,25 +28,6 @@ import * as teamStatistics from './utils/team-statistics.js';
 import * as checkStatistics from './utils/check-statistics.js';
 import * as durationTracker from './utils/duration-tracker.js';
 
-// UI modules
-import * as toast from './ui/toast.js';
-import * as modals from './ui/modals.js';
-import * as filters from './ui/filters.js';
-import * as workflowRun from './ui/workflow-run.js';
-import * as serviceCard from './ui/service-card.js';
-import * as serviceModal from './ui/service-modal.js';
-import * as serviceWorkflows from './ui/service-workflows.js';
-import * as actionsWidget from './ui/actions-widget.js';
-import * as settings from './ui/settings.js';
-import * as stats from './ui/stats.js';
-import * as buttonStates from './ui/button-states.js';
-import * as teamFilter from './ui/team-filter.js';
-import * as teamDashboard from './ui/team-dashboard.js';
-import * as teamEditModal from './ui/team-edit-modal.js';
-import * as teamModal from './ui/team-modal.js';
-import * as checkFilter from './ui/check-filter.js';
-import * as checkAdoptionDashboard from './ui/check-adoption-dashboard.js';
-
 // API modules
 import * as registry from './api/registry.js';
 import * as github from './api/github.js';
@@ -89,6 +41,9 @@ import * as theme from './services/theme.js';
 
 // Application initialization
 import * as appInit from './app-init.js';
+
+// Zustand store
+import { useAppStore } from './stores/appStore.js';
 
 // Window types are defined in types/globals.d.ts
 
@@ -110,17 +65,9 @@ window.teamsSort = 'score-desc';
 window.teamsSearchQuery = '';
 window.teamsActiveFilters = new Map();
 window.githubPAT = null;
-window.currentServiceOrg = null;
-window.currentServiceRepo = null;
-window.serviceWorkflowRuns = [];
-window.serviceWorkflowFilterStatus = 'all';
-window.serviceWorkflowPollInterval = null;
-window.serviceWorkflowPollIntervalTime = 30000;
-window.serviceWorkflowLoaded = false;
-window.serviceDurationUpdateInterval = null;
+// Note: Service modal state is now managed by Zustand store (serviceModal slice)
 
-// Export modules to window for backward compatibility with app.js
-// This allows the existing app.js to use the modular functions
+// Export modules to window for backward compatibility
 const ScorecardModules = {
   // Config
   constants,
@@ -136,24 +83,6 @@ const ScorecardModules = {
   teamStatistics,
   checkStatistics,
   durationTracker,
-  // UI
-  toast,
-  modals,
-  filters,
-  workflowRun,
-  serviceCard,
-  serviceModal,
-  serviceWorkflows,
-  actionsWidget,
-  settings,
-  stats,
-  buttonStates,
-  teamFilter,
-  teamDashboard,
-  teamEditModal,
-  teamModal,
-  checkFilter,
-  checkAdoptionDashboard,
   // API
   registry,
   github,
@@ -169,7 +98,7 @@ const ScorecardModules = {
 window.ScorecardModules = ScorecardModules;
 
 // Export individual functions to global scope for easier access
-// (This bridges the gap between ES6 modules and the existing app.js)
+// (This bridges the gap between ES6 modules and remaining vanilla JS)
 
 // Formatting utilities
 window.formatRelativeTime = formatting.formatRelativeTime;
@@ -209,15 +138,6 @@ window.openApiExplorer = function (org: string, repo: string): void {
   window.open(explorerUrl, '_blank');
 };
 
-// Toast notifications - handled by React components (see components/index.tsx)
-// window.showToast is set by the React Toast component
-
-// Modal management
-window.showModal = modals.showModal;
-window.hideModal = modals.hideModal;
-window.closeAllModals = modals.closeAllModals;
-window.showConfirmation = modals.showConfirmation;
-
 // Auth functions
 window.getGitHubToken = auth.getToken;
 window.hasGitHubToken = auth.hasToken;
@@ -247,105 +167,11 @@ window.triggerBulkScorecardWorkflows = github.triggerBulkScorecardWorkflows;
 window.createInstallationPR = github.createInstallationPR;
 window.checkGitHubRateLimit = github.checkRateLimit;
 
-// Filter functions
-window.filterServices = filters.filterServices;
-window.sortServices = filters.sortServices;
-window.filterAndSort = filters.filterAndSort;
-window.getFilterStats = filters.getFilterStats;
-
-// Workflow run rendering functions
-window.renderWorkflowRun = workflowRun.renderWorkflowRun;
-window.getStatusIcon = workflowRun.getStatusIcon;
-window.calculateDuration = workflowRun.calculateDuration;
-
-// Service card rendering functions
-window.renderServices = serviceCard.renderServices;
-
-// Service modal functions
-window.showServiceDetail = serviceModal.showServiceDetail;
-window.refreshServiceData = serviceModal.refreshServiceData;
-window.closeModal = serviceModal.closeModal;
-window.switchTab = serviceModal.switchTab;
-window.scrollTabs = serviceModal.scrollTabs;
-
-// Service workflows functions
-window.loadWorkflowRunsForService = serviceWorkflows.loadWorkflowRunsForService;
-window.startServiceWorkflowPolling = serviceWorkflows.startServiceWorkflowPolling;
-window.changeServicePollingInterval = serviceWorkflows.changeServicePollingInterval;
-window.refreshServiceWorkflowRuns = serviceWorkflows.refreshServiceWorkflowRuns;
-window.renderServiceWorkflowRuns = serviceWorkflows.renderServiceWorkflowRuns;
-window.updateServiceFilterCounts = serviceWorkflows.updateServiceFilterCounts;
-window.filterServiceWorkflows = serviceWorkflows.filterServiceWorkflows;
-window.startServiceLiveDurationUpdates =
-  serviceWorkflows.startServiceLiveDurationUpdates;
-
-// Actions widget functions
-window.initializeActionsWidget = actionsWidget.initializeActionsWidget;
-window.toggleActionsWidget = actionsWidget.toggleActionsWidget;
-window.startWidgetPolling = actionsWidget.startWidgetPolling;
-window.stopWidgetPolling = actionsWidget.stopWidgetPolling;
-window.fetchWorkflowRuns = actionsWidget.fetchWorkflowRuns;
-window.updateWidgetBadge = actionsWidget.updateWidgetBadge;
-window.renderWidgetContent = actionsWidget.renderWidgetContent;
-window.filterActions = actionsWidget.filterActions;
-window.refreshActionsWidget = actionsWidget.refreshActionsWidget;
-window.changePollingInterval = actionsWidget.changePollingInterval;
-window.handlePATSaved = actionsWidget.handlePATSaved;
-window.handlePATCleared = actionsWidget.handlePATCleared;
-
-// Settings functions
-window.openSettings = settings.openSettings;
-window.closeSettings = settings.closeSettings;
-window.testPAT = settings.testPAT;
-window.savePAT = settings.savePAT;
-window.clearPAT = settings.clearPAT;
-window.updateWidgetState = settings.updateWidgetState;
-window.updateModeIndicator = settings.updateModeIndicator;
-window.checkRateLimit = settings.checkRateLimit;
-
-// Stats functions
-window.updateStats = stats.updateStats;
-
 // Team statistics functions
 window.getTeamName = teamStatistics.getTeamName;
 window.getTeamCount = teamStatistics.getTeamCount;
 window.getUniqueTeams = teamStatistics.getUniqueTeams;
 window.calculateTeamStats = teamStatistics.calculateTeamStats;
-
-// Team filter functions
-window.initTeamFilter = teamFilter.initTeamFilter;
-window.updateTeamFilter = teamFilter.updateTeamFilter;
-window.filterByTeam = teamFilter.filterByTeam;
-window.selectTeam = teamFilter.selectTeam;
-window.clearTeamFilter = teamFilter.clearTeamFilter;
-
-// Team dashboard functions
-window.initTeamDashboard = teamDashboard.initTeamDashboard;
-window.openTeamDashboard = teamDashboard.openTeamDashboard;
-window.closeTeamDashboard = teamDashboard.closeTeamDashboard;
-window.updateDashboardServices = teamDashboard.updateDashboardServices;
-
-// Team edit modal functions
-window.initTeamEditModal = teamEditModal.initTeamEditModal;
-window.openTeamEditModal = teamEditModal.openTeamEditModal;
-window.openCreateTeamModal = teamEditModal.openCreateTeamModal;
-window.closeTeamEditModal = teamEditModal.closeTeamEditModal;
-
-// Check filter functions
-window.initCheckFilter = checkFilter.initCheckFilter;
-window.updateCheckFilter = checkFilter.updateCheckFilter;
-window.filterByChecks = checkFilter.filterByChecks;
-window.getCheckFilterState = checkFilter.getCheckFilterState;
-window.setCheckFilterState = checkFilter.setCheckFilterState;
-window.getActiveFilterCount = checkFilter.getActiveFilterCount;
-window.setServicesForStats = checkFilter.setServicesForStats;
-window.openCheckFilterModal = checkFilter.openCheckFilterModal;
-window.closeCheckFilterModal = checkFilter.closeCheckFilterModal;
-
-// Check adoption dashboard functions
-window.initCheckAdoptionDashboard = checkAdoptionDashboard.initCheckAdoptionDashboard;
-window.openCheckAdoptionDashboard = checkAdoptionDashboard.openCheckAdoptionDashboard;
-window.closeCheckAdoptionDashboard = checkAdoptionDashboard.closeCheckAdoptionDashboard;
 
 // Registry team functions
 window.loadTeams = registry.loadTeams;
@@ -431,7 +257,14 @@ async function initTeamsView(): Promise<void> {
     // Merge registry data with calculated stats
     let teamData: Record<string, TeamRegistryEntry>;
     if (teamsData) {
-      teamData = teamStatistics.mergeTeamDataWithStats(teamsData, calculatedStats);
+      // mergeTeamDataWithStats returns MergedTeamData with null for description, convert to undefined
+      const merged = teamStatistics.mergeTeamDataWithStats(teamsData, calculatedStats);
+      teamData = Object.fromEntries(
+        Object.entries(merged).map(([key, data]) => [
+          key,
+          { ...data, description: data.description ?? undefined },
+        ])
+      ) as Record<string, TeamRegistryEntry>;
     } else {
       // Fallback: use service-derived teams only
       teamData = Object.fromEntries(
@@ -457,11 +290,20 @@ async function initTeamsView(): Promise<void> {
     // Update teams stats
     updateTeamsStats(window.allTeams, services);
 
-    // Render teams
-    renderTeamsGrid(window.allTeams, services);
+    // Update Zustand store (for React components)
+    const store = useAppStore.getState();
+    store.setTeams(window.allTeams);
+    store.setFilteredTeams(window.allTeams);
+
+    // Render teams (only if React is not managing)
+    if (!window.__REACT_MANAGES_TEAMS_GRID) {
+      renderTeamsGrid(window.allTeams, services);
+    }
   } catch (error) {
     console.error('Failed to initialize teams view:', error);
-    grid.innerHTML = `<div class="error">Failed to load teams: ${error instanceof Error ? error.message : String(error)}</div>`;
+    if (!window.__REACT_MANAGES_TEAMS_GRID) {
+      grid.innerHTML = `<div class="error">Failed to load teams: ${error instanceof Error ? error.message : String(error)}</div>`;
+    }
   }
 }
 
@@ -574,18 +416,50 @@ function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void 
 }
 
 /**
+ * Filter and sort teams, then update Zustand store
+ * Called by search/sort event handlers
+ */
+function filterAndSortTeams(): void {
+  const teams = window.allTeams || [];
+
+  // Sort teams
+  const sortedTeams = sortTeams([...teams], window.teamsSort);
+
+  // Filter teams by search
+  let filteredTeams = sortedTeams;
+  if (window.teamsSearchQuery) {
+    const query = window.teamsSearchQuery.toLowerCase();
+    filteredTeams = sortedTeams.filter(
+      (t) =>
+        t.name.toLowerCase().includes(query) ||
+        (t.description && t.description.toLowerCase().includes(query))
+    );
+  }
+
+  // Update window global
+  window.filteredTeams = filteredTeams;
+
+  // Update Zustand store (for React components)
+  const store = useAppStore.getState();
+  store.setFilteredTeams(filteredTeams);
+
+  // Render vanilla JS grid (no-op if React manages it)
+  renderTeamsGrid(window.allTeams, window.allServices);
+}
+
+/**
  * Sort teams by selected criteria
  */
 function sortTeams(teams: TeamWithStats[], sortBy: string): TeamWithStats[] {
   switch (sortBy) {
   case 'services-desc':
     return teams.sort((a, b) => {
-      const diff = b.serviceCount - a.serviceCount;
+      const diff = (b.serviceCount || 0) - (a.serviceCount || 0);
       return diff !== 0 ? diff : (b.averageScore || 0) - (a.averageScore || 0);
     });
   case 'services-asc':
     return teams.sort((a, b) => {
-      const diff = a.serviceCount - b.serviceCount;
+      const diff = (a.serviceCount || 0) - (b.serviceCount || 0);
       return diff !== 0 ? diff : (b.averageScore || 0) - (a.averageScore || 0);
     });
   case 'score-desc':
@@ -622,8 +496,8 @@ function renderTeamCard(team: TeamWithStats, _services: ServiceData[]): string {
 
   // Calculate installed percentage
   const installedPct =
-    team.serviceCount > 0
-      ? Math.round((team.installedCount / team.serviceCount) * 100)
+    (team.serviceCount || 0) > 0
+      ? Math.round(((team.installedCount || 0) / (team.serviceCount || 1)) * 100)
       : 0;
 
   return `
@@ -640,15 +514,15 @@ function renderTeamCard(team: TeamWithStats, _services: ServiceData[]): string {
                     <span class="team-stat-label">Avg Score</span>
                 </div>
                 <div class="team-stat">
-                    <span class="team-stat-value">${team.serviceCount}</span>
+                    <span class="team-stat-value">${team.serviceCount || 0}</span>
                     <span class="team-stat-label">Services</span>
                 </div>
                 <div class="team-stat">
-                    <span class="team-stat-value">${team.installedCount}</span>
+                    <span class="team-stat-value">${team.installedCount || 0}</span>
                     <span class="team-stat-label">Installed</span>
                 </div>
                 ${
-  team.staleCount > 0
+  (team.staleCount || 0) > 0
     ? `
                 <div class="team-stat warning">
                     <span class="team-stat-value">${team.staleCount}</span>
@@ -720,8 +594,6 @@ window.renderTeamsGrid = renderTeamsGrid;
 window.filterAndRenderTeams = filterAndRenderTeams;
 window.handleHashChange = handleHashChange;
 
-// Note: updateThemeIcon removed - React FloatingControls component now handles theme icon rendering
-
 /**
  * Setup Event Listeners
  * Initializes all DOM event listeners for the application
@@ -778,34 +650,11 @@ function setupEventListeners(): void {
     });
   }
 
-  // Theme toggle - handled by React FloatingControls component
-
-  // Modal close
-  const modalClose = document.querySelector('.modal-close');
-  if (modalClose) {
-    modalClose.addEventListener('click', window.closeModal);
-  }
-
-  const serviceModal = document.getElementById('service-modal');
-  if (serviceModal) {
-    serviceModal.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).id === 'service-modal') {
-        window.closeModal();
-      }
-    });
-  }
-
   // Modal close on Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const modal = document.getElementById('service-modal');
-      if (modal && !modal.classList.contains('hidden')) {
-        window.closeModal();
-      }
-      const teamModalEl = document.getElementById('team-modal');
-      if (teamModalEl && !teamModalEl.classList.contains('hidden')) {
-        window.closeTeamModal();
-      }
+      // React modals handle their own escape key events
+      // This is kept for any remaining vanilla modals
     }
   });
 
@@ -816,7 +665,7 @@ function setupEventListeners(): void {
   if (teamsSearchInput) {
     teamsSearchInput.addEventListener('input', (e) => {
       window.teamsSearchQuery = (e.target as HTMLInputElement).value.toLowerCase();
-      renderTeamsGrid(window.allTeams, window.allServices);
+      filterAndSortTeams();
     });
   }
 
@@ -827,7 +676,7 @@ function setupEventListeners(): void {
   if (teamsSortSelect) {
     teamsSortSelect.addEventListener('change', (e) => {
       window.teamsSort = (e.target as HTMLSelectElement).value;
-      renderTeamsGrid(window.allTeams, window.allServices);
+      filterAndSortTeams();
     });
   }
 
@@ -875,21 +724,37 @@ function setupEventListeners(): void {
   // Handle URL hash on load
   handleHashChange();
   window.addEventListener('hashchange', handleHashChange);
+
+  // Listen for team filter changes from TeamFilterDropdown component
+  window.addEventListener('team-filter-changed', ((e: CustomEvent<{ teams: string[] }>) => {
+    const { teams } = e.detail;
+    const store = useAppStore.getState();
+
+    // For multi-select, join teams with comma
+    // Empty selection means no filter (null)
+    // Single selection keeps the value as-is (including __no_team__)
+    let teamFilter: string | null = null;
+    if (teams.length === 1) {
+      // Single team selected - use it directly (including __no_team__)
+      teamFilter = teams[0];
+    } else if (teams.length > 1) {
+      // Multi-select: store the array as comma-joined string
+      teamFilter = teams.join(',');
+    }
+
+    // Update store using updateFilters
+    store.updateFilters({ teamFilter });
+
+    // Re-filter and render
+    window.filterAndRenderServices();
+  }) as EventListener);
 }
 
 // Export to window for backward compatibility
 window.setupEventListeners = setupEventListeners;
 
-// Initialize modal handlers and event listeners for common modals
+// Initialize event listeners on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-  // Setup modal handlers
-  const modalIds = ['service-modal', 'settings-modal', 'team-dashboard-modal'];
-  modalIds.forEach((id) => {
-    if (document.getElementById(id)) {
-      modals.setupModalHandlers(id);
-    }
-  });
-
   // Setup event listeners
   setupEventListeners();
 
@@ -913,24 +778,6 @@ export {
   teamStatistics,
   checkStatistics,
   durationTracker,
-  // UI
-  toast,
-  modals,
-  filters,
-  workflowRun,
-  serviceCard,
-  serviceModal,
-  serviceWorkflows,
-  actionsWidget,
-  settings,
-  stats,
-  buttonStates,
-  teamFilter,
-  teamDashboard,
-  teamEditModal,
-  teamModal,
-  checkFilter,
-  checkAdoptionDashboard,
   // API
   registry,
   github,

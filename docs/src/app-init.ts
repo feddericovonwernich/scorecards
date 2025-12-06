@@ -1,44 +1,135 @@
 /**
  * Application Initialization
  * Handles app bootstrap, data loading, filtering, and refresh logic
+ *
+ * Note: Most UI rendering is now handled by React components (see components/index.tsx)
+ * This file focuses on data loading and coordination with the Zustand store.
  */
 
+import type { ServiceData } from './types/index.js';
 import { loadServices, fetchCurrentChecksHash } from './api/registry.js';
 import { isServiceStale } from './services/staleness.js';
 import { initTheme, getCurrentTheme } from './services/theme.js';
-import { renderServices } from './ui/service-card.js';
-import { updateStats } from './ui/stats.js';
-import { showToast } from './ui/toast.js';
 import { getCssVar } from './utils/css.js';
-import {
-  initTeamFilter,
-  updateTeamFilter,
-  filterByTeam,
-} from './ui/team-filter.js';
-import { initTeamDashboard } from './ui/team-dashboard.js';
 import { getTeamName } from './utils/team-statistics.js';
-import {
-  initCheckFilter,
-  updateCheckFilter,
-  filterByChecks,
-  setServicesForStats,
-} from './ui/check-filter.js';
-import { initCheckAdoptionDashboard } from './ui/check-adoption-dashboard.js';
+import { useAppStore } from './stores/appStore.js';
+import { showToastGlobal } from './components/ui/Toast.js';
 
 // Window types are defined in types/globals.d.ts
 
 /**
+ * Update services view statistics (stat cards)
+ * Populates API count, Stale count, Installed count, and rank distribution
+ */
+function updateServicesStats(services: ServiceData[], checksHash: string | null): void {
+  // Total services
+  const totalEl = document.getElementById('total-services');
+  if (totalEl) {
+    totalEl.textContent = String(services.length);
+  }
+
+  // Average score
+  const avgEl = document.getElementById('avg-score');
+  if (avgEl && services.length > 0) {
+    const avg = services.reduce((sum, s) => sum + s.score, 0) / services.length;
+    avgEl.textContent = String(Math.round(avg));
+  } else if (avgEl) {
+    avgEl.textContent = '0';
+  }
+
+  // With API count
+  const apiEl = document.getElementById('api-count');
+  if (apiEl) {
+    apiEl.textContent = String(services.filter((s) => s.has_api).length);
+  }
+
+  // Stale count
+  const staleEl = document.getElementById('stale-count');
+  if (staleEl) {
+    staleEl.textContent = String(
+      services.filter((s) => isServiceStale(s, checksHash)).length
+    );
+  }
+
+  // Installed count
+  const installedEl = document.getElementById('installed-count');
+  if (installedEl) {
+    installedEl.textContent = String(services.filter((s) => s.installed).length);
+  }
+
+  // Rank counts
+  const platinumEl = document.getElementById('platinum-count');
+  const goldEl = document.getElementById('gold-count');
+  const silverEl = document.getElementById('silver-count');
+  const bronzeEl = document.getElementById('bronze-count');
+
+  if (platinumEl) {
+    platinumEl.textContent = String(services.filter((s) => s.rank === 'platinum').length);
+  }
+  if (goldEl) {
+    goldEl.textContent = String(services.filter((s) => s.rank === 'gold').length);
+  }
+  if (silverEl) {
+    silverEl.textContent = String(services.filter((s) => s.rank === 'silver').length);
+  }
+  if (bronzeEl) {
+    bronzeEl.textContent = String(services.filter((s) => s.rank === 'bronze').length);
+  }
+}
+
+/**
  * Filter and render services based on active filters
+ * This function updates the Zustand store, which triggers React re-renders
  */
 export function filterAndRenderServices(): void {
   // Start with all services
   let services = [...window.allServices];
+  const store = useAppStore.getState();
 
-  // Apply team filter first
-  services = filterByTeam(services);
+  // Apply team filter first (supports multi-select with comma-separated values)
+  const teamFilter = store.filters.teamFilter;
+  if (teamFilter) {
+    // Parse comma-separated teams into array
+    const selectedTeams = teamFilter.split(',').map((t) => t.trim().toLowerCase());
+    const hasNoTeamFilter = selectedTeams.includes('__no_team__');
 
-  // Apply check filters (must pass / must fail)
-  services = filterByChecks(services);
+    services = services.filter((s) => {
+      const serviceTeam = getTeamName(s);
+      const hasTeam = !!serviceTeam;
+
+      // Check if "no team" filter matches
+      if (hasNoTeamFilter && !hasTeam) {
+        return true;
+      }
+
+      // Check if service team matches any selected team
+      if (serviceTeam) {
+        return selectedTeams.includes(serviceTeam.toLowerCase());
+      }
+
+      return false;
+    });
+  }
+
+  // Apply check filters from store
+  // Note: Check filters use service.check_results which has CheckStatus values ('pass'/'fail')
+  const checkFilters = store.filters.checkFilters;
+  if (checkFilters && checkFilters.size > 0) {
+    services = services.filter((service) => {
+      for (const [checkId, filterState] of checkFilters) {
+        // Get the check result status from check_results map
+        const checkStatus = service.check_results?.[checkId];
+
+        if (filterState === 'pass' && checkStatus !== 'pass') {
+          return false;
+        }
+        if (filterState === 'fail' && checkStatus !== 'fail') {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
 
   // Then apply other filters
   window.filteredServices = services.filter((service) => {
@@ -49,11 +140,11 @@ export function filterAndRenderServices(): void {
         let matches = false;
 
         if (filterName === 'has-api') {
-          matches = service.has_api;
+          matches = service.has_api ?? false;
         } else if (filterName === 'stale') {
           matches = isServiceStale(service, window.currentChecksHash);
         } else if (filterName === 'installed') {
-          matches = service.installed;
+          matches = service.installed ?? false;
         } else if (
           filterName === 'platinum' ||
           filterName === 'gold' ||
@@ -112,7 +203,9 @@ export function filterAndRenderServices(): void {
     }
   });
 
-  renderServices();
+  // Update the Zustand store - React components will re-render automatically
+  store.setServices(window.allServices);
+  store.setFilteredServices(window.filteredServices);
 }
 
 /**
@@ -132,7 +225,7 @@ export async function refreshData(): Promise<void> {
   refreshBtn.innerHTML = '<span class="spinner"></span> Refreshing...';
 
   try {
-    showToast('Refreshing service data...', 'info');
+    showToastGlobal('Refreshing service data...', 'info');
 
     // Clear checks hash cache to force refetch
     window.currentChecksHash = null;
@@ -147,35 +240,31 @@ export async function refreshData(): Promise<void> {
     window.currentChecksHash = await fetchCurrentChecksHash();
     window.checksHashTimestamp = Date.now();
 
-    // Update team filter with new services
-    updateTeamFilter(services);
-
-    // Update check filter with new data
-    updateCheckFilter();
-
-    // Update services for check filter stats
-    setServicesForStats(services);
+    // Update Zustand store
+    const store = useAppStore.getState();
+    store.setServices(services);
+    store.setFilteredServices([...services]);
+    store.setChecksHash(window.currentChecksHash);
 
     // Update UI
-    updateStats();
     filterAndRenderServices();
 
     // Show success message
     const timestamp = new Date().toLocaleTimeString();
     if (usedAPI) {
-      showToast(
+      showToastGlobal(
         `Data refreshed successfully from GitHub API at ${timestamp}. (Fresh data, bypassed cache)`,
         'success'
       );
     } else {
-      showToast(
+      showToastGlobal(
         `Data refreshed from CDN at ${timestamp}. (Note: CDN cache may be up to 5 minutes old. Use GitHub PAT in settings for real-time data)`,
         'success'
       );
     }
   } catch (error) {
     console.error('Error refreshing data:', error);
-    showToast(
+    showToastGlobal(
       `Failed to refresh data: ${error instanceof Error ? error.message : String(error)}`,
       'error'
     );
@@ -223,28 +312,17 @@ export async function initializeApp(): Promise<void> {
     window.currentChecksHash = await fetchCurrentChecksHash();
     window.checksHashTimestamp = Date.now();
 
-    // Initialize team filter
-    initTeamFilter(services, () => {
-      filterAndRenderServices();
-    });
+    // Update Zustand store - React components will render from this
+    const store = useAppStore.getState();
+    store.setServices(services);
+    store.setFilteredServices([...services]);
+    store.setChecksHash(window.currentChecksHash);
 
-    // Initialize check filter
-    initCheckFilter(() => {
-      filterAndRenderServices();
-    });
-
-    // Set services for check filter stats
-    setServicesForStats(services);
-
-    // Initialize team dashboard
-    initTeamDashboard(isServiceStale);
-
-    // Initialize check adoption dashboard
-    initCheckAdoptionDashboard();
-
-    // Initialize UI
-    updateStats();
+    // Initialize UI (filtering applies to store, React components auto-update)
     filterAndRenderServices();
+
+    // Update stat cards with service counts
+    updateServicesStats(services, window.currentChecksHash);
 
     // Re-initialize teams view if hash is #teams (handles direct navigation)
     // This fixes the race condition where handleHashChange() runs before services load
@@ -255,7 +333,7 @@ export async function initializeApp(): Promise<void> {
     console.error('Error loading services:', error);
     const textMuted = getCssVar('--color-text-muted');
     const servicesGrid = document.getElementById('services-grid');
-    if (servicesGrid) {
+    if (servicesGrid && !window.__REACT_MANAGES_SERVICES_GRID) {
       servicesGrid.innerHTML = `
             <div class="empty-state">
                 <h3>No Services Found</h3>

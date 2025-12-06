@@ -1,7 +1,10 @@
 /**
  * Header Component
  * App header with logo and title
+ * Uses CSS classes from header.css for styling
  */
+
+import { cn } from '../../utils/css.js';
 
 /**
  * Scorecards Logo SVG
@@ -83,14 +86,16 @@ export interface HeaderProps {
 export function Header({ title = 'Scorecards' }: HeaderProps) {
   return (
     <>
-      {/* Elegant Top Strip */}
-      <div className="header-strip" />
+      {/* Elegant Top Strip - Using CSS class for gradient and animation */}
+      <div className={cn('header-strip', 'header-strip-react')} />
 
       {/* Compact Header Bar */}
-      <header className="header-bar">
-        <div className="header-brand">
-          <ScorecardsLogo className="header-logo" />
-          <span className="header-title">{title}</span>
+      <header className="header-bar header-bar-react">
+        <div className="header-brand header-brand-react">
+          <ScorecardsLogo className="header-logo header-logo-react" />
+          <span className="header-title header-title-react">
+            {title}
+          </span>
         </div>
       </header>
     </>

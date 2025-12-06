@@ -5,8 +5,9 @@
  * Supports click to open service detail modal.
  */
 
-import type { ServiceData } from '../../types/index.js';
-import { RankBadge, ServiceBadges, ScoreBadge, type RankType } from '../ui/Badge.js';
+import { memo, useRef, useEffect } from 'react';
+import type { ServiceData, DisplayMode } from '../../types/index.js';
+import { RankBadge, ServiceBadges, ScoreBadge, UtilityBadge, type RankType } from '../ui/Badge.js';
 
 // Icons as components for cleaner JSX
 function GitHubIcon() {
@@ -29,6 +30,14 @@ function RefreshIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
       <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z" />
+    </svg>
+  );
+}
+
+function TeamIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1-1.482.235 4 4 0 0 0-7.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1 3.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672A1.5 1.5 0 0 0 11 5.5.75.75 0 0 1 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z" />
     </svg>
   );
 }
@@ -75,20 +84,23 @@ function formatRelativeTime(timestamp: string): string {
 interface ServiceCardProps {
   service: ServiceData;
   isStale?: boolean;
+  variant?: DisplayMode;
   onCardClick?: (org: string, repo: string) => void;
   onTeamClick?: (teamName: string) => void;
   onTriggerWorkflow?: (org: string, repo: string, button: HTMLButtonElement) => void;
 }
 
-export function ServiceCard({
+export const ServiceCard = memo(function ServiceCard({
   service,
   isStale = false,
+  variant = 'grid',
   onCardClick,
   onTeamClick,
   onTriggerWorkflow,
 }: ServiceCardProps) {
   const canTrigger = isStale && service.installed;
   const teamName = service.team?.primary;
+  const isListView = variant === 'list';
 
   const handleCardClick = () => {
     onCardClick?.(service.org, service.repo);
@@ -114,18 +126,121 @@ export function ServiceCard({
     e.stopPropagation();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
+  // List view: 7-column grid for perfect vertical alignment
+  if (isListView) {
+    return (
+      <div
+        className={`service-card rank-${service.rank} service-card--list`}
+        onClick={handleCardClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
+        {/* Column 1: Name & Org */}
+        <div className="service-info">
+          <div className="service-name">{service.name}</div>
+          <div className="service-org">{service.org}/{service.repo}</div>
+        </div>
+
+        {/* Column 2: Rank */}
+        <RankBadge rank={service.rank as RankType} />
+
+        {/* Column 3: Badges */}
+        <div className="service-badges-cell">
+          <ServiceBadges
+            hasApi={service.has_api}
+            isStale={isStale}
+            isInstalled={service.installed}
+          />
+        </div>
+
+        {/* Column 4: Icons */}
+        <div className="service-icons">
+          {canTrigger && (
+            <button
+              className="trigger-btn trigger-btn-icon"
+              onClick={handleTriggerClick}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); } }}
+              title="Re-run scorecard workflow"
+            >
+              <RefreshIcon />
+            </button>
+          )}
+          <a
+            href={`https://github.com/${service.org}/${service.repo}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="github-icon-link"
+            onClick={handleGitHubClick}
+            title="View on GitHub"
+          >
+            <GitHubIcon />
+          </a>
+          {!service.installed && service.installation_pr && (
+            <a
+              href={service.installation_pr.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`pr-icon-link pr-icon-${service.installation_pr.state.toLowerCase()}`}
+              onClick={handlePRClick}
+              title={`PR #${service.installation_pr.number}`}
+            >
+              <PRIcon />
+            </a>
+          )}
+        </div>
+
+        {/* Column 5: Score */}
+        <div className="score-badge-cell">
+          <ScoreBadge score={service.score} />
+        </div>
+
+        {/* Column 6: Team (always render placeholder for alignment) */}
+        {teamName ? (
+          <div className="service-team">
+            <span
+              className="service-team-link"
+              onClick={handleTeamClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTeamClick(e as unknown as React.MouseEvent);
+                }
+              }}
+            >
+              <TeamIcon />
+              {teamName}
+            </span>
+          </div>
+        ) : (
+          <div className="service-team-empty" />
+        )}
+
+        {/* Column 7: Last Updated */}
+        <div className="service-meta">
+          <div>Last updated: {formatDate(service.last_updated)}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Grid view: Original vertical card layout
   return (
     <div
       className={`service-card rank-${service.rank}`}
       onClick={handleCardClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleCardClick();
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       <div className="service-header">
         <div>
@@ -134,7 +249,7 @@ export function ServiceCard({
             <ServiceBadges
               hasApi={service.has_api}
               isStale={isStale}
-              isInstalled={service.installed}
+              isInstalled={false}
             />
           </div>
           <div className="service-org">
@@ -146,6 +261,11 @@ export function ServiceCard({
             <button
               className="trigger-btn trigger-btn-icon"
               onClick={handleTriggerClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                }
+              }}
               title="Re-run scorecard workflow"
             >
               <RefreshIcon />
@@ -176,40 +296,47 @@ export function ServiceCard({
           <ScoreBadge score={service.score} />
         </div>
       </div>
-      <RankBadge rank={service.rank as RankType} />
-      {teamName && (
-        <div className="service-team">
-          Team:{' '}
-          <span
-            className="service-team-link"
-            onClick={handleTeamClick}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleTeamClick(e as unknown as React.MouseEvent);
-              }
-            }}
-          >
-            {teamName}
-          </span>
-        </div>
-      )}
-      <div className="service-meta">
-        <div>Last updated: {formatDate(service.last_updated)}</div>
-        {service.installation_pr?.updated_at && (
-          <div
-            className="pr-status-timestamp"
-            title={`PR status last fetched at ${new Date(service.installation_pr.updated_at).toLocaleString()}`}
-          >
-            PR status: {formatRelativeTime(service.installation_pr.updated_at)}
+      <div className="service-status-row">
+        <RankBadge rank={service.rank as RankType} />
+        {teamName ? (
+          <div className="service-team">
+            <span
+              className="service-team-link"
+              onClick={handleTeamClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTeamClick(e as unknown as React.MouseEvent);
+                }
+              }}
+            >
+              <TeamIcon />
+              {teamName}
+            </span>
           </div>
+        ) : (
+          <div className="service-team-empty" />
         )}
+      </div>
+      <div className="service-meta">
+        <div className="service-meta-left">
+          <div>Last updated: {formatDate(service.last_updated)}</div>
+          {service.installation_pr?.updated_at && (
+            <div
+              className="pr-status-timestamp"
+              title={`PR status last fetched at ${new Date(service.installation_pr.updated_at).toLocaleString()}`}
+            >
+              PR status: {formatRelativeTime(service.installation_pr.updated_at)}
+            </div>
+          )}
+        </div>
+        {service.installed && <UtilityBadge type="installed" />}
       </div>
     </div>
   );
-}
+});
 
 /**
  * ServiceGrid - Container for service cards
@@ -217,6 +344,7 @@ export function ServiceCard({
 interface ServiceGridProps {
   services: ServiceData[];
   checksHash?: string | null;
+  variant?: DisplayMode;
   isServiceStale?: (service: ServiceData, checksHash: string | null) => boolean;
   onCardClick?: (org: string, repo: string) => void;
   onTeamClick?: (teamName: string) => void;
@@ -226,11 +354,29 @@ interface ServiceGridProps {
 export function ServiceGrid({
   services,
   checksHash = null,
+  variant = 'grid',
   isServiceStale,
   onCardClick,
   onTeamClick,
   onTriggerWorkflow,
 }: ServiceGridProps) {
+  // Note: ServiceGrid renders INTO a container that already has 'services-grid' class
+  // We use a ref and add --list class via useEffect to the parent container
+  // Hooks must be called unconditionally, before any early returns
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Find the parent container (the one with ID 'services-grid') and add/remove --list class
+    const parent = gridRef.current?.parentElement;
+    if (parent && parent.id === 'services-grid') {
+      if (variant === 'list') {
+        parent.classList.add('services-grid--list');
+      } else {
+        parent.classList.remove('services-grid--list');
+      }
+    }
+  }, [variant]);
+
   if (services.length === 0) {
     return (
       <div className="empty-state">
@@ -240,7 +386,7 @@ export function ServiceGrid({
   }
 
   return (
-    <>
+    <div ref={gridRef} style={{ display: 'contents' }}>
       {services.map((service) => {
         const isStale = isServiceStale?.(service, checksHash) ?? false;
         return (
@@ -248,12 +394,13 @@ export function ServiceGrid({
             key={`${service.org}/${service.repo}`}
             service={service}
             isStale={isStale}
+            variant={variant}
             onCardClick={onCardClick}
             onTeamClick={onTeamClick}
             onTriggerWorkflow={onTriggerWorkflow}
           />
         );
       })}
-    </>
+    </div>
   );
 }

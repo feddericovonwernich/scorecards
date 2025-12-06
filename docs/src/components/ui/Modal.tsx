@@ -15,6 +15,8 @@ export interface ModalProps {
   showCloseButton?: boolean;
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
+  /** Test ID for the modal wrapper element */
+  testId?: string;
 }
 
 /**
@@ -29,6 +31,7 @@ export function Modal({
   showCloseButton = true,
   closeOnBackdrop = true,
   closeOnEscape = true,
+  testId,
 }: ModalProps) {
   // Handle ESC key
   const handleKeyDown = useCallback(
@@ -66,6 +69,7 @@ export function Modal({
 
   const modalContent = (
     <div
+      id={testId}
       className={`modal ${className}`}
       onClick={handleBackdropClick}
       role="dialog"

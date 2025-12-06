@@ -3,8 +3,9 @@
  * Displays check adoption rates for a team
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { ServiceData, RankName, CheckMetadata } from '../../../../types/index.js';
+import { cn } from '../../../../utils/css.js';
 
 interface CheckAdoptionTabProps {
   teamServices: ServiceData[];
@@ -36,12 +37,27 @@ export function CheckAdoptionTab({
   teamServices,
   teamName: _teamName,
 }: CheckAdoptionTabProps) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [checks, setChecks] = useState<CheckMetadata[]>([]);
   const [selectedCheckId, setSelectedCheckId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!dropdownOpen) {return;}
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
 
   // Load checks metadata
   useEffect(() => {
@@ -175,54 +191,67 @@ export function CheckAdoptionTab({
   return (
     <div className="tab-panel" id="team-tab-adoption">
       <div className="check-adoption-content">
-        {/* Check selector */}
-        <div className="check-selector">
-          <label>Select Check:</label>
-          <div className="check-selector-dropdown">
-            <button
-              className="check-selector-toggle"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              <span className="check-selector-text">
-                {selectedCheck?.name || 'Select a check'}
-              </span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M4.427 7.427l3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 7H4.604a.25.25 0 0 0-.177.427Z" />
-              </svg>
-            </button>
-            {dropdownOpen && (
-              <div className="check-selector-menu open">
-                <div className="check-selector-search">
-                  <input
-                    type="text"
-                    placeholder="Search checks..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    autoFocus
-                  />
+        {/* Check Card Selector */}
+        <div className="check-card-selector" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className={cn('check-card-selected', dropdownOpen && 'open')}
+          >
+            {selectedCheck ? (
+              <>
+                <div className="check-card-header">
+                  <span className="check-card-name">{selectedCheck.name}</span>
+                  <span className="check-card-category">{selectedCheck.category}</span>
+                  <svg
+                    className="check-card-chevron"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 0 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06z" />
+                  </svg>
                 </div>
-                <div className="check-selector-options">
-                  {filteredChecks.map((check) => (
-                    <div
-                      key={check.id}
-                      className={`check-selector-option ${check.id === selectedCheckId ? 'selected' : ''}`}
-                      onClick={() => handleSelectCheck(check.id)}
-                    >
-                      {check.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
+                <p className="check-card-description">{selectedCheck.description}</p>
+              </>
+            ) : (
+              <span className="check-card-placeholder">Select a check to view adoption...</span>
             )}
+          </button>
+
+          {/* Dropdown with card options */}
+          <div className={cn('check-card-dropdown', dropdownOpen && 'open')}>
+            <div className="check-card-search">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search checks..."
+                autoFocus={dropdownOpen}
+              />
+            </div>
+            <div className="check-card-options">
+              {filteredChecks.map((check) => (
+                <button
+                  key={check.id}
+                  onClick={() => handleSelectCheck(check.id)}
+                  className={cn('check-card-option', check.id === selectedCheckId && 'selected')}
+                >
+                  <div className="check-card-option-header">
+                    <span className="check-card-name">{check.name}</span>
+                    <span className="check-card-category">{check.category}</span>
+                  </div>
+                  <p className="check-card-option-desc">
+                    {check.description?.slice(0, 100)}{check.description && check.description.length > 100 ? '...' : ''}
+                  </p>
+                </button>
+              ))}
+              {filteredChecks.length === 0 && (
+                <div className="check-card-empty">No checks found</div>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Check description */}
-        {selectedCheck?.description && (
-          <div className="check-info">
-            <p className="check-description">{selectedCheck.description}</p>
-          </div>
-        )}
 
         {/* Adoption progress */}
         {stats && (

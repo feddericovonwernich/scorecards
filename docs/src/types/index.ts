@@ -403,6 +403,29 @@ export interface TeamStatistics {
   rankDistribution: RankCounts;
 }
 
+/**
+ * TeamWithStats - Extended team data for UI display
+ * Combines team registry data with computed statistics
+ */
+export interface TeamWithStats {
+  id?: string;
+  name: string;
+  description?: string;
+  slug?: string;
+  github_org?: string;
+  github_slug?: string;
+  serviceCount?: number;
+  averageScore?: number;
+  installedCount?: number;
+  staleCount?: number;
+  rankDistribution?: Record<string, number>;
+  slack_channel?: string | null;
+  metadata?: {
+    slack_channel?: string;
+  };
+  statistics?: TeamStatistics;
+}
+
 // ============= Service Results Types =============
 
 export interface ServiceResults {
@@ -502,3 +525,5 @@ export interface OpenAPIConfig {
 // ============= View Types =============
 
 export type ViewType = 'services' | 'teams';
+
+export type DisplayMode = 'grid' | 'list';

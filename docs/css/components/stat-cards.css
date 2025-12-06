@@ -1,0 +1,268 @@
+/* ==============================================
+   STAT CARDS - Premium Design
+   ============================================== */
+
+.stat-card {
+    background: var(--color-surface);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-normal) var(--ease-out-expo),
+                background-color 0.3s ease,
+                box-shadow 0.3s ease,
+                border-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle top highlight */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.5) 50%,
+        transparent 100%
+    );
+    opacity: 0.5;
+}
+
+.stat-card.filterable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stat-card.filterable:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-border-strong);
+}
+
+.stat-card.filterable.active {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), 0 0 0 2px var(--color-active-border);
+    border-color: var(--color-active-border);
+    background: var(--color-active-bg);
+}
+
+.stat-card.filterable.exclude {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), 0 0 0 2px var(--color-exclude-border);
+    border-color: var(--color-exclude-border);
+    background: var(--color-exclude-bg);
+}
+
+/* Rank accent borders */
+.stat-card.rank-platinum { border-left: 4px solid var(--color-platinum); }
+.stat-card.rank-gold { border-left: 4px solid var(--color-gold); }
+.stat-card.rank-silver { border-left: 4px solid var(--color-silver); }
+.stat-card.rank-bronze { border-left: 4px solid var(--color-bronze); }
+.stat-card.filter-api { border-left: 4px solid var(--color-link); }
+.stat-card.filter-stale { border-left: 4px solid var(--color-warning); }
+.stat-card.filter-installed { border-left: 4px solid #8B5CF6; }
+
+.stat-value {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-4xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+    margin-bottom: var(--space-2);
+    color: var(--color-text);
+}
+
+.stat-label {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+}
+
+/* Rank-colored values */
+.stat-card.rank-platinum .stat-value { color: var(--color-platinum); }
+.stat-card.rank-gold .stat-value { color: var(--color-gold); }
+.stat-card.rank-silver .stat-value { color: var(--color-silver); }
+.stat-card.rank-bronze .stat-value { color: var(--color-bronze); }
+
+/* ==============================================
+   STAT CARD - React Component Styles
+   ============================================== */
+
+.stat-card-react {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+/* Filterable variant */
+.stat-card-react--filterable {
+    cursor: pointer;
+}
+
+.stat-card-react--filterable:hover {
+    background: var(--color-surface-secondary);
+    border-color: var(--color-border-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card-react--filterable:focus {
+    outline: none;
+}
+
+.stat-card-react--filterable:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-accent), 0 0 0 4px var(--color-surface);
+}
+
+/* Non-filterable variant */
+.stat-card-react--static {
+    cursor: default;
+}
+
+/* Active states by rank */
+.stat-card-react--active-platinum {
+    background: var(--color-platinum-bg);
+    border-color: var(--color-platinum);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-react--active-gold {
+    background: var(--color-gold-bg);
+    border-color: var(--color-gold);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-react--active-silver {
+    background: var(--color-silver-bg);
+    border-color: var(--color-silver);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-react--active-bronze {
+    background: var(--color-bronze-bg);
+    border-color: var(--color-bronze);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Active states by filter type */
+.stat-card-react--active-api {
+    background: var(--color-info-bg);
+    border-color: var(--color-link);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-react--active-stale {
+    background: var(--color-warning-bg);
+    border-color: var(--color-warning);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-react--active-installed {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: #8B5CF6;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Excluded state */
+.stat-card-react--excluded {
+    opacity: 0.5;
+    border-color: var(--color-error);
+}
+
+.stat-card-react--excluded .stat-card-react__value,
+.stat-card-react--excluded .stat-card-react__label {
+    text-decoration: line-through;
+}
+
+/* Value text */
+.stat-card-react__value {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    margin-bottom: var(--space-1);
+}
+
+.stat-card-react__value--platinum { color: var(--color-platinum-text); }
+.stat-card-react__value--gold { color: var(--color-gold-text); }
+.stat-card-react__value--silver { color: var(--color-silver-text); }
+.stat-card-react__value--bronze { color: var(--color-bronze-text); }
+.stat-card-react__value--api { color: var(--color-link); }
+.stat-card-react__value--stale { color: var(--color-warning-text); }
+.stat-card-react__value--installed { color: #8B5CF6; }
+
+/* Label text */
+.stat-card-react__label {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+}
+
+.stat-card-react--active .stat-card-react__label {
+    opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .stat-card-react {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .stat-card-react__value {
+        font-size: var(--text-xl);
+    }
+}
+
+/* ==============================================
+   STAT CARD GROUP - React Component Styles
+   ============================================== */
+
+.stat-card-group {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-6);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.stat-card-group--services {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-card-group--teams {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+    .stat-card-group--services {
+        grid-template-columns: repeat(8, 1fr);
+    }
+    .stat-card-group--teams {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .stat-card-group {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
+        padding: var(--space-4);
+    }
+}

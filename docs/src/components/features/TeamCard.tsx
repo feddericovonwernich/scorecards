@@ -5,6 +5,8 @@
  * Supports click to open team detail modal.
  */
 
+import { memo, useLayoutEffect } from 'react';
+import type { DisplayMode } from '../../types/index.js';
 import { RankBadge, RankBadgeGroup, type RankType } from '../ui/Badge.js';
 
 // Types for team data
@@ -79,10 +81,11 @@ function ProgressBar({ label, percentage }: ProgressBarProps) {
 
 interface TeamCardProps {
   team: TeamData;
+  variant?: DisplayMode;
   onCardClick?: (teamName: string) => void;
 }
 
-export function TeamCard({ team, onCardClick }: TeamCardProps) {
+export const TeamCard = memo(function TeamCard({ team, variant = 'grid', onCardClick }: TeamCardProps) {
   // Normalize team data (can come from different sources)
   const serviceCount = team.serviceCount ?? team.statistics?.serviceCount ?? 0;
   const averageScore = team.averageScore ?? team.statistics?.averageScore ?? 0;
@@ -97,6 +100,7 @@ export function TeamCard({ team, onCardClick }: TeamCardProps) {
 
   const dominantRank = getDominantRank(rankDistribution);
   const installedPct = serviceCount > 0 ? Math.round((installedCount / serviceCount) * 100) : 0;
+  const isListView = variant === 'list';
 
   const handleCardClick = () => {
     onCardClick?.(team.name);
@@ -104,7 +108,7 @@ export function TeamCard({ team, onCardClick }: TeamCardProps) {
 
   return (
     <div
-      className={`team-card rank-${dominantRank}`}
+      className={`team-card rank-${dominantRank}${isListView ? ' team-card--list' : ''}`}
       onClick={handleCardClick}
       role="button"
       tabIndex={0}
@@ -142,22 +146,45 @@ export function TeamCard({ team, onCardClick }: TeamCardProps) {
       <ProgressBar label="Installed" percentage={installedPct} />
     </div>
   );
-}
+});
 
 /**
  * TeamGrid - Container for team cards
  */
 interface TeamGridProps {
   teams: TeamData[];
+  variant?: DisplayMode;
   onCardClick?: (teamName: string) => void;
   emptyMessage?: string;
 }
 
 export function TeamGrid({
   teams,
+  variant = 'grid',
   onCardClick,
   emptyMessage = 'No teams found',
 }: TeamGridProps) {
+  // Note: TeamGrid renders INTO a container that already has 'teams-grid' class
+  // We directly access the DOM element by ID and add/remove --list class
+  // useLayoutEffect ensures this runs synchronously after DOM mutations
+  useLayoutEffect(() => {
+    const container = document.getElementById('teams-grid');
+    if (container) {
+      if (variant === 'list') {
+        container.classList.add('teams-grid--list');
+      } else {
+        container.classList.remove('teams-grid--list');
+      }
+    }
+    // Cleanup: remove --list class when component unmounts
+    return () => {
+      const el = document.getElementById('teams-grid');
+      if (el) {
+        el.classList.remove('teams-grid--list');
+      }
+    };
+  }, [variant]);
+
   if (teams.length === 0) {
     return (
       <div className="empty-state">
@@ -167,14 +194,15 @@ export function TeamGrid({
   }
 
   return (
-    <>
+    <div style={{ display: 'contents' }}>
       {teams.map((team) => (
         <TeamCard
           key={team.id ?? team.name}
           team={team}
+          variant={variant}
           onCardClick={onCardClick}
         />
       ))}
-    </>
+    </div>
   );
 }

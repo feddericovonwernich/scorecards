@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { WorkflowRunItem } from '../../../features/ActionsWidget/WorkflowRunItem.js';
+import { useAppStore, selectPAT } from '../../../../stores/appStore.js';
 import type { WorkflowRun } from '../../../../types/index.js';
 
 interface WorkflowsTabProps {
@@ -27,69 +29,6 @@ const POLLING_INTERVALS = [
 ];
 
 /**
- * Format relative time
- */
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) {return 'just now';}
-  if (diffMins < 60) {return `${diffMins}m ago`;}
-  if (diffHours < 24) {return `${diffHours}h ago`;}
-  return `${diffDays}d ago`;
-}
-
-/**
- * Get status badge class
- */
-function getStatusClass(status: string, conclusion: string | null): string {
-  if (status === 'completed') {
-    return conclusion === 'success' ? 'success' : 'failure';
-  }
-  return status;
-}
-
-/**
- * Workflow run item component
- */
-function WorkflowRunItem({ run }: { run: WorkflowRun }) {
-  const statusClass = getStatusClass(run.status, run.conclusion);
-
-  return (
-    <div className={`workflow-run-item ${statusClass}`}>
-      <div className="workflow-run-header">
-        <span className={`workflow-status-badge ${statusClass}`}>
-          {run.status === 'completed' ? run.conclusion : run.status}
-        </span>
-        <span className="workflow-run-name">{run.name}</span>
-      </div>
-      <div className="workflow-run-meta">
-        <span className="workflow-run-time">
-          {formatRelativeTime(run.created_at)}
-        </span>
-        {run.head_branch && (
-          <span className="workflow-run-branch">{run.head_branch}</span>
-        )}
-      </div>
-      <div className="workflow-run-actions">
-        <a
-          href={run.html_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="workflow-run-link"
-        >
-          View on GitHub
-        </a>
-      </div>
-    </div>
-  );
-}
-
-/**
  * Workflows Tab Component
  */
 export function WorkflowsTab({
@@ -98,6 +37,7 @@ export function WorkflowsTab({
   runs,
   onRunsUpdate,
 }: WorkflowsTabProps) {
+  const pat = useAppStore(selectPAT);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [pollingInterval, setPollingInterval] = useState(30000);
   const [loading, setLoading] = useState(false);
@@ -106,7 +46,7 @@ export function WorkflowsTab({
 
   // Fetch workflow runs
   const fetchRuns = useCallback(async () => {
-    if (!org || !repo) {return;}
+    if (!org || !repo || !pat) {return;}
 
     setLoading(true);
     setError(null);
@@ -120,7 +60,7 @@ export function WorkflowsTab({
     } finally {
       setLoading(false);
     }
-  }, [org, repo, onRunsUpdate]);
+  }, [org, repo, pat, onRunsUpdate]);
 
   // Initial fetch
   useEffect(() => {
@@ -159,6 +99,26 @@ export function WorkflowsTab({
     completed: runs.filter((r) => r.status === 'completed').length,
   };
 
+  // Show empty state when not authenticated
+  if (!pat) {
+    return (
+      <div className="tab-panel" id="workflows-tab">
+        <div className="widget-empty">
+          <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M4 4a4 4 0 1 1 8 0v2h.25c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 12.25 15h-8.5A1.75 1.75 0 0 1 2 13.25v-5.5C2 6.784 2.784 6 3.75 6H4Zm8.25 3.5h-8.5a.25.25 0 0 0-.25.25v5.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25ZM10.5 4a2.5 2.5 0 1 0-5 0v2h5Z" />
+          </svg>
+          <p>Configure GitHub PAT in settings to view workflow runs</p>
+          <button
+            onClick={() => useAppStore.getState().openModal('settings')}
+            className="btn btn--primary"
+          >
+            Configure Token
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tab-panel" id="workflows-tab">
       {/* Filter buttons and controls */}
@@ -171,20 +131,22 @@ export function WorkflowsTab({
             marginBottom: 15,
           }}
         >
-          <div className="widget-filters" style={{ margin: 0 }}>
+          <div className="widget-filters" style={{ margin: 0, flex: 1 }}>
             {(['all', 'in_progress', 'queued', 'completed'] as FilterStatus[]).map(
               (status) => (
                 <button
                   key={status}
-                  className={`widget-filter-btn ${filter === status ? 'active' : ''}`}
+                  className={`filter-btn ${filter === status ? 'filter-btn--active' : ''}`}
                   onClick={() => setFilter(status)}
                 >
                   {status === 'all'
                     ? 'All'
                     : status === 'in_progress'
-                      ? 'In Progress'
-                      : status.charAt(0).toUpperCase() + status.slice(1)}
-                  <span className="filter-count">{counts[status]}</span>
+                      ? 'Running'
+                      : status === 'queued'
+                        ? 'Queued'
+                        : 'Done'}
+                  <span className="filter-btn__count">({counts[status]})</span>
                 </button>
               )
             )}
@@ -196,6 +158,7 @@ export function WorkflowsTab({
               value={pollingInterval}
               onChange={(e) => setPollingInterval(Number(e.target.value))}
               title="Auto-refresh interval"
+              aria-label="Auto-refresh interval"
             >
               {POLLING_INTERVALS.map((interval) => (
                 <option key={interval.value} value={interval.value}>

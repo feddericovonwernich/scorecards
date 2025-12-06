@@ -1,7 +1,10 @@
 /**
  * Footer Component
  * App footer with logo and documentation link
+ * Uses CSS classes from footer.css for styling
  */
+
+import { cn } from '../../utils/css.js';
 
 /**
  * Scorecards Logo SVG (compact version for footer)
@@ -85,21 +88,26 @@ export function Footer({
 }: FooterProps) {
   return (
     <>
-      <footer>
-        <div className="container">
-          <div className="footer-content">
-            <ScorecardsLogo className="footer-logo" />
-            <p>
+      <footer className="footer-react">
+        <div className="footer-react__container">
+          <div className="footer-react__content">
+            <ScorecardsLogo className="footer-react__logo" />
+            <p className="footer-react__text">
               Powered by Scorecards |{' '}
-              <a href={docsUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-react__link"
+              >
                 Documentation
               </a>
             </p>
           </div>
         </div>
       </footer>
-      {/* Footer Gradient Strip */}
-      <div className="footer-strip" />
+      {/* Footer Gradient Strip - Using CSS class for gradient and animation */}
+      <div className={cn('footer-strip', 'footer-strip-react')} />
     </>
   );
 }

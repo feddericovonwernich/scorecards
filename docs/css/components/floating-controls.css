@@ -37,10 +37,11 @@
 }
 
 /* ==============================================
-   THEME & SETTINGS BUTTONS - Surface style
+   THEME, DISPLAY MODE & SETTINGS BUTTONS - Surface style
    ============================================== */
 
 .floating-btn--theme,
+.floating-btn--display,
 .floating-btn--settings {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -49,6 +50,7 @@
 }
 
 .floating-btn--theme:hover,
+.floating-btn--display:hover,
 .floating-btn--settings:hover {
     background: var(--color-surface-secondary);
     color: var(--color-text);
@@ -57,6 +59,7 @@
 }
 
 .floating-btn--theme:active,
+.floating-btn--display:active,
 .floating-btn--settings:active {
     transform: translateY(-1px) scale(1);
 }

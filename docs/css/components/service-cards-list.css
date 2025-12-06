@@ -1,0 +1,227 @@
+/* ==============================================
+   SERVICE CARD - LIST VARIANT
+   7-column grid for perfect vertical alignment
+   ============================================== */
+
+/* Container: single column stack, full width */
+/* Using higher specificity to override base .services-grid */
+.services-grid.services-grid--list {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+    grid-template-columns: none;
+}
+
+/* Each card takes full width */
+.services-grid--list .service-card {
+    width: 100%;
+    max-width: none;
+}
+
+/* Card: 7-column horizontal layout for alignment */
+.service-card--list {
+    display: grid;
+    grid-template-columns:
+        minmax(150px, 1fr)   /* Col 1: Name - flexible */
+        120px                /* Col 2: Rank badge */
+        100px                /* Col 3: Badges */
+        auto                 /* Col 4: Icons */
+        55px                 /* Col 5: Score */
+        120px                /* Col 6: Team */
+        140px;               /* Col 7: Last updated */
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+}
+
+/* ==============================================
+   COLUMN 1: Service Info (Name & Org)
+   ============================================== */
+.service-card--list .service-info {
+    grid-column: 1;
+    min-width: 0; /* Allow text truncation */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.service-card--list .service-info .service-name {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.service-card--list .service-info .service-org {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==============================================
+   COLUMN 2: Rank Badge
+   ============================================== */
+.service-card--list > .rank-badge {
+    grid-column: 2;
+    margin: 0;
+    justify-self: center;
+}
+
+/* ==============================================
+   COLUMN 3: Badges (INSTALLED, STALE, API)
+   ============================================== */
+.service-card--list .service-badges-cell {
+    grid-column: 3;
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+}
+
+/* ==============================================
+   COLUMN 4: Icons (GitHub, PR, Trigger)
+   ============================================== */
+.service-card--list .service-icons {
+    grid-column: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+/* ==============================================
+   COLUMN 5: Score Badge
+   ============================================== */
+.service-card--list .score-badge-cell {
+    grid-column: 5;
+    display: flex;
+    justify-content: center;
+}
+
+.service-card--list .score-badge-cell .score-badge {
+    font-size: var(--text-lg);
+    padding: var(--space-1) var(--space-2);
+}
+
+/* ==============================================
+   COLUMN 6: Team
+   ============================================== */
+.service-card--list .service-team {
+    grid-column: 6;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--text-sm);
+}
+
+/* Empty placeholder for services without team */
+.service-card--list .service-team-empty {
+    grid-column: 6;
+}
+
+/* ==============================================
+   COLUMN 7: Meta (Last Updated)
+   ============================================== */
+.service-card--list .service-meta {
+    grid-column: 7;
+    border: none;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* Hide PR timestamp in list view */
+.service-card--list .pr-status-timestamp {
+    display: none;
+}
+
+/* ==============================================
+   HOVER EFFECT
+   ============================================== */
+.service-card--list:hover {
+    transform: translateY(-2px);
+}
+
+/* ==============================================
+   RESPONSIVE - Progressive column hiding
+   ============================================== */
+
+/* Large screens: Hide meta, keep 6 columns */
+@media (max-width: 1100px) {
+    .service-card--list {
+        grid-template-columns:
+            minmax(120px, 1fr)  /* Name */
+            105px               /* Rank */
+            90px                /* Badges */
+            auto                /* Icons */
+            50px                /* Score */
+            100px;              /* Team */
+    }
+
+    .service-card--list .service-meta {
+        display: none;
+    }
+}
+
+/* Medium: Hide badges column */
+@media (max-width: 900px) {
+    .service-card--list {
+        grid-template-columns:
+            minmax(100px, 1fr)  /* Name */
+            100px               /* Rank */
+            auto                /* Icons */
+            50px                /* Score */
+            90px;               /* Team */
+    }
+
+    .service-card--list .service-badges-cell {
+        display: none;
+    }
+
+    .service-card--list > .rank-badge { grid-column: 2; }
+    .service-card--list .service-icons { grid-column: 3; }
+    .service-card--list .score-badge-cell { grid-column: 4; }
+    .service-card--list .service-team { grid-column: 5; }
+    .service-card--list .service-team-empty { grid-column: 5; }
+}
+
+/* Tablet: 2-row layout */
+@media (max-width: 768px) {
+    .service-card--list {
+        grid-template-columns: 1fr auto auto;
+        grid-template-rows: auto auto;
+        gap: var(--space-2) var(--space-3);
+    }
+
+    .service-card--list .service-info { grid-column: 1; grid-row: 1; }
+    .service-card--list > .rank-badge { grid-column: 2; grid-row: 1; }
+    .service-card--list .score-badge-cell { grid-column: 3; grid-row: 1; }
+    .service-card--list .service-team { grid-column: 1 / -1; grid-row: 2; }
+    .service-card--list .service-team-empty { grid-column: 1 / -1; grid-row: 2; }
+
+    .service-card--list .service-icons,
+    .service-card--list .service-badges-cell {
+        display: none;
+    }
+}
+
+/* Mobile: Single column */
+@media (max-width: 480px) {
+    .service-card--list {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .service-card--list .service-info { grid-column: 1; grid-row: 1; }
+    .service-card--list > .rank-badge { grid-column: 1; grid-row: 2; justify-self: start; }
+    .service-card--list .score-badge-cell { grid-column: 1; grid-row: 3; justify-self: start; }
+    .service-card--list .service-team { grid-column: 1; grid-row: 4; }
+    .service-card--list .service-team-empty { grid-column: 1; grid-row: 4; }
+}

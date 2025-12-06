@@ -1,0 +1,239 @@
+/* ==============================================
+   TEAM MODAL DETAIL VIEW
+   ============================================== */
+
+#team-modal .modal-content {
+    max-width: 900px;
+    max-height: 95vh;
+    padding: 0;
+}
+
+#team-detail {
+    position: relative;
+    padding: var(--space-5) var(--space-10) var(--space-10);
+    z-index: 1;
+}
+
+.team-metadata {
+    margin-bottom: var(--space-5);
+}
+
+.team-id {
+    display: block;
+    font-family: var(--font-family-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+}
+
+.team-description {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--space-3) 0;
+    line-height: var(--leading-relaxed);
+}
+
+.team-aliases {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.aliases-label {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+.alias-tag {
+    display: inline-block;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--text-sm);
+}
+
+.team-modal-stats {
+    display: flex;
+    gap: var(--space-8);
+    margin-bottom: var(--space-6);
+    padding: 0;
+    background: transparent;
+}
+
+.team-modal-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.team-modal-stat .stat-value {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    line-height: 1;
+}
+
+.team-modal-stat .stat-label {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
+}
+
+.team-modal-stat.warning .stat-value {
+    color: var(--color-warning-text);
+}
+
+.team-modal-contact {
+    display: flex;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-lg);
+}
+
+.team-modal-contact .contact-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+.team-modal-contact svg {
+    color: var(--color-text-muted);
+}
+
+/* ==============================================
+   TEAM SERVICES LIST
+   ============================================== */
+
+.team-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.team-service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-in-out-smooth);
+}
+
+.team-service-item:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-strong);
+}
+
+.team-service-item .service-name {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}
+
+.team-service-item .service-score {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-md);
+}
+
+.team-service-item .service-score.rank-platinum {
+    background: var(--color-platinum-bg);
+    color: var(--color-platinum-text);
+}
+
+.team-service-item .service-score.rank-gold {
+    background: var(--color-gold-bg);
+    color: var(--color-gold-text);
+}
+
+.team-service-item .service-score.rank-silver {
+    background: var(--color-silver-bg);
+    color: var(--color-silver-text);
+}
+
+.team-service-item .service-score.rank-bronze {
+    background: var(--color-bronze-bg);
+    color: var(--color-bronze-text);
+}
+
+/* ==============================================
+   RANK DISTRIBUTION DETAIL
+   ============================================== */
+
+.rank-distribution-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.rank-dist-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.rank-dist-label {
+    width: 70px;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}
+
+.rank-dist-bar-container {
+    flex: 1;
+    height: 20px;
+    background: var(--color-surface-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.rank-dist-bar {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width var(--duration-slow) var(--ease-out-expo);
+}
+
+.rank-dist-bar.rank-platinum { background: var(--color-platinum); }
+.rank-dist-bar.rank-gold { background: var(--color-gold); }
+.rank-dist-bar.rank-silver { background: var(--color-silver); }
+.rank-dist-bar.rank-bronze { background: var(--color-bronze); }
+
+.rank-dist-count {
+    width: 30px;
+    text-align: right;
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+/* ==============================================
+   EMPTY STATE
+   ============================================== */
+
+.empty-state {
+    padding: var(--space-10);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+}

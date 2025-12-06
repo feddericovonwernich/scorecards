@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
  * API requests are mocked via page.route() to serve test fixtures.
  */
 
-const TEST_PORT = process.env.TEST_PORT || 8080;
+const TEST_PORT = process.env.TEST_PORT || 4173;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -15,8 +15,8 @@ export default defineConfig({
   // Maximum time one test can run for
   timeout: 30 * 1000,
 
-  // Global timeout for the entire test run (10 minutes)
-  globalTimeout: 10 * 60 * 1000,
+  // Global timeout for the entire test run (20 minutes)
+  globalTimeout: 20 * 60 * 1000,
 
   // Test configuration
   fullyParallel: true,
@@ -33,7 +33,7 @@ export default defineConfig({
 
   // Shared settings for all projects
   use: {
-    baseURL: `http://localhost:${TEST_PORT}/`,
+    baseURL: `http://localhost:${TEST_PORT}/scorecards/`,
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -53,11 +53,12 @@ export default defineConfig({
     },
   ],
 
-  // Run local dev server before starting the tests
+  // Build and serve the production build before starting the tests
+  // Uses Vite preview mode which serves pre-built files (no dep optimization issues)
   // Tests use request mocking via page.route() to serve test fixtures
   // from tests/e2e/fixtures/ instead of fetching from GitHub
   webServer: {
-    command: `python3 -m http.server ${TEST_PORT} --directory docs`,
+    command: `npm run build && npm run preview -- --port ${TEST_PORT}`,
     port: TEST_PORT,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
