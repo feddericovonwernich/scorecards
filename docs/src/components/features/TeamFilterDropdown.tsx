@@ -3,7 +3,7 @@
  * Multi-select dropdown for filtering services by team
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { ServiceData } from '../../types/index.js';
 import { useAppStore, selectServicesAll } from '../../stores/index.js';
@@ -183,17 +183,14 @@ export function TeamFilterDropdown({
  * TeamFilterDropdownPortal - Renders into #team-filter-container
  */
 export function TeamFilterDropdownPortal() {
-  const [container, setContainer] = useState<HTMLElement | null>(null);
+  // Lazy initialize container from DOM
+  const [container] = useState<HTMLElement | null>(
+    () => document.getElementById('team-filter-container')
+  );
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   // Get services from Zustand store (reactive)
   const services = useAppStore(selectServicesAll);
-
-  // Find container on mount
-  useEffect(() => {
-    const el = document.getElementById('team-filter-container');
-    setContainer(el);
-  }, []);
 
   // Handle team filter changes
   const handleTeamsChange = useCallback((teams: string[]) => {
