@@ -1,7 +1,7 @@
 /**
  * Workflow Triggers E2E Tests
  *
- * Tests to exercise workflow trigger functionality,
+ * Consolidated tests for workflow trigger functionality,
  * targeting low coverage in workflow-triggers.ts (36%).
  */
 
@@ -19,46 +19,41 @@ import {
   closeSettingsModal,
 } from './test-helper.js';
 
-test.describe('Workflow Triggers - Single Service Card', () => {
+// ============================================================================
+// SINGLE SERVICE TRIGGERS (Consolidated from 2 tests → 1)
+// ============================================================================
+
+test.describe('Workflow Triggers - Single Service', () => {
   test.beforeEach(async ({ page }) => {
     await mockCatalogRequests(page);
     await page.goto('/');
     await waitForCatalogLoad(page);
   });
 
-  test('should show trigger button on stale service cards', async ({ page }) => {
-    // The stale service (test-repo-stale) should have a visible trigger button
+  test('should show trigger button and trigger workflow from card', async ({ page }) => {
+    // Test 1: Check for trigger button on stale service
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
     await expect(staleCard).toBeVisible();
 
-    // Check for trigger button with the icon
     const triggerBtn = staleCard.locator('button[title*="Re-run"], button[title*="trigger"]');
     if (await triggerBtn.count() > 0) {
       await expect(triggerBtn.first()).toBeVisible();
-    } else {
-      // Test passes if no individual trigger button (different UI)
-      expect(true).toBe(true);
-    }
-  });
 
-  test('should trigger workflow from card button with PAT', async ({ page }) => {
-    await setGitHubPAT(page, mockPAT);
-    await mockWorkflowDispatch(page, { status: 204 });
+      // Test 2: Trigger workflow with PAT
+      await setGitHubPAT(page, mockPAT);
+      await mockWorkflowDispatch(page, { status: 204 });
 
-    // Find the stale service card which should have a trigger button
-    const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
-    const triggerBtn = staleCard.locator('button[title*="Re-run"], button[title*="trigger"]').first();
-
-    if (await triggerBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await triggerBtn.click();
-      // Should show success toast
-      await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-    } else {
-      // Test passes if no individual trigger button (different UI)
-      expect(true).toBe(true);
+      if (await triggerBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+        await triggerBtn.first().click();
+        await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
+      }
     }
   });
 });
+
+// ============================================================================
+// BULK OPERATIONS (Consolidated from 10 tests → 3)
+// ============================================================================
 
 test.describe('Workflow Triggers - Bulk Operations', () => {
   test.beforeEach(async ({ page }) => {
@@ -67,142 +62,87 @@ test.describe('Workflow Triggers - Bulk Operations', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should have Re-Run All Stale button visible', async ({ page }) => {
-    // Use exact button name to avoid matching multiple elements
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
-    await expect(rerunButton).toBeVisible();
-  });
+  test('should show bulk trigger buttons and require PAT', async ({ page }) => {
+    // Test 1: Re-run All Stale button visible
+    const rerunStaleButton = page.getByRole('button', { name: 'Re-run All Stale' });
+    await expect(rerunStaleButton).toBeVisible();
 
-  test('should have Re-run All Installed button visible', async ({ page }) => {
-    const rerunAllButton = page.getByRole('button', { name: 'Re-run All Installed' });
-    await expect(rerunAllButton).toBeVisible();
-  });
+    // Test 2: Re-run All Installed button visible
+    const rerunInstalledButton = page.getByRole('button', { name: 'Re-run All Installed' });
+    await expect(rerunInstalledButton).toBeVisible();
 
-  test('should require PAT for bulk trigger - stale', async ({ page }) => {
-    // Handle dialog
+    // Handle dialogs
     page.on('dialog', async dialog => {
       await dialog.accept();
     });
 
-    // Click Re-run All Stale button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
-    await rerunButton.click();
+    // Test 3: PAT required for stale trigger
+    await rerunStaleButton.click();
+    await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
 
-    // Should show toast (either warning about PAT or info about no stale services)
+    // Test 4: PAT required for installed trigger
+    await rerunInstalledButton.click();
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('should require PAT for bulk trigger - installed', async ({ page }) => {
-    // Handle dialog
-    page.on('dialog', async dialog => {
-      await dialog.accept();
-    });
-
-    // Click Re-run All Installed button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Installed' });
-    await rerunButton.click();
-
-    // Should show toast
-    await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
-
-  test('should show confirmation or trigger when PAT set - stale', async ({ page }) => {
+  test('should trigger bulk workflows with PAT and handle success', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
     await mockWorkflowDispatch(page, { status: 204 });
 
-    // Track if dialog was shown
     let dialogShown = false;
     page.on('dialog', async dialog => {
       dialogShown = true;
       await dialog.accept();
     });
 
-    // Click Re-run All Stale button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
-    await rerunButton.click();
-
-    // Wait for dialog or toast
+    // Test 1: Stale trigger with PAT
+    const rerunStaleButton = page.getByRole('button', { name: 'Re-run All Stale' });
+    await rerunStaleButton.click();
     await page.waitForTimeout(1000);
 
-    // Either dialog was shown OR toast appeared
-    const toastVisible = await page.locator('.toast').first().isVisible();
+    let toastVisible = await page.locator('.toast').first().isVisible();
+    expect(dialogShown || toastVisible).toBe(true);
+
+    // Test 2: Installed trigger with PAT
+    dialogShown = false;
+    const rerunInstalledButton = page.getByRole('button', { name: 'Re-run All Installed' });
+    await rerunInstalledButton.click();
+    await page.waitForTimeout(1000);
+
+    toastVisible = await page.locator('.toast').first().isVisible();
     expect(dialogShown || toastVisible).toBe(true);
   });
 
-  test('should show confirmation or trigger when PAT set - installed', async ({ page }) => {
+  test('should handle bulk trigger errors (401, 403, 500)', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
-    await mockWorkflowDispatch(page, { status: 204 });
 
-    // Track if dialog was shown
-    let dialogShown = false;
     page.on('dialog', async dialog => {
-      dialogShown = true;
       await dialog.accept();
     });
 
-    // Click Re-run All Installed button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Installed' });
-    await rerunButton.click();
+    const rerunStaleButton = page.getByRole('button', { name: 'Re-run All Stale' });
+    const rerunInstalledButton = page.getByRole('button', { name: 'Re-run All Installed' });
 
-    // Wait for dialog or toast
-    await page.waitForTimeout(1000);
-
-    // Either dialog was shown OR toast appeared
-    const toastVisible = await page.locator('.toast').first().isVisible();
-    expect(dialogShown || toastVisible).toBe(true);
-  });
-
-  test('should handle bulk trigger 401 error', async ({ page }) => {
-    await setGitHubPAT(page, mockPAT);
+    // Test 1: 401 error
     await mockWorkflowDispatch(page, { status: 401 });
-
-    // Accept confirmation dialog
-    page.on('dialog', async dialog => {
-      await dialog.accept();
-    });
-
-    // Click Re-run All Stale button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
-    await rerunButton.click();
-
-    // Wait for result toast
+    await rerunStaleButton.click();
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
 
-  test('should handle bulk trigger 403 error', async ({ page }) => {
-    await setGitHubPAT(page, mockPAT);
+    // Test 2: 403 error
     await mockWorkflowDispatch(page, { status: 403 });
-
-    // Accept confirmation dialog
-    page.on('dialog', async dialog => {
-      await dialog.accept();
-    });
-
-    // Click Re-run All Installed button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Installed' });
-    await rerunButton.click();
-
-    // Wait for result toast
+    await rerunInstalledButton.click();
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
 
-  test('should handle bulk trigger 500 error', async ({ page }) => {
-    await setGitHubPAT(page, mockPAT);
+    // Test 3: 500 error
     await mockWorkflowDispatch(page, { status: 500 });
-
-    // Accept confirmation dialog
-    page.on('dialog', async dialog => {
-      await dialog.accept();
-    });
-
-    // Click Re-run All Stale button
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
-    await rerunButton.click();
-
-    // Wait for result toast
+    await rerunStaleButton.click();
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
   });
 });
+
+// ============================================================================
+// SETTINGS INTEGRATION (Consolidated from 2 tests → 1)
+// ============================================================================
 
 test.describe('Workflow Triggers - Settings Integration', () => {
   test.beforeEach(async ({ page }) => {
@@ -211,8 +151,8 @@ test.describe('Workflow Triggers - Settings Integration', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should save and use PAT for workflow triggers', async ({ page }) => {
-    // Open settings and save PAT
+  test('should save PAT, use for triggers, and clear PAT', async ({ page }) => {
+    // Test 1: Save PAT and use for workflow triggers
     await openSettingsModal(page);
 
     const patInput = page.getByRole('textbox', { name: /token/i });
@@ -221,35 +161,21 @@ test.describe('Workflow Triggers - Settings Integration', () => {
     const saveButton = page.getByRole('button', { name: /save/i });
     await saveButton.click();
 
-    // Wait for success toast
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 3000 });
-
     await closeSettingsModal(page);
 
-    // Now workflow triggers should work - mock success
     await mockWorkflowDispatch(page, { status: 204 });
 
-    // Accept confirmation dialog
     page.on('dialog', async dialog => {
       await dialog.accept();
     });
 
-    // Try bulk trigger
     const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
     await rerunButton.click();
-
-    // Should show toast
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
 
-  test('should clear PAT and require auth again', async ({ page }) => {
-    // First set up PAT
-    await setGitHubPAT(page, mockPAT);
-
-    // Wait for any toasts to clear
+    // Test 2: Clear PAT
     await page.waitForTimeout(500);
-
-    // Now clear it
     await openSettingsModal(page);
 
     const clearButton = page.getByRole('button', { name: /clear/i });
@@ -260,19 +186,15 @@ test.describe('Workflow Triggers - Settings Integration', () => {
 
     await closeSettingsModal(page);
 
-    // Accept confirmation dialog
-    page.on('dialog', async dialog => {
-      await dialog.accept();
-    });
-
-    // Now try bulk trigger - should show PAT required
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
+    // Test 3: Verify PAT required again
     await rerunButton.click();
-
-    // Should show toast about PAT or no stale services
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
   });
 });
+
+// ============================================================================
+// SERVICE MODAL (Consolidated from 2 tests → 1)
+// ============================================================================
 
 test.describe('Workflow Triggers - Service Modal', () => {
   test.beforeEach(async ({ page }) => {
@@ -281,38 +203,28 @@ test.describe('Workflow Triggers - Service Modal', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should open service modal and show workflow runs tab', async ({ page }) => {
-    // Open service modal
+  test('should show workflow runs tab in modal and display content', async ({ page }) => {
+    // Test 1: Open modal and verify workflow tab
     await openServiceModal(page, 'test-repo-perfect');
 
-    // The Workflow Runs tab should exist
     const workflowTab = page.locator('#service-modal').getByRole('button', { name: 'Workflow Runs' });
     await expect(workflowTab).toBeVisible();
 
-    // Click to switch to workflow runs tab
     await workflowTab.click();
-
-    // Wait for tab to switch
     await page.waitForTimeout(500);
 
-    // Tab content should be visible
     const tabContent = page.locator('#service-modal .tab-content, #service-modal [class*="tab-content"]');
     await expect(tabContent).toBeVisible();
 
     await closeServiceModal(page);
-  });
 
-  test('should show workflow runs or placeholder in modal', async ({ page }) => {
+    // Test 2: With PAT, show workflow runs or placeholder
     await setGitHubPAT(page, mockPAT);
-
-    // Open service modal
     await openServiceModal(page, 'test-repo-perfect');
 
-    // Switch to Workflow Runs tab
     await clickServiceModalTab(page, 'Workflow Runs');
     await page.waitForTimeout(500);
 
-    // Should show either workflow runs or a message about no runs/loading
     const modal = page.locator('#service-modal');
     const hasContent = await modal.locator('.workflow-run, .workflow-runs, [class*="workflow"], p, .empty-state, .loading').first().isVisible();
     expect(hasContent).toBe(true);
