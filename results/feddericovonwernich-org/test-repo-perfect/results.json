@@ -8,34 +8,29 @@
       "all": [
         "platform"
       ],
-      "source": "manual",
-      "last_discovered": "2025-12-07T23:33:10Z"
+      "source": "codeowners",
+      "last_discovered": "2025-12-07T23:35:35Z"
     },
-    "links": [
-      {
-        "name": "Documentation",
-        "url": "https://github.com/feddericovonwernich/test-repo-perfect#readme"
-      }
-    ],
+    "links": [],
     "openapi": null
   },
-  "score": 94,
-  "rank": "platinum",
-  "passed_checks": 11,
+  "score": 89,
+  "rank": "gold",
+  "passed_checks": 10,
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-07T23:34:13Z",
+  "timestamp": "2025-12-07T23:36:36Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
+      "name": "feddericovonwernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-07T20:32:37Z",
-      "last_commit_hash": "f9c1578"
+      "last_commit_date": "2025-12-07T20:35:22Z",
+      "last_commit_hash": "931a86d"
     }
   ],
   "checks": [
@@ -72,7 +67,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -96,7 +91,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Scorecard config found: .scorecard/config.yml (284 bytes)\n",
+      "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
       "stderr": ""
     },
     {
@@ -119,7 +114,7 @@
       "weight": 10,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "OpenAPI Quality Score: 98/100\n\nQuality Metrics:\n  Info: ✓ description, ✓ contact, ✓ license\n  Operations: 4 total\n    - 4/4 (100%) with descriptions\n    - 4/4 (100%) with tags\n    - 2/4 (50%) with examples\n  Parameters: 3/3 (100%) with descriptions\n  Responses: 9/9 (100%) with descriptions\n  Schemas: 4/4 (100%) with descriptions\n  Security: ✓ defined, ✓ applied\n\nQuality score meets threshold (60+)\n",
       "stderr": ""
     },
@@ -153,11 +148,11 @@
       "description": "Validates that .scorecard/config.yml contains meaningful service metadata beyond the basic template. Requires both team and description fields to be filled with actual content, ensuring the service is properly documented in the catalog.",
       "category": "Scorecards Setup",
       "weight": 7,
-      "status": "pass",
-      "exit_code": 0,
+      "status": "fail",
+      "exit_code": 1,
       "duration": 0,
-      "stdout": "Scorecard config has meaningful content:\n  • Team: platform\n  • Description: Reference implementation demonstrating all scorecards best practices for achievi...\n  • Links: 1 configured\n",
-      "stderr": ""
+      "stdout": "",
+      "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     },
     {
       "check_id": "11-codeowners",
