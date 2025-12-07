@@ -1,0 +1,38 @@
+{
+  "org": "feddericovonwernich-org",
+  "repo": "test-repo-edge-cases",
+  "name": "test-repo-edge-cases",
+  "team": {
+    "primary": "backend",
+    "all": [
+      "backend"
+    ],
+    "source": "codeowners",
+    "last_discovered": "2025-12-07T23:21:24Z",
+    "github_org": "feddericovonwernich-org",
+    "github_slug": "backend"
+  },
+  "score": 85,
+  "rank": "gold",
+  "last_updated": "2025-12-07T23:22:28Z",
+  "has_api": false,
+  "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
+  "checks_count": 13,
+  "check_results": {
+    "01-readme": "pass",
+    "02-license": "pass",
+    "03-ci-config": "pass",
+    "04-tests": "pass",
+    "05-scorecard-config": "pass",
+    "06-openapi-spec": "pass",
+    "07-openapi-quality": "pass",
+    "08-api-environments": "fail",
+    "09-scorecard-badge": "fail",
+    "10-scorecard-config-quality": "fail",
+    "11-codeowners": "pass",
+    "12-codeowners-quality": "pass"
+  },
+  "excluded_checks": [],
+  "installed": true,
+  "default_branch": "main"
+}
