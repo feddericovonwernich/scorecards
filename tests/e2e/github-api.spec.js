@@ -31,30 +31,18 @@ test.describe('GitHub API - Rate Limit', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should show rate limit status in settings modal', async ({ page }) => {
+  test('should display rate limit correctly for auth states', async ({ page }) => {
+    // Unauthenticated
     await openSettingsModal(page);
-
-    // Look for rate limit display (should show unauthenticated limit initially)
     const rateLimitSection = page.locator('#settings-modal').getByText(/remaining|limit/i);
     await expect(rateLimitSection.first()).toBeVisible();
-
     await closeSettingsModal(page);
-  });
 
-  test('should show higher rate limit when authenticated', async ({ page }) => {
-    // Set PAT to authenticate
+    // Authenticated
     await setGitHubPAT(page, mockPAT);
-
-    // Wait for rate limit to refresh
-    await page.waitForTimeout(500);
-
-    // Open settings to check rate limit
     await openSettingsModal(page);
-
-    // The rate limit info should be visible
     const settingsModal = page.locator('#settings-modal');
     await expect(settingsModal).toBeVisible();
-
     await closeSettingsModal(page);
   });
 
@@ -81,106 +69,40 @@ test.describe('GitHub API - Rate Limit', () => {
 });
 
 test.describe('GitHub API - Rate Limit Mock Scenarios', () => {
-  test('should handle unauthenticated rate limit (60 requests)', async ({ page }) => {
-    // Custom route for unauthenticated rate limit
-    await page.route('**/api.github.com/rate_limit', async (route) => {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify({
-          rate: {
-            limit: 60,
-            remaining: 55,
-            reset: Math.floor(Date.now() / 1000) + 3600,
-          }
-        }),
-        headers: { 'Content-Type': 'application/json' },
+  test('should handle various rate limit scenarios correctly', async ({ page }) => {
+    const scenarios = [
+      { limit: 60, remaining: 55, desc: 'unauthenticated' },
+      { limit: 5000, remaining: 4500, desc: 'authenticated' },
+      { limit: 60, remaining: 5, desc: 'low' },
+      { limit: 60, remaining: 0, desc: 'exhausted' },
+    ];
+
+    for (const scenario of scenarios) {
+      await page.route('**/api.github.com/rate_limit', async (route) => {
+        await route.fulfill({
+          status: 200,
+          body: JSON.stringify({
+            rate: {
+              limit: scenario.limit,
+              remaining: scenario.remaining,
+              reset: Math.floor(Date.now() / 1000) + 3600,
+            }
+          }),
+          headers: { 'Content-Type': 'application/json' },
+        });
       });
-    });
 
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
+      await mockCatalogRequests(page);
+      await page.goto('/');
+      await waitForCatalogLoad(page);
 
-    // Open settings to see rate limit
-    await openSettingsModal(page);
-    const settingsModal = page.locator('#settings-modal');
-    await expect(settingsModal).toBeVisible();
-    await closeSettingsModal(page);
-  });
+      await openSettingsModal(page);
+      const settingsModal = page.locator('#settings-modal');
+      await expect(settingsModal).toBeVisible();
+      await closeSettingsModal(page);
 
-  test('should handle authenticated rate limit (5000 requests)', async ({ page }) => {
-    // Custom route for authenticated rate limit
-    await page.route('**/api.github.com/rate_limit', async (route) => {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify({
-          rate: {
-            limit: 5000,
-            remaining: 4500,
-            reset: Math.floor(Date.now() / 1000) + 3600,
-          }
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
-
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
-
-    await openSettingsModal(page);
-    await expect(page.locator('#settings-modal')).toBeVisible();
-    await closeSettingsModal(page);
-  });
-
-  test('should handle low rate limit warning scenario', async ({ page }) => {
-    // Custom route for low rate limit
-    await page.route('**/api.github.com/rate_limit', async (route) => {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify({
-          rate: {
-            limit: 60,
-            remaining: 5,
-            reset: Math.floor(Date.now() / 1000) + 3600,
-          }
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
-
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
-
-    await openSettingsModal(page);
-    await expect(page.locator('#settings-modal')).toBeVisible();
-    await closeSettingsModal(page);
-  });
-
-  test('should handle exhausted rate limit', async ({ page }) => {
-    // Custom route for exhausted rate limit
-    await page.route('**/api.github.com/rate_limit', async (route) => {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify({
-          rate: {
-            limit: 60,
-            remaining: 0,
-            reset: Math.floor(Date.now() / 1000) + 3600,
-          }
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
-
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
-
-    await openSettingsModal(page);
-    await expect(page.locator('#settings-modal')).toBeVisible();
-    await closeSettingsModal(page);
+      await page.unroute('**/api.github.com/rate_limit');
+    }
   });
 
   test('should handle rate limit API error', async ({ page }) => {
@@ -210,104 +132,48 @@ test.describe('GitHub API - Workflow Runs', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should fetch workflow runs in service modal', async ({ page }) => {
-    // Mock workflow runs API
+  test('should display workflow runs in all scenarios', async ({ page }) => {
+    await setGitHubPAT(page, mockPAT);
+
+    // With data
     await mockWorkflowRuns(page, {
       runs: {
         workflow_runs: [
-          {
-            id: 1,
-            name: 'scorecards',
-            status: 'completed',
-            conclusion: 'success',
-            created_at: new Date().toISOString(),
-            html_url: 'https://github.com/test/repo/actions/runs/1',
-          }
+          { id: 1, name: 'scorecards', status: 'completed', conclusion: 'success', created_at: new Date().toISOString(), html_url: 'https://github.com/test/repo/actions/runs/1' }
         ],
         total_count: 1,
       }
     });
 
-    await setGitHubPAT(page, mockPAT);
-
-    // Open service modal
-    await openServiceModal(page, 'test-repo-perfect');
-
-    // Switch to Workflow Runs tab
-    await clickServiceModalTab(page, 'Workflow Runs');
-
-    // Wait for workflow runs to load
-    await page.waitForTimeout(500);
-
-    // Should show workflow runs content
-    const modal = page.locator('#service-modal');
-    await expect(modal).toBeVisible();
-
-    await closeServiceModal(page);
-  });
-
-  test('should handle empty workflow runs', async ({ page }) => {
-    // Mock empty workflow runs
-    await mockWorkflowRuns(page, {
-      runs: {
-        workflow_runs: [],
-        total_count: 0,
-      }
-    });
-
-    await setGitHubPAT(page, mockPAT);
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Workflow Runs');
     await page.waitForTimeout(500);
 
-    // Modal should still be visible with empty state or message
     const modal = page.locator('#service-modal');
     await expect(modal).toBeVisible();
-
     await closeServiceModal(page);
-  });
 
-  test('should handle workflow runs with mixed statuses', async ({ page }) => {
+    // Empty runs
+    await mockWorkflowRuns(page, { runs: { workflow_runs: [], total_count: 0 } });
+    await openServiceModal(page, 'test-repo-perfect');
+    await clickServiceModalTab(page, 'Workflow Runs');
+    await expect(modal).toBeVisible();
+    await closeServiceModal(page);
+
+    // Mixed statuses
     await mockWorkflowRuns(page, {
       runs: {
         workflow_runs: [
-          {
-            id: 1,
-            name: 'scorecards',
-            status: 'completed',
-            conclusion: 'success',
-            created_at: new Date().toISOString(),
-            html_url: 'https://github.com/test/repo/actions/runs/1',
-          },
-          {
-            id: 2,
-            name: 'scorecards',
-            status: 'completed',
-            conclusion: 'failure',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            html_url: 'https://github.com/test/repo/actions/runs/2',
-          },
-          {
-            id: 3,
-            name: 'scorecards',
-            status: 'in_progress',
-            conclusion: null,
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-            html_url: 'https://github.com/test/repo/actions/runs/3',
-          },
+          { id: 1, status: 'completed', conclusion: 'success', created_at: new Date().toISOString() },
+          { id: 2, status: 'completed', conclusion: 'failure', created_at: new Date().toISOString() },
+          { id: 3, status: 'in_progress', conclusion: null, created_at: new Date().toISOString() },
         ],
         total_count: 3,
       }
     });
-
-    await setGitHubPAT(page, mockPAT);
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Workflow Runs');
-    await page.waitForTimeout(500);
-
-    const modal = page.locator('#service-modal');
     await expect(modal).toBeVisible();
-
     await closeServiceModal(page);
   });
 
@@ -335,20 +201,16 @@ test.describe('GitHub API - Workflow Runs', () => {
 });
 
 test.describe('GitHub API - User Info', () => {
-  test('should fetch user info when PAT is valid', async ({ page }) => {
+  test('should handle user info validation in all scenarios', async ({ page }) => {
     await mockCatalogRequests(page);
     await page.goto('/');
     await waitForCatalogLoad(page);
 
-    // Set PAT and verify it's saved
+    // Valid PAT
     await setGitHubPAT(page, mockPAT);
-
-    // Success toast should appear
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 3000 });
-  });
 
-  test('should handle invalid PAT gracefully', async ({ page }) => {
-    // Mock user endpoint to return unauthorized
+    // Invalid PAT
     await page.route('**/api.github.com/user', async (route) => {
       await route.fulfill({
         status: 401,
@@ -357,44 +219,22 @@ test.describe('GitHub API - User Info', () => {
       });
     });
 
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
-
     await openSettingsModal(page);
-    const patInput = page.getByRole('textbox', { name: /token/i });
-    await patInput.fill('invalid_token');
-    const saveButton = page.getByRole('button', { name: /save/i });
-    await saveButton.click();
-
-    // Should show a toast (success or error depending on validation behavior)
+    await page.getByRole('textbox', { name: /token/i }).fill('invalid_token');
+    await page.getByRole('button', { name: /save/i }).click();
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-
     await closeSettingsModal(page);
-  });
 
-  test('should handle user API network error', async ({ page }) => {
-    // Mock user endpoint to fail
+    // Network error
     await page.route('**/api.github.com/user', async (route) => {
       await route.abort('failed');
     });
 
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
-
     await openSettingsModal(page);
-    const patInput = page.getByRole('textbox', { name: /token/i });
-    await patInput.fill(mockPAT);
-    const saveButton = page.getByRole('button', { name: /save/i });
-    await saveButton.click();
-
-    // Wait for any response
+    await page.getByRole('textbox', { name: /token/i }).fill(mockPAT);
+    await page.getByRole('button', { name: /save/i }).click();
     await page.waitForTimeout(1000);
-
-    // Page should still be functional
     await expect(page.locator('#settings-modal')).toBeVisible();
-
     await closeSettingsModal(page);
   });
 });
@@ -426,56 +266,32 @@ test.describe('GitHub API - Workflow Dispatch', () => {
     }
   });
 
-  test('should handle workflow dispatch without token', async ({ page }) => {
-    // Don't set PAT, try to trigger
+  test('should handle all workflow dispatch error scenarios', async ({ page }) => {
     page.on('dialog', async dialog => await dialog.accept());
-
     const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
+
+    // Without token
     await rerunButton.click();
-
-    // Should show warning about PAT or no stale services
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
 
-  test('should handle workflow dispatch 404 error', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
+
+    // 404 error
     await mockWorkflowDispatch(page, { status: 404 });
-
-    page.on('dialog', async dialog => await dialog.accept());
-
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
     await rerunButton.click();
-
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
 
-  test('should handle workflow dispatch network failure', async ({ page }) => {
-    await setGitHubPAT(page, mockPAT);
-
-    // Mock network failure
+    // Network failure
     await page.route('**/api.github.com/repos/**/actions/workflows/*/dispatches', async (route) => {
       await route.abort('failed');
     });
-
-    page.on('dialog', async dialog => await dialog.accept());
-
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
     await rerunButton.click();
-
-    // Should show error toast
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
-  });
 
-  test('should handle workflow dispatch with slow response', async ({ page }) => {
-    await setGitHubPAT(page, mockPAT);
+    // Slow response
+    await page.unroute('**/api.github.com/repos/**/actions/workflows/*/dispatches');
     await mockWorkflowDispatch(page, { status: 204, delay: 500 });
-
-    page.on('dialog', async dialog => await dialog.accept());
-
-    const rerunButton = page.getByRole('button', { name: 'Re-run All Stale' });
     await rerunButton.click();
-
-    // Should eventually show result
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 6000 });
   });
 });

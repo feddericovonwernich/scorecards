@@ -30,156 +30,78 @@ test.describe('Settings Modal', () => {
     await expect(modal).not.toBeVisible();
   });
 
-  test('should display current mode as CDN initially', async ({ page }) => {
+  test('should display all settings modal UI elements correctly', async ({ page }) => {
     await openSettingsModal(page);
-
     const modal = page.locator('#settings-modal');
+
+    // Mode display
     await expect(modal).toContainText(/Public CDN|CDN/i);
-  });
 
-  test('should show PAT input field', async ({ page }) => {
-    await openSettingsModal(page);
-
+    // PAT input
     const patInput = page.getByRole('textbox', { name: /Personal Access Token|PAT/i });
     await expect(patInput).toBeVisible();
-  });
 
-  test('should have Save Token button', async ({ page }) => {
-    await openSettingsModal(page);
-
+    // Save Token button
     const saveButton = page.getByRole('button', { name: 'Save Token' });
     await expect(saveButton).toBeVisible();
-  });
 
-  test('should have Clear Token button', async ({ page }) => {
-    await openSettingsModal(page);
-
+    // Clear Token button
     const clearButton = page.getByRole('button', { name: 'Clear Token' });
     await expect(clearButton).toBeVisible();
-  });
 
-  test('should display rate limit status', async ({ page }) => {
-    await openSettingsModal(page);
-
-    const modal = page.locator('#settings-modal');
+    // Rate limit status
     await expect(modal).toContainText(/Rate Limit|Remaining/i);
-    // Should show 60/60 without PAT
     await expect(modal).toContainText(/60|Limit: 60/);
-  });
 
-  test('should have Check Rate Limit button', async ({ page }) => {
-    await openSettingsModal(page);
-
-    // React button text is "Check Rate" (shorter version)
+    // Check Rate button
     const checkButton = page.getByRole('button', { name: 'Check Rate' });
     await expect(checkButton).toBeVisible();
+
+    await closeSettingsModal(page);
   });
 
-  test('should display instructions for creating PAT', async ({ page }) => {
+  test('should display all accordion information sections', async ({ page }) => {
     await openSettingsModal(page);
-
     const modal = page.locator('#settings-modal');
 
-    // In React, instructions are in a collapsible accordion - expand it first
     const accordion = modal.locator('.settings-accordion');
     await accordion.click();
-
-    // Wait for accordion content to be visible
     await expect(modal.locator('.settings-accordion-content')).toBeVisible();
 
+    // Instructions
     await expect(modal).toContainText(/How to create/i);
-    await expect(modal).toContainText(/workflow/i); // scope needed
-  });
+    await expect(modal).toContainText(/workflow/i);
 
-  test('should display benefits of using PAT', async ({ page }) => {
-    await openSettingsModal(page);
-
-    const modal = page.locator('#settings-modal');
-
-    // In React, benefits are in a collapsible accordion - expand it first
-    const accordion = modal.locator('.settings-accordion');
-    await accordion.click();
-
-    // Wait for accordion content to be visible
-    await expect(modal.locator('.settings-accordion-content')).toBeVisible();
-
+    // Benefits
     await expect(modal).toContainText(/Benefits/i);
     await expect(modal).toContainText(/faster/i);
-  });
 
-  test('should display security information', async ({ page }) => {
-    await openSettingsModal(page);
-
-    const modal = page.locator('#settings-modal');
-
-    // In React, security info is in a collapsible accordion - expand it first
-    const accordion = modal.locator('.settings-accordion');
-    await accordion.click();
-
-    // Wait for accordion content to be visible
-    await expect(modal.locator('.settings-accordion-content')).toBeVisible();
-
+    // Security
     await expect(modal).toContainText(/Security/i);
     await expect(modal).toContainText(/memory/i);
+
+    await closeSettingsModal(page);
   });
 
-  test('should save PAT and switch to API mode', async ({ page }) => {
+  test('should complete PAT save workflow with all UI updates', async ({ page }) => {
     await openSettingsModal(page);
-
-    // Enter PAT
-    const patInput = page.getByRole('textbox', { name: /Personal Access Token|PAT/i });
-    await patInput.fill(mockPAT);
-
-    // Click Save
-    const saveButton = page.getByRole('button', { name: 'Save Token' });
-    await saveButton.click();
-
-    const modal = page.locator('#settings-modal');
-    // Should now show API mode
-    await expect(modal).toContainText(/GitHub API|API mode/i);
-  });
-
-  test('should update rate limit after saving PAT', async ({ page }) => {
-    await openSettingsModal(page);
-
-    // Enter and save PAT
-    const patInput = page.getByRole('textbox', { name: /Personal Access Token|PAT/i });
-    await patInput.fill(mockPAT);
-    const saveButton = page.getByRole('button', { name: 'Save Token' });
-    await saveButton.click();
-
     const modal = page.locator('#settings-modal');
 
-    // Wait for mode to switch to API mode (indicates PAT was saved)
+    await page.getByRole('textbox', { name: /Personal Access Token|PAT/i }).fill(mockPAT);
+    await page.getByRole('button', { name: 'Save Token' }).click();
+
+    // Switch to API mode
     await expect(modal).toContainText(/GitHub API|API mode/i, { timeout: 5000 });
 
-    // Click "Check Rate" button to force a fresh rate limit check with the new PAT
-    // This is needed because the initial fetchRateLimit after save uses a stale closure
-    const checkRateButton = page.getByRole('button', { name: 'Check Rate' });
-    await checkRateButton.click();
+    // Click Check Rate to update rate limit
+    await page.getByRole('button', { name: 'Check Rate' }).click();
 
-    // Wait for rate limit display to update with higher limit
-    // The mock returns 5000 limit and 4999 remaining for authenticated requests
-    // The rate limit section should show 5000 somewhere in the text
+    // Update rate limit
     await expect(modal.locator('.settings-rate-limit')).toContainText(/5000/, { timeout: 5000 });
-  });
-
-  test('should indicate PAT is loaded in settings button', async ({ page }) => {
-    await openSettingsModal(page);
-
-    // Save PAT
-    const patInput = page.getByRole('textbox', { name: /Personal Access Token|PAT/i });
-    await patInput.fill(mockPAT);
-    const saveButton = page.getByRole('button', { name: 'Save Token' });
-    await saveButton.click();
-
-    // Wait for API mode to be displayed (indicates PAT saved)
-    const modal = page.locator('#settings-modal');
-    await expect(modal).toContainText(/GitHub API|API mode/i);
 
     await closeSettingsModal(page);
 
-    // Settings button should indicate PAT is loaded
+    // Settings button indicator
     const settingsButton = page.getByRole('button', { name: /Settings.*PAT/i });
     await expect(settingsButton).toBeVisible();
   });
