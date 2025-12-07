@@ -5,6 +5,8 @@
  * targeting low coverage in github.ts (30% -> 60%).
  */
 
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { test, expect } from './coverage.js';
 import { mockPAT } from './fixtures.js';
 import {
@@ -19,6 +21,8 @@ import {
   mockWorkflowDispatch,
   mockWorkflowRuns,
 } from './test-helper.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test.describe('GitHub API - Rate Limit', () => {
   test.beforeEach(async ({ page }) => {
@@ -508,7 +512,7 @@ test.describe('GitHub API - Request Headers', () => {
         if (!relativePath.startsWith('docs/')) {
           relativePath = 'docs/' + relativePath;
         }
-        const fixturePath = `/home/feddericokz/Workspace/scorecards-workspace/scorecards/tests/e2e/fixtures/${relativePath}`;
+        const fixturePath = path.join(__dirname, 'fixtures', relativePath);
         try {
           await route.fulfill({ status: 200, path: fixturePath, headers: { 'Content-Type': 'application/json' } });
         } catch {
