@@ -18,6 +18,7 @@ async function clickServiceModalTab(page, tabName) {
   await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
 }
 
+
 test.describe('Clipboard Copy Functionality', () => {
   test.beforeEach(async ({ page, context }) => {
     // Grant clipboard permissions
@@ -27,58 +28,38 @@ test.describe('Clipboard Copy Functionality', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should have copy buttons in Badges tab', async ({ page }) => {
+  // Consolidated test: Task 13 - Badge Copy Button Variations
+  // Combines: have copy buttons, copy rank badge, handle consecutive copies
+  test('should have multiple copy buttons and handle consecutive copies of score and rank badges', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Badges');
 
     const modal = page.locator('#service-modal');
     const copyButtons = modal.getByRole('button', { name: 'Copy' });
+
+    // Multiple copy buttons exist
     const count = await copyButtons.count();
     expect(count).toBeGreaterThanOrEqual(2);
-  });
 
-  test('should copy score badge markdown when clicking Copy', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    // Verify clipboard content
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardContent).toContain('![Score]');
-    expect(clipboardContent).toContain('img.shields.io');
-  });
-
-  test('should copy rank badge markdown when clicking second Copy', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButtons = modal.getByRole('button', { name: 'Copy' });
-    const secondCopyButton = copyButtons.nth(1);
-    await secondCopyButton.click();
-
-    // Verify clipboard content
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    // Second button (rank)
+    await copyButtons.nth(1).click();
+    let clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipboardContent).toContain('![Rank]');
     expect(clipboardContent).toContain('img.shields.io');
-  });
 
-  test('should show Copied! feedback state', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    // Should show "Copied!" text
+    // Feedback shown
     await expect(modal).toContainText(/Copied/i);
+
+    // Multiple consecutive copies
+    await page.waitForTimeout(100);
+    await copyButtons.first().click();
+    clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardContent).toBeTruthy();
   });
 
-  test('should reset to Copy after timeout', async ({ page }) => {
+  // Consolidated test: Task 2 - Clipboard Copy Complete Journey
+  // Combines: copy score badge, show feedback, reset after timeout
+  test('should copy badge markdown, show feedback, and reset after timeout', async ({ page }) => {
     // This test needs extra time to wait for the reset timer
     test.setTimeout(10000);
 
@@ -87,9 +68,14 @@ test.describe('Clipboard Copy Functionality', () => {
 
     const modal = page.locator('#service-modal');
     const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
 
-    // Should show "Copied!"
+    // Copy badge
+    await copyButton.click();
+    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardContent).toContain('![Score]');
+    expect(clipboardContent).toContain('img.shields.io');
+
+    // Feedback shown
     await expect(modal).toContainText(/Copied/i);
 
     // Wait for reset using state-based polling
@@ -99,7 +85,9 @@ test.describe('Clipboard Copy Functionality', () => {
     }).toPass({ timeout: 5000 });
   });
 
-  test('should include correct repo in badge URL', async ({ page }) => {
+  // Consolidated test: Task 3 - Badge URL Content Validation
+  // Combines: correct repo and org in badge URL
+  test('should include correct org and repo in badge URL', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Badges');
 
@@ -109,40 +97,7 @@ test.describe('Clipboard Copy Functionality', () => {
 
     const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipboardContent).toContain('test-repo-perfect');
-  });
-
-  test('should include correct org in badge URL', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipboardContent).toContain('feddericovonwernich');
-  });
-
-  test('should handle multiple consecutive copies', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButtons = modal.getByRole('button', { name: 'Copy' });
-
-    // Copy first badge
-    await copyButtons.first().click();
-    await expect(modal).toContainText(/Copied/i);
-
-    // Copy second badge (may need to wait for button to be available again)
-    const secondButton = copyButtons.nth(1);
-    if (await secondButton.isVisible()) {
-      await secondButton.click();
-    }
-
-    // Both should work without error
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardContent).toBeTruthy();
   });
 });
 
@@ -153,6 +108,7 @@ test.describe('Clipboard Fallback Behavior', () => {
     await waitForCatalogLoad(page);
   });
 
+  // Keep unchanged - error handling with unique mock setup
   test('should handle clipboard API unavailable', async ({ page }) => {
     // Override clipboard API to simulate failure
     await page.evaluate(() => {
@@ -172,6 +128,7 @@ test.describe('Clipboard Fallback Behavior', () => {
     await expect(modal).toBeVisible();
   });
 
+  // Keep unchanged - fallback behavior test
   test('should display markdown snippets even without clipboard', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Badges');
@@ -193,7 +150,9 @@ test.describe('Badge Markdown Content', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should have valid markdown image syntax', async ({ page }) => {
+  // Consolidated test: Task 4 - Badge Markdown Format Validation
+  // Combines: valid markdown syntax, shields.io endpoint, catalog badges path
+  test('should generate valid markdown with shields.io URL and catalog badges path', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Badges');
 
@@ -203,56 +162,33 @@ test.describe('Badge Markdown Content', () => {
 
     const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
 
-    // Should match markdown image pattern: ![alt](url)
+    // Valid markdown syntax
     expect(clipboardContent).toMatch(/!\[.+\]\(.+\)/);
-  });
 
-  test('should use shields.io endpoint URL', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    // Shields.io endpoint
     expect(clipboardContent).toContain('https://img.shields.io/endpoint');
-  });
 
-  test('should reference catalog badges path', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    // Catalog badges path
     expect(clipboardContent).toContain('catalog/badges');
   });
 
-  test('should reference score.json for score badge', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-    await clickServiceModalTab(page, 'Badges');
-
-    const modal = page.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardContent).toContain('score.json');
-  });
-
-  test('should reference rank.json for rank badge', async ({ page }) => {
+  // Consolidated test: Task 5 - Badge Type Specific Markdown
+  // Combines: score.json for score badge, rank.json for rank badge
+  test('should reference correct JSON files for score and rank badges', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
     await clickServiceModalTab(page, 'Badges');
 
     const modal = page.locator('#service-modal');
     const copyButtons = modal.getByRole('button', { name: 'Copy' });
-    const rankCopyButton = copyButtons.nth(1);
-    await rankCopyButton.click();
 
-    const clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    // First copy button (score)
+    await copyButtons.first().click();
+    let clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardContent).toContain('score.json');
+
+    // Second copy button (rank)
+    await copyButtons.nth(1).click();
+    clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipboardContent).toContain('rank.json');
   });
 });

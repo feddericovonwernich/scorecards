@@ -10,10 +10,13 @@ import {
 } from './test-helper.js';
 
 test.describe('Service Modal - Basic Behavior', () => {
-  test('should open, display service info, and close correctly', async ({ catalogPage }) => {
+  // Consolidated test: Task 1 - Modal Open/Close Journey
+  // Combines: open/display/close and close with Escape key tests
+  test('should open modal, display service info, and close via X button or Escape key', async ({ catalogPage }) => {
     await openServiceModal(catalogPage, 'test-repo-perfect');
-
     const modal = catalogPage.locator('#service-modal');
+
+    // Verify modal content
     await expect(modal).toBeVisible();
     await expect(modal.locator('h2')).toContainText('test-repo-perfect');
     await expect(modal).toContainText('76');
@@ -22,14 +25,15 @@ test.describe('Service Modal - Basic Behavior', () => {
     // Close with X button
     await closeServiceModal(catalogPage);
     await expect(modal).not.toBeVisible();
-  });
 
-  test('should close with Escape key', async ({ catalogPage }) => {
+    // Reopen and close with Escape
     await openServiceModal(catalogPage, 'test-repo-perfect');
+    await expect(modal).toBeVisible();
     await catalogPage.keyboard.press('Escape');
-    await expect(catalogPage.locator('#service-modal')).not.toBeVisible();
+    await expect(modal).not.toBeVisible();
   });
 
+  // Keep unchanged - unique assertion for specific UI elements
   test('should have GitHub link and Refresh Data button', async ({ serviceModalPage }) => {
     const modal = serviceModalPage.locator('#service-modal');
     const githubLink = modal.locator('a[href*="github.com"]').first();
@@ -42,49 +46,45 @@ test.describe('Service Modal - Basic Behavior', () => {
 });
 
 test.describe('Service Modal - Check Results Tab', () => {
-  test('should display all check information correctly', async ({ serviceModalPage }) => {
+  // Consolidated test: Task 12 - Check Results Display and Categories
+  // Combines: display all check information, check categories, specific pass/fail status
+  test('should display check results with categories, pass/fail indicators, and collapse/expand', async ({ serviceModalPage }) => {
     const modal = serviceModalPage.locator('#service-modal');
+
+    // Check count and indicators
     const checkResults = modal.locator('.check-result');
     const count = await checkResults.count();
     expect(count).toBeGreaterThanOrEqual(10);
 
-    // Check for pass/fail indicators
     const passedChecks = modal.locator('.check-result').filter({ hasText: '✓' });
-    const failedChecks = modal.locator('.check-result').filter({ hasText: '✗' });
     expect(await passedChecks.count()).toBeGreaterThan(0);
+
+    const failedChecks = modal.locator('.check-result').filter({ hasText: '✗' });
     expect(await failedChecks.count()).toBeGreaterThan(0);
 
-    // Check output and weight display
     const outputSection = modal.locator('strong', { hasText: 'Output:' }).first();
     await expect(outputSection).toBeVisible();
 
     const weightText = modal.getByText(/Weight: \d+/);
     await expect(weightText.first()).toBeVisible();
 
-    // Score in modal stats
     const statValue = modal.locator('.modal-stat-value').filter({ hasText: '76' });
     await expect(statValue).toBeVisible();
-  });
 
-  test('should display check categories with correct functionality', async ({ serviceModalPage }) => {
-    const modal = serviceModalPage.locator('#service-modal');
-
-    // Verify categories exist and are expanded
+    // Categories
     await expect(modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })).toBeVisible();
     await expect(modal.locator('.category-name').filter({ hasText: 'Documentation' })).toBeVisible();
 
     const categories = modal.locator('.check-category');
     expect(await categories.count()).toBeGreaterThan(0);
 
-    // First category should be open
     const firstCategory = categories.first();
     expect(await firstCategory.getAttribute('open')).not.toBeNull();
 
-    // Category stats should show pass/fail format
     const categoryStats = modal.locator('.category-stats');
     await expect(categoryStats.first()).toContainText(/\d+\/\d+ passed/);
 
-    // Collapse and expand functionality
+    // Collapse/expand
     const firstCategoryHeader = firstCategory.locator('.check-category-header');
     await firstCategoryHeader.click();
     await expect(async () => {
@@ -95,23 +95,20 @@ test.describe('Service Modal - Check Results Tab', () => {
     await expect(async () => {
       expect(await firstCategory.getAttribute('open')).not.toBeNull();
     }).toPass({ timeout: 3000 });
-  });
 
-  test('should show specific check pass/fail status', async ({ serviceModalPage }) => {
-    const modal = serviceModalPage.locator('#service-modal');
-
-    // README Documentation check should pass
+    // Specific checks
     const readmeCheck = modal.locator('.check-result').filter({ hasText: 'README Documentation' });
     await expect(readmeCheck).toContainText('✓');
 
-    // Scorecard Configuration check should fail
     const configCheck = modal.locator('.check-result').filter({ hasText: 'Scorecard Configuration' });
     await expect(configCheck).toContainText('✗');
   });
 });
 
 test.describe('Service Modal - API Specification Tab', () => {
-  test('should display complete API specification information', async ({ serviceModalPage }) => {
+  // Consolidated test: Task 7 - API Specification Tab Complete View
+  // Combines: display API spec info, expandable raw spec, environment config
+  test('should display API specification info, expandable raw spec, and environment config', async ({ serviceModalPage }) => {
     await clickServiceModalTab(serviceModalPage, 'API Specification');
 
     const modal = serviceModalPage.locator('#service-modal');
@@ -121,40 +118,30 @@ test.describe('Service Modal - API Specification Tab', () => {
     await expect(modal).toContainText('1.0.0');
     await expect(modal).toContainText('openapi.yaml');
     await expect(modal).toContainText('3.0');
-
-    // Endpoint counts
     await expect(modal).toContainText(/\d+ paths/i);
     await expect(modal).toContainText(/\d+ operations/i);
 
-    // GitHub link in API tab (specific to openapi.yaml)
     const apiTab = modal.locator('#api-tab');
     const githubLink = apiTab.locator('a').filter({ hasText: 'View on GitHub' });
     await expect(githubLink).toBeVisible();
     await expect(githubLink).toHaveAttribute('href', /github\.com.*openapi\.yaml/);
-  });
 
-  test('should have expandable raw specification section', async ({ serviceModalPage }) => {
-    await clickServiceModalTab(serviceModalPage, 'API Specification');
-
-    const modal = serviceModalPage.locator('#service-modal');
+    // Raw spec expansion
     const rawSpecToggle = modal.getByText(/View Raw Specification/i);
     await expect(rawSpecToggle).toBeVisible();
-
     await rawSpecToggle.click();
     await expect(async () => {
       const hasCodeBlock = await modal.locator('pre, code').count() > 0;
       expect(hasCodeBlock).toBe(true);
     }).toPass({ timeout: 3000 });
-  });
 
-  test('should show environment configuration message', async ({ serviceModalPage }) => {
-    await clickServiceModalTab(serviceModalPage, 'API Specification');
-    const modal = serviceModalPage.locator('#service-modal');
+    // Environment config
     await expect(modal).toContainText(/Configure environments|\.scorecard\/config\.yml|API Explorer/i);
   });
 });
 
 test.describe('Service Modal - Contributors Tab', () => {
+  // Keep unchanged - complete Contributors tab test
   test('should display complete contributor information', async ({ serviceModalPage }) => {
     await clickServiceModalTab(serviceModalPage, 'Contributors');
 
@@ -183,6 +170,7 @@ test.describe('Service Modal - Contributors Tab', () => {
 });
 
 test.describe('Service Modal - Badges Tab', () => {
+  // Keep unchanged - UI preview test
   test('should display badge previews and markdown correctly', async ({ serviceModalPage }) => {
     await clickServiceModalTab(serviceModalPage, 'Badges');
 
@@ -224,39 +212,23 @@ test.describe('Service Modal - Badges Tab', () => {
 });
 
 test.describe('Service Modal - Workflow Runs Tab', () => {
-  test('should show PAT required message and Configure Token button when no token', async ({ serviceModalPage }) => {
-    await clickServiceModalTab(serviceModalPage, 'Workflow Runs');
-
-    const modal = serviceModalPage.locator('#service-modal');
-    const hasPrompt = await modal.getByText(/Configure|Token|PAT|GitHub/i).count() > 0;
-    expect(hasPrompt).toBe(true);
-
-    const configButton = modal.getByRole('button', { name: /Configure Token/i });
-    await expect(configButton).toBeVisible();
-  });
-
-  test('should show workflow filter and refresh controls with PAT', async ({ catalogPage }) => {
-    await setGitHubPAT(catalogPage, mockPAT);
-
-    await catalogPage.route('**/api.github.com/repos/**/actions/runs*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify({ workflow_runs: [], total_count: 0 }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
-
+  // Consolidated test: Task 11 - Workflow Runs Tab PAT States
+  // Combines: PAT required message, workflow controls with PAT, display workflow runs
+  test('should show PAT prompt without token, then controls and data with valid token', async ({ catalogPage }) => {
     await openServiceModal(catalogPage, 'test-repo-perfect');
     await clickServiceModalTab(catalogPage, 'Workflow Runs');
 
     const modal = catalogPage.locator('#service-modal');
-    await expect(modal.getByRole('button', { name: /All/i })).toBeVisible();
 
-    const refreshDropdown = modal.locator('select').filter({ hasText: /Refresh|15s|30s/i });
-    expect(await refreshDropdown.count()).toBeGreaterThan(0);
-  });
+    // No token state
+    const hasPrompt = await modal.getByText(/Configure|Token|PAT|GitHub/i).count() > 0;
+    expect(hasPrompt).toBe(true);
+    const configButton = modal.getByRole('button', { name: /Configure Token/i });
+    await expect(configButton).toBeVisible();
 
-  test('should display workflow runs when API returns data', async ({ catalogPage }) => {
+    await closeServiceModal(catalogPage);
+
+    // Set PAT and mock workflow runs
     await setGitHubPAT(catalogPage, mockPAT);
 
     await catalogPage.route('**/api.github.com/repos/**/actions/runs*', async (route) => {
@@ -277,11 +249,20 @@ test.describe('Service Modal - Workflow Runs Tab', () => {
     await openServiceModal(catalogPage, 'test-repo-perfect');
     await clickServiceModalTab(catalogPage, 'Workflow Runs');
 
-    await expect(catalogPage.locator('#service-modal')).toContainText(/CI|workflow/i);
+    // With token - controls visible
+    await expect(modal.getByRole('button', { name: /All/i })).toBeVisible();
+    const refreshDropdown = modal.locator('select').filter({ hasText: /Refresh|15s|30s/i });
+    expect(await refreshDropdown.count()).toBeGreaterThan(0);
+
+    // With data - workflow visible
+    await expect(modal).toContainText(/CI|workflow/i);
+
+    await closeServiceModal(catalogPage);
   });
 });
 
 test.describe('Service Modal - Links Tab', () => {
+  // Keep unchanged - edge case testing conditional rendering
   test('should not show Links tab when service has no links', async ({ serviceModalPage }) => {
     const linksTab = serviceModalPage.locator('#service-modal').getByRole('button', { name: 'Links', exact: true });
     expect(await linksTab.count()).toBe(0);
@@ -289,7 +270,9 @@ test.describe('Service Modal - Links Tab', () => {
 });
 
 test.describe('Service Modal - Tab Navigation', () => {
-  test('should default to Check Results tab and switch correctly', async ({ serviceModalPage }) => {
+  // Consolidated test: Task 6 - Tab Navigation Complete Journey
+  // Combines: default tab and switch correctly, keyboard accessible tabs
+  test('should navigate tabs via click and keyboard, preserving active state', async ({ serviceModalPage }) => {
     const modal = serviceModalPage.locator('#service-modal');
 
     // Check Results should be active by default
@@ -303,21 +286,20 @@ test.describe('Service Modal - Tab Navigation', () => {
     expect(await apiTab.evaluate(el => el.classList.contains('active'))).toBe(true);
     await expect(modal).toContainText(/OpenAPI|API|paths/i);
 
-    // Verify tab state preservation
+    // Switch to Contributors tab
     await clickServiceModalTab(serviceModalPage, 'Contributors');
     await expect(modal).toContainText(/Recent Contributors/i);
 
+    // Switch to Badges tab
     await clickServiceModalTab(serviceModalPage, 'Badges');
     await expect(modal).toContainText(/Badge Preview/i);
 
+    // Back to Contributors (state preservation)
     await clickServiceModalTab(serviceModalPage, 'Contributors');
     await expect(modal).toContainText(/Recent Contributors/i);
-  });
 
-  test('should have keyboard accessible tabs', async ({ serviceModalPage }) => {
-    const modal = serviceModalPage.locator('#service-modal');
+    // Keyboard navigation - verify only one tab active at a time
     const tabs = modal.locator('.tab-btn');
-
     await tabs.first().focus();
     await serviceModalPage.keyboard.press('Tab');
     await serviceModalPage.keyboard.press('Enter');
@@ -334,7 +316,10 @@ test.describe('Service Modal - Mobile Tab Scroll', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should have tabs container and handle scroll correctly on mobile', async ({ page }) => {
+  // Consolidated test: Task 10 - Mobile Tab Scroll Complete Behavior
+  // Combines: tabs container and scroll on mobile, hide scroll arrows on desktop
+  test('should show scroll arrows on mobile and hide on desktop when content fits', async ({ page }) => {
+    // Mobile viewport
     await openServiceModal(page, 'test-repo-perfect');
 
     const modal = page.locator('#service-modal');
@@ -362,19 +347,23 @@ test.describe('Service Modal - Mobile Tab Scroll', () => {
 
       await expect(page.locator('.tab-scroll-left')).toBeVisible();
     }
-  });
 
-  test('should not show scroll arrows on desktop when content fits', async ({ page }) => {
+    await closeServiceModal(page);
+
+    // Desktop viewport
     await page.setViewportSize({ width: 1200, height: 800 });
     await openServiceModal(page, 'test-repo-perfect');
 
     const leftCount = await page.locator('.tab-scroll-left').count();
     const rightCount = await page.locator('.tab-scroll-right').count();
     expect(leftCount + rightCount).toBeLessThanOrEqual(1);
+
+    await closeServiceModal(page);
   });
 });
 
 test.describe('Service Modal - Case-Insensitive Categories', () => {
+  // Keep unchanged - specific edge case behavior
   test('should group checks by category with case-insensitive matching', async ({ serviceModalPage }) => {
     const modal = serviceModalPage.locator('#service-modal');
 
