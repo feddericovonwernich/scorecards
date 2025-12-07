@@ -8,13 +8,13 @@
       "platform"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-12-07T23:33:08Z",
+    "last_discovered": "2025-12-07T23:35:36Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "platform"
   },
   "score": 50,
   "rank": "silver",
-  "last_updated": "2025-12-07T23:34:04Z",
+  "last_updated": "2025-12-07T23:36:34Z",
   "has_api": false,
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
@@ -33,11 +33,11 @@
     "12-codeowners-quality": "pass"
   },
   "excluded_checks": [],
-  "installed": false,
+  "installed": true,
   "default_branch": "main",
   "installation_pr": {
     "number": 1,
-    "state": "OPEN",
+    "state": "MERGED",
     "url": "https://github.com/feddericovonwernich-org/test-repo-minimal/pull/1"
   }
 }
