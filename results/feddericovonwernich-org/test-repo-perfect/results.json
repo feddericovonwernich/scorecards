@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "manual",
-      "last_discovered": "2025-12-07T23:21:16Z"
+      "last_discovered": "2025-12-07T23:33:10Z"
     },
     "links": [
       {
@@ -25,17 +25,17 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-07T23:22:15Z",
+  "timestamp": "2025-12-07T23:34:13Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": true,
+  "installed": false,
   "recent_contributors": [
     {
       "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-05T21:38:13Z",
-      "last_commit_hash": "cfef947"
+      "last_commit_date": "2025-12-07T20:32:37Z",
+      "last_commit_hash": "f9c1578"
     }
   ],
   "checks": [
@@ -72,7 +72,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
+      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml)\n",
       "stderr": ""
     },
     {
