@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-07T23:21:24Z"
+      "last_discovered": "2025-12-07T23:33:21Z"
     },
     "links": [],
     "openapi": null
@@ -20,17 +20,17 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-07T23:22:28Z",
+  "timestamp": "2025-12-07T23:34:18Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": true,
+  "installed": false,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
+      "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:52:06Z",
-      "last_commit_hash": "fa454ad"
+      "last_commit_date": "2025-12-07T20:32:42Z",
+      "last_commit_hash": "6d48643"
     }
   ],
   "checks": [
@@ -54,7 +54,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "LICENSE file found: LICENSE (1003 chars, detected: Unknown)\n",
       "stderr": ""
     },
@@ -67,7 +67,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml); Other CI: .travis.yml, .gitlab-ci.yml\n",
+      "stdout": "GitHub Actions: 1 workflow(s) (ci.yml); Other CI: .travis.yml, .gitlab-ci.yml\n",
       "stderr": ""
     },
     {
@@ -102,7 +102,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "OpenAPI specification found and validated: openapi.yaml\nTitle: Perfect Example API (v1.0.0)\nOpenAPI version: 3.0.3\nEndpoints: 3 paths, 4 operations\n",
       "stderr": ""
     },
