@@ -109,7 +109,12 @@ test.describe('Catalog Page', () => {
 
   test('should sort by "Score: Low to High"', async ({ page }) => {
     await selectSort(page, 'Score: Low to High');
-    await page.waitForTimeout(300); // Wait for re-render
+
+    // Wait for sort to apply and verify first service
+    await expect(async () => {
+      const names = await getVisibleServiceNames(page);
+      expect(names[0]).toBe('test-repo-empty');
+    }).toPass({ timeout: 3000 });
 
     const names = await getVisibleServiceNames(page);
     // First service should be test-repo-empty (lowest score: 23)
@@ -120,7 +125,12 @@ test.describe('Catalog Page', () => {
 
   test('should sort by "Name: A to Z"', async ({ page }) => {
     await selectSort(page, 'Name: A to Z');
-    await page.waitForTimeout(300);
+
+    // Wait for sort to apply and verify first service
+    await expect(async () => {
+      const names = await getVisibleServiceNames(page);
+      expect(names[0]).toBe('test-repo-edge-cases');
+    }).toPass({ timeout: 3000 });
 
     const names = await getVisibleServiceNames(page);
     // Should start with 'test-repo-edge-cases' (alphabetically first)
@@ -131,7 +141,12 @@ test.describe('Catalog Page', () => {
 
   test('should sort by "Name: Z to A"', async ({ page }) => {
     await selectSort(page, 'Name: Z to A');
-    await page.waitForTimeout(300);
+
+    // Wait for sort to apply and verify first service
+    await expect(async () => {
+      const names = await getVisibleServiceNames(page);
+      expect(names[0]).toBe('test-repo-stale');
+    }).toPass({ timeout: 3000 });
 
     const names = await getVisibleServiceNames(page);
     // Should start with 'test-repo-stale' (alphabetically last)

@@ -37,9 +37,8 @@ test.describe('Check Exclusion Feature', () => {
       // Select a check that has exclusions (OpenAPI Specification - check 06)
       await modal.locator('.check-card-selected').click();
       await modal.locator('.check-card-search input').fill('OpenAPI Spec');
-      await page.waitForTimeout(100);
+      await expect(modal.locator('.check-card-option:visible').first()).toBeVisible();
       await modal.locator('.check-card-option:visible').first().click();
-      await page.waitForTimeout(300);
 
       // Verify excluded stat card appears
       const excludedStatCard = modal.locator('.adoption-stat-card.excluded');
@@ -56,11 +55,9 @@ test.describe('Check Exclusion Feature', () => {
       await modal.locator('.check-card-selected').click();
       await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
       await modal.locator('.check-card-search input').fill('OpenAPI Specification');
-      await page.waitForTimeout(300);
       const options = modal.locator('.check-card-option');
       await expect(options.first()).toBeVisible({ timeout: 5000 });
       await options.first().click();
-      await page.waitForTimeout(500);
 
       // Wait for table to update
       await expect(modal.locator('.adoption-table')).toBeVisible();
@@ -88,11 +85,9 @@ test.describe('Check Exclusion Feature', () => {
       await modal.locator('.check-card-selected').click();
       await expect(modal.locator('.check-card-dropdown.open')).toBeVisible();
       await modal.locator('.check-card-search input').fill('README Documentation');
-      await page.waitForTimeout(300);
       const options = modal.locator('.check-card-option');
       await expect(options.first()).toBeVisible({ timeout: 5000 });
       await options.first().click();
-      await page.waitForTimeout(500);
 
       // Wait for table to update
       await expect(modal.locator('.adoption-table')).toBeVisible();
@@ -125,9 +120,8 @@ test.describe('Check Exclusion Feature', () => {
       // Select a check with exclusions
       await modal.locator('.check-card-selected').click();
       await modal.locator('.check-card-search input').fill('API Environment');
-      await page.waitForTimeout(100);
+      await expect(modal.locator('.check-card-option:visible').first()).toBeVisible();
       await modal.locator('.check-card-option:visible').first().click();
-      await page.waitForTimeout(300);
 
       // Verify Services Passing stat card shows x/y format
       const servicesPassingCard = modal.locator('.adoption-stat-card').filter({ hasText: 'Services Passing' });
@@ -152,14 +146,14 @@ test.describe('Check Exclusion Feature', () => {
       const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
       if (await checkAdoptionTab.isVisible()) {
         await checkAdoptionTab.click();
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
       }
 
       // Select a check that has exclusions (API Environment Configuration - 08)
       const checkSelect = modal.locator('#team-check-select');
       if (await checkSelect.isVisible()) {
         await checkSelect.selectOption({ label: 'API Environment Configuration' });
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.adoption-lists, .adoption-percentage')).toBeVisible();
       }
 
       // Verify three-column layout exists when there are exclusions
@@ -182,14 +176,14 @@ test.describe('Check Exclusion Feature', () => {
       const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
       if (await checkAdoptionTab.isVisible()) {
         await checkAdoptionTab.click();
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
       }
 
       // Select a check with exclusions
       const checkSelect = modal.locator('#team-check-select');
       if (await checkSelect.isVisible()) {
         await checkSelect.selectOption({ label: 'API Environment Configuration' });
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.adoption-lists, .adoption-percentage')).toBeVisible();
       }
 
       // Look for exclusion reason text
@@ -208,14 +202,14 @@ test.describe('Check Exclusion Feature', () => {
       const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
       if (await checkAdoptionTab.isVisible()) {
         await checkAdoptionTab.click();
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
       }
 
       // Select a check with exclusions
       const checkSelect = modal.locator('#team-check-select');
       if (await checkSelect.isVisible()) {
         await checkSelect.selectOption({ label: 'API Environment Configuration' });
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.adoption-lists, .adoption-percentage')).toBeVisible();
       }
 
       // Look for excluded service items with proper styling
@@ -233,14 +227,14 @@ test.describe('Check Exclusion Feature', () => {
       const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
       if (await checkAdoptionTab.isVisible()) {
         await checkAdoptionTab.click();
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
       }
 
       // Select a check with exclusions for this team
       const checkSelect = modal.locator('#team-check-select');
       if (await checkSelect.isVisible()) {
         await checkSelect.selectOption({ label: 'API Environment Configuration' });
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.adoption-lists, .adoption-percentage')).toBeVisible();
       }
 
       // Check for adoption percentage display
@@ -265,14 +259,14 @@ test.describe('Check Exclusion Feature', () => {
       const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
       if (await checkAdoptionTab.isVisible()) {
         await checkAdoptionTab.click();
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
       }
 
       // Select OpenAPI Specification check
       const checkSelect = modal.locator('#team-check-select');
       if (await checkSelect.isVisible()) {
         await checkSelect.selectOption({ label: 'OpenAPI Specification' });
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.adoption-lists, .adoption-percentage')).toBeVisible();
 
         // Should show excluded list with test-repo-edge-cases
         const excludedList = modal.locator('.adoption-list-excluded');
@@ -294,7 +288,8 @@ test.describe('Check Exclusion - Dark Mode', () => {
     const darkModeToggle = page.locator('button[aria-label="Toggle night mode"]');
     if (await darkModeToggle.isVisible()) {
       await darkModeToggle.click();
-      await page.waitForTimeout(300);
+      // Wait for theme to apply
+      await expect(page.locator('body')).toHaveClass(/night-mode|dark/);
     }
   });
 
@@ -307,9 +302,8 @@ test.describe('Check Exclusion - Dark Mode', () => {
     // Select a check with exclusions
     await modal.locator('.check-card-selected').click();
     await modal.locator('.check-card-search input').fill('OpenAPI Spec');
-    await page.waitForTimeout(100);
+    await expect(modal.locator('.check-card-option:visible').first()).toBeVisible();
     await modal.locator('.check-card-option:visible').first().click();
-    await page.waitForTimeout(300);
 
     // Verify excluded stat card is visible
     const excludedStatCard = modal.locator('.adoption-stat-card.excluded');
@@ -334,13 +328,13 @@ test.describe('Check Exclusion - Dark Mode', () => {
     const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
     if (await checkAdoptionTab.isVisible()) {
       await checkAdoptionTab.click();
-      await page.waitForTimeout(300);
+      await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
 
       // Select a check with exclusions
       const checkSelect = modal.locator('#team-check-select');
       if (await checkSelect.isVisible()) {
         await checkSelect.selectOption({ label: 'OpenAPI Specification' });
-        await page.waitForTimeout(300);
+        await expect(modal.locator('.adoption-lists, .adoption-percentage')).toBeVisible();
       }
 
       // Verify exclusion-related elements are visible

@@ -39,26 +39,29 @@ test.describe('Search and Filters', () => {
 
   test('should clear search and show all services', async ({ page }) => {
     await searchServices(page, 'python');
-    await page.waitForTimeout(300);
 
-    let count = await getServiceCount(page);
-    expect(count).toBe(1);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(1);
+    }).toPass({ timeout: 3000 });
 
     await clearSearch(page);
-    await page.waitForTimeout(300);
 
-    count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.totalServices);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.totalServices);
+    }).toPass({ timeout: 3000 });
   });
 
   test('should filter by Gold rank', async ({ page }) => {
     // Use .services-stats to target only the Services view stat cards
     const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
     await goldStat.click();
-    await page.waitForTimeout(300);
 
-    const count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.ranks.gold);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.ranks.gold);
+    }).toPass({ timeout: 3000 });
 
     // Should show test-repo-stale (highest Gold score: 80)
     const serviceCard = page.locator('.service-card').first();
@@ -69,10 +72,11 @@ test.describe('Search and Filters', () => {
   test('should filter by Silver rank', async ({ page }) => {
     const silverStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Silver' });
     await silverStat.click();
-    await page.waitForTimeout(300);
 
-    const count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.ranks.silver);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.ranks.silver);
+    }).toPass({ timeout: 3000 });
 
     // All visible cards should have Silver badge
     const serviceCards = page.locator('.service-card');
@@ -83,10 +87,11 @@ test.describe('Search and Filters', () => {
   test('should filter by Bronze rank', async ({ page }) => {
     const bronzeStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Bronze' });
     await bronzeStat.click();
-    await page.waitForTimeout(300);
 
-    const count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.ranks.bronze);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.ranks.bronze);
+    }).toPass({ timeout: 3000 });
 
     // All visible cards should have Bronze badge
     const serviceCards = page.locator('.service-card');
@@ -98,33 +103,40 @@ test.describe('Search and Filters', () => {
     // Apply Gold filter
     const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
     await goldStat.click();
-    await page.waitForTimeout(300);
 
-    let count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.ranks.gold);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.ranks.gold);
+    }).toPass({ timeout: 3000 });
 
     // Click again - filters use 3-state cycle: include -> exclude -> clear
     // Second click enters "exclude" state, showing all non-Gold services (7)
     await goldStat.click();
-    await page.waitForTimeout(300);
 
-    count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.totalServices - expectedStats.ranks.gold); // 9 - 2 = 7
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.totalServices - expectedStats.ranks.gold); // 9 - 2 = 7
+    }).toPass({ timeout: 3000 });
   });
 
   test('should combine search with rank filter', async ({ page }) => {
     // Filter by Silver rank
     const silverStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Silver' });
     await silverStat.click();
-    await page.waitForTimeout(300);
+
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.ranks.silver);
+    }).toPass({ timeout: 3000 });
 
     // Then search for "javascript"
     await searchServices(page, 'javascript');
-    await page.waitForTimeout(300);
 
     // Should show only test-repo-javascript (which is Silver)
-    const count = await getServiceCount(page);
-    expect(count).toBe(1);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(1);
+    }).toPass({ timeout: 3000 });
 
     const serviceCard = page.locator('.service-card').first();
     await expect(serviceCard).toContainText('test-repo-javascript');
@@ -157,27 +169,29 @@ test.describe('Search and Filters', () => {
 
   test('should handle search with no results', async ({ page }) => {
     await searchServices(page, 'nonexistent-service-xyz');
-    await page.waitForTimeout(300);
 
-    const count = await getServiceCount(page);
-    expect(count).toBe(0);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(0);
+    }).toPass({ timeout: 3000 });
 
     // Should show no results message or empty state
     const noResults = page.getByText(/no.*services.*found|no results/i);
     const isEmpty = await noResults.count();
     // If there's no explicit "no results" message, count should just be 0
-    expect(count).toBe(0);
+    expect(isEmpty >= 0).toBe(true);
   });
 
   test('should update filtered count in dashboard', async ({ page }) => {
     // Apply Bronze filter - use .services-stats to target only Services view
     const bronzeStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Bronze' });
     await bronzeStat.click();
-    await page.waitForTimeout(300);
 
     // The displayed service count should update
-    const count = await getServiceCount(page);
-    expect(count).toBe(expectedStats.ranks.bronze);
+    await expect(async () => {
+      const count = await getServiceCount(page);
+      expect(count).toBe(expectedStats.ranks.bronze);
+    }).toPass({ timeout: 3000 });
   });
 
   test('should have search input placeholder', async ({ page }) => {

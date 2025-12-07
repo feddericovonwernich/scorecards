@@ -80,12 +80,13 @@ test.describe('Check Adoption Dashboard Modal', () => {
 
     // Type in search to filter (React uses check-card-search)
     await modal.locator('.check-card-search input').fill('License');
-    await page.waitForTimeout(100);
 
     // Verify only matching options are visible (React uses check-card-option)
-    const visibleOptions = modal.locator('.check-card-option:visible');
-    const count = await visibleOptions.count();
-    expect(count).toBeLessThan(13); // Should filter down from all options
+    await expect(async () => {
+      const visibleOptions = modal.locator('.check-card-option:visible');
+      const count = await visibleOptions.count();
+      expect(count).toBeLessThan(13); // Should filter down from all options
+    }).toPass({ timeout: 3000 });
   });
 
   test('check selector changes update the dashboard', async ({ page }) => {
@@ -97,7 +98,6 @@ test.describe('Check Adoption Dashboard Modal', () => {
     // Open dropdown and select second option (React uses check-card-selected and check-card-option)
     await modal.locator('.check-card-selected').click();
     await modal.locator('.check-card-option').nth(1).click();
-    await page.waitForTimeout(300);
 
     // Verify dropdown closed (React uses check-card-dropdown.open)
     await expect(modal.locator('.check-card-dropdown.open')).not.toBeVisible();
@@ -171,10 +171,10 @@ test.describe('Check Adoption Dashboard Modal', () => {
 
     // Click on Team header to sort
     await modal.locator('.adoption-table th:has-text("Team")').click();
-    await page.waitForTimeout(300);
 
     // Verify sort indicator appears
     const teamHeader = modal.locator('.adoption-table th:has-text("Team")');
+    await expect(teamHeader.locator('.sort-indicator')).toBeVisible();
     const sortIndicator = await teamHeader.locator('.sort-indicator').textContent();
     expect(sortIndicator).toMatch(/[↑↓]/);
   });
@@ -184,21 +184,22 @@ test.describe('Check Adoption Dashboard Modal', () => {
 
     // Click on Adoption header to sort (should be default sorted)
     await modal.locator('.adoption-table th:has-text("Adoption")').click();
-    await page.waitForTimeout(300);
 
     // Verify sort indicator changes
     const adoptionHeader = modal.locator('.adoption-table th:has-text("Adoption")');
+    await expect(adoptionHeader.locator('.sort-indicator')).toBeVisible();
     const sortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
     expect(sortIndicator).toMatch(/[↑↓]/);
 
     // Click again to reverse sort
     await modal.locator('.adoption-table th:has-text("Adoption")').click();
-    await page.waitForTimeout(300);
 
     // Verify sort indicator changed direction
-    const newSortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
-    expect(newSortIndicator).toMatch(/[↑↓]/);
-    expect(newSortIndicator).not.toBe(sortIndicator);
+    await expect(async () => {
+      const newSortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
+      expect(newSortIndicator).toMatch(/[↑↓]/);
+      expect(newSortIndicator).not.toBe(sortIndicator);
+    }).toPass({ timeout: 3000 });
   });
 
   test('clicking team row opens team detail modal', async ({ page }) => {
@@ -210,7 +211,6 @@ test.describe('Check Adoption Dashboard Modal', () => {
     // Check if such a row exists
     if (await teamRow.count() > 0) {
       await teamRow.click();
-      await page.waitForTimeout(300);
 
       // Verify team modal opens
       await expect(page.locator('#team-modal')).toBeVisible();
@@ -228,7 +228,6 @@ test.describe('Check Adoption Dashboard Modal', () => {
   test('Escape key closes modal', async ({ page }) => {
     // Press Escape
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
 
     // Verify modal is hidden
     await expect(page.locator('#check-adoption-modal')).toBeHidden();
@@ -291,7 +290,8 @@ test.describe('Check Adoption Dashboard - Dark Mode', () => {
     const darkModeToggle = page.locator('button[aria-label="Toggle night mode"]');
     if (await darkModeToggle.isVisible()) {
       await darkModeToggle.click();
-      await page.waitForTimeout(300);
+      // Wait for dark mode to apply by checking data attribute
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     }
 
     // Open the Check Adoption Dashboard

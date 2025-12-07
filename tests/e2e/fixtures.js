@@ -161,3 +161,64 @@ export const rankBadges = {
   silver: { color: '#C0C0C0', label: 'Silver' },
   bronze: { color: '#CD7F32', label: 'Bronze' },
 };
+
+// Error response fixtures for testing error states
+export const errorResponses = {
+  networkError: { message: 'Network error', code: 'NETWORK_ERROR' },
+  rateLimitExceeded: { message: 'API rate limit exceeded', code: 403 },
+  unauthorized: { message: 'Bad credentials', code: 401 },
+  notFound: { message: 'Not Found', code: 404 },
+  serverError: { message: 'Internal Server Error', code: 500 },
+};
+
+// Rate limit fixtures for testing rate limit states
+export const rateLimitResponses = {
+  normal: { remaining: 4500, limit: 5000, reset: Math.floor(Date.now() / 1000) + 3600 },
+  low: { remaining: 50, limit: 5000, reset: Math.floor(Date.now() / 1000) + 3600 },
+  critical: { remaining: 5, limit: 5000, reset: Math.floor(Date.now() / 1000) + 3600 },
+  exhausted: { remaining: 0, limit: 5000, reset: Math.floor(Date.now() / 1000) + 3600 },
+  unauthenticated: { remaining: 30, limit: 60, reset: Math.floor(Date.now() / 1000) + 3600 },
+};
+
+// Empty state fixtures for testing no-data scenarios
+export const emptyStates = {
+  noServices: { services: {} },
+  noTeams: { teams: [] },
+  noWorkflows: { workflow_runs: [], total_count: 0 },
+};
+
+// Mock GitHub team members for testing
+export const mockTeamMembers = [
+  {
+    login: 'testuser1',
+    avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+    html_url: 'https://github.com/testuser1',
+  },
+  {
+    login: 'testuser2',
+    avatar_url: 'https://avatars.githubusercontent.com/u/2?v=4',
+    html_url: 'https://github.com/testuser2',
+  },
+];
+
+// Mock workflow runs for testing
+export const mockWorkflowRuns = [
+  {
+    id: 123456,
+    name: 'CI',
+    status: 'completed',
+    conclusion: 'success',
+    run_number: 42,
+    created_at: '2025-01-01T12:00:00Z',
+    html_url: 'https://github.com/test/repo/actions/runs/123456',
+  },
+  {
+    id: 123457,
+    name: 'CI',
+    status: 'in_progress',
+    conclusion: null,
+    run_number: 43,
+    created_at: '2025-01-02T12:00:00Z',
+    html_url: 'https://github.com/test/repo/actions/runs/123457',
+  },
+];

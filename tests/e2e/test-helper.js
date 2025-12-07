@@ -4,6 +4,7 @@
 
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { expect } from '@playwright/test';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -250,9 +251,12 @@ export async function applyStatFilter(page, label) {
  * @param {string} query
  */
 export async function searchServices(page, query) {
-  await page.getByRole('textbox', { name: 'Search services...' }).fill(query);
-  // Wait a bit for debounce/filtering to happen
-  await page.waitForTimeout(300);
+  const searchInput = page.getByRole('textbox', { name: 'Search services...' });
+  await searchInput.fill(query);
+  // Wait for filter to be applied by checking that the input value is set
+  // and the services grid is still visible (filter complete)
+  await expect(searchInput).toHaveValue(query);
+  await expect(page.locator('.services-grid')).toBeVisible();
 }
 
 /**
@@ -260,8 +264,11 @@ export async function searchServices(page, query) {
  * @param {import('@playwright/test').Page} page
  */
 export async function clearSearch(page) {
-  await page.getByRole('textbox', { name: 'Search services...' }).clear();
-  await page.waitForTimeout(300);
+  const searchInput = page.getByRole('textbox', { name: 'Search services...' });
+  await searchInput.clear();
+  // Wait for filter to be cleared and services grid to be visible
+  await expect(searchInput).toHaveValue('');
+  await expect(page.locator('.services-grid')).toBeVisible();
 }
 
 /**
@@ -280,7 +287,8 @@ export async function selectSort(page, option) {
 export async function switchToTeamsView(page) {
   // React Navigation component uses button[data-view="teams"] without .view-tab class
   await page.locator('[data-view="teams"]').click();
-  await page.waitForTimeout(300);
+  // Wait for teams grid to be visible
+  await expect(page.locator('.teams-grid')).toBeVisible();
 }
 
 /**
@@ -289,7 +297,8 @@ export async function switchToTeamsView(page) {
  */
 export async function switchToServicesView(page) {
   await page.locator('[data-view="services"]').click();
-  await page.waitForTimeout(300);
+  // Wait for services grid to be visible
+  await expect(page.locator('.services-grid')).toBeVisible();
 }
 
 /**
@@ -426,4 +435,119 @@ export async function mockWorkflowDispatch(page, { status = 204, requireAuth = t
 
   // CRITICAL: Wait to ensure route handler is fully registered
   await page.waitForTimeout(100);
+}
+
+/**
+ * Click a Service Modal tab by name
+ * @param {import('@playwright/test').Page} page
+ * @param {string} tabName - 'Check Results', 'API Specification', 'Links', 'Contributors', 'Workflow Runs', 'Badges'
+ */
+export async function clickServiceModalTab(page, tabName) {
+  const modal = page.locator('#service-modal');
+  const tab = modal.getByRole('button', { name: tabName });
+  await tab.click();
+  // Wait for tab content to be visible
+  await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
+}
+
+/**
+ * Click a Team Modal tab by name
+ * @param {import('@playwright/test').Page} page
+ * @param {string} tabName - 'Services', 'Distribution', 'Check Adoption', 'GitHub'
+ */
+export async function clickTeamModalTab(page, tabName) {
+  const modal = page.locator('#team-modal');
+  const tab = modal.getByRole('button', { name: tabName, exact: true });
+  await tab.click();
+  // Wait for tab content to be visible
+  await expect(modal.locator('.tab-content, [class*="tab-content"]')).toBeVisible();
+}
+
+/**
+ * Mock GitHub team members API
+ * @param {import('@playwright/test').Page} page
+ * @param {Array} members - Array of member objects with login, avatar_url, html_url
+ */
+export async function mockTeamMembersAPI(page, members = []) {
+  await page.route('**/api.github.com/orgs/**/teams/**/members', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(members),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+}
+
+/**
+ * Mock GitHub API with error response
+ * @param {import('@playwright/test').Page} page
+ * @param {string} endpoint - Endpoint pattern to match
+ * @param {number} statusCode - HTTP status code
+ * @param {string} message - Error message
+ */
+export async function mockAPIError(page, endpoint, statusCode, message) {
+  await page.route(`**/${endpoint}`, async (route) => {
+    await route.fulfill({
+      status: statusCode,
+      body: JSON.stringify({ message }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+}
+
+/**
+ * Mock empty catalog response
+ * @param {import('@playwright/test').Page} page
+ */
+export async function mockEmptyCatalog(page) {
+  await page.route('**/raw.githubusercontent.com/**/registry/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify({ services: {} }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+}
+
+/**
+ * Wait for toast notification to appear
+ * @param {import('@playwright/test').Page} page
+ * @param {string} type - Toast type: 'success', 'error', 'warning', 'info', or 'any'
+ */
+export async function waitForToast(page, type = 'any') {
+  if (type === 'any') {
+    await page.waitForSelector('.toast', { state: 'visible', timeout: 5000 });
+  } else {
+    await page.waitForSelector(`.toast-react--${type}, .toast.${type}`, { state: 'visible', timeout: 5000 });
+  }
+}
+
+/**
+ * Dismiss visible toast notification
+ * @param {import('@playwright/test').Page} page
+ */
+export async function dismissToast(page) {
+  const toast = page.locator('.toast');
+  const closeButton = toast.locator('button, [class*="close"]');
+  if (await closeButton.isVisible()) {
+    await closeButton.click();
+    // Wait for toast to be hidden
+    await expect(toast).toBeHidden();
+  }
+}
+
+/**
+ * Mock workflow runs API
+ * @param {import('@playwright/test').Page} page
+ * @param {Object} options - Mock options
+ * @param {Array} options.runs - Array of workflow run objects
+ */
+export async function mockWorkflowRuns(page, { runs = { workflow_runs: [], total_count: 0 } } = {}) {
+  await page.route('**/api.github.com/repos/**/actions/runs*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(runs),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
 }

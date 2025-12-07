@@ -1,10 +1,11 @@
 import { test, expect } from './coverage.js';
-import { expectedChecks } from './fixtures.js';
+import { expectedChecks, mockPAT } from './fixtures.js';
 import {
   mockCatalogRequests,
   waitForCatalogLoad,
   openServiceModal,
   closeServiceModal,
+  setGitHubPAT,
 } from './test-helper.js';
 
 test.describe('Service Modal', () => {
@@ -34,7 +35,6 @@ test.describe('Service Modal', () => {
     await openServiceModal(page, 'test-repo-perfect');
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
 
     const modal = page.locator('#service-modal');
     await expect(modal).not.toBeVisible();
@@ -282,17 +282,21 @@ test.describe('Service Modal', () => {
 
     // Click to collapse
     await firstCategoryHeader.click();
-    await page.waitForTimeout(100); // Wait for animation
 
-    isOpen = await firstCategory.getAttribute('open');
-    expect(isOpen).toBeNull(); // Should be collapsed now
+    // Wait for collapse state
+    await expect(async () => {
+      const openAttr = await firstCategory.getAttribute('open');
+      expect(openAttr).toBeNull(); // Should be collapsed now
+    }).toPass({ timeout: 3000 });
 
     // Click to expand again
     await firstCategoryHeader.click();
-    await page.waitForTimeout(100);
 
-    isOpen = await firstCategory.getAttribute('open');
-    expect(isOpen).not.toBeNull(); // Should be expanded again
+    // Wait for expand state
+    await expect(async () => {
+      const openAttr = await firstCategory.getAttribute('open');
+      expect(openAttr).not.toBeNull(); // Should be expanded again
+    }).toPass({ timeout: 3000 });
   });
 
   test('should show checks within categories', async ({ page }) => {
@@ -355,13 +359,6 @@ test.describe('Mobile Tab Scroll Arrows', () => {
   test('should show scroll arrows when tabs overflow on mobile', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
 
-    // Wait for scroll state to initialize
-    await page.waitForTimeout(200);
-
-    // In React, arrows are conditionally rendered - right arrow shows when there's content to scroll
-    const rightArrow = page.locator('.tab-scroll-right');
-    // Arrow may or may not be rendered depending on content width
-    const arrowCount = await rightArrow.count();
     // Just verify the tabs container exists and tab buttons are visible
     const tabButtons = page.locator('.tab-btn');
     await expect(tabButtons.first()).toBeVisible();
@@ -369,9 +366,6 @@ test.describe('Mobile Tab Scroll Arrows', () => {
 
   test('should hide left arrow initially on mobile when at start', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
-
-    // Wait for scroll state to initialize
-    await page.waitForTimeout(200);
 
     // In React, left arrow is not rendered when at scroll start (conditional rendering)
     const leftArrow = page.locator('.tab-scroll-left');
@@ -381,9 +375,6 @@ test.describe('Mobile Tab Scroll Arrows', () => {
 
   test('should scroll tabs when clicking scroll arrows', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
-
-    // Wait for scroll state to initialize
-    await page.waitForTimeout(200);
 
     const tabs = page.locator('.tabs');
 
@@ -398,23 +389,28 @@ test.describe('Mobile Tab Scroll Arrows', () => {
     if (hasRightArrow) {
       // Click right arrow to scroll
       await rightArrow.click();
-      await page.waitForTimeout(300); // Wait for smooth scroll
 
-      // Verify tabs scrolled
-      const scrolledPosition = await tabs.evaluate(el => el.scrollLeft);
-      expect(scrolledPosition).toBeGreaterThan(0);
+      // Wait for scroll to complete
+      await expect(async () => {
+        const scrolledPosition = await tabs.evaluate(el => el.scrollLeft);
+        expect(scrolledPosition).toBeGreaterThan(0);
+      }).toPass({ timeout: 3000 });
 
       // Left arrow should now be rendered
       const leftArrow = page.locator('.tab-scroll-left');
       await expect(leftArrow).toBeVisible();
 
+      // Get scrolled position for comparison
+      const scrolledPosition = await tabs.evaluate(el => el.scrollLeft);
+
       // Click left arrow to scroll back
       await leftArrow.click();
-      await page.waitForTimeout(300);
 
-      // Verify scrolled back toward start
-      const finalScrollLeft = await tabs.evaluate(el => el.scrollLeft);
-      expect(finalScrollLeft).toBeLessThan(scrolledPosition);
+      // Wait for scroll back
+      await expect(async () => {
+        const finalScrollLeft = await tabs.evaluate(el => el.scrollLeft);
+        expect(finalScrollLeft).toBeLessThan(scrolledPosition);
+      }).toPass({ timeout: 3000 });
     }
   });
 
@@ -422,8 +418,6 @@ test.describe('Mobile Tab Scroll Arrows', () => {
     // Set desktop viewport
     await page.setViewportSize({ width: 1200, height: 800 });
     await openServiceModal(page, 'test-repo-perfect');
-
-    await page.waitForTimeout(200);
 
     // On desktop with wide viewport, arrows may not be rendered if all tabs fit
     const leftArrow = page.locator('.tab-scroll-left');
@@ -434,5 +428,168 @@ test.describe('Mobile Tab Scroll Arrows', () => {
     const rightCount = await rightArrow.count();
     // Either arrows don't exist or content doesn't overflow
     expect(leftCount + rightCount).toBeLessThanOrEqual(1);
+  });
+});
+
+test.describe('API Specification Tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockCatalogRequests(page);
+    await page.goto('/');
+    await waitForCatalogLoad(page);
+  });
+
+  test('should have API Specification tab for services with OpenAPI', async ({ page }) => {
+    // test-repo-perfect has OpenAPI data in the fixture
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const apiTab = page.getByRole('button', { name: 'API Specification' });
+    await expect(apiTab).toBeVisible();
+  });
+
+  test('should switch to API Specification tab', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const apiTab = page.getByRole('button', { name: 'API Specification' });
+    await apiTab.click();
+
+    // Should show API specification content
+    const modal = page.locator('#service-modal');
+    await expect(modal).toContainText(/OpenAPI|API|Specification/i);
+  });
+
+  test('should display API title and version', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const apiTab = page.getByRole('button', { name: 'API Specification' });
+    await apiTab.click();
+
+    const modal = page.locator('#service-modal');
+    // The fixture has "Title: Perfect Example API (v1.0.0)"
+    await expect(modal).toContainText(/Perfect Example API|API/i);
+  });
+
+  test('should display OpenAPI version info', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const apiTab = page.getByRole('button', { name: 'API Specification' });
+    await apiTab.click();
+
+    const modal = page.locator('#service-modal');
+    // The fixture has "OpenAPI version: 3.0.3"
+    await expect(modal).toContainText(/3\.0|OpenAPI/i);
+  });
+
+  test('should display endpoints count', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const apiTab = page.getByRole('button', { name: 'API Specification' });
+    await apiTab.click();
+
+    const modal = page.locator('#service-modal');
+    // The fixture has "Endpoints: 3 paths, 4 operations"
+    await expect(modal).toContainText(/paths|operations|endpoints/i);
+  });
+
+  test('should show API tab only when OpenAPI data exists', async ({ page }) => {
+    // test-repo-perfect has OpenAPI data, so API tab should be present
+    await openServiceModal(page, 'test-repo-perfect');
+
+    // API Specification tab should be visible for services with OpenAPI
+    const apiTab = page.getByRole('button', { name: 'API Specification' });
+    await expect(apiTab).toBeVisible();
+
+    // Verify it's actually the API tab and clickable
+    await apiTab.click();
+    const modal = page.locator('#service-modal');
+    await expect(modal).toContainText(/OpenAPI|API/i);
+  });
+});
+
+test.describe('Links Tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockCatalogRequests(page);
+    await page.goto('/');
+    await waitForCatalogLoad(page);
+  });
+
+  test('should not have Links tab when service has no links', async ({ page }) => {
+    // test-repo-perfect has empty links array in fixture
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const linksTab = page.getByRole('button', { name: 'Links' });
+    // Should not be visible (conditional tab when links.length === 0)
+    const count = await linksTab.count();
+    expect(count).toBe(0);
+  });
+});
+
+test.describe('Workflows Tab with PAT', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockCatalogRequests(page);
+    await page.goto('/');
+    await waitForCatalogLoad(page);
+  });
+
+  test('should show PAT prompt in Workflows tab without PAT', async ({ page }) => {
+    // Don't set PAT
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const workflowTab = page.getByRole('button', { name: 'Workflow Runs' });
+    await workflowTab.click();
+
+    const modal = page.locator('#service-modal');
+    // Without PAT, should show empty state or prompt
+    const hasEmptyState = await modal.locator('.widget-empty').count() > 0;
+    const hasConfigurePrompt = await modal.getByText(/Configure|Token|PAT/i).count() > 0;
+    expect(hasEmptyState || hasConfigurePrompt).toBe(true);
+  });
+
+  test('should attempt to fetch workflows with PAT', async ({ page }) => {
+    // Set PAT
+    await setGitHubPAT(page, mockPAT);
+
+    // Mock the GitHub workflow API
+    await page.route('**/api.github.com/repos/**/actions/runs*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        body: JSON.stringify({
+          workflow_runs: [
+            {
+              id: 123456,
+              name: 'CI',
+              status: 'completed',
+              conclusion: 'success',
+              run_number: 42,
+              created_at: '2025-01-01T12:00:00Z',
+              html_url: 'https://github.com/test/repo/actions/runs/123456',
+            },
+          ],
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const workflowTab = page.getByRole('button', { name: 'Workflow Runs' });
+    await workflowTab.click();
+
+    // Should show workflows content area
+    const modal = page.locator('#service-modal');
+    const workflowsContent = modal.locator('#workflows-tab');
+    await expect(workflowsContent).toBeVisible();
+  });
+
+  test('should have Configure Token button in Workflows tab when no PAT', async ({ page }) => {
+    // Don't set PAT
+    await openServiceModal(page, 'test-repo-perfect');
+
+    const workflowTab = page.getByRole('button', { name: 'Workflow Runs' });
+    await workflowTab.click();
+
+    // The modal or content should have a way to configure token
+    const modal = page.locator('#service-modal');
+    const hasTokenReference = await modal.getByText(/token|PAT|configure/i).count() > 0;
+    expect(hasTokenReference).toBe(true);
   });
 });

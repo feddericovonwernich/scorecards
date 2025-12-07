@@ -68,11 +68,13 @@ test.describe('Team Features', () => {
       await page.locator('.team-option').filter({ hasText: 'frontend' }).click();
 
       // Wait for filter to apply
-      await page.waitForTimeout(300);
+      await expect(async () => {
+        const count = await getServiceCount(page);
+        expect(count).toBe(2);
+      }).toPass({ timeout: 3000 });
 
       // Should show only frontend services (test-repo-edge-cases, test-repo-javascript)
       const count = await getServiceCount(page);
-      expect(count).toBe(2);
 
       const names = await getVisibleServiceNames(page);
       expect(names).toContain('test-repo-edge-cases');
@@ -90,31 +92,32 @@ test.describe('Team Features', () => {
       await page.locator('.team-option').filter({ hasText: 'backend' }).locator('input').click();
 
       // Wait for filter to apply
-      await page.waitForTimeout(300);
-
-      // Should show frontend + backend services = 4
-      const count = await getServiceCount(page);
-      expect(count).toBe(4);
+      await expect(async () => {
+        const count = await getServiceCount(page);
+        expect(count).toBe(4);
+      }).toPass({ timeout: 3000 });
     });
 
     test('should clear team filter', async ({ page }) => {
       // First apply a filter
       await page.locator('.team-filter-toggle').click();
       await page.locator('.team-option').filter({ hasText: 'platform' }).locator('input').click();
-      await page.waitForTimeout(300);
 
       // Verify filter applied (platform has 2 services)
-      let count = await getServiceCount(page);
-      expect(count).toBe(2);
+      await expect(async () => {
+        const count = await getServiceCount(page);
+        expect(count).toBe(2);
+      }).toPass({ timeout: 3000 });
 
       // Clear button should appear after selection (dropdown is still open)
       await expect(page.locator('.team-clear-btn')).toBeVisible();
       await page.locator('.team-clear-btn').click();
-      await page.waitForTimeout(300);
 
       // Should show all services again
-      count = await getServiceCount(page);
-      expect(count).toBe(9);
+      await expect(async () => {
+        const count = await getServiceCount(page);
+        expect(count).toBe(9);
+      }).toPass({ timeout: 3000 });
     });
   });
 
@@ -147,12 +150,14 @@ test.describe('Team Features', () => {
       const searchInput = page.locator('.team-search, input[placeholder*="Search teams"]').first();
       if (await searchInput.isVisible()) {
         await searchInput.fill('front');
-        await page.waitForTimeout(300);
+
+        await expect(async () => {
+          const teamCards = page.locator('.team-card');
+          const count = await teamCards.count();
+          expect(count).toBe(1);
+        }).toPass({ timeout: 3000 });
 
         const teamCards = page.locator('.team-card');
-        const count = await teamCards.count();
-        expect(count).toBe(1);
-
         await expect(teamCards.first()).toContainText('frontend');
       }
     });
@@ -162,7 +167,6 @@ test.describe('Team Features', () => {
       if (await sortSelect.isVisible()) {
         // Sort by name A-Z
         await sortSelect.selectOption('name-asc');
-        await page.waitForTimeout(300);
 
         const firstCard = page.locator('.team-card').first();
         await expect(firstCard).toContainText(/backend/i);
@@ -172,21 +176,21 @@ test.describe('Team Features', () => {
     test('should filter catalog when clicking Filter button', async ({ page }) => {
       // Click on a team card to open team modal
       await page.locator('.team-card').filter({ hasText: 'platform' }).click();
-      await page.waitForTimeout(300);
 
-      // If team modal opens, check for filter button
+      // Wait for team modal to open
       const teamModal = page.locator('#team-modal');
-      if (await teamModal.isVisible()) {
-        const filterButton = teamModal.getByRole('button', { name: /Filter/i });
-        if (await filterButton.isVisible()) {
-          await filterButton.click();
-          await page.waitForTimeout(300);
+      await expect(teamModal).toBeVisible();
 
-          // Services should be filtered to platform team
-          await switchToServicesView(page);
+      const filterButton = teamModal.getByRole('button', { name: /Filter/i });
+      if (await filterButton.isVisible()) {
+        await filterButton.click();
+
+        // Services should be filtered to platform team
+        await switchToServicesView(page);
+        await expect(async () => {
           const count = await getServiceCount(page);
           expect(count).toBe(2);
-        }
+        }).toPass({ timeout: 3000 });
       }
     });
   });
@@ -200,11 +204,14 @@ test.describe('Team Features', () => {
     test('should filter to services without team', async ({ page }) => {
       await page.locator('.team-filter-toggle').click();
       await page.locator('.team-option').filter({ hasText: 'No Team Assigned' }).locator('input').click();
-      await page.waitForTimeout(300);
 
       // Should show only services without team (test-repo-empty, test-repo-minimal, test-repo-no-docs)
+      await expect(async () => {
+        const count = await getServiceCount(page);
+        expect(count).toBe(3);
+      }).toPass({ timeout: 3000 });
+
       const count = await getServiceCount(page);
-      expect(count).toBe(3);
 
       const names = await getVisibleServiceNames(page);
       expect(names).toContain('test-repo-empty');

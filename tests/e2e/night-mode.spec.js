@@ -51,19 +51,17 @@ test.describe('Night Mode Theme Toggle', () => {
     // Click to enable dark mode
     await themeToggle.click();
 
-    // Wait for theme to apply
-    await page.waitForTimeout(100);
-
+    // Wait for theme attribute to change
     const htmlElement = page.locator('html');
-    const theme = await htmlElement.getAttribute('data-theme');
-
-    expect(theme).toBe('dark');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
   });
 
   test('should show moon icon in dark mode', async ({ page }) => {
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
     await themeToggle.click();
-    await page.waitForTimeout(100);
+
+    // Wait for theme to apply
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     // React component shows moon icon when dark mode is active
     const svg = themeToggle.locator('svg');
@@ -75,19 +73,15 @@ test.describe('Night Mode Theme Toggle', () => {
 
   test('should toggle back to light theme on second click', async ({ page }) => {
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
+    const htmlElement = page.locator('html');
 
     // Toggle to dark
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
 
     // Toggle back to light
     await themeToggle.click();
-    await page.waitForTimeout(100);
-
-    const htmlElement = page.locator('html');
-    const theme = await htmlElement.getAttribute('data-theme');
-
-    expect(theme).toBe('light');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'light');
   });
 
   test('should persist theme preference in localStorage', async ({ page }) => {
@@ -95,7 +89,7 @@ test.describe('Night Mode Theme Toggle', () => {
 
     // Toggle to dark mode
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     // Check localStorage
     const storedTheme = await page.evaluate(() => localStorage.getItem('theme'));
@@ -107,7 +101,7 @@ test.describe('Night Mode Theme Toggle', () => {
 
     // Set dark mode
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     // Reload page
     await page.reload();
@@ -115,8 +109,7 @@ test.describe('Night Mode Theme Toggle', () => {
 
     // Theme should still be dark
     const htmlElement = page.locator('html');
-    const theme = await htmlElement.getAttribute('data-theme');
-    expect(theme).toBe('dark');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
 
     // Moon icon should be visible (check via SVG path)
     const reloadedToggle = page.getByRole('button', { name: /Toggle night mode/i });
@@ -136,20 +129,20 @@ test.describe('Night Mode Theme Toggle', () => {
 
     // Toggle to dark mode
     await themeToggle.click();
-    await page.waitForTimeout(500); // Wait for CSS transition
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
-    // Get dark mode background color
-    const darkBgColor = await page.locator('body').evaluate((el) => {
-      return window.getComputedStyle(el).backgroundColor;
-    });
-
-    // Colors should be different
-    expect(initialBgColor).not.toBe(darkBgColor);
+    // Wait for CSS transition to complete by polling for color change
+    await expect(async () => {
+      const darkBgColor = await page.locator('body').evaluate((el) => {
+        return window.getComputedStyle(el).backgroundColor;
+      });
+      expect(darkBgColor).not.toBe(initialBgColor);
+    }).toPass({ timeout: 1000 });
   });
 
   test('should apply dark theme to service cards', async ({ page }) => {
     // Wait for service cards to load
-    await page.waitForSelector('.service-card', { timeout: 5000 });
+    await expect(page.locator('.service-card').first()).toBeVisible();
 
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
 
@@ -160,32 +153,31 @@ test.describe('Night Mode Theme Toggle', () => {
 
     // Toggle to dark mode
     await themeToggle.click();
-    await page.waitForTimeout(500); // Wait for CSS transition
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
-    // Get dark mode service card background
-    const darkCardBg = await page.locator('.service-card').first().evaluate((el) => {
-      return window.getComputedStyle(el).backgroundColor;
-    });
-
-    // Backgrounds should be different
-    expect(initialCardBg).not.toBe(darkCardBg);
+    // Wait for CSS transition to complete by polling for color change
+    await expect(async () => {
+      const darkCardBg = await page.locator('.service-card').first().evaluate((el) => {
+        return window.getComputedStyle(el).backgroundColor;
+      });
+      expect(darkCardBg).not.toBe(initialCardBg);
+    }).toPass({ timeout: 1000 });
   });
 
   test('should work on both catalog and API explorer pages', async ({ page }) => {
     // Set dark mode on catalog page
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     // Navigate to API explorer (with mock params)
     // Use relative path so it respects the baseURL (/scorecards/)
     await page.goto('api-explorer.html?org=test&repo=test');
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('domcontentloaded');
 
     // Theme should be dark on API explorer
     const htmlElement = page.locator('html');
-    const theme = await htmlElement.getAttribute('data-theme');
-    expect(theme).toBe('dark');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
 
     // Theme toggle button should exist
     const apiExplorerToggle = page.getByRole('button', { name: /Toggle night mode/i });
@@ -206,16 +198,15 @@ test.describe('Night Mode Theme Toggle', () => {
     // Set dark mode
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     // Go to API explorer (relative path respects baseURL)
     await page.goto('api-explorer.html?org=test&repo=test');
-    await page.waitForTimeout(300);
+    await page.waitForLoadState('domcontentloaded');
 
     // Verify dark theme
     let htmlElement = page.locator('html');
-    let theme = await htmlElement.getAttribute('data-theme');
-    expect(theme).toBe('dark');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
 
     // Go back to catalog
     await page.goto('/');
@@ -223,23 +214,21 @@ test.describe('Night Mode Theme Toggle', () => {
 
     // Verify theme is still dark
     htmlElement = page.locator('html');
-    theme = await htmlElement.getAttribute('data-theme');
-    expect(theme).toBe('dark');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
   });
 
   test('should apply theme without flash on page load', async ({ page }) => {
     // Set dark mode
     const themeToggle = page.getByRole('button', { name: /Toggle night mode/i });
     await themeToggle.click();
-    await page.waitForTimeout(100);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     // Reload and check theme is applied immediately
     await page.reload();
 
     // Check theme attribute is set (should happen before DOMContentLoaded)
     const htmlElement = page.locator('html');
-    const theme = await htmlElement.getAttribute('data-theme');
-    expect(theme).toBe('dark');
+    await expect(htmlElement).toHaveAttribute('data-theme', 'dark');
   });
 
   test('should update icon immediately after theme change', async ({ page }) => {

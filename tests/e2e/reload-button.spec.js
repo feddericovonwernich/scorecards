@@ -59,7 +59,7 @@ test.describe('Reload Button', () => {
     expect(loadingContent).not.toMatch(/Trigger/i);
 
     // Wait for success state
-    await page.waitForTimeout(500);
+    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');
 
     // Success state: should show checkmark icon, no text
     const successContent = await reloadBtn.innerHTML();
@@ -69,6 +69,9 @@ test.describe('Reload Button', () => {
   });
 
   test('should show tooltips on hover in different states', async ({ page }) => {
+    // This test needs extra time for the 3 second reset timer
+    test.setTimeout(12000);
+
     // Re-mock with delay to test loading state
     await mockWorkflowDispatch(page, { delay: 300 });
     await setGitHubPAT(page, 'test-token-12345');
@@ -85,20 +88,19 @@ test.describe('Reload Button', () => {
     // Loading state: should have tooltip "Triggering..."
     await expect(reloadBtn).toHaveAttribute('title', 'Triggering...');
 
-    // Wait for success state
-    await page.waitForTimeout(500);
-
     // Success state: should have tooltip "✓ Triggered Successfully"
     await expect(reloadBtn).toHaveAttribute('title', '✓ Triggered Successfully');
 
-    // Wait for reset (3 seconds)
-    await page.waitForTimeout(3500);
-
     // After reset: should restore original tooltip
-    await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
+    await expect(async () => {
+      await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
+    }).toPass({ timeout: 5000 });
   });
 
   test('should transition through correct icon states', async ({ page }) => {
+    // This test needs extra time for the 3 second reset timer
+    test.setTimeout(12000);
+
     await setGitHubPAT(page, 'test-token-12345');
 
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
@@ -111,23 +113,25 @@ test.describe('Reload Button', () => {
     // Click the button
     await reloadBtn.click();
 
-    // Wait for success state (mock responds immediately, so skip intermediate check)
-    await page.waitForTimeout(500);
+    // Wait for success state
+    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');
 
     // Success state: should have checkmark icon
     svgPath = await reloadBtn.locator('svg path').getAttribute('d');
     expect(svgPath).toContain('13.78'); // Part of checkmark icon path
     expect(svgPath).not.toContain('1.705'); // No longer reload icon
 
-    // Wait for reset (3 seconds)
-    await page.waitForTimeout(3500);
-
     // After reset: should restore reload icon
-    svgPath = await reloadBtn.locator('svg path').getAttribute('d');
-    expect(svgPath).toContain('1.705'); // Back to reload icon
+    await expect(async () => {
+      const path = await reloadBtn.locator('svg path').getAttribute('d');
+      expect(path).toContain('1.705'); // Back to reload icon
+    }).toPass({ timeout: 5000 });
   });
 
   test('should apply spinning animation during loading', async ({ page }) => {
+    // This test needs extra time for the 3 second reset timer
+    test.setTimeout(12000);
+
     // Re-mock with delay to test loading state
     await mockWorkflowDispatch(page, { delay: 300 });
     await setGitHubPAT(page, 'test-token-12345');
@@ -145,20 +149,24 @@ test.describe('Reload Button', () => {
     // During loading: should have spinning class
     await expect(svg).toHaveClass(/spinning/);
 
-    // Wait for success state
-    await page.waitForTimeout(500);
-
     // Success state: no spinning class (different icon now)
+    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');
     await expect(svg).not.toHaveClass(/spinning/);
 
-    // Wait for reset
-    await page.waitForTimeout(3500);
+    // Move mouse away to remove hover state
+    await page.mouse.move(0, 0);
 
-    // After reset: no spinning class
-    await expect(svg).not.toHaveClass(/spinning/);
+    // After reset: no spinning class (3s reset timer + CSS transitions)
+    await expect(async () => {
+      await expect(svg).not.toHaveClass(/spinning/);
+      await expect(reloadBtn).toHaveCSS('background-color', 'rgb(245, 158, 11)');
+    }).toPass({ timeout: 6000 });
   });
 
   test('should transition background colors correctly', async ({ page }) => {
+    // This test needs extra time for the 3 second reset timer
+    test.setTimeout(12000);
+
     await setGitHubPAT(page, 'test-token-12345');
 
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
@@ -170,28 +178,26 @@ test.describe('Reload Button', () => {
     // Click the button
     await reloadBtn.click();
 
-    // Loading state: still orange (disabled, but same color)
-    await page.waitForTimeout(100);
+    // Loading state: disabled
     await expect(reloadBtn).toBeDisabled();
-
-    // Wait for success state
-    await page.waitForTimeout(500);
 
     // Success state: green background
     await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)'); // #10b981
-
-    // Wait for reset (3 seconds)
-    await page.waitForTimeout(3500);
 
     // Move mouse away to remove hover state
     await page.mouse.move(0, 0);
 
     // After reset: back to orange
-    await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/);
-    await expect(reloadBtn).not.toBeDisabled();
+    await expect(async () => {
+      await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/);
+      await expect(reloadBtn).not.toBeDisabled();
+    }).toPass({ timeout: 5000 });
   });
 
   test('should show error state on API failure', async ({ page }) => {
+    // This test needs extra time for the 3 second reset timer
+    test.setTimeout(12000);
+
     // Re-mock API to return error, then re-navigate
     await mockWorkflowDispatch(page, { status: 500 });
     await page.goto('/');
@@ -205,9 +211,6 @@ test.describe('Reload Button', () => {
     // Click the button
     await reloadBtn.click();
 
-    // Wait for error state
-    await page.waitForTimeout(500);
-
     // Error state: red background
     await expect(reloadBtn).toHaveCSS('background-color', 'rgb(239, 68, 68)'); // #ef4444
 
@@ -218,15 +221,14 @@ test.describe('Reload Button', () => {
     // Error state: should have error tooltip
     await expect(reloadBtn).toHaveAttribute('title', '✗ Trigger Failed');
 
-    // Wait for reset (3 seconds)
-    await page.waitForTimeout(3500);
-
     // Move mouse away to remove hover state
     await page.mouse.move(0, 0);
 
     // After reset: back to orange with reload icon
-    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(245, 158, 11)'); // #F59E0B
-    await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
+    await expect(async () => {
+      await expect(reloadBtn).toHaveCSS('background-color', 'rgb(245, 158, 11)'); // #F59E0B
+      await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
+    }).toPass({ timeout: 5000 });
   });
 
   test('should show warning when clicking without GitHub PAT', async ({ page }) => {
@@ -246,6 +248,9 @@ test.describe('Reload Button', () => {
   });
 
   test('should reset button after 3 seconds in success state', async ({ page }) => {
+    // This test needs extra time for the 3 second reset timer
+    test.setTimeout(12000);
+
     await setGitHubPAT(page, 'test-token-12345');
 
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
@@ -254,26 +259,21 @@ test.describe('Reload Button', () => {
     // Click the button
     await reloadBtn.click();
 
-    // Wait for success state
-    await page.waitForTimeout(500);
-
     // Verify success state
     await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');
-
-    // Wait exactly 3 seconds
-    await page.waitForTimeout(3000);
 
     // Move mouse away to remove hover state
     await page.mouse.move(0, 0);
 
     // Should be reset to original state
-    await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/);
-    await expect(reloadBtn).not.toBeDisabled();
-    await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
-
-    // Icon should be back to reload icon
-    const svgPath = await reloadBtn.locator('svg path').getAttribute('d');
-    expect(svgPath).toContain('1.705');
+    await expect(async () => {
+      await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/);
+      await expect(reloadBtn).not.toBeDisabled();
+      await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
+      // Icon should be back to reload icon
+      const svgPath = await reloadBtn.locator('svg path').getAttribute('d');
+      expect(svgPath).toContain('1.705');
+    }).toPass({ timeout: 5000 });
   });
 
   test('should be keyboard accessible', async ({ page }) => {
@@ -291,9 +291,6 @@ test.describe('Reload Button', () => {
 
     // Should transition to loading state
     await expect(reloadBtn).toBeDisabled();
-
-    // Wait for success
-    await page.waitForTimeout(500);
 
     // Should show success state
     await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');

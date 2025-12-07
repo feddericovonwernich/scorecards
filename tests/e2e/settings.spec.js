@@ -83,7 +83,9 @@ test.describe('Settings Modal', () => {
     // In React, instructions are in a collapsible accordion - expand it first
     const accordion = modal.locator('.settings-accordion');
     await accordion.click();
-    await page.waitForTimeout(100);
+
+    // Wait for accordion content to be visible
+    await expect(modal.locator('.settings-accordion-content')).toBeVisible();
 
     await expect(modal).toContainText(/How to create/i);
     await expect(modal).toContainText(/workflow/i); // scope needed
@@ -97,7 +99,9 @@ test.describe('Settings Modal', () => {
     // In React, benefits are in a collapsible accordion - expand it first
     const accordion = modal.locator('.settings-accordion');
     await accordion.click();
-    await page.waitForTimeout(100);
+
+    // Wait for accordion content to be visible
+    await expect(modal.locator('.settings-accordion-content')).toBeVisible();
 
     await expect(modal).toContainText(/Benefits/i);
     await expect(modal).toContainText(/faster/i);
@@ -111,7 +115,9 @@ test.describe('Settings Modal', () => {
     // In React, security info is in a collapsible accordion - expand it first
     const accordion = modal.locator('.settings-accordion');
     await accordion.click();
-    await page.waitForTimeout(100);
+
+    // Wait for accordion content to be visible
+    await expect(modal.locator('.settings-accordion-content')).toBeVisible();
 
     await expect(modal).toContainText(/Security/i);
     await expect(modal).toContainText(/memory/i);
@@ -127,9 +133,6 @@ test.describe('Settings Modal', () => {
     // Click Save
     const saveButton = page.getByRole('button', { name: 'Save Token' });
     await saveButton.click();
-
-    // Wait for notification
-    await page.waitForTimeout(1000);
 
     const modal = page.locator('#settings-modal');
     // Should now show API mode
@@ -154,7 +157,6 @@ test.describe('Settings Modal', () => {
     // This is needed because the initial fetchRateLimit after save uses a stale closure
     const checkRateButton = page.getByRole('button', { name: 'Check Rate' });
     await checkRateButton.click();
-    await page.waitForTimeout(500);
 
     // Wait for rate limit display to update with higher limit
     // The mock returns 5000 limit and 4999 remaining for authenticated requests
@@ -170,7 +172,10 @@ test.describe('Settings Modal', () => {
     await patInput.fill(mockPAT);
     const saveButton = page.getByRole('button', { name: 'Save Token' });
     await saveButton.click();
-    await page.waitForTimeout(1000);
+
+    // Wait for API mode to be displayed (indicates PAT saved)
+    const modal = page.locator('#settings-modal');
+    await expect(modal).toContainText(/GitHub API|API mode/i);
 
     await closeSettingsModal(page);
 

@@ -148,12 +148,13 @@ test.describe('Check Filter Modal', () => {
 
     // Type a search query that should match only some checks
     await modal.locator('#check-filter-search').fill('README');
-    await page.waitForTimeout(300);
 
     // Should have fewer visible cards
-    const filteredCount = await modal.locator('.check-option-card:visible').count();
-    expect(filteredCount).toBeLessThan(initialCount);
-    expect(filteredCount).toBeGreaterThan(0);
+    await expect(async () => {
+      const filteredCount = await modal.locator('.check-option-card:visible').count();
+      expect(filteredCount).toBeLessThan(initialCount);
+      expect(filteredCount).toBeGreaterThan(0);
+    }).toPass({ timeout: 3000 });
   });
 
   test('should toggle check filter state', async ({ page }) => {
@@ -207,12 +208,11 @@ test.describe('Check Filter Modal', () => {
     // Close modal
     await page.keyboard.press('Escape');
 
-    // Wait for services to re-render
-    await page.waitForTimeout(500);
-
-    // Service count should be reduced (some services fail this check)
-    const filteredCount = await getServiceCount(page);
-    expect(filteredCount).toBeLessThanOrEqual(initialCount);
+    // Wait for services to re-render and verify count reduced
+    await expect(async () => {
+      const filteredCount = await getServiceCount(page);
+      expect(filteredCount).toBeLessThanOrEqual(initialCount);
+    }).toPass({ timeout: 3000 });
   });
 
   test('should show filter summary when filters are active', async ({ page }) => {
