@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-12-07T23:35:25Z",
+  "generated_at": "2025-12-07T23:37:08Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -21,7 +21,7 @@
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 3
+        "installed_count": 6
       }
     },
     "frontend": {
@@ -43,7 +43,7 @@
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 1
+        "installed_count": 2
       }
     },
     "platform": {
@@ -57,15 +57,15 @@
       "auto_created": "2025-12-01T23:46:26Z",
       "statistics": {
         "service_count": 6,
-        "average_score": 72.6,
+        "average_score": 71.8,
         "rank_distribution": {
-          "platinum": 2,
-          "gold": 0,
+          "platinum": 1,
+          "gold": 1,
           "silver": 4,
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 3
+        "installed_count": 6
       }
     }
   },
