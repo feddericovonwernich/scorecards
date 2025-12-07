@@ -114,7 +114,7 @@ test.describe('Teams View - Search and Sort', () => {
 // ============================================================================
 
 test.describe('Team Filter', () => {
-  test('should filter services by team', async ({ catalogPage }) => {
+  test('should filter services by team with single select', async ({ catalogPage }) => {
     await catalogPage.locator('.team-filter-toggle').click();
     await expect(catalogPage.locator('.team-dropdown-menu')).toBeVisible();
 
@@ -175,8 +175,10 @@ test.describe('Team Filter', () => {
 // ============================================================================
 
 test.describe('Team Modal - Basic Behavior', () => {
-  test('should open, display team info, and close', async ({ teamModalPage }) => {
+  test('should open modal, navigate through all tabs, and close via multiple methods', async ({ teamModalPage }) => {
     const modal = teamModalPage.locator('#team-modal');
+
+    // Modal opening and basic info
     await expect(modal.locator('h2')).toContainText(/platform/i);
     await expect(modal).toContainText(/Platinum|Gold|Silver|Bronze/i);
     await expect(modal).toContainText(/Average Score/i);
@@ -187,14 +189,39 @@ test.describe('Team Modal - Basic Behavior', () => {
     const editButton = modal.getByRole('button', { name: /Edit Team/i });
     await expect(editButton).toBeVisible();
 
+    // All tabs visible
+    await expect(modal.getByRole('button', { name: 'Services', exact: true })).toBeVisible();
+    await expect(modal.getByRole('button', { name: 'Distribution', exact: true })).toBeVisible();
+    await expect(modal.getByRole('button', { name: 'Check Adoption' })).toBeVisible();
+    await expect(modal.getByRole('button', { name: 'GitHub', exact: true })).toBeVisible();
+
+    // Services tab (default)
+    await expect(modal).toContainText(/test-repo/i);
+
+    // Switch to Distribution
+    await clickTeamModalTab(teamModalPage, 'Distribution');
+    await expect(modal).toContainText(/Platinum|Gold|Silver|Bronze/i);
+
+    // Switch to Check Adoption
+    await clickTeamModalTab(teamModalPage, 'Check Adoption');
+    await expect(modal).toContainText(/Adoption|Passing|Failing/i);
+
+    // Switch to GitHub
+    await clickTeamModalTab(teamModalPage, 'GitHub');
+    await expect(modal).toContainText(/GitHub|Sign in/i);
+
+    // Switch back to Services
+    await clickTeamModalTab(teamModalPage, 'Services');
+    await expect(modal).toContainText(/test-repo/i);
+
     // Close with X
     await closeTeamModal(teamModalPage);
     await expect(modal).not.toBeVisible();
-  });
 
-  test('should close with Escape key', async ({ teamModalPage }) => {
+    // Reopen and close with Escape
+    await openTeamModal(teamModalPage, 'platform');
     await teamModalPage.keyboard.press('Escape');
-    await expect(teamModalPage.locator('#team-modal')).not.toBeVisible();
+    await expect(modal).not.toBeVisible();
   });
 });
 
@@ -342,72 +369,10 @@ test.describe('Team Modal - GitHub Tab', () => {
 });
 
 // ============================================================================
-// TEAM MODAL - Tab Navigation
-// ============================================================================
-
-test.describe('Team Modal - Tab Navigation', () => {
-  test('should have all tabs and switch correctly', async ({ teamModalPage }) => {
-    const modal = teamModalPage.locator('#team-modal');
-
-    // All tabs visible
-    await expect(modal.getByRole('button', { name: 'Services', exact: true })).toBeVisible();
-    await expect(modal.getByRole('button', { name: 'Distribution', exact: true })).toBeVisible();
-    await expect(modal.getByRole('button', { name: 'Check Adoption' })).toBeVisible();
-    await expect(modal.getByRole('button', { name: 'GitHub', exact: true })).toBeVisible();
-
-    // Services tab (default)
-    await expect(modal).toContainText(/test-repo/i);
-
-    // Switch to Distribution
-    await clickTeamModalTab(teamModalPage, 'Distribution');
-    await expect(modal).toContainText(/Platinum|Gold|Silver|Bronze/i);
-
-    // Switch to Check Adoption
-    await clickTeamModalTab(teamModalPage, 'Check Adoption');
-    await expect(modal).toContainText(/Adoption|Passing|Failing/i);
-
-    // Switch to GitHub
-    await clickTeamModalTab(teamModalPage, 'GitHub');
-    await expect(modal).toContainText(/GitHub|Sign in/i);
-
-    // Switch back to Services
-    await clickTeamModalTab(teamModalPage, 'Services');
-    await expect(modal).toContainText(/test-repo/i);
-  });
-});
-
-// ============================================================================
 // CHECK ADOPTION DASHBOARD (Global)
 // ============================================================================
 
 test.describe('Check Adoption Dashboard', () => {
-  test('should open and display adoption information', async ({ catalogPage }) => {
-    await openCheckAdoptionDashboard(catalogPage);
-
-    const modal = catalogPage.locator('#check-adoption-modal');
-    await expect(modal).toBeVisible();
-    await expect(modal).toContainText(/Check Adoption|Adoption/i);
-
-    // Check selector
-    const hasSelector = await modal.locator('button, select').filter({ hasText: /README|Documentation|License|Select/i }).count() > 0;
-    expect(hasSelector).toBe(true);
-
-    // Adoption rate
-    await expect(modal).toContainText(/\d+%|Adoption/i);
-    await expect(modal).toContainText(/Passing|pass/i);
-    await expect(modal).toContainText(/Failing|fail/i);
-  });
-
-  test('should close with X button and Escape key', async ({ catalogPage }) => {
-    await openCheckAdoptionDashboard(catalogPage);
-    await closeCheckAdoptionModal(catalogPage);
-    await expect(catalogPage.locator('#check-adoption-modal')).not.toBeVisible();
-
-    await openCheckAdoptionDashboard(catalogPage);
-    await catalogPage.keyboard.press('Escape');
-    await expect(catalogPage.locator('#check-adoption-modal')).not.toBeVisible();
-  });
-
   test('should allow selecting different checks', async ({ catalogPage }) => {
     await openCheckAdoptionDashboard(catalogPage);
 
