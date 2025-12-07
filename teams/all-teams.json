@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-12-07T23:34:22Z",
+  "generated_at": "2025-12-07T23:34:43Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -21,7 +21,7 @@
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 4
+        "installed_count": 3
       }
     },
     "frontend": {
@@ -65,7 +65,7 @@
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 4
+        "installed_count": 3
       }
     }
   },
