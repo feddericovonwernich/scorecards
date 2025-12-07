@@ -9,154 +9,68 @@ test.describe('Accessibility', () => {
         await waitForCatalogLoad(page);
     });
 
-    test('dashboard has no critical violations', async ({ page }) => {
-        const results = await new AxeBuilder({ page })
+    test('dashboard and page sections have no critical violations', async ({ page }) => {
+        // Dashboard
+        const dashboardResults = await new AxeBuilder({ page })
             .withTags(['wcag2a', 'wcag2aa'])
             .analyze();
 
-        const critical = results.violations.filter(v => v.impact === 'critical');
-
-        if (critical.length > 0) {
-            console.error('Critical accessibility violations found:');
-            critical.forEach(v => {
-                console.error(`  - ${v.id}: ${v.description}`);
-                v.nodes.forEach(n => console.error(`    Target: ${n.target}`));
-            });
-        }
-
+        const critical = dashboardResults.violations.filter(v => v.impact === 'critical');
         expect(critical).toHaveLength(0);
+
+        // Header
+        await page.waitForSelector('header');
+        const headerResults = await new AxeBuilder({ page }).include('header').withTags(['wcag2a', 'wcag2aa']).analyze();
+        expect(headerResults.violations.filter(v => v.impact === 'critical' || v.impact === 'serious')).toHaveLength(0);
+
+        // Controls
+        await page.waitForSelector('.controls');
+        const controlsResults = await new AxeBuilder({ page }).include('.controls').analyze();
+        expect(controlsResults.violations.filter(v => v.impact === 'critical' || v.impact === 'serious')).toHaveLength(0);
+
+        // Stat cards
+        await page.waitForSelector('.services-stats');
+        const statsResults = await new AxeBuilder({ page }).include('.services-stats').analyze();
+        expect(statsResults.violations.filter(v => v.impact === 'critical' || v.impact === 'serious')).toHaveLength(0);
     });
 
-    test('service modal is keyboard navigable', async ({ page }) => {
-        // Click first service card to open modal
+    test('modals are accessible', async ({ page }) => {
+        // Service modal
         await page.click('.service-card');
-        // React modals are either in DOM (visible) or not - wait for visible state
         await page.waitForSelector('#service-modal', { state: 'visible' });
 
-        const results = await new AxeBuilder({ page })
+        const serviceResults = await new AxeBuilder({ page })
             .include('#service-modal')
             .withTags(['wcag2a', 'wcag2aa'])
             .analyze();
 
-        // Log violations for debugging
-        if (results.violations.length > 0) {
-            console.error('Modal accessibility violations:');
-            results.violations.forEach(v => {
-                console.error(`  - ${v.id} (${v.impact}): ${v.description}`);
-            });
-        }
+        expect(serviceResults.violations.filter(v => v.impact === 'critical' || v.impact === 'serious')).toHaveLength(0);
 
-        // Check for critical and serious violations only
-        const criticalOrSerious = results.violations.filter(v =>
-            v.impact === 'critical' || v.impact === 'serious'
-        );
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#service-modal')).toBeHidden();
 
-        expect(criticalOrSerious).toHaveLength(0);
-    });
-
-    test('filter controls are accessible', async ({ page }) => {
-        // Wait for filters section
-        await page.waitForSelector('.controls');
-
-        const results = await new AxeBuilder({ page })
-            .include('.controls')
-            .analyze();
-
-        const criticalOrSerious = results.violations.filter(v =>
-            v.impact === 'critical' || v.impact === 'serious'
-        );
-
-        if (criticalOrSerious.length > 0) {
-            console.error('Filter accessibility violations:');
-            criticalOrSerious.forEach(v => {
-                console.error(`  - ${v.id} (${v.impact}): ${v.description}`);
-            });
-        }
-
-        expect(criticalOrSerious).toHaveLength(0);
-    });
-
-    test('header navigation is accessible', async ({ page }) => {
-        await page.waitForSelector('header');
-
-        const results = await new AxeBuilder({ page })
-            .include('header')
-            .withTags(['wcag2a', 'wcag2aa'])
-            .analyze();
-
-        const criticalOrSerious = results.violations.filter(v =>
-            v.impact === 'critical' || v.impact === 'serious'
-        );
-
-        expect(criticalOrSerious).toHaveLength(0);
-    });
-
-    test('stat cards are accessible', async ({ page }) => {
-        await page.waitForSelector('.services-stats');
-
-        const results = await new AxeBuilder({ page })
-            .include('.services-stats')
-            .analyze();
-
-        const criticalOrSerious = results.violations.filter(v =>
-            v.impact === 'critical' || v.impact === 'serious'
-        );
-
-        expect(criticalOrSerious).toHaveLength(0);
-    });
-
-    test('settings modal is accessible', async ({ page }) => {
-        // Open settings modal
+        // Settings modal
         await page.getByRole('button', { name: 'Settings' }).click();
-        // React modals are either in DOM (visible) or not - wait for visible state
         await page.waitForSelector('#settings-modal', { state: 'visible' });
 
-        const results = await new AxeBuilder({ page })
+        const settingsResults = await new AxeBuilder({ page })
             .include('#settings-modal')
             .withTags(['wcag2a', 'wcag2aa'])
             .analyze();
 
-        const criticalOrSerious = results.violations.filter(v =>
-            v.impact === 'critical' || v.impact === 'serious'
-        );
-
-        if (criticalOrSerious.length > 0) {
-            console.error('Settings modal accessibility violations:');
-            criticalOrSerious.forEach(v => {
-                console.error(`  - ${v.id} (${v.impact}): ${v.description}`);
-            });
-        }
-
-        expect(criticalOrSerious).toHaveLength(0);
+        expect(settingsResults.violations.filter(v => v.impact === 'critical' || v.impact === 'serious')).toHaveLength(0);
     });
 
     test('keyboard navigation works for interactive elements', async ({ page }) => {
-        // Tab through interactive elements and verify focus is visible
         await page.keyboard.press('Tab');
-
-        // Verify something is focused
         const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
         expect(focusedElement).not.toBe('BODY');
 
-        // Tab through a few more elements to ensure tab order works
         for (let i = 0; i < 5; i++) {
             await page.keyboard.press('Tab');
         }
 
         const focusedAfterTabs = await page.evaluate(() => document.activeElement?.tagName);
         expect(focusedAfterTabs).toBeDefined();
-    });
-
-    test('escape key closes modal', async ({ page }) => {
-        // Open service modal
-        await page.click('.service-card');
-        // React modals are either in DOM (visible) or not - wait for visible state
-        await page.waitForSelector('#service-modal', { state: 'visible' });
-
-        // Press Escape
-        await page.keyboard.press('Escape');
-
-        // In React, modal is removed from DOM when closed - wait for it to be hidden
-        await expect(page.locator('#service-modal')).toBeHidden();
     });
 });
