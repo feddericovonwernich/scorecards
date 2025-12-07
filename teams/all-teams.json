@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2025-12-07T02:10:53Z",
+  "generated_at": "2025-12-07T23:22:39Z",
   "teams": {
     "backend": {
       "id": "backend",
@@ -12,16 +12,16 @@
       "github_slug": "backend",
       "auto_created": "2025-12-01T23:46:15Z",
       "statistics": {
-        "service_count": 3,
-        "average_score": 71.0,
+        "service_count": 5,
+        "average_score": 74.4,
         "rank_distribution": {
           "platinum": 0,
-          "gold": 1,
-          "silver": 2,
+          "gold": 2,
+          "silver": 3,
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 3
+        "installed_count": 5
       }
     },
     "frontend": {
@@ -34,16 +34,16 @@
       "github_slug": "frontend",
       "auto_created": "2025-12-01T23:51:54Z",
       "statistics": {
-        "service_count": 1,
+        "service_count": 2,
         "average_score": 74.0,
         "rank_distribution": {
           "platinum": 0,
           "gold": 0,
-          "silver": 1,
+          "silver": 2,
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 1
+        "installed_count": 2
       }
     },
     "platform": {
@@ -56,16 +56,16 @@
       "github_slug": "platform",
       "auto_created": "2025-12-01T23:46:26Z",
       "statistics": {
-        "service_count": 4,
-        "average_score": 73.0,
+        "service_count": 5,
+        "average_score": 68.4,
         "rank_distribution": {
           "platinum": 1,
           "gold": 0,
-          "silver": 3,
+          "silver": 4,
           "bronze": 0
         },
         "stale_count": 0,
-        "installed_count": 4
+        "installed_count": 5
       }
     }
   },
