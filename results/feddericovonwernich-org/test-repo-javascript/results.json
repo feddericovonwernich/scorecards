@@ -9,7 +9,7 @@
         "frontend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-07T23:21:22Z"
+      "last_discovered": "2025-12-07T23:33:15Z"
     },
     "links": [],
     "openapi": null
@@ -20,17 +20,17 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-07T23:22:25Z",
+  "timestamp": "2025-12-07T23:34:22Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": true,
+  "installed": false,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
+      "name": "Federico von Wernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:52:04Z",
-      "last_commit_hash": "cf771ef"
+      "last_commit_date": "2025-12-07T20:32:41Z",
+      "last_commit_hash": "5280cfc"
     }
   ],
   "checks": [
@@ -66,8 +66,8 @@
       "weight": 18,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
-      "stdout": "GitHub Actions: 3 workflow(s) (ci.yml, node-ci.yml, scorecards.yml)\n",
+      "duration": 0,
+      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, node-ci.yml)\n",
       "stderr": ""
     },
     {
@@ -126,7 +126,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
       "stderr": ""
     },
