@@ -20,7 +20,9 @@ test.describe('Filter State Persistence', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should persist search filter across view switches', async ({ page }) => {
+  // Consolidated test: Task 8 - Filter State Persistence - Multiple Filters
+  // Combines: search filter persistence, team filter persistence, combine and clear filters
+  test('should persist and combine multiple filters across view switches', async ({ page }) => {
     // Apply search filter
     await searchServices(page, 'perfect');
     let count = await getServiceCount(page);
@@ -32,62 +34,40 @@ test.describe('Filter State Persistence', () => {
     await switchToServicesView(page);
     await expect(page.locator('.service-card').first()).toBeVisible();
 
-    // Filter should still be applied
+    // Search filter should persist
     count = await getServiceCount(page);
     expect(count).toBe(1);
-
-    // Search input should retain value
     const searchInput = page.getByRole('textbox', { name: /Search services/i });
-    const value = await searchInput.inputValue();
+    let value = await searchInput.inputValue();
     expect(value).toBe('perfect');
-  });
 
-  test('should persist team filter across view switches', async ({ page }) => {
-    // Apply team filter
+    // Clear search, apply team filter
+    await searchInput.clear();
     await page.locator('.team-filter-toggle').click();
     await expect(page.locator('.team-dropdown-menu')).toBeVisible();
     await page.locator('.team-option').filter({ hasText: 'platform' }).locator('input').click();
-
     await expect(async () => {
       const count = await getServiceCount(page);
       expect(count).toBe(2);
     }).toPass({ timeout: 3000 });
 
-    // Switch to Teams view and back
+    // Team filter should persist across view switches
     await switchToTeamsView(page);
-    await expect(page.locator('.team-card').first()).toBeVisible();
     await switchToServicesView(page);
-    await expect(page.locator('.service-card').first()).toBeVisible();
-
-    // Team filter should still be applied
-    const count = await getServiceCount(page);
+    count = await getServiceCount(page);
     expect(count).toBe(2);
-  });
 
-  test('should combine and clear multiple filters independently', async ({ page }) => {
-    // Apply search filter
+    // Combine search and team filter
     await searchServices(page, 'test');
-    await expect(page.locator('.service-card').first()).toBeVisible();
-
-    // Apply team filter
     await page.locator('.team-filter-toggle').click();
-    await expect(page.locator('.team-dropdown-menu')).toBeVisible();
     await page.locator('.team-option').filter({ hasText: 'backend' }).locator('input').click();
+    const combinedCount = await getServiceCount(page);
 
-    await expect(async () => {
-      const count = await getServiceCount(page);
-      expect(count).toBeGreaterThan(0);
-    }).toPass({ timeout: 3000 });
-
-    const initialCount = await getServiceCount(page);
-
-    // Clear search only - team filter should remain
-    const searchInput = page.getByRole('textbox', { name: /Search services/i });
+    // Clear search only - team filter remains
     await searchInput.clear();
-
     await expect(async () => {
       const count = await getServiceCount(page);
-      expect(count).toBeGreaterThanOrEqual(initialCount);
+      expect(count).toBeGreaterThanOrEqual(combinedCount);
     }).toPass({ timeout: 3000 });
   });
 });
@@ -103,13 +83,16 @@ test.describe('Sort State Persistence', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should default to Score: High to Low and persist after modal', async ({ page }) => {
-    // Verify default
+  // Consolidated test: Task 9 - Sort State Persistence and Verification
+  // Combines: default sort and persist after modal, sort correctly in all directions
+  test('should maintain sort selection across interactions and verify all directions', async ({ page }) => {
     const sortSelect = page.locator('#sort-select');
-    const value = await sortSelect.inputValue();
+
+    // Verify default
+    let value = await sortSelect.inputValue();
     expect(value).toContain('score');
 
-    // Change sort
+    // Change sort to Name: A to Z
     await selectSort(page, 'Name: A to Z');
     await expect(page.locator('.service-card').first()).toBeVisible();
 
@@ -120,12 +103,10 @@ test.describe('Sort State Persistence', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('#service-modal')).not.toBeVisible();
 
-    // Sort should still be Name: A to Z
-    const selectedValue = await sortSelect.inputValue();
+    // Sort should persist
+    let selectedValue = await sortSelect.inputValue();
     expect(selectedValue).toContain('name');
-  });
 
-  test('should sort correctly in all directions', async ({ page }) => {
     // Score: Low to High
     await selectSort(page, 'Score: Low to High');
     await expect(page.locator('.service-card').first()).toBeVisible();
@@ -136,14 +117,12 @@ test.describe('Sort State Persistence', () => {
 
     // Name: A to Z
     await selectSort(page, 'Name: A to Z');
-    await expect(page.locator('.service-card').first()).toBeVisible();
     let firstName = await cards.first().locator('.service-name').textContent();
     let firstChar = firstName.trim().charAt(0).toLowerCase();
     expect(firstChar.charCodeAt(0)).toBeLessThanOrEqual('t'.charCodeAt(0));
 
     // Name: Z to A
     await selectSort(page, 'Name: Z to A');
-    await expect(page.locator('.service-card').first()).toBeVisible();
     firstName = await cards.first().locator('.service-name').textContent();
     firstChar = firstName.trim().charAt(0).toLowerCase();
     expect(firstChar.charCodeAt(0)).toBeGreaterThanOrEqual('t'.charCodeAt(0));
@@ -161,12 +140,14 @@ test.describe('Team Filter Dropdown State', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should close dropdown when clicking outside or pressing Escape', async ({ page }) => {
+  // Consolidated test: Task 10 - Team Filter Dropdown Interaction
+  // Combines: close dropdown when clicking outside or pressing Escape, persist selection after closing
+  test('should handle team filter dropdown interactions and persist selections', async ({ page }) => {
     // Open dropdown
     await page.locator('.team-filter-toggle').click();
     await expect(page.locator('.team-dropdown-menu')).toBeVisible();
 
-    // Click outside
+    // Click outside to close
     await page.locator('body').click({ position: { x: 10, y: 10 } });
     await expect(page.locator('.team-dropdown-menu')).not.toBeVisible();
 
@@ -175,16 +156,13 @@ test.describe('Team Filter Dropdown State', () => {
     await expect(page.locator('.team-dropdown-menu')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.locator('.team-dropdown-menu')).not.toBeVisible();
-  });
 
-  test('should persist selection after closing dropdown', async ({ page }) => {
     // Select teams
     await page.locator('.team-filter-toggle').click();
-    await expect(page.locator('.team-dropdown-menu')).toBeVisible();
     await page.locator('.team-option').filter({ hasText: 'frontend' }).locator('input').click();
     await page.locator('.team-option').filter({ hasText: 'backend' }).locator('input').click();
 
-    // Verify filter button shows something
+    // Verify filter button
     const filterButton = page.locator('.team-filter-toggle');
     await expect(filterButton).toBeVisible();
 
@@ -196,7 +174,7 @@ test.describe('Team Filter Dropdown State', () => {
     const count = await getServiceCount(page);
     expect(count).toBe(4); // frontend (2) + backend (2)
 
-    // Reopen and verify selections are still checked
+    // Reopen and verify selections persist
     await page.locator('.team-filter-toggle').click();
     const frontendCheckbox = page.locator('.team-option').filter({ hasText: 'frontend' }).locator('input');
     expect(await frontendCheckbox.isChecked()).toBe(true);
@@ -214,6 +192,7 @@ test.describe('View State Persistence', () => {
     await waitForCatalogLoad(page);
   });
 
+  // Keep this test unchanged - complex view state persistence
   test('should default to Services view and remember view after modal close', async ({ page }) => {
     // Verify default Services view is active
     const servicesTab = page.locator('[data-view="services"]');

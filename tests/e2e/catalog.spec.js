@@ -22,33 +22,24 @@ test.describe('Catalog Page - Display', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should load and display correct title', async ({ page }) => {
+  // Consolidated test: Task 1 - Initial Page Load and Display Verification
+  // Combines: title, dashboard stats, service cards count, service card details,
+  // GitHub links, footer, and action buttons tests
+  test('should load catalog page with complete UI elements and correct data', async ({ page }) => {
+    // Title and header
     await expect(page).toHaveTitle('Scorecards Catalog');
     await expect(page.locator('header')).toContainText('Scorecards');
-  });
 
-  test('should display correct dashboard stats', async ({ page }) => {
+    // Dashboard stats
     const statsSection = page.locator('.services-stats');
-
-    // Total Services
-    const totalServices = await statsSection
-      .locator('.stat-card')
-      .filter({ hasText: 'Total Services' })
-      .locator('.stat-value')
-      .textContent();
+    const totalServices = await statsSection.locator('.stat-card').filter({ hasText: 'Total Services' }).locator('.stat-value').textContent();
     expect(totalServices.trim()).toBe(expectedStats.totalServices.toString());
 
-    // Average Score (approximately)
-    const avgScore = await statsSection
-      .locator('.stat-card')
-      .filter({ hasText: 'Average Score' })
-      .locator('.stat-value')
-      .textContent();
+    const avgScore = await statsSection.locator('.stat-card').filter({ hasText: 'Average Score' }).locator('.stat-value').textContent();
     const avgScoreNum = parseInt(avgScore.trim());
     expect(avgScoreNum).toBeGreaterThan(50);
     expect(avgScoreNum).toBeLessThan(60);
 
-    // Rank counts
     const goldCount = await statsSection.locator('.stat-card').filter({ hasText: 'Gold' }).locator('.stat-value').textContent();
     expect(goldCount.trim()).toBe(expectedStats.ranks.gold.toString());
 
@@ -57,52 +48,46 @@ test.describe('Catalog Page - Display', () => {
 
     const bronzeCount = await statsSection.locator('.stat-card').filter({ hasText: 'Bronze' }).locator('.stat-value').textContent();
     expect(bronzeCount.trim()).toBe(expectedStats.ranks.bronze.toString());
-  });
 
-  test('should render correct number of service cards', async ({ page }) => {
+    // Service cards count
     const count = await getServiceCount(page);
     expect(count).toBe(expectedStats.totalServices);
-  });
 
-  test('should display service card details correctly', async ({ page }) => {
-    // Check test-repo-perfect (Gold, score 76)
+    // Service card details
     const perfectCard = page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).first();
     await expect(perfectCard).toBeVisible();
     await expect(perfectCard).toContainText('76');
     await expect(perfectCard).toContainText('Gold');
 
-    // Check test-repo-empty (Bronze, score 23)
     const emptyCard = page.locator('.service-card').filter({ hasText: 'test-repo-empty' }).first();
     await expect(emptyCard).toBeVisible();
     await expect(emptyCard).toContainText('23');
     await expect(emptyCard).toContainText('Bronze');
-  });
 
-  test('should have GitHub links on all service cards', async ({ page }) => {
+    // GitHub links
     const githubLinks = page.locator('.service-card a[href*="github.com"]');
-    const count = await githubLinks.count();
-    expect(count).toBeGreaterThanOrEqual(expectedStats.totalServices);
-  });
+    const linkCount = await githubLinks.count();
+    expect(linkCount).toBeGreaterThanOrEqual(expectedStats.totalServices);
 
-  test('should display installation PR badges when present', async ({ page }) => {
-    const edgeCasesCard = page.locator('.service-card').filter({ hasText: 'test-repo-edge-cases' }).first();
-    const prBadge = edgeCasesCard.locator('a[href*="/pull/"]');
-    await expect(prBadge).toBeVisible();
-  });
-
-  test('should display footer with documentation link', async ({ page }) => {
+    // Footer
     const footer = page.locator('footer');
     await expect(footer).toBeVisible();
     await expect(footer).toContainText('Powered by Scorecards');
     const docLink = footer.locator('a', { hasText: 'Documentation' });
     await expect(docLink).toBeVisible();
-  });
 
-  test('should have all action buttons', async ({ page }) => {
+    // Action buttons
     const buttons = ['Refresh Data', 'Re-run All Stale', 'Settings', 'Show GitHub Actions'];
     for (const name of buttons) {
       await expect(page.getByRole('button', { name })).toBeVisible();
     }
+  });
+
+  // Keep this test unchanged - unique PR badge feature
+  test('should display installation PR badges when present', async ({ page }) => {
+    const edgeCasesCard = page.locator('.service-card').filter({ hasText: 'test-repo-edge-cases' }).first();
+    const prBadge = edgeCasesCard.locator('a[href*="/pull/"]');
+    await expect(prBadge).toBeVisible();
   });
 });
 
@@ -117,47 +102,41 @@ test.describe('Catalog Page - Sorting', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should sort by "Score: High to Low" by default', async ({ page }) => {
-    const names = await getVisibleServiceNames(page);
+  // Consolidated test: Task 2 - Sorting Functionality
+  // Combines: default sort, low to high, A to Z, Z to A tests
+  test('should sort services by all available options correctly', async ({ page }) => {
+    // Default: Score High to Low
+    let names = await getVisibleServiceNames(page);
     expect(names[0]).toBe('test-repo-stale');
     expect(names[names.length - 1]).toBe('test-repo-empty');
-  });
 
-  test('should sort by "Score: Low to High"', async ({ page }) => {
+    // Score: Low to High
     await selectSort(page, 'Score: Low to High');
-
     await expect(async () => {
       const names = await getVisibleServiceNames(page);
       expect(names[0]).toBe('test-repo-empty');
     }).toPass({ timeout: 3000 });
-
-    const names = await getVisibleServiceNames(page);
+    names = await getVisibleServiceNames(page);
     expect(names[0]).toBe('test-repo-empty');
     expect(names[names.length - 1]).toBe('test-repo-stale');
-  });
 
-  test('should sort by "Name: A to Z"', async ({ page }) => {
+    // Name: A to Z
     await selectSort(page, 'Name: A to Z');
-
     await expect(async () => {
       const names = await getVisibleServiceNames(page);
       expect(names[0]).toBe('test-repo-edge-cases');
     }).toPass({ timeout: 3000 });
-
-    const names = await getVisibleServiceNames(page);
+    names = await getVisibleServiceNames(page);
     expect(names[0]).toBe('test-repo-edge-cases');
     expect(names[names.length - 1]).toBe('test-repo-stale');
-  });
 
-  test('should sort by "Name: Z to A"', async ({ page }) => {
+    // Name: Z to A
     await selectSort(page, 'Name: Z to A');
-
     await expect(async () => {
       const names = await getVisibleServiceNames(page);
       expect(names[0]).toBe('test-repo-stale');
     }).toPass({ timeout: 3000 });
-
-    const names = await getVisibleServiceNames(page);
+    names = await getVisibleServiceNames(page);
     expect(names[0]).toBe('test-repo-stale');
     expect(names[names.length - 1]).toBe('test-repo-edge-cases');
   });
@@ -174,50 +153,40 @@ test.describe('Search Functionality', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should filter by service name search (case-insensitive)', async ({ page }) => {
-    // Test lowercase search
+  // Consolidated test: Task 3 - Search Functionality
+  // Combines: case-insensitive search, clear search, no results, placeholder tests
+  test('should search services with case-insensitive filtering, clear, and handle no results', async ({ page }) => {
+    // Placeholder
+    const searchInput = page.getByRole('textbox', { name: 'Search services...' });
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveAttribute('placeholder', /search/i);
+
+    // Lowercase search
     await searchServices(page, 'python');
     let count = await getServiceCount(page);
     expect(count).toBe(1);
     await expect(page.locator('.service-card').first()).toContainText('test-repo-python');
 
-    // Test uppercase search (case-insensitive)
+    // Uppercase search (case-insensitive)
     await clearSearch(page);
     await searchServices(page, 'PYTHON');
     count = await getServiceCount(page);
     expect(count).toBe(1);
     await expect(page.locator('.service-card').first()).toContainText('test-repo-python');
-  });
 
-  test('should clear search and show all services', async ({ page }) => {
-    await searchServices(page, 'python');
-
-    await expect(async () => {
-      const count = await getServiceCount(page);
-      expect(count).toBe(1);
-    }).toPass({ timeout: 3000 });
-
+    // Clear search
     await clearSearch(page);
-
     await expect(async () => {
       const count = await getServiceCount(page);
       expect(count).toBe(expectedStats.totalServices);
     }).toPass({ timeout: 3000 });
-  });
 
-  test('should handle search with no results', async ({ page }) => {
+    // No results
     await searchServices(page, 'nonexistent-service-xyz');
-
     await expect(async () => {
       const count = await getServiceCount(page);
       expect(count).toBe(0);
     }).toPass({ timeout: 3000 });
-  });
-
-  test('should have search input placeholder', async ({ page }) => {
-    const searchInput = page.getByRole('textbox', { name: 'Search services...' });
-    await expect(searchInput).toBeVisible();
-    await expect(searchInput).toHaveAttribute('placeholder', /search/i);
   });
 });
 
@@ -317,12 +286,15 @@ test.describe('StatCard 3-State Filtering', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should cycle through 3 filter states: include → exclude → clear', async ({ page }) => {
+  // Consolidated test: Task 4 - StatCard 3-State Filter Behavior
+  // Combines: 3-state cycling, active styling, exclude styling, and cleared styling tests
+  test('should cycle through 3-state filter with correct styling and behavior', async ({ page }) => {
     const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
     const initialCount = await getServiceCount(page);
 
     // First click → include mode (shows only Gold)
     await goldStat.click();
+    await expect(goldStat).toHaveClass(/active/);
     await expect(async () => {
       const count = await getServiceCount(page);
       expect(count).toBe(expectedStats.ranks.gold);
@@ -330,6 +302,7 @@ test.describe('StatCard 3-State Filtering', () => {
 
     // Second click → exclude mode (shows all except Gold)
     await goldStat.click();
+    await expect(goldStat).toHaveClass(/exclude/);
     await expect(async () => {
       const count = await getServiceCount(page);
       expect(count).toBe(initialCount - expectedStats.ranks.gold);
@@ -337,38 +310,11 @@ test.describe('StatCard 3-State Filtering', () => {
 
     // Third click → cleared (shows all)
     await goldStat.click();
+    await expect(goldStat).not.toHaveClass(/active/);
+    await expect(goldStat).not.toHaveClass(/excluded/);
     await expect(async () => {
       const count = await getServiceCount(page);
       expect(count).toBe(initialCount);
     }).toPass({ timeout: 3000 });
-  });
-
-  test('should show active styling on include state', async ({ page }) => {
-    const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
-
-    await goldStat.click();
-    await expect(goldStat).toHaveClass(/active/);
-  });
-
-  test('should show exclude styling on second click', async ({ page }) => {
-    const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
-
-    await goldStat.click();
-    await expect(goldStat).toHaveClass(/active/);
-
-    await goldStat.click();
-    await expect(goldStat).toHaveClass(/exclude/);
-  });
-
-  test('should remove styling when cleared', async ({ page }) => {
-    const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
-
-    // Cycle through: include → exclude → clear
-    await goldStat.click();
-    await goldStat.click();
-    await goldStat.click();
-
-    await expect(goldStat).not.toHaveClass(/active/);
-    await expect(goldStat).not.toHaveClass(/excluded/);
   });
 });
