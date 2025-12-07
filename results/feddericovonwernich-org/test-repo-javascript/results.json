@@ -9,7 +9,7 @@
         "frontend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-07T23:33:15Z"
+      "last_discovered": "2025-12-07T23:35:46Z"
     },
     "links": [],
     "openapi": null
@@ -20,17 +20,17 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-07T23:34:22Z",
+  "timestamp": "2025-12-07T23:36:47Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
-  "installed": false,
+  "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
+      "name": "feddericovonwernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-07T20:32:41Z",
-      "last_commit_hash": "5280cfc"
+      "last_commit_date": "2025-12-07T20:35:35Z",
+      "last_commit_hash": "6057032"
     }
   ],
   "checks": [
@@ -67,7 +67,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, node-ci.yml)\n",
+      "stdout": "GitHub Actions: 3 workflow(s) (ci.yml, node-ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
