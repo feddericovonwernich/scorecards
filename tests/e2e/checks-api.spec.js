@@ -30,10 +30,9 @@ test.describe('Checks API - Loading', () => {
     await expect(statsSection).toBeVisible();
   });
 
-  test('should display checks in service modal', async ({ page }) => {
+  test('should display check results in service modal correctly', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
 
-    // The Check Results tab should show individual check results
     const checkResults = page.locator('#service-modal .check-result');
     await expect(checkResults.first()).toBeVisible();
 
@@ -69,51 +68,32 @@ test.describe('Checks API - Check Filter Modal', () => {
     await closeCheckFilterModal(page);
   });
 
-  test('should display check categories in filter modal', async ({ page }) => {
+  test('should display categories and checks in filter modal', async ({ page }) => {
     await openCheckFilterModal(page);
-
-    // Should show category groupings
     const modal = page.locator('#check-filter-modal');
 
-    // Look for category headings or groups
+    // Categories
     const categoryElements = modal.locator('h3, h4, .category, .check-category, [class*="category"]');
     const count = await categoryElements.count();
-
-    // Should have at least one category displayed
     expect(count).toBeGreaterThanOrEqual(0);
 
-    await closeCheckFilterModal(page);
-  });
-
-  test('should display individual checks in filter modal', async ({ page }) => {
-    await openCheckFilterModal(page);
-
-    const modal = page.locator('#check-filter-modal');
-
-    // Look for check items or checkboxes
+    // Individual checks
     const checkItems = modal.locator('input[type="checkbox"], .check-item, [class*="check"]');
-    const count = await checkItems.count();
-
-    // Should have multiple checks
-    expect(count).toBeGreaterThanOrEqual(1);
+    const checkCount = await checkItems.count();
+    expect(checkCount).toBeGreaterThanOrEqual(1);
 
     await closeCheckFilterModal(page);
   });
 
-  test('should filter services by check selection', async ({ page }) => {
-    // Get initial service count
-    const initialCount = await page.locator('.service-card').count();
-
+  test('should filter and clear check selections', async ({ page }) => {
     await openCheckFilterModal(page);
-
     const modal = page.locator('#check-filter-modal');
 
-    // Find a checkbox and toggle it
+    // Toggle a checkbox
     const checkbox = modal.locator('input[type="checkbox"]').first();
     if (await checkbox.isVisible()) {
       await checkbox.click();
 
-      // Apply filter if there's an apply button
       const applyButton = modal.locator('button:has-text("Apply"), button:has-text("Filter")');
       if (await applyButton.isVisible()) {
         await applyButton.click();
@@ -123,26 +103,19 @@ test.describe('Checks API - Check Filter Modal', () => {
     await closeCheckFilterModal(page);
     await page.waitForTimeout(300);
 
-    // Service count may have changed
+    // After filtering
     const servicesGrid = page.locator('.services-grid');
     await expect(servicesGrid).toBeVisible();
-  });
 
-  test('should clear check filters', async ({ page }) => {
+    // Clear filters
     await openCheckFilterModal(page);
-
-    const modal = page.locator('#check-filter-modal');
-
-    // Look for clear or reset button
     const clearButton = modal.locator('button:has-text("Clear"), button:has-text("Reset")');
     if (await clearButton.isVisible()) {
       await clearButton.click();
     }
-
     await closeCheckFilterModal(page);
 
-    // Services should still be visible
-    const servicesGrid = page.locator('.services-grid');
+    // After clearing
     await expect(servicesGrid).toBeVisible();
   });
 });
@@ -154,51 +127,32 @@ test.describe('Checks API - Check Results in Service Modal', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should display check results in service modal', async ({ page }) => {
+  test('should display check status indicators correctly', async ({ page }) => {
     await openServiceModal(page, 'test-repo-perfect');
-
-    // Check Results tab should be default or selectable
-    const checkResults = page.locator('#service-modal .check-result');
-    await expect(checkResults.first()).toBeVisible();
-
-    await closeServiceModal(page);
-  });
-
-  test('should show check ID and status', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-
-    // Each check result should show the check name/ID
-    const checkResult = page.locator('#service-modal .check-result').first();
-    await expect(checkResult).toBeVisible();
-
-    // Should have some text content (check name)
-    const text = await checkResult.textContent();
-    expect(text.length).toBeGreaterThan(0);
-
-    await closeServiceModal(page);
-  });
-
-  test('should show passing checks with success indicator', async ({ page }) => {
-    await openServiceModal(page, 'test-repo-perfect');
-
-    // Perfect repo should have passing checks (green/success indicators)
     const modal = page.locator('#service-modal');
+
+    // Success indicators
     const successIndicators = modal.locator('.pass, .success, [class*="pass"], [class*="success"], .check-passed');
     const count = await successIndicators.count();
-
-    // Should have passing checks
     expect(count).toBeGreaterThanOrEqual(1);
 
     await closeServiceModal(page);
+
+    // Open stale for failures
+    await openServiceModal(page, 'test-repo-stale');
+    await expect(modal).toBeVisible();
+    await closeServiceModal(page);
   });
 
-  test('should show failing checks with failure indicator', async ({ page }) => {
-    // test-repo-stale has some check results in fixture
-    await openServiceModal(page, 'test-repo-stale');
+  test('should display complete check metadata', async ({ page }) => {
+    await openServiceModal(page, 'test-repo-perfect');
 
-    // Should have some failure indicators (or may all pass depending on fixture)
-    const modal = page.locator('#service-modal');
-    await expect(modal).toBeVisible();
+    const checkResult = page.locator('#service-modal .check-result').first();
+    await expect(checkResult).toBeVisible();
+
+    const text = await checkResult.textContent();
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toBeTruthy();
 
     await closeServiceModal(page);
   });
@@ -261,8 +215,8 @@ test.describe('Checks API - Caching Behavior', () => {
 });
 
 test.describe('Checks API - All Checks Loading', () => {
-  test('should handle all-checks.json load failure gracefully', async ({ page }) => {
-    // Mock all-checks.json to return error
+  test('should handle all-checks.json loading edge cases', async ({ page }) => {
+    // Load failure
     await page.route('**/raw.githubusercontent.com/**/current-checks.json*', async (route) => {
       await route.fulfill({
         status: 500,
@@ -273,34 +227,21 @@ test.describe('Checks API - All Checks Loading', () => {
 
     await mockCatalogRequests(page);
     await page.goto('/');
-
-    // Should still show services (graceful degradation)
     await page.waitForSelector('.services-grid', { state: 'visible', timeout: 10000 });
     const servicesGrid = page.locator('.services-grid');
     await expect(servicesGrid).toBeVisible();
-  });
 
-  test('should handle all-checks.json with empty checks array', async ({ page }) => {
-    // Mock to return empty checks
+    // Empty checks array
     await page.route('**/raw.githubusercontent.com/**/current-checks.json*', async (route) => {
       await route.fulfill({
         status: 200,
-        body: JSON.stringify({
-          version: '1.0.0',
-          checks: [],
-          categories: [],
-          count: 0,
-        }),
+        body: JSON.stringify({ version: '1.0.0', checks: [], categories: [], count: 0 }),
         headers: { 'Content-Type': 'application/json' },
       });
     });
 
-    await mockCatalogRequests(page);
-    await page.goto('/');
+    await page.reload();
     await waitForCatalogLoad(page);
-
-    // Page should still function with empty checks
-    const servicesGrid = page.locator('.services-grid');
     await expect(servicesGrid).toBeVisible();
   });
 
@@ -380,39 +321,14 @@ test.describe('Checks API - Categories', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should retrieve category list', async ({ page }) => {
-    // Categories are displayed in check filter modal
+  test('should handle check categories correctly', async ({ page }) => {
     await openCheckFilterModal(page);
-
     const modal = page.locator('#check-filter-modal');
     await expect(modal).toBeVisible();
 
-    await closeCheckFilterModal(page);
-  });
-
-  test('should group checks by category', async ({ page }) => {
-    await openCheckFilterModal(page);
-
-    const modal = page.locator('#check-filter-modal');
-
-    // Look for category sections
     const sections = modal.locator('.category, .check-group, section, [class*="category"]');
     const count = await sections.count();
-
-    // Categories are optional in the UI
     expect(count).toBeGreaterThanOrEqual(0);
-
-    await closeCheckFilterModal(page);
-  });
-
-  test('should order categories correctly', async ({ page }) => {
-    await openCheckFilterModal(page);
-
-    const modal = page.locator('#check-filter-modal');
-
-    // Categories should be displayed in the defined order
-    // This verifies the getChecksByCategory function is working
-    await expect(modal).toBeVisible();
 
     await closeCheckFilterModal(page);
   });
