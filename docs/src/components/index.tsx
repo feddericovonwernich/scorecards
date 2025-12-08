@@ -19,6 +19,7 @@ import {
 } from './ui/index.js';
 import { ServiceGridContainer } from './containers/ServiceGridContainer.js';
 import { TeamGridContainer } from './containers/TeamGridContainer.js';
+import { StatCardsContainer } from './features/StatCards/index.js';
 import { ServiceModal } from './features/ServiceModal/index.js';
 import { TeamModal } from './features/TeamModal/index.js';
 import { CheckFilterModal } from './features/CheckFilterModal/index.js';
@@ -64,6 +65,8 @@ function setReactMounted() {
 // Portal target elements - set during initialization when DOM is ready
 let servicesGridEl: HTMLElement | null = null;
 let teamsGridEl: HTMLElement | null = null;
+let servicesStatsEl: HTMLElement | null = null;
+let teamsStatsEl: HTMLElement | null = null;
 let headerEl: HTMLElement | null = null;
 let footerEl: HTMLElement | null = null;
 let navigationEl: HTMLElement | null = null;
@@ -75,6 +78,8 @@ let floatingControlsEl: HTMLElement | null = null;
 function initPortalTargets(): void {
   servicesGridEl = document.getElementById('services-grid');
   teamsGridEl = document.getElementById('teams-grid');
+  servicesStatsEl = document.getElementById('react-services-stats');
+  teamsStatsEl = document.getElementById('react-teams-stats');
 
   // Layout element targets - these are optional (React takes over if present)
   headerEl = document.getElementById('react-header');
@@ -93,6 +98,16 @@ function initPortalTargets(): void {
     teamsGridEl.innerHTML = '';
   }
 
+  // Set flag for stat cards (prevents vanilla JS event listeners from attaching)
+  if (servicesStatsEl) {
+    window.__REACT_MANAGES_SERVICES_STATS = true;
+    servicesStatsEl.innerHTML = '';
+  }
+  if (teamsStatsEl) {
+    window.__REACT_MANAGES_TEAMS_STATS = true;
+    teamsStatsEl.innerHTML = '';
+  }
+
   // Set flag for navigation (checked by vanilla JS in main.ts)
   if (navigationEl) {
     window.__REACT_MANAGES_NAVIGATION = true;
@@ -102,6 +117,8 @@ function initPortalTargets(): void {
 interface AppProps {
   servicesGrid: HTMLElement | null;
   teamsGrid: HTMLElement | null;
+  servicesStats: HTMLElement | null;
+  teamsStats: HTMLElement | null;
   header: HTMLElement | null;
   footer: HTMLElement | null;
   navigation: HTMLElement | null;
@@ -114,6 +131,8 @@ interface AppProps {
 function App({
   servicesGrid,
   teamsGrid,
+  servicesStats,
+  teamsStats,
   header,
   footer,
   navigation,
@@ -448,6 +467,16 @@ function App({
           floatingControls
         )}
 
+      {/* Stat Cards Portals */}
+      {servicesStats && createPortal(
+        <StatCardsContainer view="services" />,
+        servicesStats
+      )}
+      {teamsStats && createPortal(
+        <StatCardsContainer view="teams" />,
+        teamsStats
+      )}
+
       {/* Service Grid Portal */}
       {servicesGrid && createPortal(<ServiceGridContainer />, servicesGrid)}
 
@@ -555,6 +584,8 @@ export function initReact(): void {
       <App
         servicesGrid={servicesGridEl}
         teamsGrid={teamsGridEl}
+        servicesStats={servicesStatsEl}
+        teamsStats={teamsStatsEl}
         header={headerEl}
         footer={footerEl}
         navigation={navigationEl}

@@ -609,37 +609,8 @@ function setupEventListeners(): void {
     });
   }
 
-  // Filterable stat cards (multi-select with include/exclude)
-  document.querySelectorAll('.stat-card.filterable').forEach((card) => {
-    card.addEventListener('click', () => {
-      const cardEl = card as HTMLElement;
-      const filter = cardEl.dataset.filter;
-      if (!filter) {
-        return;
-      }
-
-      // Cycle through states: null -> include -> exclude -> null
-      const currentState = window.activeFilters.get(filter);
-
-      // Remove existing classes
-      cardEl.classList.remove('active', 'exclude');
-
-      if (!currentState) {
-        // Null -> Include
-        window.activeFilters.set(filter, 'include');
-        cardEl.classList.add('active');
-      } else if (currentState === 'include') {
-        // Include -> Exclude
-        window.activeFilters.set(filter, 'exclude');
-        cardEl.classList.add('exclude');
-      } else {
-        // Exclude -> Null
-        window.activeFilters.delete(filter);
-      }
-
-      window.filterAndRenderServices();
-    });
-  });
+  // Filterable stat cards are now managed by React (StatCardsContainer)
+  // Event listeners removed in Phase 4 of React migration
 
   // Sort
   const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
@@ -680,32 +651,8 @@ function setupEventListeners(): void {
     });
   }
 
-  // Teams filter stat cards
-  document.querySelectorAll('.stat-card.teams-filter').forEach((card) => {
-    card.addEventListener('click', () => {
-      const cardEl = card as HTMLElement;
-      const filter = cardEl.dataset.filter;
-      if (!filter) {
-        return;
-      }
-
-      const currentState = window.teamsActiveFilters.get(filter);
-
-      cardEl.classList.remove('active', 'exclude');
-
-      if (!currentState) {
-        window.teamsActiveFilters.set(filter, 'include');
-        cardEl.classList.add('active');
-      } else if (currentState === 'include') {
-        window.teamsActiveFilters.set(filter, 'exclude');
-        cardEl.classList.add('exclude');
-      } else {
-        window.teamsActiveFilters.delete(filter);
-      }
-
-      filterAndRenderTeams();
-    });
-  });
+  // Teams filter stat cards are now managed by React (StatCardsContainer)
+  // Event listeners removed in Phase 4 of React migration
 
   // View tab navigation - handled by React Navigation component if available
   // Keep as fallback for non-React rendered tabs
