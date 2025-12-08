@@ -4,8 +4,18 @@
     "repo": "test-repo-stale",
     "name": "test-repo-stale",
     "team": "platform",
-    "links": [],
-    "openapi": null
+    "links": [
+      {"name": "Documentation", "url": "https://docs.example.com/test-repo-stale", "description": "API documentation and guides"},
+      {"name": "Monitoring Dashboard", "url": "https://grafana.example.com/d/test-repo-stale"},
+      {"name": "Runbook", "url": "https://wiki.example.com/runbooks/test-repo-stale", "description": "Operational runbook for incidents"}
+    ],
+    "openapi": {
+      "spec_file": "api/openapi.yaml",
+      "environments": {
+        "production": {"base_url": "https://api.example.com/v1", "description": "Production environment"},
+        "staging": {"base_url": "https://staging-api.example.com/v1", "description": "Staging environment for testing"}
+      }
+    }
   },
   "score": 82,
   "rank": "gold",
@@ -95,7 +105,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "OpenAPI spec found",
+      "stdout": "OpenAPI spec found and validated: api/openapi.yaml\nTitle: Test Repo Stale API\nOpenAPI version: 3.0.3\nEndpoints: 5 paths, 12 operations",
       "stderr": ""
     },
     {
