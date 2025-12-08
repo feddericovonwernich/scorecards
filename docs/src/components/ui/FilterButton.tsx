@@ -48,7 +48,7 @@ export function FilterButton({
       {label}
       {count !== undefined && (
         <span className="filter-btn__count">
-          {count}
+          ({count})
         </span>
       )}
     </button>

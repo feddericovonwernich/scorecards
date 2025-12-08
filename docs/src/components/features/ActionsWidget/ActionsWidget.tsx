@@ -4,7 +4,7 @@
  * Replaces vanilla JS ui/actions-widget.ts
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { WorkflowRunItem } from './WorkflowRunItem.js';
 import { useActionsWidget } from '../../../hooks/useWorkflowPolling.js';
@@ -16,6 +16,7 @@ import {
 import { getRepoOwner, getRepoName } from '../../../api/registry.js';
 import { formatInterval } from '../../../utils/formatting.js';
 import { cn } from '../../../utils/css.js';
+import { FilterButtonGroup, createWorkflowFilterOptions } from '../../ui/FilterButton.js';
 import type { WorkflowStatus } from '../../../types/index.js';
 
 // Polling interval options (in ms)
@@ -65,9 +66,12 @@ export function ActionsWidget() {
     };
   }, [isOpen, pat, startPolling, stopPolling]);
 
-  const handleFilterClick = useCallback((status: 'all' | WorkflowStatus) => {
-    setFilterStatus(status);
+  const handleFilterClick = useCallback((status: string) => {
+    setFilterStatus(status as 'all' | WorkflowStatus);
   }, [setFilterStatus]);
+
+  // Memoized filter options with current counts
+  const filterOptions = useMemo(() => createWorkflowFilterOptions(filterCounts), [filterCounts]);
 
   const handleIntervalChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newInterval = parseInt(e.target.value, 10);
@@ -126,20 +130,12 @@ export function ActionsWidget() {
         </div>
 
         {/* Filter buttons */}
-        <div className="widget-filters">
-          {(['all', 'in_progress', 'queued', 'completed'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => handleFilterClick(status)}
-              className={cn('filter-btn', filterStatus === status && 'filter-btn--active')}
-            >
-              {status === 'all' ? 'All' : status === 'in_progress' ? 'Running' : status === 'queued' ? 'Queued' : 'Done'}
-              <span className="filter-btn__count">
-                ({filterCounts[status === 'in_progress' ? 'in_progress' : status]})
-              </span>
-            </button>
-          ))}
-        </div>
+        <FilterButtonGroup
+          options={filterOptions}
+          activeStatus={filterStatus}
+          onFilterChange={handleFilterClick}
+          className="widget-filters"
+        />
 
         {/* Controls row */}
         <div className="widget-controls">
