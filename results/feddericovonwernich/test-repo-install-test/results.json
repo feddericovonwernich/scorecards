@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-08T01:27:07Z"
+      "last_discovered": "2025-12-09T01:26:28Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-08T01:28:08Z",
+  "timestamp": "2025-12-09T01:27:18Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -54,7 +54,7 @@
       "weight": 12,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "LICENSE file found: LICENSE (1073 chars, detected: MIT)\n",
       "stderr": ""
     },
@@ -114,7 +114,7 @@
       "weight": 10,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "No OpenAPI specification file found - cannot assess quality\nThis check requires a valid OpenAPI file (checked by 06-openapi-spec)\n"
     },
