@@ -163,7 +163,7 @@ export function TeamEditModal({
       };
 
       const response = await fetch(
-        `${API_CONFIG.GITHUB_BASE_URL}/repos/${getRepoOwner()}/${getRepoName()}/actions/workflows/update-team.yml/dispatches`,
+        `${API_CONFIG.GITHUB_BASE_URL}/repos/${getRepoOwner()}/${getRepoName()}/actions/workflows/update-team-registry.yml/dispatches`,
         {
           method: 'POST',
           headers: {
