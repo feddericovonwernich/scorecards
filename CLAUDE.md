@@ -29,14 +29,12 @@ All code must pass `npm run lint`. Key enforced rules:
 
 ## Module Structure
 
-When adding code, follow this structure:
-- `docs/src/config/` - Configuration (explore for available options)
-- `docs/src/api/` - API integrations (GitHub, registry)
-- `docs/src/ui/` - UI components and rendering
-- `docs/src/ui/modals/` - Modal components (shared utilities in `shared/`)
-- `docs/src/services/` - Business logic (auth, theme, staleness)
-- `docs/src/utils/` - Utilities (explore before creating new ones)
-- `checks/` - Quality check scripts (CLI tools)
+Primary directories:
+- `docs/src/` - Frontend JavaScript (see `frontend.md` rule for details)
+- `action/` - GitHub Action implementation (bash scripts)
+- `checks/` - Quality check scripts (see `checks.md` rule)
+- `tests/e2e/` - End-to-end tests (see `playwright.md` rule)
+- `.github/workflows/` - GitHub Actions workflows (see `workflows.md` rule)
 
 ## Documentation
 - Write concise, clear documentation
@@ -49,3 +47,5 @@ Detailed guidelines auto-load from `.claude/rules/` when working on relevant fil
 - `checks.md` - Loaded for `checks/**` (script structure, exit codes)
 - `bash.md` - Loaded for `**/*.sh` (strict mode, quoting, shared utilities)
 - `playwright.md` - Loaded for `tests/e2e/**` (test patterns, helpers, state assertions)
+- `workflows.md` - Loaded for `.github/workflows/**` (workflow patterns, secrets)
+- `baseline.md` - Loaded for `tests/baseline/**` (regression testing guidelines)

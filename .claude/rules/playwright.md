@@ -83,6 +83,21 @@ Mock data lives in `tests/e2e/fixtures/`:
 - `docs/registry/registry.json` - Service catalog data
 - `docs/data/*.json` - Individual service check results
 
+### Fixture Guidelines
+
+- **Mirror production structure**: Fixture paths match `docs/` directory layout
+- **Use realistic data**: Include variety (different ranks, teams, timestamps)
+- **Keep fixtures minimal**: Only include data needed for specific tests
+- **Update fixtures carefully**: Changes affect multiple tests
+
+### Creating Test Data
+
+```javascript
+// In test-helper.js, fixtures are served from tests/e2e/fixtures/
+// Add new services to fixtures/docs/registry/registry.json
+// Add check results to fixtures/docs/data/<service-name>.json
+```
+
 ## Test Structure
 
 ```javascript

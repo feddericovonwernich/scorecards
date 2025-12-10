@@ -54,3 +54,26 @@ Check `checks/lib/` for shared utilities:
 ## Environment
 
 - `SCORECARD_REPO_PATH` - Path to repository being checked (defaults to `.`)
+
+## Bash Check Scripts
+
+Check scripts in bash follow the same exit code pattern:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+REPO_PATH="${SCORECARD_REPO_PATH:-.}"
+
+# Check logic here...
+
+# Success
+echo "Check passed: description"
+exit 0
+
+# Or failure
+echo "Check failed: reason" >&2
+exit 1
+```
+
+See `bash.md` rule for additional bash guidelines (strict mode, quoting, shared libraries).

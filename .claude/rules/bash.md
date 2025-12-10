@@ -1,6 +1,6 @@
 ---
 description: Bash script guidelines for all shell scripts
-globs: action/**/*.sh, scripts/**/*.sh, checks/**/*.sh
+globs: "**/*.sh"
 ---
 
 # Bash Script Guidelines
