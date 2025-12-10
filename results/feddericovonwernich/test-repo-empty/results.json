@@ -7,23 +7,23 @@
     "links": [],
     "openapi": null
   },
-  "score": 26,
+  "score": 41,
   "rank": "bronze",
-  "passed_checks": 3,
+  "passed_checks": 4,
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-01T23:53:16Z",
+  "timestamp": "2025-12-10T00:50:53Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
-      "email": "feddericovonwernich@gmail.com",
+      "name": "Federico von Wernich",
+      "email": "feddericokz @gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:52:09Z",
-      "last_commit_hash": "e67276a"
+      "last_commit_date": "2025-12-09T21:49:12Z",
+      "last_commit_hash": "2d83f0a"
     }
   ],
   "checks": [
@@ -69,11 +69,11 @@
       "description": "Checks that the repository has test files. Tests ensure code reliability and help prevent regressions.",
       "category": "Testing & CI",
       "weight": 20,
-      "status": "fail",
-      "exit_code": 1,
-      "duration": 1,
-      "stdout": "",
-      "stderr": "No test files or directories found\n"
+      "status": "pass",
+      "exit_code": 0,
+      "duration": 0,
+      "stdout": "Found tests: 1 file(s) in directories: tests\n",
+      "stderr": ""
     },
     {
       "check_id": "05-scorecard-config",
