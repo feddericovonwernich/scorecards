@@ -9,28 +9,28 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-09T01:58:24Z"
+      "last_discovered": "2025-12-10T00:49:46Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 50,
+  "score": 65,
   "rank": "silver",
-  "passed_checks": 6,
+  "passed_checks": 7,
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-09T01:59:17Z",
+  "timestamp": "2025-12-10T00:50:44Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "feddericovonwernich",
-      "email": "feddericovonwernich@gmail.com",
+      "name": "Federico von Wernich",
+      "email": "feddericokz @gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-01T20:51:56Z",
-      "last_commit_hash": "a55fde8"
+      "last_commit_date": "2025-12-09T21:49:12Z",
+      "last_commit_hash": "b9d86a2"
     }
   ],
   "checks": [
@@ -76,11 +76,11 @@
       "description": "Checks that the repository has test files. Tests ensure code reliability and help prevent regressions.",
       "category": "Testing & CI",
       "weight": 20,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "No test files or directories found\n"
+      "stdout": "Found tests: 1 file(s) in directories: tests\n",
+      "stderr": ""
     },
     {
       "check_id": "05-scorecard-config",
@@ -150,7 +150,7 @@
       "weight": 7,
       "status": "fail",
       "exit_code": 1,
-      "duration": 0,
+      "duration": 1,
       "stdout": "",
       "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     },
