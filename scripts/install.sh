@@ -288,6 +288,13 @@ cd "$TEMP_DIR"
 if [ -n "$SCORECARDS_SOURCE_REPO" ]; then
     SOURCE_REPO="$SCORECARDS_SOURCE_REPO"
     print_info "Using specified source repository: $SOURCE_REPO"
+
+    # Convert relative path to absolute path (before we cd to TEMP_DIR, we're still in workspace)
+    if [[ "$SOURCE_REPO" != /* ]] && [[ "$SOURCE_REPO" != http* ]] && [[ "$SOURCE_REPO" != git@* ]]; then
+        # Relative path - convert to absolute
+        SOURCE_REPO="$(cd "$OLDPWD" && cd "$(dirname "$SOURCE_REPO")" && pwd)/$(basename "$SOURCE_REPO")"
+        print_info "Converted to absolute path: $SOURCE_REPO"
+    fi
 else
     # Try to detect if we're running from a local clone
     SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
@@ -298,6 +305,20 @@ else
         # Default to the official scorecards template repository
         SOURCE_REPO="https://github.com/feddericovonwernich/scorecards.git"
         print_info "Using official scorecards template: $SOURCE_REPO"
+    fi
+fi
+
+# Validate source repository exists before attempting to use it
+if [[ "$SOURCE_REPO" != http* ]] && [[ "$SOURCE_REPO" != git@* ]]; then
+    if [ ! -d "$SOURCE_REPO" ]; then
+        print_error "Source repository not found: $SOURCE_REPO"
+        echo "Please verify the path exists and is accessible."
+        exit 1
+    fi
+    if [ ! -d "$SOURCE_REPO/.git" ]; then
+        print_error "Source repository is not a git repository: $SOURCE_REPO"
+        echo "Please ensure $SOURCE_REPO contains a valid .git directory."
+        exit 1
     fi
 fi
 
