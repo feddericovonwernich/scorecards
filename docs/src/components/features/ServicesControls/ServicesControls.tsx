@@ -150,12 +150,6 @@ export function ServicesControls() {
         <RefreshIcon spinning={isTriggeringAll} />
         Re-run All Installed
       </button>
-
-      {/* Team filter dropdown - already a React component via portal */}
-      <div id="team-filter-container" className="team-filter-container" />
-
-      {/* Check filter toggle - already a React component via portal */}
-      <div id="check-filter-container" className="check-filter-container" />
     </section>
   );
 }
