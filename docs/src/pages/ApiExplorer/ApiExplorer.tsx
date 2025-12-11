@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from './hooks/useSearchParams';
 import { useSwaggerUI } from './hooks/useSwaggerUI';
 import { useTheme } from '../../hooks/useTheme';
@@ -39,17 +39,7 @@ export function ApiExplorer() {
 
   const swaggerContainerRef = useSwaggerUI({ serviceData, org, repo });
 
-  useEffect(() => {
-    if (!org || !repo) {
-      setError('Missing parameters. Please specify org and repo in the URL.');
-      setLoading(false);
-      return;
-    }
-
-    loadServiceData();
-  }, [org, repo]);
-
-  const loadServiceData = async () => {
+  const loadServiceData = useCallback(async () => {
     const repoOwner = catalogOwner || window.location.hostname.split('.')[0] || 'your-org';
     const rawBaseUrl = `https://raw.githubusercontent.com/${repoOwner}/scorecards/catalog`;
 
@@ -73,7 +63,17 @@ export function ApiExplorer() {
       setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
-  };
+  }, [catalogOwner, org, repo]);
+
+  useEffect(() => {
+    if (!org || !repo) {
+      setError('Missing parameters. Please specify org and repo in the URL.');
+      setLoading(false);
+      return;
+    }
+
+    loadServiceData();
+  }, [org, repo, loadServiceData]);
 
   const title = serviceData?.service.name || `${org}/${repo}`;
   const subtitle = `${org}/${repo} - OpenAPI Specification`;

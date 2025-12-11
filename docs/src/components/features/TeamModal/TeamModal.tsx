@@ -10,6 +10,7 @@ import { ServicesTab } from './tabs/ServicesTab.js';
 import { DistributionTab } from './tabs/DistributionTab.js';
 import { CheckAdoptionTab } from './tabs/CheckAdoptionTab.js';
 import { GitHubTab } from './tabs/GitHubTab.js';
+import { useAppStore } from '../../../stores/appStore.js';
 import type { ServiceData, RankName, TeamMember, TeamWithStats as BaseTeamWithStats } from '../../../types/index.js';
 
 // Extend the base TeamWithStats type for use in this modal
@@ -69,8 +70,8 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
 
       try {
         // Get team data from window globals
-        const allTeams = window.allTeams || [];
-        const allServices = window.allServices || [];
+        const allTeams = useAppStore.getState().teams.all || [];
+        const allServices = useAppStore.getState().services.all || [];
 
         // If no teams, calculate from services
         if (allTeams.length === 0 && allServices.length > 0) {
@@ -79,7 +80,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
           );
           const stats = calculateTeamStats(allServices);
           // Convert TeamStatsEntry[] to TeamWithStats[] (null -> undefined)
-          window.allTeams = Object.values(stats).map(s => ({
+          useAppStore.getState().teams.all = Object.values(stats).map(s => ({
             ...s,
             github_org: s.github_org ?? undefined,
             github_slug: s.github_slug ?? undefined,
@@ -87,7 +88,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
         }
 
         // Find team
-        const team = (window.allTeams || []).find(
+        const team = (useAppStore.getState().teams.all || []).find(
           (t: TeamWithStats) => t.name === teamName
         );
 

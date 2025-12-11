@@ -1,6 +1,14 @@
 /**
  * Theme Management
  * Handles light/dark mode with OS preference detection and localStorage persistence
+ *
+ * @deprecated This vanilla JS theme service is deprecated.
+ * Use the useTheme hook (hooks/useTheme.ts) in React components instead.
+ * This file will be removed in Phase 8 of the React migration.
+ *
+ * Migration guide:
+ * - In React components: import { useTheme } from '../hooks/useTheme'
+ * - Use: const { theme, toggleTheme } = useTheme()
  */
 
 const THEME_KEY = 'theme';

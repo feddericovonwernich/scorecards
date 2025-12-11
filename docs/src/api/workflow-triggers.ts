@@ -7,6 +7,7 @@ import { getToken, clearToken } from '../services/auth.js';
 import { showToastGlobal } from '../components/ui/Toast.js';
 import { DEPLOYMENT } from '../config/deployment.js';
 import { WORKFLOWS, getWorkflowDispatchUrl } from '../config/workflows.js';
+import * as storeAccessor from '../stores/accessor.js';
 import type { ServiceData } from '../types/index.js';
 
 // Window types are defined in types/globals.d.ts
@@ -358,8 +359,8 @@ export function handleBulkTrigger(event: Event): void {
   event.preventDefault();
 
   const { isServiceStale } = window.ScorecardModules.staleness;
-  const staleServices = window.allServices.filter(
-    (s) => isServiceStale(s, window.currentChecksHash) && s.installed
+  const staleServices = storeAccessor.getAllServices().filter(
+    (s) => isServiceStale(s, storeAccessor.getChecksHash()) && s.installed
   );
 
   if (staleServices.length === 0) {
@@ -382,7 +383,7 @@ export function handleBulkTrigger(event: Event): void {
 export function handleBulkTriggerAll(event: Event): void {
   event.preventDefault();
 
-  const installedServices = window.allServices.filter((s) => s.installed);
+  const installedServices = storeAccessor.getAllServices().filter((s) => s.installed);
 
   if (installedServices.length === 0) {
     showToastGlobal('No installed services to trigger', 'info');

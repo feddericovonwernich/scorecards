@@ -4,9 +4,10 @@
  * Uses CSS classes from floating-controls.css for styling
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { cn } from '../../utils/css.js';
 import { useAppStore, selectPAT, selectDisplayMode } from '../../stores/appStore.js';
+import { useTheme } from '../../hooks/useTheme.js';
 
 export interface FloatingControlsProps {
   onSettingsClick?: () => void;
@@ -87,8 +88,6 @@ function ListIcon({ className = '' }: { className?: string }) {
   );
 }
 
-const THEME_KEY = 'theme';
-
 /**
  * Floating Controls Component
  */
@@ -97,10 +96,9 @@ export function FloatingControls({
   onActionsWidgetClick,
   actionsBadgeCount = 0,
 }: FloatingControlsProps) {
-  // Use lazy initialization for theme
-  const [isDark, setIsDark] = useState(() => {
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  });
+  // Use theme hook
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Get token state from Zustand store (reactive updates)
   const pat = useAppStore(selectPAT);
@@ -109,14 +107,6 @@ export function FloatingControls({
   // Get display mode from store
   const displayMode = useAppStore(selectDisplayMode);
   const setDisplayMode = useAppStore((state) => state.setDisplayMode);
-
-  // Toggle theme
-  const toggleTheme = useCallback(() => {
-    const newTheme = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem(THEME_KEY, newTheme);
-    setIsDark(!isDark);
-  }, [isDark]);
 
   // Toggle display mode (grid/list)
   const toggleDisplayMode = useCallback(() => {
