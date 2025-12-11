@@ -615,34 +615,34 @@ function setupEventListeners(): void {
   // Note: These are now managed by React in Phase 4, but keeping this for backwards compatibility
   if (!window.__REACT_MANAGES_SERVICES_STATS) {
     document.querySelectorAll('.stat-card.filterable').forEach((card) => {
-    card.addEventListener('click', () => {
-      const cardEl = card as HTMLElement;
-      const filter = cardEl.dataset.filter;
-      if (!filter) {
-        return;
-      }
+      card.addEventListener('click', () => {
+        const cardEl = card as HTMLElement;
+        const filter = cardEl.dataset.filter;
+        if (!filter) {
+          return;
+        }
 
-      // Cycle through states: null -> include -> exclude -> null
-      const currentState = storeAccessor.getActiveFilters().get(filter);
+        // Cycle through states: null -> include -> exclude -> null
+        const currentState = storeAccessor.getActiveFilters().get(filter);
 
-      // Remove existing classes
-      cardEl.classList.remove('active', 'exclude');
+        // Remove existing classes
+        cardEl.classList.remove('active', 'exclude');
 
-      if (!currentState) {
+        if (!currentState) {
         // Null -> Include
-        storeAccessor.setFilter(filter, 'include');
-        cardEl.classList.add('active');
-      } else if (currentState === 'include') {
+          storeAccessor.setFilter(filter, 'include');
+          cardEl.classList.add('active');
+        } else if (currentState === 'include') {
         // Include -> Exclude
-        storeAccessor.setFilter(filter, 'exclude');
-        cardEl.classList.add('exclude');
-      } else {
+          storeAccessor.setFilter(filter, 'exclude');
+          cardEl.classList.add('exclude');
+        } else {
         // Exclude -> Null
-        storeAccessor.setFilter(filter, null);
-      }
+          storeAccessor.setFilter(filter, null);
+        }
 
-      window.filterAndRenderServices();
-    });
+        window.filterAndRenderServices();
+      });
     });
   }
 
@@ -682,29 +682,29 @@ function setupEventListeners(): void {
   // Teams filter stat cards - Skip if React manages them
   if (!window.__REACT_MANAGES_TEAMS_STATS) {
     document.querySelectorAll('.stat-card.teams-filter').forEach((card) => {
-    card.addEventListener('click', () => {
-      const cardEl = card as HTMLElement;
-      const filter = cardEl.dataset.filter;
-      if (!filter) {
-        return;
-      }
+      card.addEventListener('click', () => {
+        const cardEl = card as HTMLElement;
+        const filter = cardEl.dataset.filter;
+        if (!filter) {
+          return;
+        }
 
-      const currentState = storeAccessor.getTeamsActiveFilters().get(filter);
+        const currentState = storeAccessor.getTeamsActiveFilters().get(filter);
 
-      cardEl.classList.remove('active', 'exclude');
+        cardEl.classList.remove('active', 'exclude');
 
-      if (!currentState) {
-        storeAccessor.setTeamsFilter(filter, 'include');
-        cardEl.classList.add('active');
-      } else if (currentState === 'include') {
-        storeAccessor.setTeamsFilter(filter, 'exclude');
-        cardEl.classList.add('exclude');
-      } else {
-        storeAccessor.setTeamsFilter(filter, null);
-      }
+        if (!currentState) {
+          storeAccessor.setTeamsFilter(filter, 'include');
+          cardEl.classList.add('active');
+        } else if (currentState === 'include') {
+          storeAccessor.setTeamsFilter(filter, 'exclude');
+          cardEl.classList.add('exclude');
+        } else {
+          storeAccessor.setTeamsFilter(filter, null);
+        }
 
-      filterAndRenderTeams();
-    });
+        filterAndRenderTeams();
+      });
     });
   }
 

@@ -257,6 +257,8 @@ export async function searchServices(page, query) {
   // and the services grid is still visible (filter complete)
   await expect(searchInput).toHaveValue(query);
   await expect(page.locator('.services-grid')).toBeVisible();
+  // Wait for debounce (React controls have 300ms debounce on search)
+  await page.waitForTimeout(350);
 }
 
 /**
@@ -269,6 +271,8 @@ export async function clearSearch(page) {
   // Wait for filter to be cleared and services grid to be visible
   await expect(searchInput).toHaveValue('');
   await expect(page.locator('.services-grid')).toBeVisible();
+  // Wait for debounce (React controls have 300ms debounce on search)
+  await page.waitForTimeout(350);
 }
 
 /**

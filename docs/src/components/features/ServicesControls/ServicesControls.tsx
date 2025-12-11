@@ -3,7 +3,7 @@
  * Handles search, sort, refresh, and bulk trigger actions for services view
  */
 
-import { useState, useCallback, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useAppStore } from '../../../stores/appStore';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { triggerBulkWorkflows } from '../../../api/workflow-triggers';
