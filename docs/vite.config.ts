@@ -16,6 +16,13 @@ export default defineConfig({
     emptyOutDir: true,
     // Generate source maps for debugging
     sourcemap: true,
+    // Multi-page app configuration
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        'api-explorer': resolve(__dirname, 'api-explorer.html'),
+      },
+    },
   },
 
   // Resolve path aliases matching tsconfig.json
