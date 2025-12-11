@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-10T00:49:48Z"
+      "last_discovered": "2025-12-11T00:50:00Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-10T00:50:47Z",
+  "timestamp": "2025-12-11T00:50:52Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -54,7 +54,7 @@
       "weight": 12,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "No LICENSE file found\n"
     },
