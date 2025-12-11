@@ -9,7 +9,6 @@
 import type { ServiceData } from './types/index.js';
 import { loadServices, fetchCurrentChecksHash } from './api/registry.js';
 import { isServiceStale } from './services/staleness.js';
-import { initTheme, getCurrentTheme } from './services/theme.js';
 import { getCssVar } from './utils/css.js';
 import { getTeamName } from './utils/team-statistics.js';
 import { useAppStore } from './stores/appStore.js';
@@ -276,30 +275,12 @@ export async function refreshData(): Promise<void> {
 }
 
 /**
- * Update theme toggle button icon
- */
-function updateThemeIcon(theme: string): void {
-  const sunIcon = document.getElementById('theme-icon-sun');
-  const moonIcon = document.getElementById('theme-icon-moon');
-  if (sunIcon && moonIcon) {
-    if (theme === 'dark') {
-      sunIcon.style.display = 'none';
-      moonIcon.style.display = 'block';
-    } else {
-      sunIcon.style.display = 'block';
-      moonIcon.style.display = 'none';
-    }
-  }
-}
-
-/**
  * Initialize application on page load
  */
 export async function initializeApp(): Promise<void> {
   try {
-    // Initialize theme early to prevent flash
-    initTheme();
-    updateThemeIcon(getCurrentTheme());
+    // Theme is now managed by React (useTheme hook)
+    // The flash prevention script in index.html handles initial theme
 
     // Load services
     const { services } = await loadServices();

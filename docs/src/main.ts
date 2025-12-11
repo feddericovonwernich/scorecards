@@ -136,11 +136,9 @@ window.validateGitHubToken = auth.validateToken;
 // Staleness functions
 window.isServiceStale = staleness.isServiceStale;
 
-// Theme functions
-window.initTheme = theme.initTheme;
-window.toggleTheme = theme.toggleTheme;
-window.getCurrentTheme = theme.getCurrentTheme;
-window.setTheme = theme.setTheme;
+// Theme functions - DEPRECATED: Use useTheme hook in React components
+// Theme management is now handled by React (see hooks/useTheme.ts)
+// These exports will be removed in Phase 8
 
 // Registry functions
 window.loadServicesData = registry.loadServices;
