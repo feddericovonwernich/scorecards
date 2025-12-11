@@ -55,7 +55,7 @@ export function ServicesStatsSection({ onFilterChange, activeFilters }: Services
   };
 
   return (
-    <section className="stats services-stats">
+    <>
       <StatCard
         value={stats.total}
         label="Total Services"
@@ -131,6 +131,6 @@ export function ServicesStatsSection({ onFilterChange, activeFilters }: Services
         onClick={handleFilterClick}
         id="bronze-count"
       />
-    </section>
+    </>
   );
 }

@@ -59,7 +59,7 @@ export function TeamsStatsSection({ onFilterChange, activeFilters }: TeamsStatsS
   };
 
   return (
-    <section className="stats teams-stats">
+    <>
       <StatCard
         value={stats.totalTeams}
         label="Total Teams"
@@ -120,6 +120,6 @@ export function TeamsStatsSection({ onFilterChange, activeFilters }: TeamsStatsS
         onClick={handleFilterClick}
         id="teams-bronze-count"
       />
-    </section>
+    </>
   );
 }
