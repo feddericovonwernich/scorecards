@@ -31,7 +31,7 @@ export default defineConfig({
 
   // Reporter to use
   reporter: [
-    ['html'],
+    ['html', { open: 'never' }],
     ['list'],
     ...(process.env.CI ? [['github']] : []),
   ],
@@ -68,7 +68,7 @@ export default defineConfig({
       ? `COVERAGE=true npm run build && npm run preview -- --port ${TEST_PORT}`
       : `npm run build && npm run preview -- --port ${TEST_PORT}`,
     port: TEST_PORT,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120 * 1000,
   },
 
