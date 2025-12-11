@@ -29,6 +29,7 @@ import { TeamEditModal } from './features/TeamEditModal/index.js';
 import { CheckAdoptionDashboard } from './features/CheckAdoptionDashboard/index.js';
 import { TeamFilterDropdownPortal } from './features/TeamFilterDropdown.js';
 import { CheckFilterTogglePortal } from './features/CheckFilterToggle.js';
+import { ServicesStatsSection, TeamsStatsSection } from './features/StatsSection/index.js';
 import {
   Header,
   Footer,
@@ -39,6 +40,7 @@ import {
 import type { CheckFilter } from '../types/index.js';
 import { useAppStore, selectCurrentView } from '../stores/index.js';
 import { useActionsWidget } from '../hooks/useWorkflowPolling.js';
+import type { FilterType, FilterState } from './ui/StatCard.js';
 
 // ============================================================================
 // Toast Queue - handles toasts that arrive before React mounts
@@ -68,6 +70,8 @@ let headerEl: HTMLElement | null = null;
 let footerEl: HTMLElement | null = null;
 let navigationEl: HTMLElement | null = null;
 let floatingControlsEl: HTMLElement | null = null;
+let servicesStatsEl: HTMLElement | null = null;
+let teamsStatsEl: HTMLElement | null = null;
 
 /**
  * Initialize portal targets (called when DOM is ready)
@@ -97,6 +101,19 @@ function initPortalTargets(): void {
   if (navigationEl) {
     window.__REACT_MANAGES_NAVIGATION = true;
   }
+
+  // Stats sections - React takes over stat rendering
+  servicesStatsEl = document.querySelector('.services-stats');
+  teamsStatsEl = document.querySelector('.teams-stats');
+
+  if (servicesStatsEl) {
+    window.__REACT_MANAGES_SERVICES_STATS = true;
+    servicesStatsEl.innerHTML = '';
+  }
+  if (teamsStatsEl) {
+    window.__REACT_MANAGES_TEAMS_STATS = true;
+    teamsStatsEl.innerHTML = '';
+  }
 }
 
 interface AppProps {
@@ -106,6 +123,8 @@ interface AppProps {
   footer: HTMLElement | null;
   navigation: HTMLElement | null;
   floatingControls: HTMLElement | null;
+  servicesStats: HTMLElement | null;
+  teamsStats: HTMLElement | null;
 }
 
 /**
@@ -118,6 +137,8 @@ function App({
   footer,
   navigation,
   floatingControls,
+  servicesStats,
+  teamsStats,
 }: AppProps) {
   const { toasts, showToast, dismissToast } = useToast();
 
@@ -245,6 +266,32 @@ function App({
       new CustomEvent('view-changed', { detail: { view } })
     );
   }, [setCurrentView]);
+
+  // Handle services stat filter changes
+  const activeFilters = useAppStore((state) => state.filters.active);
+  const setFilter = useAppStore((state) => state.setFilter);
+
+  const handleServiceFilterChange = useCallback((filterType: FilterType, mode: FilterState) => {
+    setFilter(filterType, mode);
+    // Trigger filter and re-render
+    window.dispatchEvent(new CustomEvent('filters-changed'));
+  }, [setFilter]);
+
+  // Handle teams stat filter changes
+  const teamsActiveFilters = useAppStore((state) => state.teams.activeFilters);
+  const updateTeamsState = useAppStore((state) => state.updateTeamsState);
+
+  const handleTeamsFilterChange = useCallback((filterType: FilterType, mode: FilterState) => {
+    const newFilters = new Map(teamsActiveFilters);
+    if (mode === null) {
+      newFilters.delete(filterType);
+    } else {
+      newFilters.set(filterType, mode);
+    }
+    updateTeamsState({ activeFilters: newFilters });
+    // Trigger filter and re-render
+    window.dispatchEvent(new CustomEvent('teams-filters-changed'));
+  }, [teamsActiveFilters, updateTeamsState]);
 
   // Sync active view with vanilla JS
   useEffect(() => {
@@ -448,6 +495,22 @@ function App({
           floatingControls
         )}
 
+      {/* Stats Portals */}
+      {servicesStats && createPortal(
+        <ServicesStatsSection
+          onFilterChange={handleServiceFilterChange}
+          activeFilters={activeFilters}
+        />,
+        servicesStats
+      )}
+      {teamsStats && createPortal(
+        <TeamsStatsSection
+          onFilterChange={handleTeamsFilterChange}
+          activeFilters={teamsActiveFilters}
+        />,
+        teamsStats
+      )}
+
       {/* Service Grid Portal */}
       {servicesGrid && createPortal(<ServiceGridContainer />, servicesGrid)}
 
@@ -559,6 +622,8 @@ export function initReact(): void {
         footer={footerEl}
         navigation={navigationEl}
         floatingControls={floatingControlsEl}
+        servicesStats={servicesStatsEl}
+        teamsStats={teamsStatsEl}
       />
     </StrictMode>
   );

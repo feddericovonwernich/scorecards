@@ -6,7 +6,6 @@
  * This file focuses on data loading and coordination with the Zustand store.
  */
 
-import type { ServiceData } from './types/index.js';
 import { loadServices, fetchCurrentChecksHash } from './api/registry.js';
 import { isServiceStale } from './services/staleness.js';
 import { getCssVar } from './utils/css.js';
@@ -18,64 +17,10 @@ import { showToastGlobal } from './components/ui/Toast.js';
 // Window types are defined in types/globals.d.ts
 
 /**
- * Update services view statistics (stat cards)
- * Populates API count, Stale count, Installed count, and rank distribution
+ * @deprecated Stats are now managed by React components (ServicesStatsSection/TeamsStatsSection)
+ * This function has been removed. Stats are automatically computed and rendered by React.
  */
-function updateServicesStats(services: ServiceData[], checksHash: string | null): void {
-  // Total services
-  const totalEl = document.getElementById('total-services');
-  if (totalEl) {
-    totalEl.textContent = String(services.length);
-  }
-
-  // Average score
-  const avgEl = document.getElementById('avg-score');
-  if (avgEl && services.length > 0) {
-    const avg = services.reduce((sum, s) => sum + s.score, 0) / services.length;
-    avgEl.textContent = String(Math.round(avg));
-  } else if (avgEl) {
-    avgEl.textContent = '0';
-  }
-
-  // With API count
-  const apiEl = document.getElementById('api-count');
-  if (apiEl) {
-    apiEl.textContent = String(services.filter((s) => s.has_api).length);
-  }
-
-  // Stale count
-  const staleEl = document.getElementById('stale-count');
-  if (staleEl) {
-    staleEl.textContent = String(
-      services.filter((s) => isServiceStale(s, checksHash)).length
-    );
-  }
-
-  // Installed count
-  const installedEl = document.getElementById('installed-count');
-  if (installedEl) {
-    installedEl.textContent = String(services.filter((s) => s.installed).length);
-  }
-
-  // Rank counts
-  const platinumEl = document.getElementById('platinum-count');
-  const goldEl = document.getElementById('gold-count');
-  const silverEl = document.getElementById('silver-count');
-  const bronzeEl = document.getElementById('bronze-count');
-
-  if (platinumEl) {
-    platinumEl.textContent = String(services.filter((s) => s.rank === 'platinum').length);
-  }
-  if (goldEl) {
-    goldEl.textContent = String(services.filter((s) => s.rank === 'gold').length);
-  }
-  if (silverEl) {
-    silverEl.textContent = String(services.filter((s) => s.rank === 'silver').length);
-  }
-  if (bronzeEl) {
-    bronzeEl.textContent = String(services.filter((s) => s.rank === 'bronze').length);
-  }
-}
+// function updateServicesStats() removed - see ServicesStatsSection component
 
 /**
  * Filter and render services based on active filters
@@ -299,8 +244,7 @@ export async function initializeApp(): Promise<void> {
     // Initialize UI (filtering applies to store, React components auto-update)
     filterAndRenderServices();
 
-    // Update stat cards with service counts
-    updateServicesStats(services, storeAccessor.getChecksHash());
+    // Stats are now automatically updated by React (ServicesStatsSection component)
 
     // Re-initialize teams view if hash is #teams (handles direct navigation)
     // This fixes the race condition where handleHashChange() runs before services load
