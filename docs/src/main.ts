@@ -296,6 +296,11 @@ async function initTeamsView(): Promise<void> {
  * Update teams view statistics
  */
 function updateTeamsStats(teams: TeamWithStats[], services: ServiceData[]): void {
+  // Skip if React is managing the teams stats
+  if (window.__REACT_MANAGES_TEAMS_STATS) {
+    return;
+  }
+
   // Total teams
   const totalTeamsEl = document.getElementById('teams-total-teams');
   if (totalTeamsEl) {

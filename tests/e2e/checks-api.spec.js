@@ -26,8 +26,8 @@ test.describe('Checks API - Loading', () => {
   test('should load checks metadata on page load', async ({ page }) => {
     // Checks metadata loads automatically with the catalog
     // The stat cards use this data to display check counts
-    const statsSection = page.locator('.services-stats');
-    await expect(statsSection).toBeVisible();
+    // Wait for React to render stat cards
+    await expect(page.locator('#services-view .services-stats .stat-card').first()).toBeVisible();
   });
 
   test('should display check results in service modal correctly', async ({ page }) => {

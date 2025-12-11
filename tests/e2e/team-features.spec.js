@@ -26,8 +26,12 @@ test.describe('Teams View - Navigation and Stats', () => {
     await expect(teamsTab).toContainText('Teams');
 
     await switchToTeamsView(catalogPage);
-    const teamsStats = catalogPage.locator('.teams-stats');
-    await expect(teamsStats).toBeVisible();
+    // Wait for React to render stat cards in teams view
+    const teamsStats = catalogPage.locator('#teams-view .teams-stats');
+    // Wait for teams view to be active and stat cards to render
+    await expect(catalogPage.locator('#teams-view')).toBeVisible();
+    // Look for the text content of the stat cards as React renders them
+    await expect(teamsStats.getByText('Total Teams')).toBeVisible({ timeout: 10000 });
 
     // Check for stat cards (scope to teamsStats to avoid matching team modal stats)
     await expect(teamsStats.locator('.stat-card').filter({ hasText: 'Total Teams' })).toBeVisible();
