@@ -424,7 +424,7 @@ function App({
   ]);
 
   // Get current services for check filter
-  const services = window.allServices || [];
+  const services = useAppStore.getState().services.all || [];
 
   return (
     <>

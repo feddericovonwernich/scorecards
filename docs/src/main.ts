@@ -44,28 +44,16 @@ import * as appInit from './app-init.js';
 
 // Zustand store
 import { useAppStore } from './stores/appStore.js';
+import * as storeAccessor from './stores/accessor.js';
 
 // Window types are defined in types/globals.d.ts
 
 // ============================================================================
-// Initialize Global State (previously in app.js)
-// These window properties must be initialized before any other code runs
+// Global State Migration
+// All state is now managed by Zustand store
+// Window properties are deprecated and will be removed in Phase 8
 // ============================================================================
-window.allServices = [];
-window.filteredServices = [];
-window.activeFilters = new Map();
-window.currentSort = 'score-desc';
-window.searchQuery = '';
-window.currentChecksHash = null;
-window.checksHashTimestamp = 0;
-window.currentView = 'services';
-window.allTeams = [];
-window.filteredTeams = [];
-window.teamsSort = 'score-desc';
-window.teamsSearchQuery = '';
-window.teamsActiveFilters = new Map();
-window.githubPAT = null;
-// Note: Service modal state is now managed by Zustand store (serviceModal slice)
+// Note: Window globals removed - use useAppStore or storeAccessor instead
 
 // Export modules to window for backward compatibility
 const ScorecardModules = {
@@ -198,11 +186,11 @@ function switchView(view: ViewType): void {
   if (view !== 'services' && view !== 'teams') {
     return;
   }
-  if (view === window.currentView) {
+  if (view === storeAccessor.getCurrentView()) {
     return;
   }
 
-  window.currentView = view;
+  storeAccessor.setCurrentView(view);
 
   // Update tab active states
   document.querySelectorAll('.view-tab').forEach((tab) => {
@@ -240,7 +228,7 @@ async function initTeamsView(): Promise<void> {
 
   try {
     // Load teams data (services should already be loaded)
-    const services = window.allServices || [];
+    const services = storeAccessor.getAllServices() || [];
 
     // Load teams from registry (includes teams with 0 services)
     let teamsData: Record<string, TeamRegistryEntry> | null = null;
@@ -280,7 +268,7 @@ async function initTeamsView(): Promise<void> {
     }
 
     // Flatten statistics for rendering compatibility
-    window.allTeams = Object.values(teamData).map((t) => ({
+    const allTeams = Object.values(teamData).map((t) => ({
       ...t,
       ...(t.statistics || {}),
       // Flatten metadata for slack_channel access
@@ -288,16 +276,15 @@ async function initTeamsView(): Promise<void> {
     })) as TeamWithStats[];
 
     // Update teams stats
-    updateTeamsStats(window.allTeams, services);
+    updateTeamsStats(allTeams, services);
 
     // Update Zustand store (for React components)
-    const store = useAppStore.getState();
-    store.setTeams(window.allTeams);
-    store.setFilteredTeams(window.allTeams);
+    storeAccessor.setAllTeams(allTeams);
+    storeAccessor.setFilteredTeams(allTeams);
 
     // Render teams (only if React is not managing)
     if (!window.__REACT_MANAGES_TEAMS_GRID) {
-      renderTeamsGrid(window.allTeams, services);
+      renderTeamsGrid(allTeams, services);
     }
   } catch (error) {
     console.error('Failed to initialize teams view:', error);
@@ -398,12 +385,12 @@ function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void 
   }
 
   // Sort teams
-  const sortedTeams = sortTeams([...teams], window.teamsSort);
+  const sortedTeams = sortTeams([...teams], storeAccessor.getTeamsSort());
 
   // Filter teams by search
   let filteredTeams = sortedTeams;
-  if (window.teamsSearchQuery) {
-    const query = window.teamsSearchQuery.toLowerCase();
+  if (storeAccessor.getTeamsSearch()) {
+    const query = storeAccessor.getTeamsSearch().toLowerCase();
     filteredTeams = sortedTeams.filter(
       (t) =>
         t.name.toLowerCase().includes(query) ||
@@ -412,7 +399,7 @@ function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void 
   }
 
   grid.innerHTML = filteredTeams.map((team) => renderTeamCard(team, services)).join('');
-  window.filteredTeams = filteredTeams;
+  storeAccessor.setFilteredTeams(filteredTeams);
 }
 
 /**
@@ -420,15 +407,15 @@ function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void 
  * Called by search/sort event handlers
  */
 function filterAndSortTeams(): void {
-  const teams = window.allTeams || [];
+  const teams = storeAccessor.getAllTeams() || [];
 
   // Sort teams
-  const sortedTeams = sortTeams([...teams], window.teamsSort);
+  const sortedTeams = sortTeams([...teams], storeAccessor.getTeamsSort());
 
   // Filter teams by search
   let filteredTeams = sortedTeams;
-  if (window.teamsSearchQuery) {
-    const query = window.teamsSearchQuery.toLowerCase();
+  if (storeAccessor.getTeamsSearch()) {
+    const query = storeAccessor.getTeamsSearch().toLowerCase();
     filteredTeams = sortedTeams.filter(
       (t) =>
         t.name.toLowerCase().includes(query) ||
@@ -437,14 +424,14 @@ function filterAndSortTeams(): void {
   }
 
   // Update window global
-  window.filteredTeams = filteredTeams;
+  storeAccessor.setFilteredTeams(filteredTeams);
 
   // Update Zustand store (for React components)
   const store = useAppStore.getState();
   store.setFilteredTeams(filteredTeams);
 
   // Render vanilla JS grid (no-op if React manages it)
-  renderTeamsGrid(window.allTeams, window.allServices);
+  renderTeamsGrid(storeAccessor.getAllTeams(), storeAccessor.getAllServices());
 }
 
 /**
@@ -560,10 +547,10 @@ async function refreshTeamsView(): Promise<void> {
  * Filter and render teams based on active filters
  */
 function filterAndRenderTeams(): void {
-  let teams = [...window.allTeams];
+  let teams = [...storeAccessor.getAllTeams()];
 
   // Apply rank filters
-  window.teamsActiveFilters.forEach((state, filter) => {
+  storeAccessor.getTeamsActiveFilters().forEach((state, filter) => {
     if (['platinum', 'gold', 'silver', 'bronze'].includes(filter)) {
       if (state === 'include') {
         teams = teams.filter((t) => teamStatistics.getRank(t) === filter);
@@ -573,7 +560,7 @@ function filterAndRenderTeams(): void {
     }
   });
 
-  renderTeamsGrid(teams, window.allServices);
+  renderTeamsGrid(teams, storeAccessor.getAllServices());
 }
 
 /**
@@ -604,7 +591,7 @@ function setupEventListeners(): void {
   const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
-      window.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
+      storeAccessor.setSearchQuery((e.target as HTMLInputElement).value.toLowerCase());
       window.filterAndRenderServices();
     });
   }
@@ -619,22 +606,22 @@ function setupEventListeners(): void {
       }
 
       // Cycle through states: null -> include -> exclude -> null
-      const currentState = window.activeFilters.get(filter);
+      const currentState = storeAccessor.getActiveFilters().get(filter);
 
       // Remove existing classes
       cardEl.classList.remove('active', 'exclude');
 
       if (!currentState) {
         // Null -> Include
-        window.activeFilters.set(filter, 'include');
+        storeAccessor.setFilter(filter, 'include');
         cardEl.classList.add('active');
       } else if (currentState === 'include') {
         // Include -> Exclude
-        window.activeFilters.set(filter, 'exclude');
+        storeAccessor.setFilter(filter, 'exclude');
         cardEl.classList.add('exclude');
       } else {
         // Exclude -> Null
-        window.activeFilters.delete(filter);
+        storeAccessor.setFilter(filter, null);
       }
 
       window.filterAndRenderServices();
@@ -645,7 +632,7 @@ function setupEventListeners(): void {
   const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
   if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
-      window.currentSort = (e.target as HTMLSelectElement).value;
+      storeAccessor.setCurrentSort((e.target as HTMLSelectElement).value);
       window.filterAndRenderServices();
     });
   }
@@ -664,7 +651,7 @@ function setupEventListeners(): void {
   ) as HTMLInputElement | null;
   if (teamsSearchInput) {
     teamsSearchInput.addEventListener('input', (e) => {
-      window.teamsSearchQuery = (e.target as HTMLInputElement).value.toLowerCase();
+      storeAccessor.setTeamsSearch((e.target as HTMLInputElement).value.toLowerCase());
       filterAndSortTeams();
     });
   }
@@ -675,7 +662,7 @@ function setupEventListeners(): void {
   ) as HTMLSelectElement | null;
   if (teamsSortSelect) {
     teamsSortSelect.addEventListener('change', (e) => {
-      window.teamsSort = (e.target as HTMLSelectElement).value;
+      storeAccessor.setTeamsSort((e.target as HTMLSelectElement).value);
       filterAndSortTeams();
     });
   }
@@ -689,18 +676,18 @@ function setupEventListeners(): void {
         return;
       }
 
-      const currentState = window.teamsActiveFilters.get(filter);
+      const currentState = storeAccessor.getTeamsActiveFilters().get(filter);
 
       cardEl.classList.remove('active', 'exclude');
 
       if (!currentState) {
-        window.teamsActiveFilters.set(filter, 'include');
+        storeAccessor.setTeamsFilter(filter, 'include');
         cardEl.classList.add('active');
       } else if (currentState === 'include') {
-        window.teamsActiveFilters.set(filter, 'exclude');
+        storeAccessor.setTeamsFilter(filter, 'exclude');
         cardEl.classList.add('exclude');
       } else {
-        window.teamsActiveFilters.delete(filter);
+        storeAccessor.setTeamsFilter(filter, null);
       }
 
       filterAndRenderTeams();
