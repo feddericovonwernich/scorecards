@@ -6,76 +6,21 @@
  * This file focuses on data loading and coordination with the Zustand store.
  */
 
-import type { ServiceData } from './types/index.js';
 import { loadServices, fetchCurrentChecksHash } from './api/registry.js';
 import { isServiceStale } from './services/staleness.js';
-import { initTheme, getCurrentTheme } from './services/theme.js';
 import { getCssVar } from './utils/css.js';
 import { getTeamName } from './utils/team-statistics.js';
 import { useAppStore } from './stores/appStore.js';
+import * as storeAccessor from './stores/accessor.js';
 import { showToastGlobal } from './components/ui/Toast.js';
 
 // Window types are defined in types/globals.d.ts
 
 /**
- * Update services view statistics (stat cards)
- * Populates API count, Stale count, Installed count, and rank distribution
+ * @deprecated Stats are now managed by React components (ServicesStatsSection/TeamsStatsSection)
+ * This function has been removed. Stats are automatically computed and rendered by React.
  */
-function updateServicesStats(services: ServiceData[], checksHash: string | null): void {
-  // Total services
-  const totalEl = document.getElementById('total-services');
-  if (totalEl) {
-    totalEl.textContent = String(services.length);
-  }
-
-  // Average score
-  const avgEl = document.getElementById('avg-score');
-  if (avgEl && services.length > 0) {
-    const avg = services.reduce((sum, s) => sum + s.score, 0) / services.length;
-    avgEl.textContent = String(Math.round(avg));
-  } else if (avgEl) {
-    avgEl.textContent = '0';
-  }
-
-  // With API count
-  const apiEl = document.getElementById('api-count');
-  if (apiEl) {
-    apiEl.textContent = String(services.filter((s) => s.has_api).length);
-  }
-
-  // Stale count
-  const staleEl = document.getElementById('stale-count');
-  if (staleEl) {
-    staleEl.textContent = String(
-      services.filter((s) => isServiceStale(s, checksHash)).length
-    );
-  }
-
-  // Installed count
-  const installedEl = document.getElementById('installed-count');
-  if (installedEl) {
-    installedEl.textContent = String(services.filter((s) => s.installed).length);
-  }
-
-  // Rank counts
-  const platinumEl = document.getElementById('platinum-count');
-  const goldEl = document.getElementById('gold-count');
-  const silverEl = document.getElementById('silver-count');
-  const bronzeEl = document.getElementById('bronze-count');
-
-  if (platinumEl) {
-    platinumEl.textContent = String(services.filter((s) => s.rank === 'platinum').length);
-  }
-  if (goldEl) {
-    goldEl.textContent = String(services.filter((s) => s.rank === 'gold').length);
-  }
-  if (silverEl) {
-    silverEl.textContent = String(services.filter((s) => s.rank === 'silver').length);
-  }
-  if (bronzeEl) {
-    bronzeEl.textContent = String(services.filter((s) => s.rank === 'bronze').length);
-  }
-}
+// function updateServicesStats() removed - see ServicesStatsSection component
 
 /**
  * Filter and render services based on active filters
@@ -83,7 +28,7 @@ function updateServicesStats(services: ServiceData[], checksHash: string | null)
  */
 export function filterAndRenderServices(): void {
   // Start with all services
-  let services = [...window.allServices];
+  let services = [...storeAccessor.getAllServices()];
   const store = useAppStore.getState();
 
   // Apply team filter first (supports multi-select with comma-separated values)
@@ -132,17 +77,17 @@ export function filterAndRenderServices(): void {
   }
 
   // Then apply other filters
-  window.filteredServices = services.filter((service) => {
+  const filteredServices = services.filter((service) => {
     // Multi-select filters with include/exclude (AND logic)
-    if (window.activeFilters.size > 0) {
-      for (const [filterName, filterState] of window.activeFilters) {
+    if (storeAccessor.getActiveFilters().size > 0) {
+      for (const [filterName, filterState] of storeAccessor.getActiveFilters()) {
         // Determine if service matches this filter
         let matches = false;
 
         if (filterName === 'has-api') {
           matches = service.has_api ?? false;
         } else if (filterName === 'stale') {
-          matches = isServiceStale(service, window.currentChecksHash);
+          matches = isServiceStale(service, storeAccessor.getChecksHash());
         } else if (filterName === 'installed') {
           matches = service.installed ?? false;
         } else if (
@@ -170,11 +115,11 @@ export function filterAndRenderServices(): void {
     }
 
     // Search filter - also search team name
-    if (window.searchQuery) {
+    if (storeAccessor.getSearchQuery()) {
       const teamName = getTeamName(service) || '';
       const searchText =
         `${service.name} ${service.org} ${service.repo} ${teamName}`.toLowerCase();
-      if (!searchText.includes(window.searchQuery)) {
+      if (!searchText.includes(storeAccessor.getSearchQuery())) {
         return false;
       }
     }
@@ -183,8 +128,8 @@ export function filterAndRenderServices(): void {
   });
 
   // Sort
-  window.filteredServices.sort((a, b) => {
-    switch (window.currentSort) {
+  filteredServices.sort((a, b) => {
+    switch (storeAccessor.getCurrentSort()) {
     case 'score-desc':
       return b.score - a.score;
     case 'score-asc':
@@ -204,8 +149,7 @@ export function filterAndRenderServices(): void {
   });
 
   // Update the Zustand store - React components will re-render automatically
-  store.setServices(window.allServices);
-  store.setFilteredServices(window.filteredServices);
+  storeAccessor.setFilteredServices(filteredServices);
 }
 
 /**
@@ -228,23 +172,21 @@ export async function refreshData(): Promise<void> {
     showToastGlobal('Refreshing service data...', 'info');
 
     // Clear checks hash cache to force refetch
-    window.currentChecksHash = null;
-    window.checksHashTimestamp = 0;
+    storeAccessor.setChecksHash(null);
 
     // Reload services
     const { services, usedAPI } = await loadServices();
-    window.allServices = services;
-    window.filteredServices = [...services];
+    storeAccessor.setAllServices(services);
+    storeAccessor.setFilteredServices([...services]);
 
     // Fetch checks hash
-    window.currentChecksHash = await fetchCurrentChecksHash();
-    window.checksHashTimestamp = Date.now();
+    storeAccessor.setChecksHash(await fetchCurrentChecksHash());
 
     // Update Zustand store
     const store = useAppStore.getState();
     store.setServices(services);
     store.setFilteredServices([...services]);
-    store.setChecksHash(window.currentChecksHash);
+    store.setChecksHash(storeAccessor.getChecksHash());
 
     // Update UI
     filterAndRenderServices();
@@ -278,51 +220,31 @@ export async function refreshData(): Promise<void> {
 }
 
 /**
- * Update theme toggle button icon
- */
-function updateThemeIcon(theme: string): void {
-  const sunIcon = document.getElementById('theme-icon-sun');
-  const moonIcon = document.getElementById('theme-icon-moon');
-  if (sunIcon && moonIcon) {
-    if (theme === 'dark') {
-      sunIcon.style.display = 'none';
-      moonIcon.style.display = 'block';
-    } else {
-      sunIcon.style.display = 'block';
-      moonIcon.style.display = 'none';
-    }
-  }
-}
-
-/**
  * Initialize application on page load
  */
 export async function initializeApp(): Promise<void> {
   try {
-    // Initialize theme early to prevent flash
-    initTheme();
-    updateThemeIcon(getCurrentTheme());
+    // Theme is now managed by React (useTheme hook)
+    // The flash prevention script in index.html handles initial theme
 
     // Load services
     const { services } = await loadServices();
-    window.allServices = services;
-    window.filteredServices = [...services];
+    storeAccessor.setAllServices(services);
+    storeAccessor.setFilteredServices([...services]);
 
     // Fetch checks hash
-    window.currentChecksHash = await fetchCurrentChecksHash();
-    window.checksHashTimestamp = Date.now();
+    storeAccessor.setChecksHash(await fetchCurrentChecksHash());
 
     // Update Zustand store - React components will render from this
     const store = useAppStore.getState();
     store.setServices(services);
     store.setFilteredServices([...services]);
-    store.setChecksHash(window.currentChecksHash);
+    store.setChecksHash(storeAccessor.getChecksHash());
 
     // Initialize UI (filtering applies to store, React components auto-update)
     filterAndRenderServices();
 
-    // Update stat cards with service counts
-    updateServicesStats(services, window.currentChecksHash);
+    // Stats are now automatically updated by React (ServicesStatsSection component)
 
     // Re-initialize teams view if hash is #teams (handles direct navigation)
     // This fixes the race condition where handleHashChange() runs before services load
