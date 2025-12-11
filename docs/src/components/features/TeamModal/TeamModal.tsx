@@ -10,6 +10,7 @@ import { ServicesTab } from './tabs/ServicesTab.js';
 import { DistributionTab } from './tabs/DistributionTab.js';
 import { CheckAdoptionTab } from './tabs/CheckAdoptionTab.js';
 import { GitHubTab } from './tabs/GitHubTab.js';
+import { useAppStore } from '../../../stores/appStore.js';
 import type { ServiceData, RankName, TeamMember, TeamWithStats as BaseTeamWithStats } from '../../../types/index.js';
 
 // Extend the base TeamWithStats type for use in this modal

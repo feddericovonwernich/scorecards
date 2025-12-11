@@ -133,7 +133,7 @@ export function filterAndRenderServices(): void {
   }
 
   // Then apply other filters
-  let filteredServices = services.filter((service) => {
+  const filteredServices = services.filter((service) => {
     // Multi-select filters with include/exclude (AND logic)
     if (storeAccessor.getActiveFilters().size > 0) {
       for (const [filterName, filterState] of storeAccessor.getActiveFilters()) {
