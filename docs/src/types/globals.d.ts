@@ -116,6 +116,10 @@ declare global {
     __REACT_MANAGES_SERVICES_GRID?: boolean;
     __REACT_MANAGES_TEAMS_GRID?: boolean;
     __REACT_MANAGES_NAVIGATION?: boolean;
+    __REACT_MANAGES_SERVICES_STATS?: boolean;
+    __REACT_MANAGES_TEAMS_STATS?: boolean;
+    __REACT_MANAGES_SERVICES_CONTROLS?: boolean;
+    __REACT_MANAGES_TEAMS_CONTROLS?: boolean;
 
     // ============= Additional Window Functions =============
     // Using index signature for flexibility with other window functions

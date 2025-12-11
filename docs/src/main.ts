@@ -590,17 +590,31 @@ window.handleHashChange = handleHashChange;
  * Uses global variables from app.js: searchQuery, activeFilters, currentSort
  */
 function setupEventListeners(): void {
-  // Search
-  const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      storeAccessor.setSearchQuery((e.target as HTMLInputElement).value.toLowerCase());
-      window.filterAndRenderServices();
-    });
+  // Services controls - Skip if React manages them
+  if (!window.__REACT_MANAGES_SERVICES_CONTROLS) {
+    // Search
+    const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        storeAccessor.setSearchQuery((e.target as HTMLInputElement).value.toLowerCase());
+        window.filterAndRenderServices();
+      });
+    }
+
+    // Sort
+    const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        storeAccessor.setCurrentSort((e.target as HTMLSelectElement).value);
+        window.filterAndRenderServices();
+      });
+    }
   }
 
   // Filterable stat cards (multi-select with include/exclude)
-  document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+  // Note: These are now managed by React in Phase 4, but keeping this for backwards compatibility
+  if (!window.__REACT_MANAGES_SERVICES_STATS) {
+    document.querySelectorAll('.stat-card.filterable').forEach((card) => {
     card.addEventListener('click', () => {
       const cardEl = card as HTMLElement;
       const filter = cardEl.dataset.filter;
@@ -629,14 +643,6 @@ function setupEventListeners(): void {
 
       window.filterAndRenderServices();
     });
-  });
-
-  // Sort
-  const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
-  if (sortSelect) {
-    sortSelect.addEventListener('change', (e) => {
-      storeAccessor.setCurrentSort((e.target as HTMLSelectElement).value);
-      window.filterAndRenderServices();
     });
   }
 
@@ -648,30 +654,34 @@ function setupEventListeners(): void {
     }
   });
 
-  // Teams view search
-  const teamsSearchInput = document.getElementById(
-    'teams-search-input'
-  ) as HTMLInputElement | null;
-  if (teamsSearchInput) {
-    teamsSearchInput.addEventListener('input', (e) => {
-      storeAccessor.setTeamsSearch((e.target as HTMLInputElement).value.toLowerCase());
-      filterAndSortTeams();
-    });
+  // Teams controls - Skip if React manages them
+  if (!window.__REACT_MANAGES_TEAMS_CONTROLS) {
+    // Teams view search
+    const teamsSearchInput = document.getElementById(
+      'teams-search-input'
+    ) as HTMLInputElement | null;
+    if (teamsSearchInput) {
+      teamsSearchInput.addEventListener('input', (e) => {
+        storeAccessor.setTeamsSearch((e.target as HTMLInputElement).value.toLowerCase());
+        filterAndSortTeams();
+      });
+    }
+
+    // Teams view sort
+    const teamsSortSelect = document.getElementById(
+      'teams-sort-select'
+    ) as HTMLSelectElement | null;
+    if (teamsSortSelect) {
+      teamsSortSelect.addEventListener('change', (e) => {
+        storeAccessor.setTeamsSort((e.target as HTMLSelectElement).value);
+        filterAndSortTeams();
+      });
+    }
   }
 
-  // Teams view sort
-  const teamsSortSelect = document.getElementById(
-    'teams-sort-select'
-  ) as HTMLSelectElement | null;
-  if (teamsSortSelect) {
-    teamsSortSelect.addEventListener('change', (e) => {
-      storeAccessor.setTeamsSort((e.target as HTMLSelectElement).value);
-      filterAndSortTeams();
-    });
-  }
-
-  // Teams filter stat cards
-  document.querySelectorAll('.stat-card.teams-filter').forEach((card) => {
+  // Teams filter stat cards - Skip if React manages them
+  if (!window.__REACT_MANAGES_TEAMS_STATS) {
+    document.querySelectorAll('.stat-card.teams-filter').forEach((card) => {
     card.addEventListener('click', () => {
       const cardEl = card as HTMLElement;
       const filter = cardEl.dataset.filter;
@@ -695,7 +705,8 @@ function setupEventListeners(): void {
 
       filterAndRenderTeams();
     });
-  });
+    });
+  }
 
   // View tab navigation - handled by React Navigation component if available
   // Keep as fallback for non-React rendered tabs

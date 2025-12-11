@@ -30,6 +30,8 @@ import { CheckAdoptionDashboard } from './features/CheckAdoptionDashboard/index.
 import { TeamFilterDropdownPortal } from './features/TeamFilterDropdown.js';
 import { CheckFilterTogglePortal } from './features/CheckFilterToggle.js';
 import { ServicesStatsSection, TeamsStatsSection } from './features/StatsSection/index.js';
+import { ServicesControls } from './features/ServicesControls/index.js';
+import { TeamsControls } from './features/TeamsControls/index.js';
 import {
   Header,
   Footer,
@@ -72,6 +74,8 @@ let navigationEl: HTMLElement | null = null;
 let floatingControlsEl: HTMLElement | null = null;
 let servicesStatsEl: HTMLElement | null = null;
 let teamsStatsEl: HTMLElement | null = null;
+let servicesControlsEl: HTMLElement | null = null;
+let teamsControlsEl: HTMLElement | null = null;
 
 /**
  * Initialize portal targets (called when DOM is ready)
@@ -114,6 +118,19 @@ function initPortalTargets(): void {
     window.__REACT_MANAGES_TEAMS_STATS = true;
     teamsStatsEl.innerHTML = '';
   }
+
+  // Controls sections - React takes over controls rendering
+  servicesControlsEl = document.querySelector('#services-view .controls');
+  teamsControlsEl = document.querySelector('#teams-view .controls');
+
+  if (servicesControlsEl) {
+    window.__REACT_MANAGES_SERVICES_CONTROLS = true;
+    servicesControlsEl.innerHTML = '';
+  }
+  if (teamsControlsEl) {
+    window.__REACT_MANAGES_TEAMS_CONTROLS = true;
+    teamsControlsEl.innerHTML = '';
+  }
 }
 
 interface AppProps {
@@ -125,6 +142,8 @@ interface AppProps {
   floatingControls: HTMLElement | null;
   servicesStats: HTMLElement | null;
   teamsStats: HTMLElement | null;
+  servicesControls: HTMLElement | null;
+  teamsControls: HTMLElement | null;
 }
 
 /**
@@ -139,6 +158,8 @@ function App({
   floatingControls,
   servicesStats,
   teamsStats,
+  servicesControls,
+  teamsControls,
 }: AppProps) {
   const { toasts, showToast, dismissToast } = useToast();
 
@@ -511,6 +532,10 @@ function App({
         teamsStats
       )}
 
+      {/* Controls Portals */}
+      {servicesControls && createPortal(<ServicesControls />, servicesControls)}
+      {teamsControls && createPortal(<TeamsControls />, teamsControls)}
+
       {/* Service Grid Portal */}
       {servicesGrid && createPortal(<ServiceGridContainer />, servicesGrid)}
 
@@ -624,6 +649,8 @@ export function initReact(): void {
         floatingControls={floatingControlsEl}
         servicesStats={servicesStatsEl}
         teamsStats={teamsStatsEl}
+        servicesControls={servicesControlsEl}
+        teamsControls={teamsControlsEl}
       />
     </StrictMode>
   );
