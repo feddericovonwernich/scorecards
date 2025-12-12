@@ -393,6 +393,13 @@ export async function openCheckFilterModal(page) {
   const filterButton = page.getByRole('button', { name: /Check Filter/i });
   await filterButton.click();
   await page.waitForSelector('#check-filter-modal', { state: 'visible', timeout: 5000 });
+
+  // Wait for checks to load and render (checks are loaded asynchronously)
+  // Wait for at least one check card to be present
+  await page.waitForSelector('#check-filter-modal .check-option-card', {
+    state: 'visible',
+    timeout: 5000
+  });
 }
 
 /**
