@@ -113,14 +113,6 @@ export function setTeamsFilter(filterName: string, mode: 'include' | 'exclude' |
 
 // ============= UI Accessors =============
 
-export function getCurrentView(): 'services' | 'teams' {
-  return useAppStore.getState().ui.currentView;
-}
-
-export function setCurrentView(view: 'services' | 'teams'): void {
-  useAppStore.getState().setCurrentView(view);
-}
-
 export function getChecksHash(): string | null {
   return useAppStore.getState().ui.checksHash;
 }

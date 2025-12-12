@@ -15,7 +15,6 @@ export {
   selectFilters,
   selectAuth,
   selectUI,
-  selectCurrentView,
   selectServiceModal,
   getStoreState,
   subscribeToStore,

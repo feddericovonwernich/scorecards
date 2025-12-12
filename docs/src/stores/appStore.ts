@@ -16,7 +16,6 @@ import type {
   FilterMode,
   CheckFilter,
   RateLimitInfo,
-  ViewType,
   DisplayMode,
 } from '../types/index';
 
@@ -79,7 +78,6 @@ export interface UIState {
   activeModal: ActiveModal;
   checksHash: string | null;
   checksHashTimestamp: number;
-  currentView: ViewType;
   displayMode: DisplayMode;
 }
 
@@ -132,7 +130,6 @@ export interface AppState {
   setAuthUser: (user: { login: string; avatar_url: string } | null) => void;
 
   // UI actions
-  setCurrentView: (view: ViewType) => void;
   setDisplayMode: (mode: DisplayMode) => void;
   setChecksHash: (hash: string | null) => void;
   openModal: (type: ModalType, data?: unknown) => void;
@@ -179,7 +176,6 @@ const initialUIState: UIState = {
   activeModal: { type: null },
   checksHash: null,
   checksHashTimestamp: 0,
-  currentView: 'services',
   displayMode: (localStorage.getItem('scorecards-display-mode') as DisplayMode) || 'grid',
 };
 
@@ -458,11 +454,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     })),
 
   // UI actions
-  setCurrentView: (view) =>
-    set((state) => ({
-      ui: { ...state.ui, currentView: view },
-    })),
-
   setDisplayMode: (mode) => {
     localStorage.setItem('scorecards-display-mode', mode);
     set((state) => ({
@@ -619,7 +610,6 @@ export const selectRateLimit = (state: AppState) => state.auth.rateLimit;
 export const selectAuthUser = (state: AppState) => state.auth.user;
 
 export const selectUI = (state: AppState) => state.ui;
-export const selectCurrentView = (state: AppState) => state.ui.currentView;
 export const selectDisplayMode = (state: AppState) => state.ui.displayMode;
 export const selectActiveModal = (state: AppState) => state.ui.activeModal;
 export const selectChecksHash = (state: AppState) => state.ui.checksHash;
