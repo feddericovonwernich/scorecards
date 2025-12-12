@@ -19,7 +19,7 @@
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
-  <script type="module" crossorigin src="/scorecards/assets/main-BvKcfHKI.js"></script>
+  <script type="module" crossorigin src="/scorecards/assets/main-CdEOFuic.js"></script>
   <link rel="modulepreload" crossorigin href="/scorecards/assets/useTheme-DTvtv0tD.js">
   <link rel="stylesheet" crossorigin href="/scorecards/assets/main-0vRNTtSj.css">
 </head>
@@ -38,39 +38,10 @@
             <!-- ServicesStatsSection React component renders here via portal -->
         </section>
 
-        <!-- Controls -->
+        <!-- Controls - React will populate -->
         <section class="controls">
-            <input
-                type="text"
-                id="search-input"
-                placeholder="Search services..."
-                class="search-box"
-            >
-            <select id="sort-select" class="sort-select" aria-label="Sort by">
-                <option value="score-desc">Score: High to Low</option>
-                <option value="score-asc">Score: Low to High</option>
-                <option value="name-asc">Name: A to Z</option>
-                <option value="name-desc">Name: Z to A</option>
-                <option value="updated-desc">Recently Updated</option>
-            </select>
-            <button id="refresh-btn" class="refresh-btn" onclick="refreshData()" title="Re-fetch service data from catalog. Use GitHub PAT in settings to bypass CDN cache and get real-time data.">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
-                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
-                </svg>
-                Refresh Data
-            </button>
-            <button id="bulk-trigger-btn" class="trigger-btn trigger-btn-bulk" onclick="handleBulkTrigger(event)">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
-                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
-                </svg>
-                Re-run All Stale
-            </button>
-            <button id="bulk-trigger-all-btn" class="trigger-btn trigger-btn-neutral" onclick="handleBulkTriggerAll(event)" title="Trigger scorecard workflow for all installed services">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
-                    <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
-                </svg>
-                Re-run All Installed
-            </button>
+            <!-- ServicesControls React component renders here via portal -->
+            <!-- Portal targets for team filter and check filter (managed by separate portals) -->
             <div id="team-filter-container" class="team-filter-container"></div>
             <div id="check-filter-container" class="check-filter-container"></div>
         </section>
@@ -88,35 +59,9 @@
                 <!-- TeamsStatsSection React component renders here via portal -->
             </section>
 
-            <!-- Teams Controls -->
+            <!-- Teams Controls - React will populate -->
             <section class="controls teams-controls">
-                <input
-                    type="text"
-                    id="teams-search-input"
-                    placeholder="Search teams..."
-                    class="search-box"
-                >
-                <select id="teams-sort-select" class="sort-select">
-                    <option value="score-desc">Score: High to Low</option>
-                    <option value="score-asc">Score: Low to High</option>
-                    <option value="services-desc">Services: High to Low</option>
-                    <option value="services-asc">Services: Low to High</option>
-                    <option value="name-asc">Name: A to Z</option>
-                    <option value="name-desc">Name: Z to A</option>
-                </select>
-                <button id="teams-refresh-btn" class="refresh-btn" onclick="refreshTeamsView()">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
-                        <path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"></path>
-                    </svg>
-                    Refresh Data
-                </button>
-                <button class="create-btn" onclick="window.openTeamEditModal?.('create')">+ Create Team</button>
-                <button class="trigger-btn trigger-btn-accent" onclick="openCheckAdoptionDashboard(window.allServices)" title="View check adoption rates across all teams">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
-                        <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm9.78-2.22-4.78 4.78-2.28-2.28a.75.75 0 0 0-1.06 1.06l2.75 2.75a.752.752 0 0 0 1.079-.02l5.25-5.25a.75.75 0 1 0-1.06-1.06Z"></path>
-                    </svg>
-                    Check Adoption
-                </button>
+                <!-- TeamsControls React component renders here via portal -->
             </section>
 
             <!-- Teams Grid -->
