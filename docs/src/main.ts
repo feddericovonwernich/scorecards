@@ -178,35 +178,12 @@ window.refreshData = appInit.refreshData;
 
 /**
  * Switch between Services and Teams views
+ * DEPRECATED: View switching is now managed by React Navigation component
+ * This function is kept for backwards compatibility but does nothing
  */
-function switchView(view: ViewType): void {
-  if (view !== 'services' && view !== 'teams') {
-    return;
-  }
-  if (view === storeAccessor.getCurrentView()) {
-    return;
-  }
-
-  storeAccessor.setCurrentView(view);
-
-  // Update tab active states
-  document.querySelectorAll('.view-tab').forEach((tab) => {
-    const tabEl = tab as HTMLElement;
-    tabEl.classList.toggle('active', tabEl.dataset.view === view);
-  });
-
-  // Show/hide view containers
-  document.querySelectorAll('.view-content').forEach((content) => {
-    content.classList.toggle('active', content.id === `${view}-view`);
-  });
-
-  // Update URL hash (without triggering hashchange)
-  history.replaceState(null, '', `#${view}`);
-
-  // Trigger view-specific initialization
-  if (view === 'teams') {
-    initTeamsView();
-  }
+function switchView(_view: ViewType): void {
+  // View switching is now managed by React Navigation component
+  // This function is deprecated and does nothing
 }
 
 /**
@@ -535,12 +512,12 @@ function filterAndRenderTeams(): void {
 
 /**
  * Handle URL hash changes for view navigation
+ * DEPRECATED: Hash change handling is now managed by React Navigation component
+ * This function is kept for backwards compatibility but does nothing
  */
 function handleHashChange(): void {
-  const hash = window.location.hash.replace('#', '');
-  if (hash === 'teams' || hash === 'services') {
-    switchView(hash);
-  }
+  // Hash change handling is now managed by React Navigation component
+  // This function is deprecated and does nothing
 }
 
 // Export view navigation functions
@@ -561,23 +538,8 @@ window.handleHashChange = handleHashChange;
  * - Stat card filters: React stats components (Phase 4)
  */
 function setupEventListeners(): void {
-  // View tab navigation - handled by React Navigation component if available
-  // Keep as fallback for non-React rendered tabs
-  if (!window.__REACT_MANAGES_NAVIGATION) {
-    document.querySelectorAll('.view-tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const tabEl = tab as HTMLElement;
-        const view = tabEl.dataset.view as ViewType | undefined;
-        if (view) {
-          switchView(view);
-        }
-      });
-    });
-  }
-
-  // Handle URL hash on load
-  handleHashChange();
-  window.addEventListener('hashchange', handleHashChange);
+  // View tab navigation and hash handling are now fully managed by React Navigation component
+  // No vanilla JS view switching code needed here
 
   // Listen for team filter changes from TeamFilterDropdown component
   window.addEventListener('team-filter-changed', ((e: CustomEvent<{ teams: string[] }>) => {
