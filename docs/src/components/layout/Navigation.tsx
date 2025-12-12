@@ -52,6 +52,20 @@ export function Navigation() {
       // Update URL hash without triggering hashchange
       history.replaceState(null, '', `#${view}`);
 
+      // Update DOM - show/hide view containers
+      const servicesView = document.getElementById('services-view');
+      const teamsView = document.getElementById('teams-view');
+
+      if (servicesView && teamsView) {
+        if (view === 'services') {
+          servicesView.classList.add('active');
+          teamsView.classList.remove('active');
+        } else {
+          servicesView.classList.remove('active');
+          teamsView.classList.add('active');
+        }
+      }
+
       // Dispatch event for any legacy listeners
       window.dispatchEvent(
         new CustomEvent('view-changed', { detail: { view } })
@@ -66,6 +80,20 @@ export function Navigation() {
       const hash = window.location.hash.replace('#', '');
       if (hash === 'teams' || hash === 'services') {
         setCurrentView(hash);
+
+        // Update DOM - show/hide view containers
+        const servicesView = document.getElementById('services-view');
+        const teamsView = document.getElementById('teams-view');
+
+        if (servicesView && teamsView) {
+          if (hash === 'services') {
+            servicesView.classList.add('active');
+            teamsView.classList.remove('active');
+          } else {
+            servicesView.classList.remove('active');
+            teamsView.classList.add('active');
+          }
+        }
       }
     };
 
