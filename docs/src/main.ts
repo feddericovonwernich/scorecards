@@ -7,7 +7,7 @@
  * window globals for any remaining vanilla JS code.
  */
 
-import type { ServiceData, ViewType, TeamRegistryEntry, TeamWithStats } from './types/index.js';
+import type { TeamRegistryEntry, TeamWithStats } from './types/index.js';
 
 // React components entry point - this is where all UI rendering happens
 import './components/index.js';
@@ -173,29 +173,10 @@ window.refreshData = appInit.refreshData;
 // ============================================================================
 
 /**
- * Switch between Services and Teams views
- * DEPRECATED: View switching is now managed by React Navigation component
- * This function is kept for backwards compatibility but does nothing
- */
-function switchView(_view: ViewType): void {
-  // View switching is now managed by React Navigation component
-  // This function is deprecated and does nothing
-}
-
-/**
- * Initialize teams view - load and render teams
+ * Initialize teams view - load teams data into Zustand store
+ * React components handle all rendering
  */
 async function initTeamsView(): Promise<void> {
-  const grid = document.getElementById('teams-grid');
-  if (!grid) {
-    return;
-  }
-
-  // Show loading state (skip if React is managing the grid)
-  if (!window.__REACT_MANAGES_TEAMS_GRID) {
-    grid.innerHTML = '<div class="loading">Loading teams...</div>';
-  }
-
   try {
     // Load teams data (services should already be loaded)
     const services = storeAccessor.getAllServices() || [];
@@ -245,235 +226,12 @@ async function initTeamsView(): Promise<void> {
       slack_channel: t.metadata?.slack_channel || null,
     })) as TeamWithStats[];
 
-    // Update teams stats
-    updateTeamsStats(allTeams, services);
-
-    // Update Zustand store (for React components)
+    // Update Zustand store (React components will handle rendering)
     storeAccessor.setAllTeams(allTeams);
     storeAccessor.setFilteredTeams(allTeams);
-
-    // Render teams (only if React is not managing)
-    if (!window.__REACT_MANAGES_TEAMS_GRID) {
-      renderTeamsGrid(allTeams, services);
-    }
   } catch (error) {
     console.error('Failed to initialize teams view:', error);
-    if (!window.__REACT_MANAGES_TEAMS_GRID) {
-      grid.innerHTML = `<div class="error">Failed to load teams: ${error instanceof Error ? error.message : String(error)}</div>`;
-    }
   }
-}
-
-/**
- * Update teams view statistics
- */
-function updateTeamsStats(teams: TeamWithStats[], services: ServiceData[]): void {
-  // Skip if React is managing the teams stats
-  if (window.__REACT_MANAGES_TEAMS_STATS) {
-    return;
-  }
-
-  // Total teams
-  const totalTeamsEl = document.getElementById('teams-total-teams');
-  if (totalTeamsEl) {
-    totalTeamsEl.textContent = String(teams.length);
-  }
-
-  // Average score across all teams
-  const avgScoreEl = document.getElementById('teams-avg-score');
-  if (avgScoreEl && teams.length > 0) {
-    const avgScore =
-      teams.reduce((sum, t) => sum + (t.averageScore || 0), 0) / teams.length;
-    avgScoreEl.textContent = String(Math.round(avgScore));
-  }
-
-  // Total services
-  const totalServicesEl = document.getElementById('teams-total-services');
-  if (totalServicesEl) {
-    totalServicesEl.textContent = String(services.length);
-  }
-
-  // Services without team
-  const noTeamCount = services.filter((s) => !teamStatistics.getTeamName(s)).length;
-  const noTeamEl = document.getElementById('teams-no-team');
-  if (noTeamEl) {
-    noTeamEl.textContent = String(noTeamCount);
-  }
-
-  // Rank distribution across teams (based on dominant rank)
-  let platinumCount = 0,
-    goldCount = 0,
-    silverCount = 0,
-    bronzeCount = 0;
-  teams.forEach((team) => {
-    const rank = teamStatistics.getRank(team);
-    if (rank === 'platinum') {
-      platinumCount++;
-    } else if (rank === 'gold') {
-      goldCount++;
-    } else if (rank === 'silver') {
-      silverCount++;
-    } else if (rank === 'bronze') {
-      bronzeCount++;
-    }
-  });
-
-  const platinumEl = document.getElementById('teams-platinum-count');
-  const goldEl = document.getElementById('teams-gold-count');
-  const silverEl = document.getElementById('teams-silver-count');
-  const bronzeEl = document.getElementById('teams-bronze-count');
-
-  if (platinumEl) {
-    platinumEl.textContent = String(platinumCount);
-  }
-  if (goldEl) {
-    goldEl.textContent = String(goldCount);
-  }
-  if (silverEl) {
-    silverEl.textContent = String(silverCount);
-  }
-  if (bronzeEl) {
-    bronzeEl.textContent = String(bronzeCount);
-  }
-}
-
-/**
- * Render teams grid
- *
- * Note: When React is managing the grid, this function is a no-op.
- * React components use portals to render into the grid element.
- */
-function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void {
-  // Skip if React is managing the teams grid
-  if (window.__REACT_MANAGES_TEAMS_GRID) {
-    return;
-  }
-
-  const grid = document.getElementById('teams-grid');
-  if (!grid) {
-    return;
-  }
-
-  if (teams.length === 0) {
-    grid.innerHTML = '<div class="team-empty-state">No teams found</div>';
-    return;
-  }
-
-  // Sort teams
-  const sortedTeams = sortTeams([...teams], storeAccessor.getTeamsSort());
-
-  // Filter teams by search
-  let filteredTeams = sortedTeams;
-  if (storeAccessor.getTeamsSearch()) {
-    const query = storeAccessor.getTeamsSearch().toLowerCase();
-    filteredTeams = sortedTeams.filter(
-      (t) =>
-        t.name.toLowerCase().includes(query) ||
-        (t.description && t.description.toLowerCase().includes(query))
-    );
-  }
-
-  grid.innerHTML = filteredTeams.map((team) => renderTeamCard(team, services)).join('');
-  storeAccessor.setFilteredTeams(filteredTeams);
-}
-
-/**
- * Sort teams by selected criteria
- */
-function sortTeams(teams: TeamWithStats[], sortBy: string): TeamWithStats[] {
-  switch (sortBy) {
-  case 'services-desc':
-    return teams.sort((a, b) => {
-      const diff = (b.serviceCount || 0) - (a.serviceCount || 0);
-      return diff !== 0 ? diff : (b.averageScore || 0) - (a.averageScore || 0);
-    });
-  case 'services-asc':
-    return teams.sort((a, b) => {
-      const diff = (a.serviceCount || 0) - (b.serviceCount || 0);
-      return diff !== 0 ? diff : (b.averageScore || 0) - (a.averageScore || 0);
-    });
-  case 'score-desc':
-    return teams.sort((a, b) => (b.averageScore || 0) - (a.averageScore || 0));
-  case 'score-asc':
-    return teams.sort((a, b) => (a.averageScore || 0) - (b.averageScore || 0));
-  case 'name-asc':
-    return teams.sort((a, b) => {
-      const diff = a.name.localeCompare(b.name);
-      return diff !== 0 ? diff : (b.averageScore || 0) - (a.averageScore || 0);
-    });
-  case 'name-desc':
-    return teams.sort((a, b) => {
-      const diff = b.name.localeCompare(a.name);
-      return diff !== 0 ? diff : (b.averageScore || 0) - (a.averageScore || 0);
-    });
-  default:
-    return teams;
-  }
-}
-
-/**
- * Render a single team card
- */
-function renderTeamCard(team: TeamWithStats, _services: ServiceData[]): string {
-  const dominantRank = teamStatistics.getRank(team);
-  const rankDist = team.rankDistribution || {};
-
-  // Build mini rank badges
-  const rankBadges = (['platinum', 'gold', 'silver', 'bronze'] as const)
-    .filter((r) => rankDist[r] > 0)
-    .map((r) => `<span class="mini-rank-badge rank-${r}">${rankDist[r]}</span>`)
-    .join('');
-
-  // Calculate installed percentage
-  const installedPct =
-    (team.serviceCount || 0) > 0
-      ? Math.round(((team.installedCount || 0) / (team.serviceCount || 1)) * 100)
-      : 0;
-
-  return `
-        <div class="team-card rank-${dominantRank}" onclick="showTeamDetail('${formatting.escapeHtml(team.name)}')">
-            <div class="team-card-header">
-                <h3 class="team-card-name">${formatting.escapeHtml(team.name)}</h3>
-                ${team.slack_channel ? `<span class="team-slack">${formatting.escapeHtml(team.slack_channel)}</span>` : ''}
-            </div>
-            <div class="rank-badge ${dominantRank}">${formatting.capitalize(dominantRank)}</div>
-            ${team.description ? `<p class="team-card-description">${formatting.escapeHtml(team.description)}</p>` : ''}
-            <div class="team-card-stats">
-                <div class="team-stat">
-                    <span class="team-stat-value">${Math.round(team.averageScore || 0)}</span>
-                    <span class="team-stat-label">Avg Score</span>
-                </div>
-                <div class="team-stat">
-                    <span class="team-stat-value">${team.serviceCount || 0}</span>
-                    <span class="team-stat-label">Services</span>
-                </div>
-                <div class="team-stat">
-                    <span class="team-stat-value">${team.installedCount || 0}</span>
-                    <span class="team-stat-label">Installed</span>
-                </div>
-                ${
-  (team.staleCount || 0) > 0
-    ? `
-                <div class="team-stat warning">
-                    <span class="team-stat-value">${team.staleCount}</span>
-                    <span class="team-stat-label">Stale</span>
-                </div>
-                `
-    : ''
-}
-            </div>
-            <div class="team-card-ranks">${rankBadges || '<span class="mini-rank-badge rank-bronze">0</span>'}</div>
-            <div class="team-card-progress">
-                <div class="progress-label">
-                    <span>Installed</span>
-                    <span>${installedPct}%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${installedPct}%"></div>
-                </div>
-            </div>
-        </div>
-    `;
 }
 
 /**
@@ -486,43 +244,9 @@ async function refreshTeamsView(): Promise<void> {
   await initTeamsView();
 }
 
-/**
- * Filter and render teams based on active filters
- */
-function filterAndRenderTeams(): void {
-  let teams = [...storeAccessor.getAllTeams()];
-
-  // Apply rank filters
-  storeAccessor.getTeamsActiveFilters().forEach((state, filter) => {
-    if (['platinum', 'gold', 'silver', 'bronze'].includes(filter)) {
-      if (state === 'include') {
-        teams = teams.filter((t) => teamStatistics.getRank(t) === filter);
-      } else if (state === 'exclude') {
-        teams = teams.filter((t) => teamStatistics.getRank(t) !== filter);
-      }
-    }
-  });
-
-  renderTeamsGrid(teams, storeAccessor.getAllServices());
-}
-
-/**
- * Handle URL hash changes for view navigation
- * DEPRECATED: Hash change handling is now managed by React Navigation component
- * This function is kept for backwards compatibility but does nothing
- */
-function handleHashChange(): void {
-  // Hash change handling is now managed by React Navigation component
-  // This function is deprecated and does nothing
-}
-
 // Export view navigation functions
-window.switchView = switchView;
 window.initTeamsView = initTeamsView;
 window.refreshTeamsView = refreshTeamsView;
-window.renderTeamsGrid = renderTeamsGrid;
-window.filterAndRenderTeams = filterAndRenderTeams;
-window.handleHashChange = handleHashChange;
 
 /**
  * Setup Event Listeners
