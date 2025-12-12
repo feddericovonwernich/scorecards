@@ -36,7 +36,6 @@ import * as checks from './api/checks.js';
 // Service modules
 import * as auth from './services/auth.js';
 import * as staleness from './services/staleness.js';
-import * as theme from './services/theme.js';
 
 // Application initialization
 import * as appInit from './app-init.js';
@@ -77,7 +76,6 @@ const ScorecardModules = {
   // Services
   auth,
   staleness,
-  theme,
   appInit,
 };
 
@@ -585,7 +583,6 @@ export {
   formatting,
   crypto,
   clipboard,
-  dom,
   cssUtils,
   animation,
   statistics,
@@ -600,6 +597,5 @@ export {
   // Services
   auth,
   staleness,
-  theme,
   appInit,
 };
