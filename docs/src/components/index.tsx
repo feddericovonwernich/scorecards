@@ -125,11 +125,11 @@ function initPortalTargets(): void {
 
   if (servicesControlsEl) {
     window.__REACT_MANAGES_SERVICES_CONTROLS = true;
-    servicesControlsEl.innerHTML = '';
+    // Don't clear innerHTML - preserve portal container divs for team-filter and check-filter
   }
   if (teamsControlsEl) {
     window.__REACT_MANAGES_TEAMS_CONTROLS = true;
-    teamsControlsEl.innerHTML = '';
+    // Don't clear innerHTML - no portal containers in teams controls
   }
 }
 
