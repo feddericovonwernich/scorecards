@@ -20,7 +20,6 @@ import * as icons from './config/icons.js';
 import * as formatting from './utils/formatting.js';
 import * as crypto from './utils/crypto.js';
 import * as clipboard from './utils/clipboard.js';
-import * as dom from './utils/dom.js';
 import * as cssUtils from './utils/css.js';
 import * as animation from './utils/animation.js';
 import * as statistics from './utils/statistics.js';
@@ -64,7 +63,6 @@ const ScorecardModules = {
   formatting,
   crypto,
   clipboard,
-  dom,
   cssUtils,
   animation,
   statistics,
