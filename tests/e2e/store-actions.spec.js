@@ -20,6 +20,8 @@ import {
   closeServiceModal,
   openSettingsModal,
   closeSettingsModal,
+  searchTeams,
+  clearTeamsSearch,
 } from './test-helper.js';
 
 // ============================================================================
@@ -261,16 +263,15 @@ test.describe('Store Actions - Views and Team Filter', () => {
     const count = await teamCards.count();
     expect(count).toBe(expectedStats.teams);
 
-    // Test 2: Search teams
-    const searchInput = page.getByRole('textbox', { name: /search teams/i });
-    await searchInput.fill('platform');
+    // Test 2: Search teams (use helper which waits for debounce)
+    await searchTeams(page, 'platform');
 
     await expect(async () => {
       const filteredCount = await teamCards.count();
       expect(filteredCount).toBe(1);
     }).toPass({ timeout: 3000 });
 
-    await searchInput.fill('');
+    await clearTeamsSearch(page);
 
     // Test 3: Switch back to Services view
     await switchToServicesView(page);

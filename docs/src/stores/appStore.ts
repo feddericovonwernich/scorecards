@@ -124,6 +124,7 @@ export interface AppState {
   setTeams: (teams: TeamData[]) => void;
   setFilteredTeams: (teams: TeamData[]) => void;
   updateTeamsState: (updates: Partial<TeamsState>) => void;
+  filterAndSortTeams: () => void;
 
   // Auth actions
   setAuth: (pat: string | null, validated?: boolean) => void;
@@ -383,6 +384,46 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       teams: { ...state.teams, ...updates },
     })),
+
+  filterAndSortTeams: () => {
+    const state = get();
+    const { all, search, sort } = state.teams;
+
+    // Filter by search
+    let filtered = all;
+    if (search) {
+      const query = search.toLowerCase();
+      filtered = all.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          (t.description && t.description.toLowerCase().includes(query))
+      );
+    }
+
+    // Sort teams
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sort) {
+      case 'services-desc':
+        return (b.serviceCount || 0) - (a.serviceCount || 0);
+      case 'services-asc':
+        return (a.serviceCount || 0) - (b.serviceCount || 0);
+      case 'score-desc':
+        return (b.averageScore || 0) - (a.averageScore || 0);
+      case 'score-asc':
+        return (a.averageScore || 0) - (b.averageScore || 0);
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      default:
+        return (b.averageScore || 0) - (a.averageScore || 0);
+      }
+    });
+
+    set((s) => ({
+      teams: { ...s.teams, filtered: sorted },
+    }));
+  },
 
   // Auth actions
   setAuth: (pat, validated = false) =>

@@ -298,6 +298,33 @@ export async function switchToTeamsView(page) {
 }
 
 /**
+ * Search for teams
+ * @param {import('@playwright/test').Page} page
+ * @param {string} query
+ */
+export async function searchTeams(page, query) {
+  const searchInput = page.getByRole('textbox', { name: /search teams/i });
+  await searchInput.fill(query);
+  // Wait for filter to be applied by checking that the input value is set
+  await expect(searchInput).toHaveValue(query);
+  // Wait for debounce (React controls have 300ms debounce on search)
+  await page.waitForTimeout(350);
+}
+
+/**
+ * Clear teams search
+ * @param {import('@playwright/test').Page} page
+ */
+export async function clearTeamsSearch(page) {
+  const searchInput = page.getByRole('textbox', { name: /search teams/i });
+  await searchInput.clear();
+  // Wait for filter to be cleared
+  await expect(searchInput).toHaveValue('');
+  // Wait for debounce (React controls have 300ms debounce on search)
+  await page.waitForTimeout(350);
+}
+
+/**
  * Switch to Services view
  * @param {import('@playwright/test').Page} page
  */

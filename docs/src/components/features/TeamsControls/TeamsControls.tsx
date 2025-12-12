@@ -10,6 +10,7 @@ import { useDebounce } from '../../../hooks/useDebounce';
 export function TeamsControls() {
   const teams = useAppStore((state) => state.teams);
   const updateTeamsState = useAppStore((state) => state.updateTeamsState);
+  const filterAndSortTeams = useAppStore((state) => state.filterAndSortTeams);
 
   const [searchValue, setSearchValue] = useState(teams.search);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -17,6 +18,7 @@ export function TeamsControls() {
   useDebounce(
     () => {
       updateTeamsState({ search: searchValue });
+      filterAndSortTeams();
     },
     300,
     [searchValue]
@@ -28,6 +30,7 @@ export function TeamsControls() {
 
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
     updateTeamsState({ sort: e.target.value });
+    filterAndSortTeams();
   };
 
   const handleRefresh = async () => {

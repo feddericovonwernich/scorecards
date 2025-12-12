@@ -12,6 +12,8 @@ import {
   clickTeamModalTab,
   openCheckAdoptionDashboard,
   closeCheckAdoptionModal,
+  searchTeams,
+  clearTeamsSearch,
 } from './test-helper.js';
 import { mockPAT } from './fixtures.js';
 
@@ -78,7 +80,8 @@ test.describe('Teams View - Search and Sort', () => {
     const searchInput = teamsViewPage.locator('input[placeholder*="Search teams"]');
     await expect(searchInput).toBeVisible();
 
-    await searchInput.fill('front');
+    // Use searchTeams helper which waits for debounce
+    await searchTeams(teamsViewPage, 'front');
 
     await expect(async () => {
       const count = await teamsViewPage.locator('.team-card').count();

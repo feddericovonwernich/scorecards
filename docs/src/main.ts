@@ -166,8 +166,7 @@ window.loadTeams = registry.loadTeams;
 window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
 window.installService = workflowTriggers.installService;
 window.triggerBulkWorkflows = workflowTriggers.triggerBulkWorkflows;
-window.handleBulkTrigger = workflowTriggers.handleBulkTrigger;
-window.handleBulkTriggerAll = workflowTriggers.handleBulkTriggerAll;
+// handleBulkTrigger and handleBulkTriggerAll are now handled by React ServicesControls component
 
 // Application initialization
 window.filterAndRenderServices = appInit.filterAndRenderServices;
@@ -406,38 +405,6 @@ function renderTeamsGrid(teams: TeamWithStats[], services: ServiceData[]): void 
 }
 
 /**
- * Filter and sort teams, then update Zustand store
- * Called by search/sort event handlers
- */
-function filterAndSortTeams(): void {
-  const teams = storeAccessor.getAllTeams() || [];
-
-  // Sort teams
-  const sortedTeams = sortTeams([...teams], storeAccessor.getTeamsSort());
-
-  // Filter teams by search
-  let filteredTeams = sortedTeams;
-  if (storeAccessor.getTeamsSearch()) {
-    const query = storeAccessor.getTeamsSearch().toLowerCase();
-    filteredTeams = sortedTeams.filter(
-      (t) =>
-        t.name.toLowerCase().includes(query) ||
-        (t.description && t.description.toLowerCase().includes(query))
-    );
-  }
-
-  // Update window global
-  storeAccessor.setFilteredTeams(filteredTeams);
-
-  // Update Zustand store (for React components)
-  const store = useAppStore.getState();
-  store.setFilteredTeams(filteredTeams);
-
-  // Render vanilla JS grid (no-op if React manages it)
-  renderTeamsGrid(storeAccessor.getAllTeams(), storeAccessor.getAllServices());
-}
-
-/**
  * Sort teams by selected criteria
  */
 function sortTeams(teams: TeamWithStats[], sortBy: string): TeamWithStats[] {
@@ -587,127 +554,13 @@ window.handleHashChange = handleHashChange;
 /**
  * Setup Event Listeners
  * Initializes all DOM event listeners for the application
- * Uses global variables from app.js: searchQuery, activeFilters, currentSort
+ *
+ * Note: Most controls are now managed by React components (Phase 5):
+ * - Services search/sort: ServicesControls component
+ * - Teams search/sort: TeamsControls component
+ * - Stat card filters: React stats components (Phase 4)
  */
 function setupEventListeners(): void {
-  // Services controls - Skip if React manages them
-  if (!window.__REACT_MANAGES_SERVICES_CONTROLS) {
-    // Search
-    const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        storeAccessor.setSearchQuery((e.target as HTMLInputElement).value.toLowerCase());
-        window.filterAndRenderServices();
-      });
-    }
-
-    // Sort
-    const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
-    if (sortSelect) {
-      sortSelect.addEventListener('change', (e) => {
-        storeAccessor.setCurrentSort((e.target as HTMLSelectElement).value);
-        window.filterAndRenderServices();
-      });
-    }
-  }
-
-  // Filterable stat cards (multi-select with include/exclude)
-  // Note: These are now managed by React in Phase 4, but keeping this for backwards compatibility
-  if (!window.__REACT_MANAGES_SERVICES_STATS) {
-    document.querySelectorAll('.stat-card.filterable').forEach((card) => {
-      card.addEventListener('click', () => {
-        const cardEl = card as HTMLElement;
-        const filter = cardEl.dataset.filter;
-        if (!filter) {
-          return;
-        }
-
-        // Cycle through states: null -> include -> exclude -> null
-        const currentState = storeAccessor.getActiveFilters().get(filter);
-
-        // Remove existing classes
-        cardEl.classList.remove('active', 'exclude');
-
-        if (!currentState) {
-        // Null -> Include
-          storeAccessor.setFilter(filter, 'include');
-          cardEl.classList.add('active');
-        } else if (currentState === 'include') {
-        // Include -> Exclude
-          storeAccessor.setFilter(filter, 'exclude');
-          cardEl.classList.add('exclude');
-        } else {
-        // Exclude -> Null
-          storeAccessor.setFilter(filter, null);
-        }
-
-        window.filterAndRenderServices();
-      });
-    });
-  }
-
-  // Modal close on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      // React modals handle their own escape key events
-      // This is kept for any remaining vanilla modals
-    }
-  });
-
-  // Teams controls - Skip if React manages them
-  if (!window.__REACT_MANAGES_TEAMS_CONTROLS) {
-    // Teams view search
-    const teamsSearchInput = document.getElementById(
-      'teams-search-input'
-    ) as HTMLInputElement | null;
-    if (teamsSearchInput) {
-      teamsSearchInput.addEventListener('input', (e) => {
-        storeAccessor.setTeamsSearch((e.target as HTMLInputElement).value.toLowerCase());
-        filterAndSortTeams();
-      });
-    }
-
-    // Teams view sort
-    const teamsSortSelect = document.getElementById(
-      'teams-sort-select'
-    ) as HTMLSelectElement | null;
-    if (teamsSortSelect) {
-      teamsSortSelect.addEventListener('change', (e) => {
-        storeAccessor.setTeamsSort((e.target as HTMLSelectElement).value);
-        filterAndSortTeams();
-      });
-    }
-  }
-
-  // Teams filter stat cards - Skip if React manages them
-  if (!window.__REACT_MANAGES_TEAMS_STATS) {
-    document.querySelectorAll('.stat-card.teams-filter').forEach((card) => {
-      card.addEventListener('click', () => {
-        const cardEl = card as HTMLElement;
-        const filter = cardEl.dataset.filter;
-        if (!filter) {
-          return;
-        }
-
-        const currentState = storeAccessor.getTeamsActiveFilters().get(filter);
-
-        cardEl.classList.remove('active', 'exclude');
-
-        if (!currentState) {
-          storeAccessor.setTeamsFilter(filter, 'include');
-          cardEl.classList.add('active');
-        } else if (currentState === 'include') {
-          storeAccessor.setTeamsFilter(filter, 'exclude');
-          cardEl.classList.add('exclude');
-        } else {
-          storeAccessor.setTeamsFilter(filter, null);
-        }
-
-        filterAndRenderTeams();
-      });
-    });
-  }
-
   // View tab navigation - handled by React Navigation component if available
   // Keep as fallback for non-React rendered tabs
   if (!window.__REACT_MANAGES_NAVIGATION) {
