@@ -9,6 +9,8 @@ import { DEPLOYMENT } from '../config/deployment.js';
 import { WORKFLOWS, getWorkflowDispatchUrl } from '../config/workflows.js';
 import * as storeAccessor from '../stores/accessor.js';
 import type { ServiceData } from '../types/index.js';
+import { getRepoOwner, getRepoName } from './registry.js';
+import { isServiceStale } from '../services/staleness.js';
 
 // Window types are defined in types/globals.d.ts
 
@@ -84,7 +86,6 @@ function resetButton(button: HTMLButtonElement): void {
 
 // Get repo info from registry module
 const getRepoInfo = (): { owner: string; name: string } => {
-  const { getRepoOwner, getRepoName } = window.ScorecardModules.registry;
   return {
     owner: getRepoOwner(),
     name: getRepoName(),
@@ -358,7 +359,6 @@ export async function triggerBulkWorkflows(
 export function handleBulkTrigger(event: Event): void {
   event.preventDefault();
 
-  const { isServiceStale } = window.ScorecardModules.staleness;
   const staleServices = storeAccessor.getAllServices().filter(
     (s) => isServiceStale(s, storeAccessor.getChecksHash()) && s.installed
   );
