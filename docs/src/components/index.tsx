@@ -37,10 +37,9 @@ import {
   Footer,
   Navigation,
   FloatingControls,
-  type ViewType,
 } from './layout/index.js';
 import type { CheckFilter } from '../types/index.js';
-import { useAppStore, selectCurrentView } from '../stores/index.js';
+import { useAppStore } from '../stores/index.js';
 import { useActionsWidget } from '../hooks/useWorkflowPolling.js';
 import type { FilterType, FilterState } from './ui/StatCard.js';
 

@@ -24,7 +24,9 @@ export function ViewContainer({ viewId, children }: ViewContainerProps) {
   // Sync active class with DOM for backwards compatibility
   useEffect(() => {
     const element = containerRef.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
 
     if (isActive) {
       element.classList.add('active');
