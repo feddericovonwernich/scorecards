@@ -67,11 +67,6 @@ declare global {
     setGitHubToken: (token: string) => void;
     clearGitHubToken: () => void;
 
-    // Theme
-    initTheme: () => void;
-    toggleTheme: () => string;
-    getCurrentTheme: () => string;
-
     // Service Modal
     showServiceDetail: (org: string, repo: string) => Promise<void>;
     closeModal: () => void;
