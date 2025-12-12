@@ -46,3 +46,6 @@ export type { ModalProps } from './Modal.js';
 // Tabs
 export { Tabs } from './Tabs.js';
 export type { Tab, TabsProps } from './Tabs.js';
+
+// ActionButton
+export { ActionButton } from './ActionButton/index.js';
