@@ -1,12 +1,11 @@
 /**
  * Navigation Component
  * View tabs for switching between Services and Teams
- * Single source of truth for view navigation with URL hash sync
+ * Uses React Router for navigation
  */
 
-import { useCallback, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/css.js';
-import { useAppStore, selectCurrentView } from '../../stores/appStore.js';
 
 export type ViewType = 'services' | 'teams';
 
@@ -37,73 +36,20 @@ const TAB_ICON_CLASS = 'tab-icon';
 
 /**
  * Navigation Component
- * Manages view state and URL hash synchronization
+ * Uses React Router for view navigation
  * Uses legacy CSS classes from docs/css/components/tabs.css for premium styling
  */
 export function Navigation() {
-  const currentView = useAppStore(selectCurrentView);
-  const setCurrentView = useAppStore((state) => state.setCurrentView);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Handle view change with URL update
-  const handleViewChange = useCallback(
-    (view: ViewType) => {
-      setCurrentView(view);
+  // Determine current view from location
+  const currentView: ViewType = location.pathname.includes('/teams') ? 'teams' : 'services';
 
-      // Update URL hash without triggering hashchange
-      history.replaceState(null, '', `#${view}`);
-
-      // Update DOM - show/hide view containers
-      const servicesView = document.getElementById('services-view');
-      const teamsView = document.getElementById('teams-view');
-
-      if (servicesView && teamsView) {
-        if (view === 'services') {
-          servicesView.classList.add('active');
-          teamsView.classList.remove('active');
-        } else {
-          servicesView.classList.remove('active');
-          teamsView.classList.add('active');
-        }
-      }
-
-      // Dispatch event for any legacy listeners
-      window.dispatchEvent(
-        new CustomEvent('view-changed', { detail: { view } })
-      );
-    },
-    [setCurrentView]
-  );
-
-  // Sync with URL hash on mount and hash changes
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash === 'teams' || hash === 'services') {
-        setCurrentView(hash);
-
-        // Update DOM - show/hide view containers
-        const servicesView = document.getElementById('services-view');
-        const teamsView = document.getElementById('teams-view');
-
-        if (servicesView && teamsView) {
-          if (hash === 'services') {
-            servicesView.classList.add('active');
-            teamsView.classList.remove('active');
-          } else {
-            servicesView.classList.remove('active');
-            teamsView.classList.add('active');
-          }
-        }
-      }
-    };
-
-    // Check initial hash
-    handleHashChange();
-
-    // Listen for hash changes (back/forward navigation)
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [setCurrentView]);
+  // Handle view change with React Router
+  const handleViewChange = (view: ViewType) => {
+    navigate(`/${view}`);
+  };
 
   return (
     <nav className="view-tabs" role="tablist">

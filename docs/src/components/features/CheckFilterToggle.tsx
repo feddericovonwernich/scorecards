@@ -61,7 +61,16 @@ export function CheckFilterToggle() {
  * CheckFilterTogglePortal - Renders into #check-filter-container
  */
 export function CheckFilterTogglePortal() {
-  const container = document.getElementById('check-filter-container');
+  // Find container after component mounts (DOM is guaranteed to be ready)
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = document.getElementById('check-filter-container');
+    if (el) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Portal container lookup is intentionally once on mount
+      setContainer(el);
+    }
+  }, []);
 
   if (!container) {
     return null;

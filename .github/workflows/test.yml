@@ -121,6 +121,8 @@ jobs:
 
   test-e2e:
     name: E2E Tests (Playwright)
+    # Only run E2E tests on push to main/claude branches, not on PRs
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

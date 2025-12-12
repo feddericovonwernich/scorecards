@@ -2,15 +2,17 @@
  * Main Application Entry Point
  * Imports all ES6 modules and initializes the application
  *
- * Note: UI components have been migrated to React (see components/index.tsx)
- * This file now serves as a thin shell that initializes React and provides
- * window globals for any remaining vanilla JS code.
+ * Note: UI components have been fully migrated to React Router (see App.tsx)
+ * This file now serves as a thin shell that sets up window globals for
+ * any remaining vanilla JS bridge code needed by React components.
+ *
+ * React rendering is handled by main.tsx -> App.tsx (React Router based)
  */
 
 import type { TeamRegistryEntry, TeamWithStats } from './types/index.js';
 
-// React components entry point - this is where all UI rendering happens
-import './components/index.js';
+// Note: React rendering is now handled by main.tsx -> App.tsx
+// The old components/index.tsx (portal-based) is deprecated in Phase 9
 
 // Config modules
 import * as constants from './config/constants.js';
