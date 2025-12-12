@@ -1,6 +1,6 @@
 /**
  * Layout Components
- * App shell components: Header, Footer, Navigation, FloatingControls, ViewContainer
+ * App shell components: Header, Footer, Navigation, FloatingControls
  */
 
 export { Header, type HeaderProps } from './Header.js';
@@ -10,4 +10,3 @@ export {
   FloatingControls,
   type FloatingControlsProps,
 } from './FloatingControls.js';
-export { ViewContainer } from './ViewContainer.js';
