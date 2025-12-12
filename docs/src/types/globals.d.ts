@@ -81,9 +81,7 @@ declare global {
     refreshData: () => Promise<void>;
 
     // View Navigation
-    switchView: (view: ViewType) => void;
     initTeamsView: () => Promise<void>;
-    handleHashChange: () => void;
     setupEventListeners: () => void;
 
     // Check Filter Modal
