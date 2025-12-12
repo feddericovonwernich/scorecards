@@ -87,7 +87,7 @@ interface ServiceCardProps {
   variant?: DisplayMode;
   onCardClick?: (org: string, repo: string) => void;
   onTeamClick?: (teamName: string) => void;
-  onTriggerWorkflow?: (org: string, repo: string, button: HTMLButtonElement) => void;
+  onTriggerWorkflow?: (org: string, repo: string) => Promise<boolean | undefined> | void;
 }
 
 export const ServiceCard = memo(function ServiceCard({
@@ -113,9 +113,9 @@ export const ServiceCard = memo(function ServiceCard({
     }
   };
 
-  const handleTriggerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleTriggerClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    onTriggerWorkflow?.(service.org, service.repo, e.currentTarget);
+    await onTriggerWorkflow?.(service.org, service.repo);
   };
 
   const handleGitHubClick = (e: React.MouseEvent) => {
@@ -348,7 +348,7 @@ interface ServiceGridProps {
   isServiceStale?: (service: ServiceData, checksHash: string | null) => boolean;
   onCardClick?: (org: string, repo: string) => void;
   onTeamClick?: (teamName: string) => void;
-  onTriggerWorkflow?: (org: string, repo: string, button: HTMLButtonElement) => void;
+  onTriggerWorkflow?: (org: string, repo: string) => Promise<boolean | undefined> | void;
 }
 
 export function ServiceGrid({

@@ -72,7 +72,7 @@ declare global {
     setupEventListeners: () => void;
 
     // Workflow triggers (used by ServiceGridContainer reload buttons)
-    triggerServiceWorkflow: (org: string, repo: string, button: HTMLButtonElement) => Promise<void>;
+    triggerServiceWorkflow: (org: string, repo: string) => Promise<boolean>;
 
     // Check Filter Modal
     openCheckFilterModal: () => void;
