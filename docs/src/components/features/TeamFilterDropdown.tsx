@@ -200,20 +200,44 @@ export function TeamFilterDropdown({
  * TeamFilterDropdownPortal - Renders into #team-filter-container
  */
 export function TeamFilterDropdownPortal() {
-  // Lazy initialize container from DOM
-  const [container] = useState<HTMLElement | null>(
-    () => document.getElementById('team-filter-container')
-  );
+  // Find container after component mounts (DOM is guaranteed to be ready)
+  const [container, setContainer] = useState<HTMLElement | null>(null);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   // Get services from Zustand store (reactive)
   const services = useAppStore(selectServicesAll);
 
+  // Find container element after mount
+  useEffect(() => {
+    const el = document.getElementById('team-filter-container');
+    if (el) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Portal container lookup is intentionally once on mount
+      setContainer(el);
+    }
+  }, []);
+
   // Handle team filter changes
   const handleTeamsChange = useCallback((teams: string[]) => {
     setSelectedTeams(teams);
 
-    // Dispatch event for vanilla JS/React to filter services
+    // Update filter state in Zustand store and trigger re-filter
+    const store = useAppStore.getState();
+
+    // Convert teams array to filter format
+    let teamFilter: string | null = null;
+    if (teams.length === 1) {
+      teamFilter = teams[0];
+    } else if (teams.length > 1) {
+      teamFilter = teams.join(',');
+    }
+
+    // Update store
+    store.updateFilters({ teamFilter });
+
+    // Trigger filtering through the store method
+    store.filterAndSortServices();
+
+    // Also dispatch event for any legacy listeners
     window.dispatchEvent(
       new CustomEvent('team-filter-changed', { detail: { teams } })
     );

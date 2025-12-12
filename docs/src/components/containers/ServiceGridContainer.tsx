@@ -44,14 +44,16 @@ export function ServiceGridContainer() {
   }, []);
 
   return (
-    <ServiceGrid
-      services={services}
-      checksHash={checksHash}
-      variant={displayMode}
-      isServiceStale={checkServiceStale}
-      onCardClick={handleCardClick}
-      onTeamClick={handleTeamClick}
-      onTriggerWorkflow={handleTriggerWorkflow}
-    />
+    <section id="services-grid" className="services-grid">
+      <ServiceGrid
+        services={services}
+        checksHash={checksHash}
+        variant={displayMode}
+        isServiceStale={checkServiceStale}
+        onCardClick={handleCardClick}
+        onTeamClick={handleTeamClick}
+        onTriggerWorkflow={handleTriggerWorkflow}
+      />
+    </section>
   );
 }

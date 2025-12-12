@@ -22,70 +22,14 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <!-- React Header Mount Point -->
-    <div id="react-header"></div>
+    <!-- Single React Root - all UI rendered by React -->
+    <div id="root"></div>
 
-    <main class="container">
-        <!-- React Navigation Mount Point -->
-        <div id="react-navigation"></div>
+    <!-- Portal containers for special positioning -->
+    <div id="team-filter-container" class="team-filter-container"></div>
+    <div id="check-filter-container" class="check-filter-container"></div>
 
-        <!-- Services View -->
-        <div id="services-view" class="view-content active">
-        <!-- Stats Section - React will populate -->
-        <section class="stats services-stats">
-            <!-- ServicesStatsSection React component renders here via portal -->
-        </section>
-
-        <!-- Controls - React will populate -->
-        <section class="controls">
-            <!-- ServicesControls React component renders here via portal -->
-            <!-- Portal targets for team filter and check filter (managed by separate portals) -->
-            <div id="team-filter-container" class="team-filter-container"></div>
-            <div id="check-filter-container" class="check-filter-container"></div>
-        </section>
-
-        <!-- Services Grid -->
-        <section id="services-grid" class="services-grid">
-            <div class="loading">Loading services...</div>
-        </section>
-        </div><!-- End services-view -->
-
-        <!-- Teams View -->
-        <div id="teams-view" class="view-content">
-            <!-- Teams Stats - React will populate -->
-            <section class="stats teams-stats">
-                <!-- TeamsStatsSection React component renders here via portal -->
-            </section>
-
-            <!-- Teams Controls - React will populate -->
-            <section class="controls teams-controls">
-                <!-- TeamsControls React component renders here via portal -->
-            </section>
-
-            <!-- Teams Grid -->
-            <section id="teams-grid" class="teams-grid">
-                <div class="loading">Loading teams...</div>
-            </section>
-        </div><!-- End teams-view -->
-
-        <!-- Modals are rendered via React portals from /src/components -->
-    </main>
-
-    <!-- React Footer Mount Point -->
-    <div id="react-footer"></div>
-
-    <!-- React Root - for React component islands -->
-    <div id="react-root"></div>
-
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast-container"></div>
-
-    <!-- React Floating Controls Mount Point -->
-    <div id="react-floating-controls"></div>
-
-    <!-- Actions Widget - Rendered by React via portal -->
-
-    <!-- ES6 Modules - Application entry point -->
-    <script type="module" src="src/main.ts"></script>
+    <!-- Application entry point -->
+    <script type="module" src="src/main.tsx"></script>
 </body>
 </html>

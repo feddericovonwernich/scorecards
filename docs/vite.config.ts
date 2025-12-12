@@ -22,6 +22,17 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         'api-explorer': resolve(__dirname, 'api-explorer.html'),
       },
+      // Preserve side effects from main.ts (window global assignments)
+      treeshake: {
+        moduleSideEffects: (id) => {
+          // Mark main.ts as having side effects (window global assignments)
+          if (id.endsWith('main.ts') || id.endsWith('main.tsx')) {
+            return true;
+          }
+          // Default behavior for other modules
+          return 'no-external';
+        },
+      },
     },
   },
 

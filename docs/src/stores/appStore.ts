@@ -234,14 +234,30 @@ function filterServices(
 ): ServiceData[] {
   let filtered = services;
 
-  // Team filter
+  // Team filter (supports comma-separated values for multi-select)
   if (teamFilter) {
+    // Parse comma-separated teams into array
+    const selectedTeams = teamFilter.split(',').map((t) => t.trim().toLowerCase());
+    const hasNoTeamFilter = selectedTeams.includes('__no_team__');
+
     filtered = filtered.filter((service) => {
       const teamStr =
         typeof service.team === 'string'
           ? service.team
           : service.team?.primary || '';
-      return teamStr.toLowerCase() === teamFilter.toLowerCase();
+      const hasTeam = !!teamStr;
+
+      // Check if "no team" filter matches
+      if (hasNoTeamFilter && !hasTeam) {
+        return true;
+      }
+
+      // Check if service team matches any selected team
+      if (teamStr) {
+        return selectedTeams.includes(teamStr.toLowerCase());
+      }
+
+      return false;
     });
   }
 
