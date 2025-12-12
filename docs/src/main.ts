@@ -81,92 +81,18 @@ const ScorecardModules = {
 
 window.ScorecardModules = ScorecardModules;
 
-// Export individual functions to global scope for easier access
-// (This bridges the gap between ES6 modules and remaining vanilla JS)
+// Export only the minimal functions still needed as window globals
+// Most code now uses ES6 imports. These exports remain for:
+// - filterAndRenderServices: Called by setupEventListeners (team filter)
+// - refreshData: Called by refresh buttons
+// - triggerServiceWorkflow: Called by ServiceGridContainer for reload buttons
 
-// Formatting utilities
-window.formatRelativeTime = formatting.formatRelativeTime;
-window.formatDate = formatting.formatDate;
-window.formatDuration = formatting.formatDuration;
-window.formatInterval = formatting.formatInterval;
-window.escapeHtml = formatting.escapeHtml;
-window.capitalize = formatting.capitalize;
-
-// Crypto utilities
-window.md5 = crypto.md5;
-
-// CSS utilities
-window.getCssVar = cssUtils.getCssVar;
-
-// Animation utilities
-window.startButtonSpin = animation.startButtonSpin;
-window.stopButtonSpin = animation.stopButtonSpin;
-
-// Statistics utilities
-window.countByRank = statistics.countByRank;
-window.calculateAverageScore = statistics.calculateAverageScore;
-
-// Duration tracker utilities
-window.startLiveDurationUpdates = durationTracker.startLiveDurationUpdates;
-window.stopLiveDurationUpdates = durationTracker.stopLiveDurationUpdates;
-
-// Icon utilities
-window.getIcon = icons.getIcon;
-
-// Clipboard utilities
-window.copyBadgeCode = clipboard.copyBadgeCode;
-
-// API Explorer
-window.openApiExplorer = function (org: string, repo: string): void {
-  const explorerUrl = `api-explorer.html?org=${encodeURIComponent(org)}&repo=${encodeURIComponent(repo)}`;
-  window.open(explorerUrl, '_blank');
-};
-
-// Auth functions
-window.getGitHubToken = auth.getToken;
-window.hasGitHubToken = auth.hasToken;
-window.setGitHubToken = auth.setToken;
-window.clearGitHubToken = auth.clearToken;
-window.validateGitHubToken = auth.validateToken;
-
-// Staleness functions
-window.isServiceStale = staleness.isServiceStale;
-
-// Theme functions - DEPRECATED: Use useTheme hook in React components
-// Theme management is now handled by React (see hooks/useTheme.ts)
-// These exports will be removed in Phase 8
-
-// Registry functions
-window.loadServicesData = registry.loadServices;
-window.fetchCurrentChecksHash = registry.fetchCurrentChecksHash;
-window.fetchWithHybridAuth = registry.fetchWithHybridAuth;
-window.getRawBaseUrl = registry.getRawBaseUrl;
-
-// GitHub API functions
-window.fetchWorkflowRuns = github.fetchWorkflowRuns;
-window.triggerScorecardWorkflow = github.triggerScorecardWorkflow;
-window.triggerBulkScorecardWorkflows = github.triggerBulkScorecardWorkflows;
-window.createInstallationPR = github.createInstallationPR;
-window.checkGitHubRateLimit = github.checkRateLimit;
-
-// Team statistics functions
-window.getTeamName = teamStatistics.getTeamName;
-window.getTeamCount = teamStatistics.getTeamCount;
-window.getUniqueTeams = teamStatistics.getUniqueTeams;
-window.calculateTeamStats = teamStatistics.calculateTeamStats;
-
-// Registry team functions
-window.loadTeams = registry.loadTeams;
-
-// Workflow trigger functions
-window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
-window.installService = workflowTriggers.installService;
-window.triggerBulkWorkflows = workflowTriggers.triggerBulkWorkflows;
-// handleBulkTrigger and handleBulkTriggerAll are now handled by React ServicesControls component
-
-// Application initialization
+// Application initialization (used by setupEventListeners and refresh)
 window.filterAndRenderServices = appInit.filterAndRenderServices;
 window.refreshData = appInit.refreshData;
+
+// Workflow triggers (used by ServiceGridContainer for service card reload buttons)
+window.triggerServiceWorkflow = workflowTriggers.triggerServiceWorkflow;
 
 // ============================================================================
 // View Tab Navigation

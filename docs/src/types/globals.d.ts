@@ -49,23 +49,10 @@ declare global {
     githubPAT: string | null;
 
     // ============= Core Functions =============
-    // These are the most commonly used window functions with proper types
+    // Most functions now use ES6 imports. Only essential window globals remain.
 
-    // Formatting
-    formatRelativeTime: (timestamp: string | Date) => string;
-    formatDate: (dateString: string) => string;
-    formatDuration: (ms: number) => string;
-    escapeHtml: (str: string) => string;
-    capitalize: (str: string) => string;
-
-    // Toast
+    // Toast (used by React components via bridge)
     showToast: (message: string, type?: ToastType | string) => void;
-
-    // Auth
-    getGitHubToken: () => string | null;
-    hasGitHubToken: () => boolean;
-    setGitHubToken: (token: string) => void;
-    clearGitHubToken: () => void;
 
     // Service Modal
     showServiceDetail: (org: string, repo: string) => Promise<void>;
@@ -76,13 +63,16 @@ declare global {
     showTeamDetail: (teamName: string) => Promise<void>;
     closeTeamModal: () => void;
 
-    // App Init
+    // App Init (used by setupEventListeners team filter and refresh)
     filterAndRenderServices: () => void;
     refreshData: () => Promise<void>;
 
-    // View Navigation
+    // View Navigation (used by TeamGridContainer and app-init)
     initTeamsView: () => Promise<void>;
     setupEventListeners: () => void;
+
+    // Workflow triggers (used by ServiceGridContainer reload buttons)
+    triggerServiceWorkflow: (org: string, repo: string, button: HTMLButtonElement) => Promise<void>;
 
     // Check Filter Modal
     openCheckFilterModal: () => void;
