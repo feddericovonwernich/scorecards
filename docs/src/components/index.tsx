@@ -163,10 +163,6 @@ function App({
 }: AppProps) {
   const { toasts, showToast, dismissToast } = useToast();
 
-  // View state from Zustand store
-  const activeView = useAppStore(selectCurrentView);
-  const setCurrentView = useAppStore((state) => state.setCurrentView);
-
   // Actions widget state and badge count from hook
   const { runs: _runs, filterCounts } = useActionsWidget();
   const actionsBadgeCount = filterCounts.in_progress + filterCounts.queued;
@@ -181,19 +177,6 @@ function App({
   const [teamEditModalOpen, setTeamEditModalOpen] = useState(false);
   const [teamEditMode, setTeamEditMode] = useState<'create' | 'edit'>('create');
   const [teamEditId, setTeamEditId] = useState<string | undefined>(undefined);
-
-  // Initialize view state from DOM on mount
-  useEffect(() => {
-    const servicesView = document.getElementById('services-view');
-    const initialView = servicesView?.classList.contains('active')
-      ? 'services'
-      : 'teams';
-    if (initialView !== activeView) {
-      setCurrentView(initialView);
-    }
-    // Only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Modal state
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
@@ -248,45 +231,8 @@ function App({
     []
   );
 
-  // Handle view changes
-  const handleViewChange = useCallback((view: ViewType) => {
-    setCurrentView(view);
-
-    // Sync with vanilla JS view switching
-    const servicesView = document.getElementById('services-view');
-    const teamsView = document.getElementById('teams-view');
-    const servicesTabs = document.querySelectorAll('.view-tab');
-
-    if (servicesView && teamsView) {
-      if (view === 'services') {
-        servicesView.classList.add('active');
-        teamsView.classList.remove('active');
-      } else {
-        servicesView.classList.remove('active');
-        teamsView.classList.add('active');
-      }
-    }
-
-    // Update tab buttons
-    servicesTabs.forEach((tab) => {
-      const tabView = tab.getAttribute('data-view');
-      if (tabView === view) {
-        tab.classList.add('active');
-      } else {
-        tab.classList.remove('active');
-      }
-    });
-
-    // Trigger teams initialization when switching to teams view
-    if (view === 'teams' && window.initTeamsView) {
-      window.initTeamsView();
-    }
-
-    // Dispatch event for vanilla JS
-    window.dispatchEvent(
-      new CustomEvent('view-changed', { detail: { view } })
-    );
-  }, [setCurrentView]);
+  // View changes are now handled entirely by the Navigation component
+  // No need for handleViewChange here
 
   // Handle services stat filter changes
   const activeFilters = useAppStore((state) => state.filters.active);
@@ -314,21 +260,8 @@ function App({
     window.dispatchEvent(new CustomEvent('teams-filters-changed'));
   }, [teamsActiveFilters, updateTeamsState]);
 
-  // Sync active view with vanilla JS
-  useEffect(() => {
-    // Listen for vanilla JS view changes
-    const handleVanillaViewChange = (e: Event) => {
-      const customEvent = e as CustomEvent<{ view: ViewType }>;
-      if (customEvent.detail?.view) {
-        setCurrentView(customEvent.detail.view);
-      }
-    };
-    window.addEventListener('vanilla-view-changed', handleVanillaViewChange);
-
-    return () => {
-      window.removeEventListener('vanilla-view-changed', handleVanillaViewChange);
-    };
-  }, [setCurrentView]);
+  // View synchronization is now handled entirely by React Navigation component
+  // No need to listen for vanilla JS view changes
 
   // Listen for check filter modal open events (from CheckFilterToggle portal)
   useEffect(() => {
@@ -501,11 +434,7 @@ function App({
       {/* Layout Portals - rendered if mount points exist */}
       {header && createPortal(<Header />, header)}
       {footer && createPortal(<Footer />, footer)}
-      {navigation &&
-        createPortal(
-          <Navigation activeView={activeView} onViewChange={handleViewChange} />,
-          navigation
-        )}
+      {navigation && createPortal(<Navigation />, navigation)}
       {floatingControls &&
         createPortal(
           <FloatingControls

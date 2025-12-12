@@ -1,17 +1,14 @@
 /**
  * Navigation Component
  * View tabs for switching between Services and Teams
- * Uses CSS classes from tabs.css for styling
+ * Single source of truth for view navigation with URL hash sync
  */
 
+import { useCallback, useEffect } from 'react';
 import { cn } from '../../utils/css.js';
+import { useAppStore, selectCurrentView } from '../../stores/appStore.js';
 
 export type ViewType = 'services' | 'teams';
-
-export interface NavigationProps {
-  activeView: ViewType;
-  onViewChange: (view: ViewType) => void;
-}
 
 /**
  * Services icon SVG
@@ -40,23 +37,66 @@ const TAB_ICON_CLASS = 'tab-icon';
 
 /**
  * Navigation Component
+ * Manages view state and URL hash synchronization
  * Uses legacy CSS classes from docs/css/components/tabs.css for premium styling
  */
-export function Navigation({ activeView, onViewChange }: NavigationProps) {
+export function Navigation() {
+  const currentView = useAppStore(selectCurrentView);
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
+
+  // Handle view change with URL update
+  const handleViewChange = useCallback(
+    (view: ViewType) => {
+      setCurrentView(view);
+
+      // Update URL hash without triggering hashchange
+      history.replaceState(null, '', `#${view}`);
+
+      // Dispatch event for any legacy listeners
+      window.dispatchEvent(
+        new CustomEvent('view-changed', { detail: { view } })
+      );
+    },
+    [setCurrentView]
+  );
+
+  // Sync with URL hash on mount and hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'teams' || hash === 'services') {
+        setCurrentView(hash);
+      }
+    };
+
+    // Check initial hash
+    handleHashChange();
+
+    // Listen for hash changes (back/forward navigation)
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [setCurrentView]);
+
   return (
-    <nav className="view-tabs">
+    <nav className="view-tabs" role="tablist">
       <button
-        className={cn('view-tab', activeView === 'services' && 'active')}
+        className={cn('view-tab', currentView === 'services' && 'active')}
         data-view="services"
-        onClick={() => onViewChange('services')}
+        onClick={() => handleViewChange('services')}
+        role="tab"
+        aria-selected={currentView === 'services'}
+        aria-controls="services-view"
       >
         <ServicesIcon className={TAB_ICON_CLASS} />
         Services
       </button>
       <button
-        className={cn('view-tab', activeView === 'teams' && 'active')}
+        className={cn('view-tab', currentView === 'teams' && 'active')}
         data-view="teams"
-        onClick={() => onViewChange('teams')}
+        onClick={() => handleViewChange('teams')}
+        role="tab"
+        aria-selected={currentView === 'teams'}
+        aria-controls="teams-view"
       >
         <TeamsIcon className={TAB_ICON_CLASS} />
         Teams
