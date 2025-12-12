@@ -39,8 +39,8 @@ export function ServiceGridContainer() {
     window.showTeamDetail?.(teamName);
   }, []);
 
-  const handleTriggerWorkflow = useCallback((org: string, repo: string, button: HTMLButtonElement) => {
-    window.triggerServiceWorkflow?.(org, repo, button);
+  const handleTriggerWorkflow = useCallback((org: string, repo: string) => {
+    return window.triggerServiceWorkflow?.(org, repo);
   }, []);
 
   return (

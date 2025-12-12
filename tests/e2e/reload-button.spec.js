@@ -39,89 +39,56 @@ test.describe('Reload Button', () => {
   });
 
   // Consolidated test: Task 9 - Reload Button Icon-Only Display
-  // Combines: never display text (only icons), apply spinning animation during loading
-  test('should display only SVG icons (no text) and apply spinning animation during loading', async ({ page }) => {
-    // This test needs extra time for the 3 second reset timer
-    test.setTimeout(12000);
-
-    // Re-mock with delay to test loading state
-    await mockWorkflowDispatch(page, { delay: 300 });
+  // Note: Button state management removed - button remains static, API success shown via toast
+  test('should display only SVG icons (no text) and trigger workflow successfully', async ({ page }) => {
+    await mockWorkflowDispatch(page);
     await setGitHubPAT(page, 'test-token-12345');
 
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
     const reloadBtn = staleCard.locator('.trigger-btn-icon');
-    const svg = reloadBtn.locator('svg');
 
-    // Before click: icon only, no text, no spinning
+    // Button displays icon only, no text
     let content = await reloadBtn.innerHTML();
     expect(content).toContain('<svg');
     expect(content).not.toMatch(/Trigger/i);
     expect(content).not.toMatch(/Loading/i);
-    await expect(svg).not.toHaveClass(/spinning/);
 
-    // Click the button
+    // Click the button - triggers API call
     await reloadBtn.click();
 
-    // During loading: still no text, spinning
-    content = await reloadBtn.innerHTML();
-    expect(content).toContain('<svg');
-    expect(content).not.toMatch(/Trigger/i);
-    await expect(svg).toHaveClass(/spinning/);
+    // Verify success toast appears (API was called successfully)
+    const toast = page.locator('.toast').filter({ hasText: /workflow triggered/i });
+    await expect(toast).toBeVisible();
 
-    // Wait for success state
-    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');
-
-    // Success state: icon only, no spinning
+    // Button remains unchanged (no React state management yet)
     content = await reloadBtn.innerHTML();
     expect(content).toContain('<svg');
     expect(content).not.toMatch(/Success/i);
-    await expect(svg).not.toHaveClass(/spinning/);
-
-    // Move mouse away to remove hover state
-    await page.mouse.move(0, 0);
-
-    // After reset: no spinning
-    await expect(async () => {
-      await expect(svg).not.toHaveClass(/spinning/);
-      await expect(reloadBtn).toHaveCSS('background-color', 'rgb(245, 158, 11)');
-    }).toPass({ timeout: 6000 });
   });
 
-  test('should show tooltips on hover in different states', async ({ page }) => {
-    // This test needs extra time for the 3 second reset timer
-    test.setTimeout(12000);
-
-    // Re-mock with delay to test loading state
-    await mockWorkflowDispatch(page, { delay: 300 });
+  test('should show tooltip and trigger workflow successfully', async ({ page }) => {
+    await mockWorkflowDispatch(page);
     await setGitHubPAT(page, 'test-token-12345');
 
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
     const reloadBtn = staleCard.locator('.trigger-btn-icon');
 
-    // Initial state: should have tooltip "Re-run scorecard workflow"
+    // Should have tooltip "Re-run scorecard workflow"
     await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
 
     // Click to trigger workflow
     await reloadBtn.click();
 
-    // Loading state: should have tooltip "Triggering..."
-    await expect(reloadBtn).toHaveAttribute('title', 'Triggering...');
+    // Verify success via toast (button state management removed)
+    const toast = page.locator('.toast').filter({ hasText: /workflow triggered/i });
+    await expect(toast).toBeVisible();
 
-    // Success state: should have tooltip "✓ Triggered Successfully"
-    await expect(reloadBtn).toHaveAttribute('title', '✓ Triggered Successfully');
-
-    // After reset: should restore original tooltip
-    await expect(async () => {
-      await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
-    }).toPass({ timeout: 5000 });
+    // Tooltip remains unchanged (no React state management yet)
+    await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
   });
 
-  // Consolidated test: Task 8 - Reload Button State Transitions Complete Flow
-  // Combines: transition through correct icon states, background colors, reset after 3 seconds
-  test('should transition icons and colors through idle→loading→success→reset states', async ({ page }) => {
-    // This test needs extra time for the 3 second reset timer
-    test.setTimeout(12000);
-
+  // Simplified test: Verify button maintains static appearance and triggers API
+  test('should maintain static appearance and trigger workflow successfully', async ({ page }) => {
     await setGitHubPAT(page, 'test-token-12345');
 
     const staleCard = page.locator('.service-card').filter({ hasText: 'test-repo-stale' });
@@ -129,38 +96,24 @@ test.describe('Reload Button', () => {
 
     // Initial state: reload icon, orange background
     await expect(reloadBtn).toBeVisible();
-    let svgPath = await reloadBtn.locator('svg path').getAttribute('d');
-    expect(svgPath).toContain('1.705'); // Part of reload icon path
-    await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/); // #F59E0B orange
+    const initialSvgPath = await reloadBtn.locator('svg path').getAttribute('d');
+    expect(initialSvgPath).toContain('1.705'); // Reload icon path
 
-    // Click - should disable and start loading
+    // Click to trigger workflow
     await reloadBtn.click();
-    await expect(reloadBtn).toBeDisabled();
 
-    // Success state - checkmark icon, green background
-    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)'); // #10b981 green
-    svgPath = await reloadBtn.locator('svg path').getAttribute('d');
-    expect(svgPath).toContain('13.78'); // Part of checkmark icon path
-    expect(svgPath).not.toContain('1.705'); // No longer reload icon
+    // Verify success via toast
+    const toast = page.locator('.toast').filter({ hasText: /workflow triggered/i });
+    await expect(toast).toBeVisible();
 
-    // Move mouse away to remove hover state
-    await page.mouse.move(0, 0);
-
-    // After 3s reset - back to reload icon, orange background, not disabled
-    await expect(async () => {
-      const path = await reloadBtn.locator('svg path').getAttribute('d');
-      expect(path).toContain('1.705'); // Back to reload icon
-      await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/); // Back to orange
-      await expect(reloadBtn).not.toBeDisabled();
-      await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
-    }).toPass({ timeout: 5000 });
+    // Button remains unchanged (no React state management yet)
+    await expect(reloadBtn).not.toBeDisabled();
+    const svgPathAfter = await reloadBtn.locator('svg path').getAttribute('d');
+    expect(svgPathAfter).toContain('1.705'); // Still reload icon
   });
 
-  // Keep unchanged - error path with unique mock
-  test('should show error state on API failure', async ({ page }) => {
-    // This test needs extra time for the 3 second reset timer
-    test.setTimeout(12000);
-
+  // Error path - verify error toast appears
+  test('should show error toast on API failure', async ({ page }) => {
     // Re-mock API to return error, then re-navigate
     await mockWorkflowDispatch(page, { status: 500 });
     await page.goto('/');
@@ -174,24 +127,12 @@ test.describe('Reload Button', () => {
     // Click the button
     await reloadBtn.click();
 
-    // Error state: red background
-    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(239, 68, 68)'); // #ef4444
+    // Verify error toast appears
+    const toast = page.locator('.toast').filter({ hasText: /failed.*trigger/i });
+    await expect(toast).toBeVisible();
 
-    // Error state: should have X icon
-    const svgPath = await reloadBtn.locator('svg path').getAttribute('d');
-    expect(svgPath).toContain('3.72'); // Part of X icon path
-
-    // Error state: should have error tooltip
-    await expect(reloadBtn).toHaveAttribute('title', '✗ Trigger Failed');
-
-    // Move mouse away to remove hover state
-    await page.mouse.move(0, 0);
-
-    // After reset: back to orange with reload icon
-    await expect(async () => {
-      await expect(reloadBtn).toHaveCSS('background-color', 'rgb(245, 158, 11)'); // #F59E0B
-      await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
-    }).toPass({ timeout: 5000 });
+    // Button remains unchanged (no React state management yet)
+    await expect(reloadBtn).toHaveAttribute('title', 'Re-run scorecard workflow');
   });
 
   // Keep unchanged - auth validation test
@@ -211,7 +152,7 @@ test.describe('Reload Button', () => {
     await expect(reloadBtn).toHaveCSS('background', /rgb\(245, 158, 11\)/);
   });
 
-  // Keep unchanged - accessibility-specific test
+  // Accessibility test - verify keyboard navigation works
   test('should be keyboard accessible', async ({ page }) => {
     await setGitHubPAT(page, 'test-token-12345');
 
@@ -225,10 +166,11 @@ test.describe('Reload Button', () => {
     // Press Enter to trigger
     await page.keyboard.press('Enter');
 
-    // Should transition to loading state
-    await expect(reloadBtn).toBeDisabled();
+    // Verify success via toast (button state management removed)
+    const toast = page.locator('.toast').filter({ hasText: /workflow triggered/i });
+    await expect(toast).toBeVisible();
 
-    // Should show success state
-    await expect(reloadBtn).toHaveCSS('background-color', 'rgb(16, 185, 129)');
+    // Button remains enabled and unchanged
+    await expect(reloadBtn).not.toBeDisabled();
   });
 });
