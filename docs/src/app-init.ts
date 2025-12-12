@@ -8,7 +8,6 @@
 
 import { loadServices, fetchCurrentChecksHash } from './api/registry.js';
 import { isServiceStale } from './services/staleness.js';
-import { getCssVar } from './utils/css.js';
 import { getTeamName } from './utils/team-statistics.js';
 import { useAppStore } from './stores/appStore.js';
 import * as storeAccessor from './stores/accessor.js';
@@ -253,18 +252,6 @@ export async function initializeApp(): Promise<void> {
     }
   } catch (error) {
     console.error('Error loading services:', error);
-    const textMuted = getCssVar('--color-text-muted');
-    const servicesGrid = document.getElementById('services-grid');
-    if (servicesGrid && !window.__REACT_MANAGES_SERVICES_GRID) {
-      servicesGrid.innerHTML = `
-            <div class="empty-state">
-                <h3>No Services Found</h3>
-                <p>No services have run scorecards yet, or the registry is not available.</p>
-                <p style="margin-top: 10px; font-size: 0.9rem; color: ${textMuted};">
-                    Error: ${error instanceof Error ? error.message : String(error)}
-                </p>
-            </div>
-        `;
-    }
+    // Error state is now handled by React components
   }
 }

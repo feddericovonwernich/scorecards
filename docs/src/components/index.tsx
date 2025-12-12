@@ -89,20 +89,12 @@ function initPortalTargets(): void {
   navigationEl = document.getElementById('react-navigation');
   floatingControlsEl = document.getElementById('react-floating-controls');
 
-  // Set flags to tell vanilla JS that React is managing these grids
-  // This prevents vanilla JS from overwriting React's rendered content
+  // Clear any placeholder content from HTML - React will render everything
   if (servicesGridEl) {
-    window.__REACT_MANAGES_SERVICES_GRID = true;
     servicesGridEl.innerHTML = '';
   }
   if (teamsGridEl) {
-    window.__REACT_MANAGES_TEAMS_GRID = true;
     teamsGridEl.innerHTML = '';
-  }
-
-  // Set flag for navigation (checked by vanilla JS in main.ts)
-  if (navigationEl) {
-    window.__REACT_MANAGES_NAVIGATION = true;
   }
 
   // Stats sections - React takes over stat rendering
@@ -110,11 +102,9 @@ function initPortalTargets(): void {
   teamsStatsEl = document.querySelector('.teams-stats');
 
   if (servicesStatsEl) {
-    window.__REACT_MANAGES_SERVICES_STATS = true;
     servicesStatsEl.innerHTML = '';
   }
   if (teamsStatsEl) {
-    window.__REACT_MANAGES_TEAMS_STATS = true;
     teamsStatsEl.innerHTML = '';
   }
 
@@ -122,14 +112,7 @@ function initPortalTargets(): void {
   servicesControlsEl = document.querySelector('#services-view .controls');
   teamsControlsEl = document.querySelector('#teams-view .controls');
 
-  if (servicesControlsEl) {
-    window.__REACT_MANAGES_SERVICES_CONTROLS = true;
-    // Don't clear innerHTML - preserve portal container divs for team-filter and check-filter
-  }
-  if (teamsControlsEl) {
-    window.__REACT_MANAGES_TEAMS_CONTROLS = true;
-    // Don't clear innerHTML - no portal containers in teams controls
-  }
+  // Don't clear controls innerHTML - preserve portal container divs for team-filter and check-filter
 }
 
 interface AppProps {

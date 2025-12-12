@@ -93,17 +93,6 @@ declare global {
     // Check Adoption Dashboard
     openCheckAdoptionDashboard: () => void;
 
-    // ============= React Integration Flags =============
-    // These flags indicate when React is managing specific UI elements
-    // Vanilla JS code checks these before rendering to avoid conflicts
-    __REACT_MANAGES_SERVICES_GRID?: boolean;
-    __REACT_MANAGES_TEAMS_GRID?: boolean;
-    __REACT_MANAGES_NAVIGATION?: boolean;
-    __REACT_MANAGES_SERVICES_STATS?: boolean;
-    __REACT_MANAGES_TEAMS_STATS?: boolean;
-    __REACT_MANAGES_SERVICES_CONTROLS?: boolean;
-    __REACT_MANAGES_TEAMS_CONTROLS?: boolean;
-
     // ============= Additional Window Functions =============
     // Using index signature for flexibility with other window functions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
