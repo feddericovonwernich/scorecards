@@ -45,7 +45,10 @@ export function ServiceGridContainer() {
   }, []);
 
   return (
-    <section id="services-grid" className="services-grid">
+    <section
+      id="services-grid"
+      className={`services-grid${displayMode === 'list' ? ' services-grid--list' : ''}`}
+    >
       <ServiceGrid
         services={services}
         checksHash={checksHash}

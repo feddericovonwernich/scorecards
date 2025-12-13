@@ -5,7 +5,7 @@
  * Supports click to open team detail modal.
  */
 
-import { memo, useLayoutEffect } from 'react';
+import { memo } from 'react';
 import type { DisplayMode } from '../../types/index.js';
 import { RankBadge, RankBadgeGroup, type RankType } from '../ui/Badge.js';
 
@@ -164,26 +164,8 @@ export function TeamGrid({
   onCardClick,
   emptyMessage = 'No teams found',
 }: TeamGridProps) {
-  // Note: TeamGrid renders INTO a container that already has 'teams-grid' class
-  // We directly access the DOM element by ID and add/remove --list class
-  // useLayoutEffect ensures this runs synchronously after DOM mutations
-  useLayoutEffect(() => {
-    const container = document.getElementById('teams-grid');
-    if (container) {
-      if (variant === 'list') {
-        container.classList.add('teams-grid--list');
-      } else {
-        container.classList.remove('teams-grid--list');
-      }
-    }
-    // Cleanup: remove --list class when component unmounts
-    return () => {
-      const el = document.getElementById('teams-grid');
-      if (el) {
-        el.classList.remove('teams-grid--list');
-      }
-    };
-  }, [variant]);
+  // Grid/list mode is now managed by TeamGridContainer via className
+  // No DOM manipulation needed - React handles styling
 
   if (teams.length === 0) {
     return (

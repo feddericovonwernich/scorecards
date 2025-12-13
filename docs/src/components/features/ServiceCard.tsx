@@ -5,7 +5,7 @@
  * Supports click to open service detail modal.
  */
 
-import { memo, useRef, useEffect } from 'react';
+import { memo } from 'react';
 import type { ServiceData, DisplayMode } from '../../types/index.js';
 import { RankBadge, ServiceBadges, ScoreBadge, UtilityBadge, type RankType } from '../ui/Badge.js';
 
@@ -362,20 +362,8 @@ export function ServiceGrid({
 }: ServiceGridProps) {
   // Note: ServiceGrid renders INTO a container that already has 'services-grid' class
   // We use a ref and add --list class via useEffect to the parent container
-  // Hooks must be called unconditionally, before any early returns
-  const gridRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Find the parent container (the one with ID 'services-grid') and add/remove --list class
-    const parent = gridRef.current?.parentElement;
-    if (parent && parent.id === 'services-grid') {
-      if (variant === 'list') {
-        parent.classList.add('services-grid--list');
-      } else {
-        parent.classList.remove('services-grid--list');
-      }
-    }
-  }, [variant]);
+  // Grid/list mode is now managed by ServiceGridContainer via className
+  // No DOM manipulation needed - React handles styling
 
   if (services.length === 0) {
     return (
