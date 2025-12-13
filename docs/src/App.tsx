@@ -17,6 +17,8 @@ import {
   type ToastType,
 } from './components/ui/index.js';
 import { useActionsWidget } from './hooks/useWorkflowPolling.js';
+import { initializeApp } from './app-init.js';
+import { useAppStore } from './stores/index.js';
 
 // Toast queue for messages before React mounts
 let pendingToasts: Array<{ message: string; type: ToastType }> = [];
@@ -31,6 +33,33 @@ function AppContent() {
   const { toasts, showToast, dismissToast } = useToast();
   const { filterCounts } = useActionsWidget();
   const actionsBadgeCount = filterCounts.in_progress + filterCounts.queued;
+  const updateFilters = useAppStore(state => state.updateFilters);
+
+  // Initialize app on mount
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  // Setup team filter event listener
+  // TODO: Remove when TeamFilterDropdown migrates to direct Zustand updates
+  useEffect(() => {
+    const handleTeamFilterChange = ((e: CustomEvent<{ teams: string[] }>) => {
+      const { teams } = e.detail;
+
+      // For multi-select, join teams with comma
+      let teamFilter: string | null = null;
+      if (teams.length === 1) {
+        teamFilter = teams[0];
+      } else if (teams.length > 1) {
+        teamFilter = teams.join(',');
+      }
+
+      updateFilters({ teamFilter });
+    }) as EventListener;
+
+    window.addEventListener('team-filter-changed', handleTeamFilterChange);
+    return () => window.removeEventListener('team-filter-changed', handleTeamFilterChange);
+  }, [updateFilters]);
 
   // Register global toast handler
   useEffect(() => {
