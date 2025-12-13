@@ -9,7 +9,7 @@
         "frontend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-12T01:50:16Z"
+      "last_discovered": "2025-12-13T01:44:40Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-12T01:51:19Z",
+  "timestamp": "2025-12-13T01:45:31Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -66,7 +66,7 @@
       "weight": 18,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "GitHub Actions: 3 workflow(s) (ci.yml, node-ci.yml, scorecards.yml)\n",
       "stderr": ""
     },
@@ -126,7 +126,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
       "stderr": ""
     },

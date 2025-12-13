@@ -8,13 +8,13 @@
       "frontend"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-12-12T01:50:16Z",
+    "last_discovered": "2025-12-13T01:44:40Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "frontend"
   },
   "score": 74,
   "rank": "silver",
-  "last_updated": "2025-12-12T01:51:19Z",
+  "last_updated": "2025-12-13T01:45:31Z",
   "has_api": false,
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
