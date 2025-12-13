@@ -4,16 +4,16 @@
 
 ### DRY Configuration
 Never hardcode magic values (timeouts, API params, thresholds, workflow names, etc.). Configuration lives in:
-- `docs/src/config/` - Frontend JavaScript config
+- `docs/src/config/` - Frontend TypeScript config
 - `action/config/` - Bash script config (scoring thresholds, etc.)
 
 Explore these directories to discover available constants, settings, and helper functions.
 
 ### DRY Styling
-Never hardcode colors in JavaScript. Use CSS variables from `docs/css/base/variables.css` via the `getCssVar()` utility in `docs/src/utils/css.js`.
+Never hardcode colors in TypeScript/React. Use CSS variables from `docs/css/base/variables.css` via the `getCssVar()` utility in `docs/src/utils/css.ts`.
 
 ### DRY Code
-Before creating new utilities, explore `docs/src/utils/` for existing implementations. Reuse over reinvent.
+Before creating new utilities, explore `docs/src/utils/` for existing implementations. Reuse over reinvent. The frontend uses React + TypeScript with Zustand for state management.
 
 ### ESLint Compliance
 All code must pass `npm run lint`. Key enforced rules:
@@ -30,7 +30,7 @@ All code must pass `npm run lint`. Key enforced rules:
 ## Module Structure
 
 Primary directories:
-- `docs/src/` - Frontend JavaScript (see `frontend.md` rule for details)
+- `docs/src/` - Frontend React + TypeScript (see `frontend.md` rule for details)
 - `action/` - GitHub Action implementation (bash scripts)
 - `checks/` - Quality check scripts (see `checks.md` rule)
 - `tests/e2e/` - End-to-end tests (see `playwright.md` rule)

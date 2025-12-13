@@ -4,224 +4,356 @@ This document describes the architecture and features of the Scorecards catalog 
 
 ## Overview
 
-The catalog UI is a static web application served via GitHub Pages from the catalog branch. It provides a comprehensive interface for browsing service scorecards, triggering updates, and exploring service quality metrics.
+The catalog UI is a React single-page application served via GitHub Pages from the catalog branch. It provides a comprehensive interface for browsing service scorecards, triggering updates, and exploring service quality metrics.
+
+## Technology Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.2.0 | Component-based UI framework |
+| TypeScript | 5.9.3 | Static typing and IDE support |
+| Vite | 5.4.0 | Build tool with HMR |
+| Zustand | 5.0.9 | Lightweight state management |
+| React Router | 7.10.1 | Client-side routing |
 
 ## Architecture
 
-### Technology Stack
+### Component Hierarchy
 
-- **Vanilla JavaScript** - ES6 modules, no framework dependencies
-- **Modular Design** - Components split into separate modules
-- **Static Hosting** - GitHub Pages serves from catalog branch docs/ directory
-- **Client-side Rendering** - Fetches data from JSON files in catalog branch
+```
+App.tsx
+├── Header
+│   ├── Navigation (Services | Teams)
+│   └── ThemeToggle
+├── Routes
+│   ├── ServicesView
+│   │   ├── ServicesControls (search, filters, sort)
+│   │   ├── StatsSection (rank distribution)
+│   │   └── ServiceGridContainer
+│   │       └── ServiceCard[] (clickable → ServiceModal)
+│   └── TeamsView
+│       ├── TeamsControls (search, filters)
+│       ├── StatsSection (team statistics)
+│       └── TeamGridContainer
+│           └── TeamCard[] (clickable → TeamModal)
+├── ModalOrchestrator
+│   ├── ServiceModal
+│   ├── TeamModal
+│   ├── SettingsModal
+│   └── CheckFilterModal
+├── ActionsWidget (floating, collapsible)
+├── FloatingControls
+└── Footer
+```
 
 ### File Structure
 
 ```
-docs/
-├── index.html          # Main catalog page
-├── api-explorer.html   # OpenAPI spec explorer
-├── app.js              # Main application entry point
-├── modules/
-│   ├── api.js         # GitHub API client
-│   ├── filters.js     # Table filtering logic
-│   ├── renderer.js    # DOM rendering
-│   ├── settings.js    # Settings management
-│   ├── actions.js     # Actions widget
-│   └── ...
-└── styles/
-    └── *.css
+docs/src/
+├── main.tsx                    # Entry point
+├── App.tsx                     # Router & layout
+├── app-init.ts                 # Data bootstrapping
+├── components/
+│   ├── features/               # Business components
+│   │   ├── ServiceCard.tsx
+│   │   ├── TeamCard.tsx
+│   │   ├── ServiceModal/       # Multi-file component
+│   │   ├── TeamModal/
+│   │   ├── ActionsWidget/
+│   │   ├── SettingsModal/
+│   │   ├── CheckFilterModal/
+│   │   └── ModalOrchestrator.tsx
+│   ├── layout/                 # Structural components
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   └── Navigation.tsx
+│   ├── ui/                     # Reusable primitives
+│   │   ├── Badge.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Toast.tsx
+│   │   └── Tabs.tsx
+│   ├── views/                  # Page-level components
+│   │   ├── ServicesView.tsx
+│   │   └── TeamsView.tsx
+│   └── containers/             # Data containers
+│       ├── ServiceGridContainer.tsx
+│       └── TeamGridContainer.tsx
+├── stores/                     # Zustand stores
+│   ├── appStore.ts
+│   └── accessor.ts
+├── hooks/                      # Custom React hooks
+├── api/                        # API clients
+├── config/                     # Constants & configuration
+├── services/                   # Business logic
+├── types/                      # TypeScript definitions
+└── utils/                      # Utility functions
 ```
+
+### State Management
+
+The application uses Zustand for global state with a single store:
+
+```typescript
+// stores/appStore.ts
+interface AppState {
+  // Data
+  services: Service[];
+  teams: Team[];
+  checksHash: string | null;
+
+  // UI State
+  filters: FilterState;
+  sortConfig: SortConfig;
+  searchQuery: string;
+
+  // Modal State
+  activeModal: ModalType | null;
+  modalData: ModalData | null;
+
+  // Theme
+  theme: 'light' | 'dark';
+
+  // Actions
+  setServices: (services: Service[]) => void;
+  setFilters: (filters: Partial<FilterState>) => void;
+  openModal: (type: ModalType, data?: ModalData) => void;
+  closeModal: () => void;
+  toggleTheme: () => void;
+}
+```
+
+**Usage in components:**
+
+```typescript
+import { useAppStore } from '../stores/appStore';
+
+function ServicesView() {
+  const { services, filters, setFilters } = useAppStore();
+  // Component logic
+}
+```
+
+### Routing
+
+React Router provides client-side navigation:
+
+```typescript
+// App.tsx
+<BrowserRouter basename="/scorecards">
+  <Routes>
+    <Route path="/" element={<Navigate to="/services" />} />
+    <Route path="/services" element={<ServicesView />} />
+    <Route path="/teams" element={<TeamsView />} />
+  </Routes>
+</BrowserRouter>
+```
+
+**URL Parameters:**
+- `/services?service=org/repo` - Opens service modal
+- `/teams?team=team-name` - Opens team modal
 
 ### Sync Workflow
 
 The UI is kept in sync via the `sync-docs.yml` workflow:
 
 1. Changes to `docs/` on main branch trigger sync workflow
-2. Workflow uses rsync to copy files to catalog branch
-3. GitHub Pages automatically updates from catalog branch
-4. No manual deployment needed
+2. Vite builds the production bundle
+3. Built files are committed to catalog branch
+4. GitHub Pages automatically updates from catalog branch
 
 ## Core Features
 
-### Service Catalog Table
+### Service Catalog
 
-**Location**: docs/index.html (main table)
+**Location**: `components/views/ServicesView.tsx`
 
-**Capabilities**:
-- **Sortable columns** - Click headers to sort by score, rank, team, etc.
-- **Search filter** - Real-time filtering by service name, team, description
-- **Rank badges** - Visual indicators (Platinum, Gold, Silver, Bronze)
-- **Score display** - Percentage score with color coding
-- **Details expansion** - Click row to see individual check results
+**Capabilities:**
+- **Grid display** - Responsive card grid of all services
+- **Search** - Real-time filtering by service name, team, description
+- **Rank filtering** - Filter by Platinum, Gold, Silver, Bronze
+- **Check filtering** - Include/exclude by specific check results
+- **Sorting** - Sort by score, name, team, last updated
+- **Staleness indicators** - Visual warning for outdated scorecards
 
-**Data Source**: Fetches `registry/all-services.json` from catalog branch
+**Data Source:** Fetches `registry/all-services.json` from catalog branch
 
-### Check Details View
+### Service Modal
 
-**Location**: Expanded row in main table
+**Location**: `components/features/ServiceModal/`
 
-**Shows**:
-- Individual check results (pass/fail)
-- Points awarded vs possible
-- Check categories
-- Timestamp of last run
-- Links to relevant files (README, OpenAPI spec, etc.)
+**Tabs:**
+- **Checks** - Individual check results with pass/fail status
+- **API** - OpenAPI spec viewer (if available)
+- **Contributors** - Repository contributors with Gravatar
+- **Workflows** - GitHub Actions workflow status
+- **Badges** - Embeddable badge code snippets
+- **Links** - Quick links to repo, docs, API spec
+
+### Teams View
+
+**Location**: `components/views/TeamsView.tsx`
+
+**Features:**
+- **Team cards** - Aggregated statistics per team
+- **Check adoption** - Which checks each team has adopted
+- **Score distribution** - Team-level rank breakdown
 
 ### Staleness Detection
 
-**How it Works**:
-1. Each service's registry entry includes `checks_hash` (hash when it was scored)
+**How it works:**
+1. Each service's registry entry includes `checks_hash`
 2. UI fetches `current-checks-hash.txt` from catalog branch
 3. Compares service hash vs current hash
 4. Visual indicator shows services needing re-scoring
 
-**Visual Indicators**:
-- ⚠️ Warning icon for stale scorecards
-- Highlighted rows
-- Tooltip explaining staleness
-
-**See [Staleness Detection Flow](flows/staleness-detection-flow.md) for detailed diagram and mechanics.**
+**See [Staleness Detection Flow](flows/staleness-detection-flow.md) for details.**
 
 ## Advanced Features
 
-### Settings Management
+### Settings Modal
 
-**Location**: docs/modules/settings.js, Settings modal in UI
+**Location**: `components/features/SettingsModal/`
 
-**Purpose**: Store GitHub Personal Access Token for enhanced API access
+**Purpose:** Configure GitHub PAT for enhanced API access
 
-**Features**:
-- **Secure Storage** - Token stored in browser localStorage only
-- **Validation** - Tests token before saving
-- **Rate Limiting** - Shows API quota usage
-- **Permissions Check** - Validates token has required scopes
-- **Faster API Access** - Authenticated requests have higher rate limits
-- **Workflow Triggering** - Required for dispatching scorecards workflows
+**Features:**
+- Token validation before saving
+- Rate limit display
+- Permission scope checking
+- Secure localStorage storage
 
-**Why Needed**:
+**Why Needed:**
 - Unauthenticated GitHub API: 60 requests/hour
 - Authenticated GitHub API: 5000 requests/hour
 - Enables workflow triggering (requires write access)
 
 ### Actions Widget
 
-**Location**: docs/modules/actions.js, Actions panel in UI
+**Location**: `components/features/ActionsWidget/`
 
-**Purpose**: Real-time monitoring of running scorecard workflows
+**Purpose:** Real-time monitoring of running scorecard workflows
 
-**Features**:
-- **Auto-refresh** - Polls GitHub API at adaptive intervals:
+**Features:**
+- **Auto-refresh** - Adaptive polling intervals:
   - 15s when workflows running
   - 30s when recently completed
   - 5m when idle
-- **Status Display** - Shows in_progress, queued, completed, failed
-- **Duration Tracking** - Shows runtime for active workflows
-- **Conclusion Icons** - ✅ success, ❌ failure, ⏭️ skipped
-- **Direct Links** - Click to view workflow run on GitHub
-- **Manual Refresh** - Button to force immediate update
-
-**API Usage**: `GET /repos/{owner}/{repo}/actions/runs` filtered by workflow_id
+- **Status display** - in_progress, queued, completed, failed
+- **Duration tracking** - Runtime for active workflows
+- **Direct links** - Click to view workflow on GitHub
 
 ### Workflow Triggering
 
-**Location**: docs/modules/api.js triggerWorkflow function
+**Location**: `api/workflow-triggers-react.ts`
 
-**Capabilities**:
-- **Single Service** - Trigger scorecard for one service
-- **Bulk Trigger** - Re-run all stale services at once
-- **Manual Dispatch** - `workflow_dispatch` API event
+**Capabilities:**
+- Single service trigger
+- Bulk trigger for stale services
+- Manual dispatch via `workflow_dispatch` API
 
-**Requirements**:
-- GitHub PAT with `workflow` scope (stored in Settings)
+**Requirements:**
+- GitHub PAT with `workflow` scope
 - Target service must have scorecards.yml installed
-- Uses `trigger-service-workflow.yml` in scorecards repo
-
-**Flow**:
-1. User clicks "Trigger Update" button
-2. UI validates PAT is configured
-3. Dispatches workflow_dispatch event via API
-4. Actions widget shows queued/running status
-5. On completion, catalog automatically updates
 
 ### API Explorer
 
-**Location**: docs/api-explorer.html
+**Location**: `docs/api-explorer.html`, `pages/ApiExplorer/`
 
-**Purpose**: Browse OpenAPI specifications for services with documented APIs
-
-**Features**:
-- **Swagger UI Integration** - Full-featured API documentation viewer
-- **Auto-detection** - Shows services with openapi.json/yaml
-- **Direct Links** - From catalog table to API explorer
-- **Version Support** - OpenAPI 2.0, 3.0, 3.1
-
-**Data Source**: Reads openapi_spec field from service registry entries
-
-### Bulk Operations
-
-**Location**: Bulk action buttons in main UI
-
-**Operations**:
-- **Re-run Stale Services** - Triggers workflows for all services with outdated checks_hash
-- **Batch Processing** - Handles rate limiting and retries
-- **Progress Indication** - Shows how many services triggered/remaining
-
-**Implementation**: Uses trigger-service-workflow.yml with array of service names
+**Features:**
+- Swagger UI integration
+- Auto-detection of OpenAPI specs
+- Support for OpenAPI 2.0, 3.0, 3.1
 
 ## Data Flow
 
-### Page Load
+### Initial Load
 
-1. Fetch `registry/all-services.json`
-2. Fetch `current-checks-hash.txt`
-3. Render table with all services
-4. Compare hashes to detect staleness
-5. Load Actions widget (if PAT configured)
+```
+main.tsx
+  └── App.tsx
+        └── app-init.ts
+              ├── fetch registry/all-services.json
+              ├── fetch current-checks-hash.txt
+              ├── populate Zustand store
+              └── render views
+```
 
-### Workflow Trigger
+### User Interactions
 
-1. User clicks trigger button
-2. Validate PAT from localStorage
-3. Call GitHub API to dispatch workflow_dispatch
-4. Poll Actions widget for status updates
-5. Wait for workflow completion
-6. Catalog auto-updates when workflow commits results
+```
+User clicks ServiceCard
+  └── ModalOrchestrator receives event
+        └── appStore.openModal('service', { org, repo })
+              └── ServiceModal renders with data
+```
 
-### Settings Update
+### Workflow Triggering
 
-1. User enters PAT in Settings modal
-2. Validate token via GitHub API `/user` endpoint
-3. Check rate limit via `/rate_limit` endpoint
-4. Store in localStorage if valid
-5. Enable workflow triggering features
+```
+User clicks "Trigger Update"
+  └── Validate PAT in localStorage
+        └── POST workflow_dispatch to GitHub API
+              └── ActionsWidget polls for status
+                    └── Catalog updates when workflow commits
+```
+
+## Custom Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useTheme()` | Theme state and toggle |
+| `useDebounce(value, delay)` | Debounced value updates |
+| `useWorkflowPolling()` | Workflow status polling |
+| `useButtonState()` | Button loading/success states |
+
+## Configuration
+
+Configuration constants live in `src/config/`:
+
+| File | Contents |
+|------|----------|
+| `constants.ts` | Timing values, API params, storage keys |
+| `deployment.ts` | Repository owner, API version |
+| `scoring.ts` | Rank thresholds (90/75/50), colors |
+| `workflows.ts` | Workflow filenames, polling intervals |
+| `icons.ts` | SVG icon definitions |
+
+## Testing
+
+### Unit Tests
+
+```bash
+npm run test:react
+```
+
+Uses Jest + React Testing Library for component tests.
+
+### E2E Tests
+
+```bash
+npm run test:e2e
+```
+
+Uses Playwright for full integration testing. **263 E2E tests** covering all major user flows.
 
 ## Security Considerations
 
-- **Client-side Only** - No backend server; all processing in browser
-- **Token Storage** - PAT stored in localStorage (user's browser only)
-- **No Token Transmission** - Token sent only to GitHub API, never to other servers
-- **HTTPS** - GitHub Pages enforces HTTPS for all requests
-- **Read-only Default** - Most features work without authentication
-- **Explicit Opt-in** - User must manually configure PAT for write operations
+- **Client-side only** - No backend server; all processing in browser
+- **Token storage** - PAT stored in localStorage (user's browser only)
+- **No token transmission** - Token sent only to GitHub API
+- **HTTPS enforced** - GitHub Pages requires HTTPS
+- **Read-only default** - Most features work without authentication
 
 ## Performance
 
-- **Lazy Loading** - Details fetched only when row expanded
-- **Client-side Filtering** - No server requests for search/filter
-- **Caching** - Browser caches static assets
-- **Minimal Dependencies** - No large frameworks; faster page load
-- **Adaptive Polling** - Actions widget adjusts refresh rate to minimize API calls
-
-## Extension Points
-
-- **Custom Renderers** - Add new renderers in modules/renderer.js
-- **Additional Filters** - Extend modules/filters.js
-- **New Widgets** - Add modules following existing patterns
-- **Styling** - Modify CSS without touching logic
-- **Data Sources** - Add new JSON endpoints in catalog branch
+- **Code splitting** - Vite handles automatic chunk splitting
+- **Lazy loading** - Modal content loaded on demand
+- **Client-side filtering** - No server requests for search/filter
+- **Memoization** - React.memo and useMemo for expensive computations
+- **Adaptive polling** - Actions widget adjusts refresh rate
 
 ## Related Documentation
 
 - [Architecture Overview](overview.md) - System-wide architecture
 - [Staleness Detection Flow](flows/staleness-detection-flow.md) - How staleness detection works
+- [docs/README.md](../../docs/README.md) - Frontend development guide

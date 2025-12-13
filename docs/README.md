@@ -2,140 +2,218 @@
 
 This directory contains the catalog web UI for viewing scorecard results across all repositories.
 
+## Technology Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.2.0 | UI framework |
+| TypeScript | 5.9.3 | Type-safe JavaScript |
+| Vite | 5.4.0 | Build tool & dev server |
+| Zustand | 5.0.9 | State management |
+| React Router | 7.10.1 | Client-side routing |
+
 ## Structure
 
 ```
 docs/
-├── index.html              # Main catalog page
+├── index.html              # Main catalog page (React root)
 ├── api-explorer.html       # API exploration interface
-├── app.js                  # Legacy application logic (being phased out)
-├── app.js.backup           # Backup of original monolith
-├── css/                    # Modular CSS (main.css imports all modules)
+├── css/                    # Modular CSS
 │   ├── main.css            # Entry point with @imports
 │   ├── base/               # Reset, variables, typography
 │   ├── components/         # Buttons, cards, modals, etc.
 │   ├── features/           # Stats, controls, teams, etc.
 │   ├── layout/             # Container, header, footer
 │   └── utilities/          # Animations, helpers, responsive
-└── src/                    # ES6 Modules (NEW)
-    ├── main.js             # Module orchestration & exports
-    ├── api/
-    │   ├── github.js       # GitHub API client (~180 lines)
-    │   └── registry.js     # Registry data fetching (~220 lines)
-    ├── services/
-    │   ├── auth.js         # Token management (~80 lines)
-    │   └── staleness.js    # Staleness detection (~90 lines)
-    ├── ui/
-    │   ├── filters.js      # Filtering & sorting (~135 lines)
-    │   ├── modals.js       # Modal management (~125 lines)
-    │   ├── service-modal.js # Service detail modal
-    │   ├── team-modal.js   # Team detail modal (~145 lines)
-    │   └── toast.js        # Toast notifications (~65 lines)
-    └── utils/
-        ├── clipboard.js    # Clipboard operations (~75 lines)
-        ├── crypto.js       # MD5 hashing (~170 lines)
-        ├── dom.js          # DOM helpers (~120 lines)
-        └── formatting.js   # Date/text formatting (~120 lines)
+└── src/                    # React + TypeScript source
+    ├── main.tsx            # Application entry point
+    ├── App.tsx             # Router configuration & layout
+    ├── app-init.ts         # Data initialization
+    ├── components/
+    │   ├── features/       # Business components
+    │   │   ├── ServiceCard.tsx
+    │   │   ├── TeamCard.tsx
+    │   │   ├── ServiceModal/
+    │   │   ├── TeamModal/
+    │   │   ├── ActionsWidget/
+    │   │   ├── SettingsModal/
+    │   │   └── ModalOrchestrator.tsx
+    │   ├── layout/         # Header, Footer, Navigation
+    │   ├── ui/             # Reusable UI (Badge, Modal, Toast, Tabs)
+    │   ├── views/          # Page views (ServicesView, TeamsView)
+    │   └── containers/     # Grid containers
+    ├── stores/             # Zustand state management
+    │   ├── appStore.ts     # Main application store
+    │   └── accessor.ts     # Store access utilities
+    ├── hooks/              # Custom React hooks
+    │   ├── useTheme.ts
+    │   ├── useDebounce.ts
+    │   └── useWorkflowPolling.ts
+    ├── api/                # API clients
+    │   ├── github.ts       # GitHub API interactions
+    │   └── registry.ts     # Registry data fetching
+    ├── config/             # Configuration constants
+    │   ├── constants.ts    # Timing, API params, storage keys
+    │   ├── deployment.ts   # Repo owner, API version
+    │   ├── scoring.ts      # Rank thresholds, colors
+    │   ├── workflows.ts    # Workflow filenames, polling
+    │   └── icons.ts        # SVG icon definitions
+    ├── services/           # Business logic
+    │   ├── auth.ts         # Token management
+    │   └── staleness.ts    # Staleness detection
+    ├── types/              # TypeScript definitions
+    └── utils/              # Utility functions
+        ├── formatting.ts   # Date/text formatting
+        ├── statistics.ts   # Score calculations
+        └── crypto.ts       # MD5 hashing for Gravatar
 ```
 
 ## Architecture
 
-### ES6 Module System (Phase 4 Complete)
+### Component-Based Design
 
-The catalog now uses a modular ES6 architecture with clear separation of concerns:
+The catalog uses a modern React architecture with clear separation of concerns:
 
-**API Layer** (`src/api/`)
-- `github.js` - GitHub REST API interactions (workflow triggers, rate limiting)
-- `registry.js` - Registry data fetching with hybrid auth (API vs CDN)
+**Views** (`src/components/views/`)
+- `ServicesView.tsx` - Services grid with filtering and sorting
+- `TeamsView.tsx` - Teams dashboard with aggregated statistics
 
-**Services Layer** (`src/services/`)
-- `auth.js` - GitHub PAT management and validation
-- `staleness.js` - Service staleness detection based on checks hash
+**Features** (`src/components/features/`)
+- Business logic components like modals, cards, widgets
+- Each feature is self-contained with its own state handling
 
-**UI Layer** (`src/ui/`)
-- `filters.js` - Service filtering and sorting logic
-- `modals.js` - Modal dialog management
-- `service-modal.js` - Service detail modal rendering
-- `team-modal.js` - Team detail modal rendering
-- `toast.js` - Toast notification system
+**UI Components** (`src/components/ui/`)
+- Reusable presentational components (Badge, Modal, Toast, Tabs)
+- No business logic, purely visual
 
-**Utilities** (`src/utils/`)
-- `formatting.js` - Date, time, and text formatting
-- `crypto.js` - MD5 hashing for Gravatar
-- `clipboard.js` - Copy-to-clipboard functionality
-- `dom.js` - DOM manipulation helpers
+**Layout** (`src/components/layout/`)
+- Header, Footer, Navigation components
+- Consistent page structure
 
-**Orchestration** (`src/main.js`)
-- Imports all modules
-- Exports to window for backward compatibility with app.js
-- Initializes modal handlers and event listeners
+### State Management
 
-### Module Loading
+The application uses Zustand for global state:
 
-Modules are loaded via ES6 imports in `index.html`:
+```typescript
+import { useAppStore } from '../stores/appStore';
 
-```html
-<!-- ES6 Modules (loaded first) -->
-<script type="module" src="src/main.js"></script>
-
-<!-- Main application (uses modules via window.ScorecardModules) -->
-<script src="app.js" defer></script>
+// In a component
+const { services, filters, setFilters } = useAppStore();
 ```
 
-### Accessing Modules
+**Store structure:**
+- `services` - All service data from registry
+- `teams` - Team aggregations
+- `filters` - Active filter state
+- `modals` - Modal open/close state
+- `theme` - Light/dark mode
 
-Modules can be accessed in two ways:
+### Routing
 
-1. **Via window.ScorecardModules** (recommended for new code):
-```javascript
-const { auth, github, registry } = window.ScorecardModules;
-```
+React Router handles navigation between views:
 
-2. **Via global functions** (for backward compatibility):
-```javascript
-showToast('Message', 'success');
-const token = getGitHubToken();
+```typescript
+// Routes defined in App.tsx
+<Routes>
+  <Route path="/" element={<Navigate to="/services" />} />
+  <Route path="/services" element={<ServicesView />} />
+  <Route path="/teams" element={<TeamsView />} />
+</Routes>
 ```
 
 ## Development
 
-The catalog is a static web application served via GitHub Pages.
-
 ### Local Development
 
 ```bash
-# Serve locally
-cd docs
-python3 -m http.server 8000
-# Open http://localhost:8000
+# Start Vite dev server with hot reload
+npm run dev
+
+# Open http://localhost:5173/scorecards/
 ```
 
-### Testing Modules
+### Building
 
-To verify modules load correctly, check the browser console for:
-```
-✓ ES6 Modules loaded successfully
-Available modules: [formatting, crypto, clipboard, dom, toast, modals, filters, registry, github, auth, staleness]
-✓ Modal handlers initialized
+```bash
+# Production build
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-### Deployment
+### Testing
+
+```bash
+# Run React component tests
+npm run test:react
+
+# Run E2E tests
+npm run test:e2e
+
+# Run E2E tests with UI
+npm run test:e2e:ui
+```
+
+### Type Checking
+
+```bash
+# Check TypeScript types
+npm run typecheck
+
+# Lint code
+npm run lint
+```
+
+## Deployment
 
 The catalog is automatically deployed to GitHub Pages from the `catalog` branch.
 
-The workflow `.github/workflows/sync-docs.yml` handles synchronization.
+The workflow `.github/workflows/sync-docs.yml` handles synchronization:
+1. Changes to `docs/` on main branch trigger sync workflow
+2. Vite builds the production bundle
+3. Built files are committed to catalog branch
+4. GitHub Pages serves from catalog branch
 
-## Module Benefits
+## Key Patterns
 
-- **Clear Separation**: API, services, UI, and utilities are isolated
-- **Maintainable**: ~12 focused modules (~80-220 lines each) vs 2,622-line monolith
-- **Testable**: Pure functions with minimal dependencies
-- **Modern**: ES6 import/export with native browser support
-- **Backward Compatible**: Existing app.js continues to work during transition
+### Configuration Constants
 
-## Next Steps
+Never hardcode values. Use config files:
 
-- Continue extracting complex UI rendering logic from app.js
-- Add unit tests for individual modules
-- Gradually reduce app.js footprint
-- Eventually replace app.js entirely with modular architecture
+```typescript
+import { TIMING, API_CONFIG } from '../config/constants';
+import { SCORING, getRankForScore } from '../config/scoring';
+
+// Use constants
+setTimeout(callback, TIMING.BUTTON_FEEDBACK);
+const rank = getRankForScore(85);
+```
+
+### CSS Variables
+
+Never hardcode colors. Use CSS variables:
+
+```typescript
+import { getCssVar } from '../utils/css';
+
+// Access CSS variable
+const color = getCssVar('--color-success');
+```
+
+### Custom Hooks
+
+Encapsulate reusable logic in hooks:
+
+```typescript
+import { useDebounce } from '../hooks/useDebounce';
+import { useTheme } from '../hooks/useTheme';
+
+const debouncedSearch = useDebounce(searchTerm, 300);
+const { theme, toggleTheme } = useTheme();
+```
+
+## Related Documentation
+
+- [Architecture Overview](../documentation/architecture/overview.md) - System-wide architecture
+- [Catalog UI Architecture](../documentation/architecture/catalog-ui.md) - Detailed UI documentation

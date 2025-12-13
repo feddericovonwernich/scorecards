@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
+  - Replaced ES6 modules with React functional components
+  - Replaced manual DOM manipulation with React declarative rendering
+  - Replaced scattered state with Zustand stores
+  - Replaced Python dev server with Vite (HMR support)
+  - Added React Router for client-side navigation
+  - Removed 1,183 lines of obsolete vanilla JS code
+  - 263 E2E tests passing post-migration
+
 ### Added
 - CHANGELOG.md to track project changes
 - Glossary of domain-specific terms
