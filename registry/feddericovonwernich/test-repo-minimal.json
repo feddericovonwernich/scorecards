@@ -8,13 +8,13 @@
       "platform"
     ],
     "source": "codeowners",
-    "last_discovered": "2025-12-13T01:55:01Z",
+    "last_discovered": "2025-12-13T18:37:25Z",
     "github_org": "feddericovonwernich-org",
     "github_slug": "platform"
   },
-  "score": 65,
+  "score": 72,
   "rank": "silver",
-  "last_updated": "2025-12-13T01:56:02Z",
+  "last_updated": "2025-12-13T18:38:22Z",
   "has_api": false,
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
@@ -24,7 +24,7 @@
     "03-ci-config": "pass",
     "04-tests": "pass",
     "05-scorecard-config": "pass",
-    "06-openapi-spec": "fail",
+    "06-openapi-spec": "excluded",
     "07-openapi-quality": "fail",
     "08-api-environments": "pass",
     "09-scorecard-badge": "fail",
@@ -32,7 +32,12 @@
     "11-codeowners": "pass",
     "12-codeowners-quality": "pass"
   },
-  "excluded_checks": [],
+  "excluded_checks": [
+    {
+      "check": "06-openapi-spec",
+      "reason": "Test exclusion - verifying check exclusion feature"
+    }
+  ],
   "installed": true,
   "default_branch": "main",
   "installation_pr": {
