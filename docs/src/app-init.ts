@@ -153,20 +153,9 @@ export function filterAndRenderServices(): void {
 
 /**
  * Refresh data (re-fetch from catalog)
+ * Pure function - no DOM manipulation, button state managed by caller
  */
-export async function refreshData(): Promise<void> {
-  const refreshBtn = document.getElementById(
-    'refresh-btn'
-  ) as HTMLButtonElement | null;
-  if (!refreshBtn) {
-    return;
-  }
-
-  // Disable button and show loading state
-  const originalText = refreshBtn.innerHTML;
-  refreshBtn.disabled = true;
-  refreshBtn.innerHTML = '<span class="spinner"></span> Refreshing...';
-
+export async function refreshData(): Promise<{ success: boolean; usedAPI: boolean }> {
   try {
     showToastGlobal('Refreshing service data...', 'info');
 
@@ -203,18 +192,15 @@ export async function refreshData(): Promise<void> {
         'success'
       );
     }
+
+    return { success: true, usedAPI };
   } catch (error) {
     console.error('Error refreshing data:', error);
     showToastGlobal(
       `Failed to refresh data: ${error instanceof Error ? error.message : String(error)}`,
       'error'
     );
-  } finally {
-    // Restore button state
-    setTimeout(() => {
-      refreshBtn.disabled = false;
-      refreshBtn.innerHTML = originalText;
-    }, 1000);
+    return { success: false, usedAPI: false };
   }
 }
 
