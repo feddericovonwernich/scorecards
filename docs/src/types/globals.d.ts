@@ -63,16 +63,17 @@ declare global {
     showTeamDetail: (teamName: string) => Promise<void>;
     closeTeamModal: () => void;
 
-    // App Init (used by setupEventListeners team filter and refresh)
-    filterAndRenderServices: () => void;
-    refreshData: () => Promise<void>;
+    // App Init (used by legacy main.ts only - to be removed)
+    filterAndRenderServices?: () => void;
+    refreshData?: () => Promise<void>;
 
-    // View Navigation (used by TeamGridContainer and app-init)
-    initTeamsView: () => Promise<void>;
-    setupEventListeners: () => void;
+    // View Navigation (used by legacy main.ts only - to be removed)
+    initTeamsView?: () => Promise<void>;
+    refreshTeamsView?: () => void;
+    setupEventListeners?: () => void;
 
-    // Workflow triggers (used by ServiceGridContainer reload buttons)
-    triggerServiceWorkflow: (org: string, repo: string) => Promise<boolean>;
+    // Workflow triggers - removed from React entry, use direct imports instead
+    triggerServiceWorkflow?: (org: string, repo: string) => Promise<boolean>;
 
     // Check Filter Modal
     openCheckFilterModal: () => void;

@@ -14,6 +14,7 @@ import {
   selectDisplayMode,
 } from '../../stores/appStore.js';
 import { isServiceStale } from '../../services/staleness.js';
+import { triggerServiceWorkflow } from '../../api/workflow-triggers.js';
 import type { ServiceData } from '../../types/index.js';
 
 /**
@@ -40,7 +41,7 @@ export function ServiceGridContainer() {
   }, []);
 
   const handleTriggerWorkflow = useCallback((org: string, repo: string) => {
-    return window.triggerServiceWorkflow?.(org, repo);
+    return triggerServiceWorkflow(org, repo);
   }, []);
 
   return (

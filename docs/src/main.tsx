@@ -7,18 +7,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.js';
 
-// Import functions directly to set up window globals
-// (importing ./main.js was getting tree-shaken out by bundler)
-import { initializeApp, filterAndRenderServices, refreshData } from './app-init.js';
-import { triggerServiceWorkflow } from './api/workflow-triggers.js';
+// Import initialization function
+import { initializeApp } from './app-init.js';
 
-// Set up window globals for vanilla JS bridge
-// These are used by React components that call window.* functions
-window.filterAndRenderServices = filterAndRenderServices;
-window.refreshData = refreshData;
-window.triggerServiceWorkflow = triggerServiceWorkflow;
-
-// Setup event listeners function (now inline to avoid tree-shaking)
+// Setup event listeners for legacy custom events
+// TODO: Remove when TeamFilterDropdown migrates to direct Zustand updates
 function setupEventListeners(): void {
   // Listen for team filter changes from TeamFilterDropdown component
   window.addEventListener('team-filter-changed', ((e: CustomEvent<{ teams: string[] }>) => {
@@ -33,16 +26,14 @@ function setupEventListeners(): void {
       teamFilter = teams.join(',');
     }
 
-    // Import dynamically to avoid circular dependency
+    // Update filter in store - this automatically triggers re-render of filtered services
     import('./stores/appStore.js').then(({ useAppStore }) => {
       const store = useAppStore.getState();
       store.updateFilters({ teamFilter });
-      window.filterAndRenderServices();
+      // No need to call filterAndRenderServices - React handles re-rendering
     });
   }) as EventListener);
 }
-
-window.setupEventListeners = setupEventListeners;
 
 // Call initialization
 setupEventListeners();
