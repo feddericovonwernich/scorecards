@@ -85,11 +85,15 @@ export function formatInterval(ms: number): string {
 
 /**
  * Escape HTML special characters to prevent XSS
+ * Pure function - no DOM manipulation
  */
 export function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**

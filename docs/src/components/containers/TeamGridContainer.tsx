@@ -24,7 +24,10 @@ export function TeamGridContainer() {
   }, []);
 
   return (
-    <section id="teams-grid" className="teams-grid">
+    <section
+      id="teams-grid"
+      className={`teams-grid${displayMode === 'list' ? ' teams-grid--list' : ''}`}
+    >
       <TeamGrid
         teams={teams}
         variant={displayMode}
