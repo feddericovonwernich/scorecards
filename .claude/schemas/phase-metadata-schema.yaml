@@ -1,0 +1,369 @@
+# JSON Schema for phase metadata validation
+# This schema defines the structure and validation rules for phase file metadata sections
+$schema: http://json-schema.org/draft-07/schema#
+# Local identifier for schema references (not a resolvable URL)
+$id: urn:claude-workflow:schema:phase-metadata:v1
+title: Phase Metadata Schema
+description: Schema for validating phase file metadata sections in Claude workflows
+type: object
+required:
+  - phase_metadata
+properties:
+  phase_metadata:
+    type: object
+    description: Metadata section defining phase inputs, outputs, and execution configuration
+    properties:
+      execution_mode:
+        type: string
+        description: How this phase should be executed
+        enum:
+          - sequential
+          - parallel
+        default: sequential
+      
+      parallel_config:
+        type: object
+        description: Configuration for parallel execution mode
+        required:
+          - agent_type
+          - discovery_pattern
+          - work_item_parameter
+        properties:
+          agent_type:
+            type: string
+            description: Specialized agent to use for parallel tasks
+            examples:
+              - phase-executor
+              - workflow-creator
+              - custom-domain-agent
+          
+          discovery_pattern:
+            type: string
+            description: Glob pattern to find work items (supports parameter interpolation)
+            examples:
+              - "$OUTPUT_DIR/features/FEAT-*.md"
+              - "$SPECS_DIR/*/spec.md"
+          
+          work_item_parameter:
+            type: string
+            description: Parameter name for passing work item to each agent
+            pattern: "^[A-Z][A-Z0-9_]*$"
+            examples:
+              - FEATURE_FILE
+              - SPEC_FILE
+              - WORK_ITEM
+          
+          output_pattern:
+            type: string
+            description: Expected output path pattern with placeholders
+            examples:
+              - "$OUTPUT_DIR/specs/SPEC-{number}-{name}/spec.md"
+              - "$OUTPUT_DIR/results/{basename}.processed"
+          
+          max_parallel:
+            oneOf:
+              - type: integer
+                minimum: 0
+                description: Maximum concurrent agents (0 = unlimited)
+              - type: string
+                pattern: "^\\$[A-Z][A-Z0-9_]*$"
+                description: Parameter reference for max parallel value
+            examples:
+              - 5
+              - 0
+              - "$MAX_PARALLEL_AGENTS"
+        
+        additionalProperties: false
+      
+      inputs:
+        type: object
+        description: Input specifications for this phase
+        properties:
+          files:
+            type: array
+            description: Input file specifications
+            items:
+              type: object
+              required:
+                - name
+                - required
+                - description
+              properties:
+                name:
+                  type: string
+                  description: Parameter name for this file
+                  pattern: "^[A-Z][A-Z0-9_]*$"
+                  examples:
+                    - FEATURE_SPEC
+                    - REQUIREMENTS_DOC
+                    - CONFIG_FILE
+                
+                required:
+                  type: boolean
+                  description: Whether this file is required for phase execution
+                
+                path:
+                  type: string
+                  description: Explicit file path (supports parameter interpolation)
+                  examples:
+                    - "$OUTPUT_DIR/features/index.md"
+                    - "./config/settings.yaml"
+                
+                description:
+                  type: string
+                  description: What this file contains and its purpose
+                  minLength: 5
+                  maxLength: 200
+              
+              additionalProperties: false
+            
+            minItems: 0
+            uniqueItems: true
+          
+          parameters:
+            type: array
+            description: Input parameter specifications
+            items:
+              type: object
+              required:
+                - name
+                - required
+                - description
+              properties:
+                name:
+                  type: string
+                  description: Parameter name
+                  pattern: "^[A-Z][A-Z0-9_]*$"
+                  examples:
+                    - OUTPUT_DIR
+                    - ENABLE_LOGGING
+                    - MAX_RETRIES
+                
+                required:
+                  type: boolean
+                  description: Whether this parameter is required
+                
+                default:
+                  description: Default value if not provided
+                
+                description:
+                  type: string
+                  description: Parameter purpose and usage
+                  minLength: 5
+                  maxLength: 200
+                
+                type:
+                  type: string
+                  description: Expected parameter type
+                  enum:
+                    - string
+                    - boolean
+                    - integer
+                    - number
+                    - enum
+                    - file
+                    - directory
+                    - array
+
+                enum:
+                  type: array
+                  description: Valid values when type is enum
+                  items:
+                    type: string
+                  minItems: 2
+                  uniqueItems: true
+
+              # Require enum field when type is enum
+              allOf:
+                - if:
+                    properties:
+                      type:
+                        const: enum
+                    required:
+                      - type
+                  then:
+                    required:
+                      - enum
+
+              additionalProperties: false
+
+            minItems: 0
+            uniqueItems: true
+
+        additionalProperties: false
+
+      outputs:
+        type: object
+        description: Output specifications for this phase
+        properties:
+          files:
+            type: array
+            description: Output file specifications
+            items:
+              type: object
+              required:
+                - path
+                - description
+              properties:
+                path:
+                  type: string
+                  description: Path where file will be created (supports parameter interpolation)
+                  examples:
+                    - "$OUTPUT_DIR/report.md"
+                    - "$SPECS_DIR/validation-results.json"
+                
+                description:
+                  type: string
+                  description: What this file contains
+                  minLength: 5
+                  maxLength: 200
+                
+                required:
+                  type: boolean
+                  description: Whether this output must be created
+                  default: true
+              
+              additionalProperties: false
+            
+            minItems: 0
+            uniqueItems: true
+          
+          parameters:
+            type: array
+            description: Output parameter specifications for next phases
+            items:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: Parameter name for next phases
+                  pattern: "^[A-Z][A-Z0-9_]*$"
+                  examples:
+                    - SPECS_COUNT
+                    - VALIDATION_PASSED
+                    - GENERATED_FILES
+
+                required:
+                  type: boolean
+                  description: Whether this output parameter is guaranteed to be set
+                  default: true
+
+                description:
+                  type: string
+                  description: What this parameter represents
+                  minLength: 5
+                  maxLength: 200
+
+                type:
+                  type: string
+                  description: Parameter type
+                  enum:
+                    - string
+                    - boolean
+                    - integer
+                    - number
+                    - enum
+                    - file
+                    - directory
+                    - array
+
+                enum:
+                  type: array
+                  description: Valid values when type is enum
+                  items:
+                    type: string
+                  minItems: 2
+                  uniqueItems: true
+
+              # Require enum field when type is enum
+              allOf:
+                - if:
+                    properties:
+                      type:
+                        const: enum
+                    required:
+                      - type
+                  then:
+                    required:
+                      - enum
+
+              additionalProperties: false
+
+            minItems: 0
+            uniqueItems: true
+
+        additionalProperties: false
+      
+      preferred_agent:
+        type: string
+        description: Hint for orchestrator to use specific agent for this phase
+        examples:
+          - phase-executor
+          - workflow-creator
+          - custom-domain-agent
+
+      model:
+        type: string
+        description: Claude model to use for executing this phase (overrides workflow default)
+        enum:
+          - opus
+          - sonnet
+          - haiku
+        examples:
+          - opus
+          - sonnet
+          - haiku
+
+      prerequisites:
+        type: array
+        description: Conditions that must be met before phase execution
+        items:
+          type: object
+          properties:
+            condition:
+              type: string
+              description: Condition expression (supports parameter interpolation)
+              examples:
+                - "$ENVIRONMENT == 'production'"
+                - "$VALIDATION_PASSED == true"
+            
+            action:
+              type: string
+              description: Action to take if condition is met
+              enum:
+                - require_approval
+                - skip_phase
+                - fail_phase
+                - warning
+          
+          required:
+            - condition
+            - action
+          
+          additionalProperties: false
+        
+        minItems: 0
+        uniqueItems: true
+    
+    # Conditional requirements based on execution_mode
+    if:
+      properties:
+        execution_mode:
+          const: parallel
+    then:
+      required:
+        - parallel_config
+
+    # Also ensure parallel_config only appears with parallel mode
+    dependencies:
+      parallel_config:
+        properties:
+          execution_mode:
+            const: parallel
+
+    additionalProperties: false
+
+additionalProperties: false

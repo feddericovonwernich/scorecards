@@ -1,0 +1,62 @@
+# Runtime Parameters - Coverage Improvement Loop
+# Workflow Run ID: wf-20251220-152621-vjq3n2
+# Generated: 2025-12-20 15:26:21 UTC
+
+# Coverage targets
+TARGET_COVERAGE: 80
+MIN_COVERAGE: 60
+CRITICAL_TIER_TARGET: 90
+HIGH_RISK_TIER_TARGET: 80
+STANDARD_TIER_TARGET: 60
+
+# Iteration control
+MAX_ITERATIONS: 20
+FILES_PER_ITERATION: 5
+
+# Diminishing returns detection
+MIN_ROI: 0.5
+MIN_ITERATION_GAIN: 1.0
+
+# Tier focus
+TIER: ""
+
+# Component selection
+BACKEND_ONLY: true
+COMPONENTS: ""
+LANGUAGE: "auto"
+
+# Paths
+OUTPUT_DIR: ".claude/workflows/coverage-improvement-loop"
+RUN_DIR: ".claude/workflows/coverage-improvement-loop/runs/wf-20251220-152621-vjq3n2"
+HISTORY_FILE: ".claude/coverage-improvement-history.json"
+CONFIG_FILE: ".claude/rules/testing-workflows-config.md"
+
+# Flags
+FORCE: false
+
+# Test fixing
+MAX_FIX_ATTEMPTS: 3
+
+# Workflow metadata
+WORKFLOW_RUN_ID: "wf-20251220-152621-vjq3n2"
+WORKFLOW_NAME: "coverage-improvement-loop"
+WORKFLOW_VERSION: "1.0.0"
+
+# Baseline metrics (discovered in phase 00)
+BASELINE_COVERAGE: 85.0
+BASELINE_CRITICAL: 91.2
+BASELINE_HIGH_RISK: 80.8
+BASELINE_STANDARD: 96.2
+COMPONENTS_CHECKED: [backend, frontend]
+PREREQUISITES_MET: true
+
+# Phase 01 outputs (iteration 1)
+CURRENT_COVERAGE: 85.0
+CURRENT_CRITICAL: 91.2
+CURRENT_HIGH_RISK: 80.8
+CURRENT_STANDARD: 96.2
+PRIORITY_FILES: ""
+PRIORITY_COUNT: 0
+TARGETS_MET: true
+LOOP_CONTINUE: false
+LOOP_REASON: "All coverage targets met - Overall: 85.0% >= 80.0%, Critical: 91.2% >= 90.0%, High-Risk: 80.8% >= 80.0%, Standard: 96.2% >= 60.0%"

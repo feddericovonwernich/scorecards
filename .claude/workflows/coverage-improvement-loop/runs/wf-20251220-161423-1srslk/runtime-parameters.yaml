@@ -1,0 +1,135 @@
+# Runtime Parameters - Coverage Improvement Loop (Frontend Focus)
+# Workflow Run ID: wf-20251220-161423-1srslk
+# Generated: 2025-12-20 16:14:23 UTC
+# Target: Improve frontend coverage from 77.8% to 85%
+
+# Coverage targets (CUSTOM FOR FRONTEND)
+TARGET_COVERAGE: 85
+MIN_COVERAGE: 60
+CRITICAL_TIER_TARGET: 90
+HIGH_RISK_TIER_TARGET: 80
+STANDARD_TIER_TARGET: 60
+
+# Iteration control (CUSTOM)
+MAX_ITERATIONS: 10
+FILES_PER_ITERATION: 8
+
+# Diminishing returns detection
+MIN_ROI: 0.5
+MIN_ITERATION_GAIN: 1.0
+
+# Tier focus
+TIER: ""
+
+# Component selection (FRONTEND ONLY)
+BACKEND_ONLY: false
+COMPONENTS: "frontend"
+LANGUAGE: "auto"
+
+# Paths
+OUTPUT_DIR: ".claude/workflows/coverage-improvement-loop"
+RUN_DIR: ".claude/workflows/coverage-improvement-loop/runs/wf-20251220-161423-1srslk"
+HISTORY_FILE: ".claude/coverage-improvement-history.json"
+CONFIG_FILE: ".claude/rules/testing-workflows-config.md"
+
+# Flags (FORCE MODE ENABLED)
+FORCE: true
+
+# Test fixing
+MAX_FIX_ATTEMPTS: 3
+
+# Workflow metadata
+WORKFLOW_RUN_ID: "wf-20251220-161423-1srslk"
+WORKFLOW_NAME: "coverage-improvement-loop"
+WORKFLOW_VERSION: "1.0.0"
+
+# Baseline Coverage Metrics (Frontend Only - Phase 00)
+# Measured: 2025-12-20 13:15 UTC
+BASELINE_COVERAGE: 77.8
+BASELINE_CRITICAL: 83.6
+BASELINE_HIGH_RISK: 70.8
+BASELINE_STANDARD: 100.0
+COMPONENTS_CHECKED: ["frontend"]
+PREREQUISITES_MET: true
+
+# Gap Analysis (Frontend)
+# Overall gap: 7.2% (77.8% -> 85% target)
+# Critical tier gap: 6.4% (83.6% -> 90% target)
+# High-risk tier gap: 9.2% (70.8% -> 80% target)
+# Standard tier: Already at 100% (exceeds 60% target)
+
+# Phase 01 - Iteration 1 Analysis Results
+# Generated: 2025-12-20 16:14 UTC
+
+# Current coverage metrics (iteration 1)
+CURRENT_COVERAGE: 77.8
+CURRENT_CRITICAL: 83.6
+CURRENT_HIGH_RISK: 70.8
+CURRENT_STANDARD: 100.0
+
+# Priority files for this iteration (5 files available, target was 8)
+PRIORITY_FILES: "/tmp/claude-workspaces/e1e0d55b-8804-4124-bc1e-738e0dd5f0e7/frontend/src/stores/workspaces.ts,/tmp/claude-workspaces/e1e0d55b-8804-4124-bc1e-738e0dd5f0e7/frontend/src/components/workspace/ExecutionIndicator.vue,/tmp/claude-workspaces/e1e0d55b-8804-4124-bc1e-738e0dd5f0e7/frontend/src/components/workspace/ConversationHistory.vue,/tmp/claude-workspaces/e1e0d55b-8804-4124-bc1e-738e0dd5f0e7/frontend/src/components/workspace/MessageComposer.vue,/tmp/claude-workspaces/e1e0d55b-8804-4124-bc1e-738e0dd5f0e7/frontend/src/components/common/Badge.vue"
+PRIORITY_COUNT: 5
+
+# Targets status
+TARGETS_MET: false
+
+# Gap analysis
+OVERALL_GAP: 7.2
+CRITICAL_GAP: 6.4
+HIGH_RISK_GAP: 9.2
+STANDARD_GAP: -40.0
+
+# Iteration metadata
+ITERATION: 1
+LOOP_INDEX: 1
+FILES_ANALYZED: 15
+FILES_NEEDING_IMPROVEMENT: 5
+FILES_ALREADY_AT_TARGET: 10
+
+# Phase 02 - Test Generation Results (Iteration 1)
+# Generated: 2025-12-20 16:16 UTC
+
+TESTS_GENERATED: 1
+NEW_TEST_FILES: "/tmp/claude-workspaces/e1e0d55b-8804-4124-bc1e-738e0dd5f0e7/frontend/src/stores/__tests__/workspaces-enhanced.test.ts"
+FILES_SKIPPED: 1
+SKIPPED_FILE: "Badge.vue"
+EXISTING_TESTS_ADEQUATE: 3
+ADEQUATE_FILES: "ExecutionIndicator.vue,ConversationHistory.vue,MessageComposer.vue"
+
+# Phase 03 - Test Validation Results (Iteration 1)
+# Generated: 2025-12-20 16:17 UTC
+
+TEST_VALIDATION_STATUS: "pass"
+TESTS_PASSING: 28
+TESTS_FAILING: 0
+FIX_ATTEMPTS_USED: 1
+VALIDATED_TESTS_COUNT: 28
+DELETED_TESTS_COUNT: 0
+FIXED_TESTS_COUNT: 3
+FIX_SUCCESS_RATE: 100.0
+VALIDATION_PASSED: true
+TEST_OUTPUT: "All 28 tests passing - 3 initial failures fixed (2 API mismatches, 1 import issue)"
+
+# Phase 04 - Coverage Verification Results (Iteration 1)
+# Generated: 2025-12-20 16:18 UTC
+
+NEW_COVERAGE: 82.3
+NEW_CRITICAL: 91.9
+NEW_HIGH_RISK: 70.8
+NEW_STANDARD: 100.0
+COVERAGE_IMPROVEMENT: 4.5
+CRITICAL_IMPROVEMENT: 8.3
+HIGH_RISK_IMPROVEMENT: 0.0
+STANDARD_IMPROVEMENT: 0.0
+IMPROVEMENT_SUCCESSFUL: true
+TARGETS_NOW_MET: false
+TESTS_PASSED: true
+NO_REGRESSION: true
+ROI: 0.161
+
+# Phase 05 - Decision Logic Results (Iteration 1)
+# Generated: 2025-12-20 16:19 UTC
+
+LOOP_CONTINUE: true
+LOOP_REASON: "Targets not met: Overall 82.3% < 85.0%, High-risk 70.8% < 80.0%. Good progress (+4.5% this iteration). Continue to iteration 2."

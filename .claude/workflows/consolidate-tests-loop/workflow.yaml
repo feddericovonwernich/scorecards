@@ -1,0 +1,81 @@
+name: consolidate-tests-loop
+description: Iteratively consolidate tests until diminishing returns are detected
+version: 1.0.0
+
+parameters:
+  MAX_ITERATIONS:
+    type: integer
+    required: false
+    default: 10
+    min: 1
+    max: 50
+    description: Maximum number of consolidation iterations (safety limit)
+
+  BACKEND_ONLY:
+    type: boolean
+    required: false
+    default: false
+    description: Only consolidate backend (Python) tests
+
+  FRONTEND_ONLY:
+    type: boolean
+    required: false
+    default: false
+    description: Only consolidate frontend (TypeScript/Vue) tests
+
+  DRY_RUN:
+    type: boolean
+    required: false
+    default: false
+    description: Analyze only, make no changes
+
+  FORCE:
+    type: boolean
+    required: false
+    default: false
+    description: Skip diminishing returns check and proceed
+
+  OUTPUT_DIR:
+    type: directory
+    required: false
+    default: ./.claude/workflows/consolidate-tests-loop/runs
+    description: Directory for execution reports and logs
+
+  MIN_OPPORTUNITIES:
+    type: integer
+    required: false
+    default: 5
+    min: 1
+    max: 50
+    description: Minimum consolidation opportunities to continue iterating
+
+  MIN_REDUCTION_PCT:
+    type: number
+    required: false
+    default: 3.0
+    min: 0.1
+    max: 50.0
+    description: Minimum reduction percentage to continue iterating
+
+phases:
+  require_confirmation: false
+  allow_retry: true
+  generate_logs: true
+  stop_on_failure: true
+
+loops:
+  - name: consolidation-loop
+    description: "Iteratively consolidate tests until diminishing returns detected"
+    phases: [2]  # Phase 2 is the consolidation loop body
+    max_iterations: 50  # Safety limit (uses MAX_ITERATIONS parameter)
+    allow_phase_control: true  # Phase 2 controls loop via LOOP_CONTINUE
+
+metadata:
+  generated_date: "2025-12-15"
+  workflow_type: testing
+  complexity: medium
+  architecture_notes:
+    - "Uses hybrid loop control: fixed iterations with phase override capability"
+    - "Phase 2 analyzes opportunities after each iteration and sets LOOP_CONTINUE"
+    - "Stops when opportunities < MIN_OPPORTUNITIES or reduction < MIN_REDUCTION_PCT"
+    - "Accumulates results across all iterations for final report"

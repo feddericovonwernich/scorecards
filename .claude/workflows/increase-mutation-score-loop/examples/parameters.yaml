@@ -1,0 +1,61 @@
+# Example parameters for increase-mutation-score workflow
+
+# Example 1: Critical tier module (auto-target 90%)
+example_critical:
+  TIER: "critical"
+  MODULE_PATH: "src/telegram_claude_bot/auth/manager.py"
+  # TARGET_SCORE: 90  # Automatically set by TIER=critical
+
+# Example 2: Specific module with custom target
+example_custom_target:
+  MODULE_PATH: "src/telegram_claude_bot/session/manager.py"
+  TARGET_SCORE: 85
+  MUTANT_LIMIT: 50  # Analyze top 50 mutants only
+
+# Example 3: High-risk tier
+example_high_tier:
+  TIER: "high"  # Target: 85%
+  MODULE_PATH: "src/telegram_claude_bot/storage/database.py"
+
+# Example 4: Standard tier
+example_standard_tier:
+  TIER: "standard"  # Target: 75%
+  MODULE_PATH: "src/telegram_claude_bot/bot/utils/helpers.py"
+
+# Example 5: Force mode (skip coverage check - not recommended)
+example_force:
+  MODULE_PATH: "src/telegram_claude_bot/config/settings.py"
+  TARGET_SCORE: 80
+  FORCE: true  # Skip 60% coverage requirement
+
+# Example 6: Custom output directory
+example_custom_output:
+  MODULE_PATH: "src/telegram_claude_bot/web/api/auth.py"
+  TIER: "critical"
+  OUTPUT_DIR: ".mutation-reports/auth-api"
+
+# Example 7: Multiple iterations planned
+example_iterations:
+  MODULE_PATH: "src/telegram_claude_bot/claude/executor.py"
+  TIER: "critical"
+  MAX_ITERATIONS: 5  # Allow up to 5 iterations
+  # Each workflow run = 1 iteration
+  # Run workflow multiple times to complete iterations
+
+# Example 8: Using environment variables
+# Set these before running:
+# export WORKFLOW_MODULE_PATH="src/telegram_claude_bot/auth/manager.py"
+# export WORKFLOW_TIER="critical"
+# Then run without parameters
+example_env_vars:
+  # Parameters will be read from environment variables with WORKFLOW_ prefix
+  # WORKFLOW_MODULE_PATH, WORKFLOW_TIER, etc.
+
+# Example 9: Session manager reproduction (89.9% success)
+example_session_manager:
+  MODULE_PATH: "src/telegram_claude_bot/session/manager.py"
+  TARGET_SCORE: 90
+  TIER: "critical"
+  # Expected result after exclusions: 89.9%
+  # Exclusions: String, FuncCall, Keyword
+  # Survivors: 14 (documented and justified)

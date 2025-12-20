@@ -1,0 +1,209 @@
+name: coverage-improvement-loop
+description: Self-iterating workflow that continuously improves test coverage until achieving project goals through intelligent gap analysis and targeted test generation
+version: 1.0.0
+
+parameters:
+  # Coverage targets
+  TARGET_COVERAGE:
+    type: number
+    required: false
+    description: "Overall coverage target percentage (0-100). Per-component targets defined in config file."
+    default: 80
+    min: 60
+    max: 100
+    example: 80
+
+  MIN_COVERAGE:
+    type: number
+    required: false
+    description: "Minimum acceptable coverage percentage (0-100)"
+    default: 60
+    min: 40
+    max: 100
+    example: 60
+
+  CRITICAL_TIER_TARGET:
+    type: number
+    required: false
+    description: "Coverage target for critical tier (auth, API, core models)"
+    default: 90
+    min: 80
+    max: 100
+    example: 90
+
+  HIGH_RISK_TIER_TARGET:
+    type: number
+    required: false
+    description: "Coverage target for high-risk tier (storage, session management)"
+    default: 80
+    min: 70
+    max: 100
+    example: 80
+
+  STANDARD_TIER_TARGET:
+    type: number
+    required: false
+    description: "Coverage target for standard tier (utilities, handlers)"
+    default: 60
+    min: 50
+    max: 100
+    example: 60
+
+  # Iteration control
+  MAX_ITERATIONS:
+    type: integer
+    required: false
+    description: "Maximum number of improvement iterations (safety limit)"
+    default: 20
+    min: 1
+    max: 50
+    example: 20
+
+  FILES_PER_ITERATION:
+    type: integer
+    required: false
+    description: "Number of priority files to improve per iteration"
+    default: 5
+    min: 1
+    max: 10
+    example: 5
+
+  # Diminishing returns detection
+  MIN_ROI:
+    type: number
+    required: false
+    description: "Minimum ROI (coverage % gained per test) to continue iterations"
+    default: 0.5
+    min: 0.1
+    max: 5.0
+    example: 0.5
+
+  MIN_ITERATION_GAIN:
+    type: number
+    required: false
+    description: "Minimum coverage % gain per iteration to continue"
+    default: 1.0
+    min: 0.1
+    max: 10.0
+    example: 1.0
+
+  # Tier definitions
+  TIER:
+    type: enum
+    required: false
+    description: "Focus on specific tier (empty = all tiers)"
+    enum: ["critical", "high-risk", "standard", ""]
+    default: ""
+    example: "critical"
+
+  # Backend-only flag
+  BACKEND_ONLY:
+    type: boolean
+    required: false
+    description: "Only improve backend coverage (skip frontend)"
+    default: true
+    example: true
+
+  # Output directory
+  OUTPUT_DIR:
+    type: directory
+    required: false
+    description: "Base directory for workflow outputs (run-specific subdirectory will be created)"
+    default: ".claude/workflows/coverage-improvement-loop"
+    example: ".claude/workflows/coverage-improvement-loop"
+
+  # History tracking
+  HISTORY_FILE:
+    type: file
+    required: false
+    description: "Path to coverage improvement history JSON file"
+    default: ".claude/coverage-improvement-history.json"
+    example: ".claude/coverage-improvement-history.json"
+
+  # Force flag
+  FORCE:
+    type: boolean
+    required: false
+    description: "Skip prerequisite checks and continue even with warnings"
+    default: false
+    example: false
+
+  # Test fixing configuration
+  MAX_FIX_ATTEMPTS:
+    type: integer
+    required: false
+    description: "Maximum attempts to fix failing tests per iteration (Phase 02.5)"
+    default: 3
+    min: 1
+    max: 5
+    example: 3
+
+  # Multi-language support
+  LANGUAGE:
+    type: enum
+    required: false
+    description: "Programming language (auto-detect if not specified)"
+    enum: ["auto", "python", "javascript", "typescript", "go", "rust"]
+    default: "auto"
+    example: "python"
+
+  COMPONENTS:
+    type: string
+    required: false
+    description: "Comma-separated list of components to cover (e.g., 'backend,frontend'). Leave empty to use PACKAGE_NAME/LANGUAGE."
+    default: ""
+    example: "backend,frontend"
+
+  CONFIG_FILE:
+    type: file
+    required: false
+    description: "Path to project-specific coverage configuration"
+    default: ".claude/rules/testing-workflows-config.md"
+    example: ".claude/rules/testing-workflows-config.md"
+
+phases:
+  require_confirmation: false
+  allow_retry: true
+  generate_logs: true
+  stop_on_failure: true
+  parallel_execution_supported: false
+
+# Loop configuration: iterate until coverage targets met or diminishing returns detected
+loops:
+  - name: coverage-improvement
+    description: "Iteratively analyze gaps, generate tests, validate/fix tests, verify improvements until targets met"
+    phases: [1, 2, 3, 4, 5]  # Phase 03 validates and fixes generated tests before verification
+    max_iterations: 20  # Safety limit (required)
+    iterations: 5
+
+metadata:
+  generated_from:
+    - ".claude/workflows/coverage-improvement-loop-spec.md"
+    - ".claude/rules/coverage-strategies.md"
+    - ".claude/rules/testing.md"
+  generated_date: "2025-12-15"
+  updated_date: "2025-12-19"
+  workflow_type: "testing"
+  complexity: "complex"
+  supported_agents:
+    - "phase-executor"
+  supported_languages:
+    - "python"
+    - "javascript"
+    - "typescript"
+    - "go"
+    - "rust"
+  multi_language_support: true
+  component_based_execution: true
+  architecture_notes:
+    - "Self-iterating loop controlled by phase 05 decision logic"
+    - "Tracks coverage improvement history in JSON format"
+    - "Implements tier-based prioritization (critical > high-risk > standard)"
+    - "Detects diminishing returns to stop gracefully"
+    - "Follows project test quality standards (Given/When/Then, parameterization, strong assertions)"
+    - "Integrates with pytest --cov for coverage measurement"
+    - "Phase 03 automatically validates and fixes generated tests before verification"
+    - "Test failures in new tests do NOT cause workflow exit (Phase 03 handles them)"
+    - "Supports multi-language projects via LANGUAGE and COMPONENTS parameters"
+    - "Component-based execution allows independent coverage improvement per component"
+    - "Configurable per-component coverage targets via CONFIG_FILE"

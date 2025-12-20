@@ -1,0 +1,2 @@
+LOOP_CONTINUE=true
+LOOP_REASON=Targets not met: Overall 82.3% < 85.0%, High-risk 70.8% < 80.0%. Good progress (+4.5% this iteration). Continue to iteration 2.

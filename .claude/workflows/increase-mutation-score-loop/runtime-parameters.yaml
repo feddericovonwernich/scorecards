@@ -1,0 +1,138 @@
+# Workflow Runtime Parameters
+# Generated: 2025-12-15 08:40:52
+# Workflow: increase-mutation-score v3.0.0
+
+# Command-line arguments
+MODULE_PATH: "storage/workspace.py"
+TIER: "critical"
+
+# Resolved parameters
+TARGET_SCORE: 90
+MAX_ITERATIONS: 3
+MUTANT_LIMIT: 0
+OUTPUT_DIR: ".claude/workflows/increase-mutation-score"
+RUN_DIR: ".claude/workflows/increase-mutation-score/run-20251215-084052"
+FORCE: false
+BACKEND_ONLY: true
+POODLE_CONFIG: "poodle.toml"
+
+# Loop control
+CURRENT_ITERATION: 2  # Incremented for next iteration
+SHOULD_CONTINUE: true  # Set by Phase 05 - continue to iteration 2
+
+# Phase outputs (will be populated by phases)
+
+# Phase 00: Baseline Establishment
+BASELINE_SCORE: 27.10
+TOTAL_MUTATIONS: 107
+MUTATIONS_KILLED: 29
+SURVIVED_COUNT: 78
+TIMEOUT_COUNT: 0
+ERROR_COUNT: 0
+EFFECTIVE_MODULE_PATH: "src/telegram_claude_bot/storage/workspace.py"
+EFFECTIVE_TARGET_SCORE: 90
+COVERAGE_PERCENTAGE: 96.10
+BASELINE_REPORT: ".claude/workflows/increase-mutation-score/run-20251215-084052/baseline-report.md"
+POODLE_BASELINE_OUTPUT: ".claude/workflows/increase-mutation-score/run-20251215-084052/poodle-baseline-full.txt"
+
+# Phase 01: Mutation Analysis (Iteration 1)
+HIGH_VALUE_TARGETS: 17
+MEDIUM_VALUE_COUNT: 54
+LOW_VALUE_COUNT: 5
+EXCLUDE_COUNT: 2
+TARGET_LINES: [52, 70, 141, 146, 157, 191, 255, 327, 330, 342, 343, 347, 351, 353]
+TARGET_STRATEGIES_COUNT: 13
+ITERATION_1_ANALYSIS: .claude/workflows/increase-mutation-score/run-20251215-084052/iteration-1-analysis.md
+
+# Phase 02: Test Implementation (Iteration 1)
+TESTS_ADDED: 34
+TESTS_FILE: "tests/storage/test_workspace_mutations.py"
+ITERATION_1_TESTS_DOC: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-1-tests.md"
+TEST_CLASSES_CREATED: 6
+PARAMETERIZED_TESTS: 3
+EXPECTED_MUTANTS_KILLED: 17
+
+# Phase 03: Verification (Iteration 1)
+NEW_SCORE: 65.42
+NEW_SURVIVORS: 37
+IMPROVEMENT_DELTA: 38.32
+MUTANTS_KILLED: 41
+CURRENT_SCORE: 65.42
+ITERATION_1_RESULTS: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-1-results.md"
+POODLE_ITERATION_1_OUTPUT: ".claude/workflows/increase-mutation-score/run-20251215-084052/poodle-iteration-1-full.txt"
+
+# Phase 04: Exclusion Assessment (Iteration 1)
+HIGH_VALUE_REMAINING: 3
+MEDIUM_VALUE_REMAINING: 7
+LOW_VALUE_REMAINING: 27
+EXCLUDE_RECOMMENDED: 0
+PROJECTED_SCORE: 87.5
+EFFECTIVE_TOTAL_MUTATIONS: 80
+RECOMMENDED_EXCLUSIONS: []
+ITERATION_1_EXCLUSIONS: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-1-exclusions.md"
+POODLE_CONFIG_RECOMMENDATIONS: ".claude/workflows/increase-mutation-score/run-20251215-084052/poodle-config-recommendations.md"
+
+# Phase 05: Decision (Iteration 1)
+SHOULD_CONTINUE: true
+WORKFLOW_STATUS: "LOOPING"
+STOP_REASON: "Continuing to iteration 2 (3 HIGH VALUE targets remain)"
+ITERATION_1_DECISION: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-1-decision.md"
+ITERATION_HISTORY: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-history.md"
+
+# Phase 01: Mutation Analysis (Iteration 2)
+HIGH_VALUE_TARGETS_ITERATION_2: 3
+MEDIUM_VALUE_COUNT_ITERATION_2: 7
+LOW_VALUE_COUNT_ITERATION_2: 27
+EXCLUDE_COUNT_ITERATION_2: 0
+TARGET_LINES_ITERATION_2: [146, 231, 239]
+TARGET_STRATEGIES_ITERATION_2: |
+  [
+    {
+      "line": 146,
+      "mutator": "UnaryOp",
+      "type": "Existence Check Inversion",
+      "method": "get_workspace_size",
+      "test_name": "test_get_workspace_size_returns_zero_for_nonexistent_path",
+      "impact": "Silent data corruption - returns 0 for existing paths"
+    },
+    {
+      "line": 231,
+      "mutator": "Return",
+      "type": "Timeout Return Mutation",
+      "method": "clone_workspace",
+      "test_name": "test_clone_timeout_returns_clone_result_not_none",
+      "impact": "API contract violation - returns None instead of CloneResult"
+    },
+    {
+      "line": 239,
+      "mutator": "Compare",
+      "type": "Return Code Inversion",
+      "method": "clone_workspace",
+      "test_name": "test_clone_success_does_not_delete_workspace",
+      "impact": "Data loss - deletes successful clones"
+    }
+  ]
+ITERATION_2_ANALYSIS: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-2-analysis.md"
+EXPECTED_SCORE_ITERATION_2: 68.22
+EXPECTED_EFFECTIVE_SCORE_ITERATION_2: 91.25
+EXPECTED_MUTANTS_KILLED_ITERATION_2: 3
+
+# Phase 02: Test Implementation (Iteration 2)
+TESTS_ADDED_ITERATION_2: 3
+TESTS_FILE_ITERATION_2: "tests/storage/test_workspace_mutations.py"
+ITERATION_2_TESTS_DOC: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-2-tests.md"
+TEST_CLASS_ITERATION_2: "TestIteration2HighValueMutants"
+MUTANTS_TARGETED_ITERATION_2: [146, 231, 239]
+
+# Phase 03: Verification (Iteration 2)
+NEW_SCORE: 71.96
+NEW_SURVIVORS: 30
+IMPROVEMENT_DELTA: 6.54
+MUTANTS_KILLED: 7
+CURRENT_SCORE: 71.96
+SURVIVED_COUNT: 30
+ITERATION_2_RESULTS: ".claude/workflows/increase-mutation-score/run-20251215-084052/iteration-2-results.md"
+POODLE_ITERATION_2_OUTPUT: ".claude/workflows/increase-mutation-score/run-20251215-084052/poodle-iteration-2-full.txt"
+EFFECTIVE_SCORE: 96.25
+EFFECTIVE_TOTAL: 80
+EFFECTIVE_KILLED: 77

@@ -1,0 +1,33 @@
+# Loop State - Coverage Improvement Loop (Frontend Focus)
+# Workflow Run ID: wf-20251220-161423-1srslk
+# Updated: 2025-12-20 16:19:00 UTC
+
+loops:
+  coverage-improvement:
+    name: coverage-improvement
+    description: "Iteratively analyze gaps, generate tests, validate/fix tests, verify improvements until targets met"
+    current_iteration: 2
+    total_iterations: 1
+    max_iterations: 10
+    fixed_iterations: 5
+    phases: [1, 2, 3, 4, 5]
+    completed: false
+    iteration_history:
+      - iteration: 1
+        timestamp: "2025-12-20T16:15:00Z"
+        duration_seconds: 240
+        loop_reason: "Targets not met: Overall 82.3% < 85.0%, High-risk 70.8% < 80.0%. Good progress (+4.5% this iteration). Continue to iteration 2."
+        loop_continue: true
+        phases_executed: [1, 2, 3, 4, 5]
+        coverage_before: 77.8
+        coverage_after: 82.3
+        coverage_improvement: 4.5
+        targets_met: false
+        tests_generated: 28
+        tests_passing: 28
+        tests_failing: 0
+
+# Injected loop parameters (available to all phases in loop)
+LOOP_INDEX: 2
+LOOP_NAME: "coverage-improvement"
+LOOP_ITERATION: 2

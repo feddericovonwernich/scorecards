@@ -1,0 +1,266 @@
+# Example Parameter Configurations for Coverage Improvement Loop Workflow
+
+# ============================================================================
+# Example 1: Default Configuration (Recommended)
+# ============================================================================
+# Run with all default settings for comprehensive coverage improvement
+#
+# Usage: /run-workflow coverage-improvement-loop
+# ============================================================================
+default:
+  TARGET_COVERAGE: 80
+  MIN_COVERAGE: 60
+  CRITICAL_TIER_TARGET: 90
+  HIGH_RISK_TIER_TARGET: 80
+  STANDARD_TIER_TARGET: 60
+  MAX_ITERATIONS: 20
+  FILES_PER_ITERATION: 5
+  MIN_ROI: 0.5
+  MIN_ITERATION_GAIN: 1.0
+  TIER: ""
+  BACKEND_ONLY: true
+  FORCE: false
+
+# ============================================================================
+# Example 2: Focus on Critical Tier
+# ============================================================================
+# Prioritize critical path coverage (auth, API, core models)
+#
+# Usage: /run-workflow coverage-improvement-loop --tier=critical
+# ============================================================================
+critical_only:
+  TARGET_COVERAGE: 80
+  CRITICAL_TIER_TARGET: 95  # Higher target for critical code
+  TIER: "critical"
+  MAX_ITERATIONS: 15
+  FILES_PER_ITERATION: 3
+  MIN_ROI: 0.4
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 3: Quick Coverage Boost
+# ============================================================================
+# Rapidly improve coverage with larger batch sizes and lower thresholds
+#
+# Usage: /run-workflow coverage-improvement-loop \
+#          --files-per-iteration=10 --max-iterations=5
+# ============================================================================
+quick_boost:
+  TARGET_COVERAGE: 70  # Lower target for quick improvement
+  MAX_ITERATIONS: 5
+  FILES_PER_ITERATION: 10  # More files per iteration
+  MIN_ROI: 0.3  # Lower ROI threshold
+  MIN_ITERATION_GAIN: 2.0  # Higher gain requirement
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 4: Thorough Improvement (High Standards)
+# ============================================================================
+# Achieve high coverage with strict quality standards
+#
+# Usage: /run-workflow coverage-improvement-loop \
+#          --target-coverage=85 --max-iterations=30
+# ============================================================================
+thorough:
+  TARGET_COVERAGE: 85
+  MIN_COVERAGE: 70
+  CRITICAL_TIER_TARGET: 95
+  HIGH_RISK_TIER_TARGET: 85
+  STANDARD_TIER_TARGET: 70
+  MAX_ITERATIONS: 30
+  FILES_PER_ITERATION: 5
+  MIN_ROI: 0.3  # Accept lower ROI for thorough coverage
+  MIN_ITERATION_GAIN: 0.5  # Accept smaller gains
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 5: High-Risk Tier Focus
+# ============================================================================
+# Focus on storage, session management, handlers
+#
+# Usage: /run-workflow coverage-improvement-loop --tier=high-risk
+# ============================================================================
+high_risk_focus:
+  TARGET_COVERAGE: 80
+  HIGH_RISK_TIER_TARGET: 85
+  TIER: "high-risk"
+  MAX_ITERATIONS: 12
+  FILES_PER_ITERATION: 4
+  MIN_ROI: 0.4
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 6: Standard Tier Cleanup
+# ============================================================================
+# Improve utility and config file coverage
+#
+# Usage: /run-workflow coverage-improvement-loop --tier=standard
+# ============================================================================
+standard_cleanup:
+  TARGET_COVERAGE: 80
+  STANDARD_TIER_TARGET: 65
+  TIER: "standard"
+  MAX_ITERATIONS: 10
+  FILES_PER_ITERATION: 6
+  MIN_ROI: 0.3
+  MIN_ITERATION_GAIN: 0.8
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 7: Aggressive Improvement (No Safety Limits)
+# ============================================================================
+# Use with caution - bypasses prerequisite checks and runs many iterations
+#
+# Usage: /run-workflow coverage-improvement-loop \
+#          --force --max-iterations=50
+# ============================================================================
+aggressive:
+  TARGET_COVERAGE: 90
+  CRITICAL_TIER_TARGET: 95
+  HIGH_RISK_TIER_TARGET: 90
+  STANDARD_TIER_TARGET: 75
+  MAX_ITERATIONS: 50
+  FILES_PER_ITERATION: 8
+  MIN_ROI: 0.2  # Very low threshold
+  MIN_ITERATION_GAIN: 0.3  # Very low threshold
+  FORCE: true  # Skip prerequisite checks
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 8: Conservative Approach (Small Batches)
+# ============================================================================
+# Incremental improvement with careful validation
+#
+# Usage: /run-workflow coverage-improvement-loop \
+#          --files-per-iteration=2 --min-roi=0.8
+# ============================================================================
+conservative:
+  TARGET_COVERAGE: 75
+  MAX_ITERATIONS: 15
+  FILES_PER_ITERATION: 2  # Small batches
+  MIN_ROI: 0.8  # High ROI requirement
+  MIN_ITERATION_GAIN: 1.5  # Higher gain requirement
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 9: Resume After Failure
+# ============================================================================
+# Continue improving from current state (skips prerequisite checks)
+#
+# Usage: /run-workflow coverage-improvement-loop \
+#          --force --max-iterations=10
+# ============================================================================
+resume:
+  TARGET_COVERAGE: 80
+  MAX_ITERATIONS: 10
+  FILES_PER_ITERATION: 5
+  MIN_ROI: 0.4
+  FORCE: true  # Skip baseline measurement
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Example 10: Pre-Mutation Testing Preparation
+# ============================================================================
+# Achieve high coverage before running mutation testing
+#
+# Usage: /run-workflow coverage-improvement-loop \
+#          --target-coverage=75
+# Then: /increase-mutation-score
+# ============================================================================
+pre_mutation:
+  TARGET_COVERAGE: 75  # Mutation testing needs 60%+
+  MIN_COVERAGE: 60
+  CRITICAL_TIER_TARGET: 90
+  HIGH_RISK_TIER_TARGET: 80
+  STANDARD_TIER_TARGET: 65
+  MAX_ITERATIONS: 20
+  FILES_PER_ITERATION: 5
+  MIN_ROI: 0.4
+  BACKEND_ONLY: true
+
+# ============================================================================
+# Parameter Reference
+# ============================================================================
+# TARGET_COVERAGE (number, 60-100):
+#   - Overall backend coverage target percentage
+#   - Default: 80
+#
+# MIN_COVERAGE (number, 40-100):
+#   - Minimum acceptable coverage (prerequisite check)
+#   - Default: 60
+#
+# CRITICAL_TIER_TARGET (number, 80-100):
+#   - Target for auth/, web/api/, session/models, claude/executor
+#   - Default: 90
+#
+# HIGH_RISK_TIER_TARGET (number, 70-100):
+#   - Target for storage/, session/manager, bot/handlers
+#   - Default: 80
+#
+# STANDARD_TIER_TARGET (number, 50-100):
+#   - Target for bot/utils, config/, utilities
+#   - Default: 60
+#
+# MAX_ITERATIONS (integer, 1-50):
+#   - Maximum iterations before stopping (safety limit)
+#   - Default: 20
+#
+# FILES_PER_ITERATION (integer, 1-10):
+#   - Number of priority files to improve per iteration
+#   - Default: 5
+#
+# MIN_ROI (number, 0.1-5.0):
+#   - Minimum coverage % gained per test to continue
+#   - Default: 0.5
+#
+# MIN_ITERATION_GAIN (number, 0.1-10.0):
+#   - Minimum coverage % gain per iteration to continue
+#   - Default: 1.0
+#
+# TIER (enum: critical|high-risk|standard|""):
+#   - Focus on specific tier (empty = all tiers)
+#   - Default: "" (all)
+#
+# BACKEND_ONLY (boolean):
+#   - Only improve backend coverage (skip frontend)
+#   - Default: true
+#
+# FORCE (boolean):
+#   - Skip prerequisite checks (not recommended)
+#   - Default: false
+#
+# OUTPUT_DIR (directory):
+#   - Base directory for workflow outputs
+#   - Default: ".claude/workflows/coverage-improvement-loop"
+#
+# HISTORY_FILE (file):
+#   - Path to coverage improvement history JSON
+#   - Default: ".claude/coverage-improvement-history.json"
+# ============================================================================
+
+# ============================================================================
+# Stopping Conditions
+# ============================================================================
+# The workflow exits when ANY of these conditions are met:
+#
+# 1. ✅ Targets Achieved: All tier targets and overall target met
+# 2. ⚠️ Diminishing Returns: ROI declining and below MIN_ROI threshold
+# 3. ⚠️ Minimal Gains: Coverage gain < MIN_ITERATION_GAIN for 3 iterations
+# 4. ⚠️ No Gaps: No more high-value coverage gaps identified
+# 5. ❌ Test Failures: Newly generated tests fail
+# 6. ❌ Regression: Existing tests break
+# 7. 🛑 Max Iterations: MAX_ITERATIONS reached
+# ============================================================================
+
+# ============================================================================
+# Typical ROI Values
+# ============================================================================
+# ROI (coverage gained per test) typically ranges:
+#
+# - Excellent: > 1.0% per test (early iterations, low-hanging fruit)
+# - Good: 0.5-1.0% per test (normal improvement)
+# - Fair: 0.3-0.5% per test (diminishing returns starting)
+# - Poor: < 0.3% per test (minimal value, consider stopping)
+#
+# Default MIN_ROI of 0.5 balances thoroughness with efficiency.
+# ============================================================================

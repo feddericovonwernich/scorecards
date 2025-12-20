@@ -1,0 +1,164 @@
+name: increase-mutation-score
+description: Iterative mutation testing workflow using Poodle with orchestrator-controlled looping through improvement cycles
+version: 3.0.0
+
+parameters:
+  # Target module/path
+  MODULE_PATH:
+    type: string
+    required: false
+    description: "Path to specific module to improve (e.g., src/telegram_claude_bot/auth/manager.py)"
+    default: ""
+    example: "src/telegram_claude_bot/session/manager.py"
+
+  # Target score
+  TARGET_SCORE:
+    type: number
+    required: false
+    description: "Desired mutation score percentage (0-100)"
+    default: 90
+    min: 60
+    max: 100
+    example: 90
+
+  # Module tier (determines target if TARGET_SCORE not specified)
+  TIER:
+    type: enum
+    required: false
+    description: "Module criticality tier (determines target mutation score if TARGET_SCORE not set)"
+    enum: ["critical", "high", "standard", ""]
+    default: "critical"
+    example: "critical"
+
+  # Iteration control
+  MAX_ITERATIONS:
+    type: integer
+    required: false
+    description: "Maximum number of improvement iterations"
+    default: 3
+    min: 1
+    max: 10
+    example: 3
+
+  # Mutant analysis control
+  MUTANT_LIMIT:
+    type: integer
+    required: false
+    description: "Maximum mutants to analyze per run (0 = unlimited)"
+    default: 0
+    min: 0
+    max: 500
+    example: 50
+
+  # Output directory
+  OUTPUT_DIR:
+    type: directory
+    required: false
+    description: "Base directory for workflow outputs (each run creates a timestamped subdirectory)"
+    default: ".claude/workflows/increase-mutation-score-loop"
+    example: ".claude/workflows/increase-mutation-score-loop"
+
+  # Force flag
+  FORCE:
+    type: boolean
+    required: false
+    description: "Skip coverage prerequisite check (not recommended)"
+    default: false
+    example: false
+
+  # Backend-only flag
+  BACKEND_ONLY:
+    type: boolean
+    required: false
+    description: "Only run mutation testing on backend Python code"
+    default: true
+    example: true
+
+  # Poodle configuration file
+  POODLE_CONFIG:
+    type: file
+    required: false
+    description: "Path to poodle.toml configuration file"
+    default: "poodle.toml"
+    example: "poodle.toml"
+
+  # Language detection
+  LANGUAGE:
+    type: enum
+    required: false
+    description: "Programming language (auto-detect if not specified)"
+    enum: ["auto", "python", "javascript", "typescript", "go", "rust"]
+    default: "auto"
+    example: "python"
+
+  # Component selection
+  COMPONENTS:
+    type: string
+    required: false
+    description: "Comma-separated list of components to test (e.g., backend,frontend)"
+    default: ""
+    example: "backend,frontend"
+
+  # Mutation tool selection
+  MUTATION_TOOL:
+    type: enum
+    required: false
+    description: "Mutation testing tool (auto-detect if not specified)"
+    enum: ["auto", "poodle", "mutmut", "stryker", "gremlins", "cargo-mutants"]
+    default: "auto"
+    example: "poodle"
+
+  # Config file path
+  CONFIG_FILE:
+    type: file
+    required: false
+    description: "Path to project-specific testing workflows config"
+    default: ".claude/rules/testing-workflows-config.md"
+    example: ".claude/rules/testing-workflows-config.md"
+
+phases:
+  require_confirmation: false
+  allow_retry: true
+  generate_logs: true
+  stop_on_failure: true
+  parallel_execution_supported: false
+
+# Orchestrator-controlled loop configuration
+loops:
+  - name: improvement-loop
+    description: "Iterative refinement until mutation score target is reached or no high-value survivors remain"
+    phases: [1, 2, 3, 4, 5]
+    max_iterations: 5
+    allow_phase_control: true
+
+metadata:
+  generated_from:
+    - ".claude/workflows/mutation-score-improvement/final-summary.md"
+    - ".claude/workflows/mutation-score-improvement/exclusion-analysis.md"
+    - "poodle.toml"
+  generated_date: "2025-12-13"
+  workflow_type: "testing"
+  complexity: "medium"
+  supported_agents:
+    - "phase-executor"
+  supported_languages:
+    - python
+    - javascript
+    - typescript
+    - go
+    - rust
+  supported_mutation_tools:
+    - poodle
+    - mutmut
+    - stryker
+    - gremlins
+    - cargo-mutants
+  multi_language_support: true
+  component_based_execution: true
+  architecture_notes:
+    - "Uses Poodle mutation testing (not mutmut)"
+    - "Orchestrator-controlled looping: phases 01-05 repeat until target reached"
+    - "Each phase runs in its own context window for optimal memory usage"
+    - "Phase 05 outputs SHOULD_CONTINUE to control loop behavior"
+    - "Categorizes survivors: EXCLUDE, LOW VALUE, MEDIUM VALUE, HIGH VALUE"
+    - "Builds on learnings from session/manager.py mutation testing success (89.9%)"
