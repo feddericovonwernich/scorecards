@@ -1,3 +1,0 @@
-LOOP_CONTINUE=false
-LOOP_REASON=All coverage targets achieved (standard tier: 93.2% >= 85.0%)
-STOP_REASON=targets_achieved
