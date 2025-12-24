@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-23T00:48:55Z"
+      "last_discovered": "2025-12-24T00:49:14Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-23T00:49:45Z",
+  "timestamp": "2025-12-24T00:50:09Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -90,7 +90,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "Scorecard config found: .scorecard/config.yml (78 bytes)\n",
       "stderr": ""
     },
@@ -162,7 +162,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "CODEOWNERS file found: .github/CODEOWNERS (1 ownership rule)\n",
       "stderr": ""
     },
