@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2025-12-26T01:39:02Z"
+      "last_discovered": "2025-12-27T01:27:49Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-26T01:40:01Z",
+  "timestamp": "2025-12-27T01:28:49Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -126,7 +126,7 @@
       "weight": 8,
       "status": "fail",
       "exit_code": 1,
-      "duration": 0,
+      "duration": 1,
       "stdout": "",
       "stderr": "OpenAPI specification found, but no openapi section in .scorecard/config.yml\nAdd an openapi section with environments configuration\n\nExample:\n  openapi:\n    spec_file: \"openapi.yaml\"\n    environments:\n      production:\n        base_url: \"https://api.example.com\"\n        description: \"Production environment\"\n"
     },
