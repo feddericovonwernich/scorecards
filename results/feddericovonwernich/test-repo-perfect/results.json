@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "manual",
-      "last_discovered": "2025-12-26T02:04:00Z"
+      "last_discovered": "2025-12-27T02:01:37Z"
     },
     "links": [
       {
@@ -25,7 +25,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2025-12-26T02:04:59Z",
+  "timestamp": "2025-12-27T02:02:31Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
