@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-01-04T02:19:32Z"
+      "last_discovered": "2026-01-05T02:12:56Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2026-01-04T02:20:21Z",
+  "timestamp": "2026-01-05T02:13:53Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": false,
@@ -102,7 +102,7 @@
       "weight": 12,
       "status": "fail",
       "exit_code": 1,
-      "duration": 1,
+      "duration": 0,
       "stdout": "",
       "stderr": "No OpenAPI specification file found in common locations\nLooked for: openapi.{yaml,yml,json}, swagger.{yaml,yml,json}\nIn directories: root, /api, /docs, /spec, /.openapi\n"
     },
