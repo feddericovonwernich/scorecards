@@ -9,7 +9,7 @@
         "backend"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-01-10T00:49:40Z"
+      "last_discovered": "2026-01-11T00:56:12Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2026-01-10T00:50:36Z",
+  "timestamp": "2026-01-11T00:57:04Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -174,7 +174,7 @@
       "weight": 10,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "CODEOWNERS syntax validated: .github/CODEOWNERS\n  1 ownership rule\n  1 unique owner\n  - * -> @feddericovonwernich-org/backend\n",
       "stderr": ""
     }
