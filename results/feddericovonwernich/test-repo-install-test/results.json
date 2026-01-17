@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-01-16T02:04:44Z"
+      "last_discovered": "2026-01-17T01:58:29Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2026-01-16T02:05:37Z",
+  "timestamp": "2026-01-17T01:59:23Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": false,
@@ -162,7 +162,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "CODEOWNERS file found: .github/CODEOWNERS (1 ownership rule)\n",
       "stderr": ""
     },
