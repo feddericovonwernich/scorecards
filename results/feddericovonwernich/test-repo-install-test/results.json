@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-01-23T02:04:34Z"
+      "last_discovered": "2026-01-24T02:00:35Z"
     },
     "links": [],
     "openapi": null
@@ -20,7 +20,7 @@
   "total_checks": 12,
   "excluded_count": 0,
   "excluded_checks": [],
-  "timestamp": "2026-01-23T02:05:28Z",
+  "timestamp": "2026-01-24T02:01:42Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": false,
@@ -78,7 +78,7 @@
       "weight": 20,
       "status": "pass",
       "exit_code": 0,
-      "duration": 0,
+      "duration": 1,
       "stdout": "Found tests: 1 file(s) in directories: tests\n",
       "stderr": ""
     },
@@ -126,7 +126,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
       "stderr": ""
     },
