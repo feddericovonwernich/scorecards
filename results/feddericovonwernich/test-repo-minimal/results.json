@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-01-29T02:30:43Z"
+      "last_discovered": "2026-01-30T02:30:49Z"
     },
     "links": [],
     "openapi": null
@@ -25,7 +25,7 @@
       "reason": "Test exclusion - verifying check exclusion feature"
     }
   ],
-  "timestamp": "2026-01-29T02:31:46Z",
+  "timestamp": "2026-01-30T02:31:41Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -167,7 +167,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "CODEOWNERS file found: .github/CODEOWNERS (1 ownership rule)\n",
       "stderr": ""
     },
