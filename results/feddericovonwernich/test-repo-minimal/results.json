@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-02-08T02:56:47Z"
+      "last_discovered": "2026-02-09T02:41:40Z"
     },
     "links": [],
     "openapi": null
@@ -25,7 +25,7 @@
       "reason": "Test exclusion - verifying check exclusion feature"
     }
   ],
-  "timestamp": "2026-02-08T02:57:43Z",
+  "timestamp": "2026-02-09T02:42:40Z",
   "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
   "checks_count": 13,
   "installed": true,
@@ -131,7 +131,7 @@
       "weight": 8,
       "status": "pass",
       "exit_code": 0,
-      "duration": 1,
+      "duration": 0,
       "stdout": "No OpenAPI specification found - environment configuration not required\nThis check only applies to repositories with API specifications\n",
       "stderr": ""
     },
