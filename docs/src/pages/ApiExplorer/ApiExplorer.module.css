@@ -122,6 +122,21 @@ body {
     margin: 0 auto;
 }
 
+/* Keep long spec URLs readable without widening the page. */
+:global(#swagger-ui) {
+    overflow-wrap: anywhere;
+}
+
+/* Tables and expanded models retain all content in their own scroll region. */
+:global(#swagger-ui .responses-inner),
+:global(#swagger-ui .model-box) {
+    overflow-x: auto;
+}
+
+:global(#swagger-ui .model-box) {
+    overflow-wrap: normal;
+}
+
 /* Customize Swagger UI to match our theme */
 :global(.swagger-ui .topbar) {
     display: none;

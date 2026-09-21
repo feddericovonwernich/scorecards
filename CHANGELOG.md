@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Keep API Explorer's long source URLs, expanded schemas and responses reachable on narrow screens without horizontal page overflow.
+
 ### Changed
 - **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
   - Replaced ES6 modules with React functional components
