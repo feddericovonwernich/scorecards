@@ -466,7 +466,7 @@ prepare() {
     [ "$recipe_timeout" -le "$timeout_max" ] || recipe_timeout="$timeout_max"
     if (
         ulimit -f "$(((output_max + 511) / 512))"
-        timeout --signal=KILL --kill-after=1 "$recipe_timeout" docker run --rm --cidfile "$recipe_cidfile" --network=none --read-only --cap-drop=ALL --security-opt=no-new-privileges --user="$sandbox_user" --pids-limit "$(jq -r '.pids_max' "$policy_file")" --memory "$(jq -r '.memory_max_bytes' "$policy_file")" --cpus "$(jq -r '.cpu_max' "$policy_file")" --tmpfs "/tmp:rw,nosuid,nodev,noexec,size=$(jq -r '.memory_max_bytes' "$policy_file")" --mount "type=bind,src=$(realpath -e "$trusted_suite_dir/checks"),dst=/checks,readonly" --mount "type=bind,src=$(realpath -e "$trusted_suite_dir/action/lib"),dst=/action/lib,readonly" --mount "type=bind,src=$(realpath -e "$work_dir/tree"),dst=/workspace" --env SCORECARD_REPO_PATH=/workspace --env SCORECARDS_REPO="${GITHUB_REPOSITORY}" --env SERVICE_REPOSITORY="$(jq -r '.repository' <<< "$context")" --env SCORECARDS_BRANCH=catalog --entrypoint "$recipe_entry" "$runtime_image" "/checks/$(jq -r '.check_id' <<< "$context")/$(basename "$recipe_path")"
+        timeout --signal=KILL --kill-after=1 "$recipe_timeout" docker run --rm --cidfile "$recipe_cidfile" --network=none --read-only --cap-drop=ALL --security-opt=no-new-privileges --user="$sandbox_user" --pids-limit "$(jq -r '.pids_max' "$policy_file")" --memory "$(jq -r '.memory_max_bytes' "$policy_file")" --cpus "$(jq -r '.cpu_max' "$policy_file")" --tmpfs "/tmp:rw,nosuid,nodev,noexec,size=$(jq -r '.memory_max_bytes' "$policy_file")" --mount "type=bind,src=$(realpath -e "$trusted_suite_dir/checks"),dst=/checks,readonly" --mount "type=bind,src=$(realpath -e "$trusted_suite_dir/action/lib"),dst=/action/lib,readonly" --mount "type=bind,src=$(realpath -e "$work_dir/tree"),dst=/workspace" --env SCORECARD_REPO_PATH=/workspace --env SCORECARDS_REPO="${GITHUB_REPOSITORY}" --env SERVICE_REPOSITORY="$(jq -r '.org + "/" + .repo' "$request_file")" --env SCORECARDS_BRANCH=catalog --entrypoint "$recipe_entry" "$runtime_image" "/checks/$(jq -r '.check_id' <<< "$context")/$(basename "$recipe_path")"
     ) > "$work_dir/recipe.log" 2>&1; then
         recipe_rc=0
     else
@@ -522,7 +522,7 @@ publish() {
     local work_dir="$3"
 
     local prepared context repository check_id default_branch branch baseline tree allowed_paths changed_paths verified_paths target current_service_sha remote_base remote_url askpass writer_dir path pr_body pr_url
-    local existing
+    local existing mode blob
     require_regular_file "$prepared_file" && validate_remediation_policy "$policy_file" || return 1
     prepared="$(jq -ce 'select(
         type == "object" and keys == ["allowed_paths", "baseline", "branch", "changed_paths", "context", "default_branch", "tree"]
@@ -566,12 +566,13 @@ SH
     chmod 700 "$askpass"
     GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -c core.hooksPath=/dev/null clone --no-checkout "$work_dir/service-clone" "$writer_dir" >/dev/null 2>&1 || { write_result "$work_dir" pr_failed "$context" "$policy_file"; return 0; }
     GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" remote set-url origin "$remote_url"
-    GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" -c core.hooksPath=/dev/null checkout --detach "$(jq -r '.service_sha' <<< "$context")" >/dev/null 2>&1 || { write_result "$work_dir" pr_failed "$context" "$policy_file"; return 0; }
+    GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" update-ref --no-deref HEAD "$(jq -r '.service_sha' <<< "$context")" || { write_result "$work_dir" pr_failed "$context" "$policy_file"; return 0; }
+    GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" read-tree HEAD || { write_result "$work_dir" pr_failed "$context" "$policy_file"; return 0; }
     for path in $(jq -r '.[]' <<< "$changed_paths"); do
         [[ "$path" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] || { write_result "$work_dir" invalid_diff "$context" "$policy_file"; return 0; }
-        mkdir -p "$writer_dir/$(dirname "$path")"
-        cp --preserve=mode -- "$tree/$path" "$writer_dir/$path"
-        GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" -c core.hooksPath=/dev/null add -- "$path"
+        mode="$(GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" ls-tree HEAD -- "$path" | cut -d' ' -f1)"
+        blob="$(GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" hash-object -w --no-filters -- "$tree/$path")"
+        GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" update-index --cacheinfo "$mode,$blob,$path"
     done
     GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" diff --cached --quiet && { write_result "$work_dir" no_diff "$context" "$policy_file"; return 0; }
     GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$writer_dir" config user.name "scorecards-remediation[bot]"

@@ -192,10 +192,9 @@ The Scorecards system groups workflows into three categories:
 
 3. **run-scorecards** - Calculates scorecards
    - Runs always if not installed (PR created or not)
-   - Checks cache for today's results (daily cache key: `scorecards-results-{repo}-{date}`)
-   - Runs scorecards action if not cached
+   - Checks out the service and central platform separately
+   - Runs the local platform action against `service-workspace`, producing fresh results with service and suite Git provenance
    - Displays results in GitHub Step Summary
-   - Saves results to cache
    - Uploads results as artifact
    - Outputs: `score`, `rank`, `passed-checks`, `total-checks`, `results-file`
 
@@ -227,8 +226,8 @@ The Scorecards system groups workflows into three categories:
 **Jobs:**
 
 1. **scorecard** - Runs scorecards action
-   - Checks out service repository
-   - Runs scorecards action (`feddericovonwernich-org/scorecards/action@main`)
+   - Checks out the service into `service` and the central platform's default branch into `.scorecards-platform`
+   - Runs `./.scorecards-platform/action` with `service-workspace` pointing to the service checkout
    - Displays results in GitHub Step Summary
    - Uploads results as artifact
 
@@ -237,6 +236,7 @@ The Scorecards system groups workflows into three categories:
 - `github-token` - Token with repo and contents permissions
 - `scorecards-repo` - Central scorecards repository
 - `scorecards-branch` - Branch for results (default: 'catalog')
+- `service-workspace` - Absolute path to the separate service checkout
 
 **Action Outputs:**
 
@@ -369,23 +369,12 @@ jobs:
 
 - Full installation + scoring functionality
 - Automatic installation PR creation
-- Daily caching to avoid duplicate runs
+- Fresh scoring with service and suite Git provenance
 - Example: test-repo-perfect's ci.yml
 
 ### Template Pattern
 
-`scorecard-workflow-template.yml` provides a simpler template for direct action usage:
-
-```yaml
-jobs:
-  scorecard:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: feddericovonwernich-org/scorecards/action@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
+Use the maintained [service workflow template](../examples/scorecard-workflow-template.yml), customized with your central repository. It checks out the service and platform separately, invokes the local platform action, and passes the service checkout through `service-workspace`. This preserves the Git revisions of both inputs for evaluation provenance.
 
 **Benefits:**
 
@@ -403,14 +392,9 @@ Multiple workflows write to catalog branch to prevent conflicts and loops:
 - **Dedicated tokens**: All catalog updates use SCORECARDS_CATALOG_TOKEN
 - **Bot commits**: All automated commits by github-actions[bot]
 
-### Caching Strategy
+### Fresh Scoring
 
-`install.yml` implements daily result caching:
-
-- **Cache key**: `scorecards-results-{repo}-{date}`
-- **Cache duration**: Resets daily at midnight UTC
-- **Benefits**: Reduces API usage, speeds up repeated runs on same day
-- **Use case**: Multiple pushes/PRs on same day reuse cached results
+`install.yml` evaluates the checked-out service with the checked-out platform on every scoring run. It neither restores nor saves daily result caches: results must describe the service and suite revisions actually evaluated, including repeated runs on the same day. Results remain available in the step summary and uploaded artifact.
 
 ### Token Requirements
 

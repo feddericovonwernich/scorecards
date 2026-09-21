@@ -119,6 +119,7 @@ printf '%s\n' "$*" > "$DOCKER_ARGS"
 for arg in "$@"; do
     case "$arg" in
         *dst=/workspace*) workspace="${arg#*src=}"; workspace="${workspace%%,dst=*}" ;;
+        SERVICE_REPOSITORY=*|SCORECARDS_REPO=*|SCORECARDS_BRANCH=*) export "$arg" ;;
     esac
 done
 last="${!#}"
@@ -127,7 +128,7 @@ if [[ "$last" == */check.sh ]]; then
     exit $?
 fi
 case "${DOCKER_MODE:-badge}" in
-  badge) SCORECARD_REPO_PATH="$workspace" SCORECARDS_REPO="$GITHUB_REPOSITORY" SERVICE_REPOSITORY=acme/service SCORECARDS_BRANCH=catalog bash "$PROJECT_ROOT/checks/09-scorecard-badge/remediate.sh" ;;
+  badge) SCORECARD_REPO_PATH="$workspace" bash "$PROJECT_ROOT/checks/09-scorecard-badge/remediate.sh" ;;
   symlink) rm "$workspace/README.md"; ln -s /etc/passwd "$workspace/README.md" ;;
   modechange) chmod +x "$workspace/README.md" ;;
   noop) : ;;
@@ -291,6 +292,49 @@ SH
     [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = pr_created ]
     git --git-dir="$REMOTE" show refs/heads/scorecards-remediation/09-scorecard-badge/42-1:README.md | grep -Fqx '$Format:%H$'
     git --git-dir="$REMOTE" cat-file -e refs/heads/scorecards-remediation/09-scorecard-badge/42-1:tracked-export-ignore
+    [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
+}
+
+@test "mixed-case catalog identity is preserved in the published badge URL" {
+    export GH_MODE=created
+    jq '.org = "Acme" | .repo = "Service"' "$REQUEST" > "$TEST_TEMP_DIR/mixed.json"
+
+    run "$RUNNER" prepare "$TEST_TEMP_DIR/mixed.json" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .context.repository "$TEST_TEMP_DIR/work/prepared.json")" = acme/service ]
+
+    run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = pr_created ]
+    git --git-dir="$REMOTE" show refs/heads/scorecards-remediation/09-scorecard-badge/42-1:README.md |
+        grep -Fq 'https://raw.githubusercontent.com/acme/scorecards/catalog/badges/Acme/Service/score.json'
+    [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
+}
+
+@test "publication preserves validated README bytes with working-tree encoding" {
+    export GH_MODE=created
+    printf '# Service caf\351\n' > "$TEST_TEMP_DIR/seed/README.md"
+    printf 'README.md working-tree-encoding=ISO-8859-1\n' > "$TEST_TEMP_DIR/seed/.gitattributes"
+    chmod +x "$TEST_TEMP_DIR/seed/README.md"
+    git -C "$TEST_TEMP_DIR/seed" add README.md .gitattributes
+    git -C "$TEST_TEMP_DIR/seed" commit -m encoded >/dev/null
+    git -C "$TEST_TEMP_DIR/seed" push origin trunk >/dev/null
+    export BASE_SHA="$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)"
+    write_request
+
+    run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    printf '# Service café\n' > "$TEST_TEMP_DIR/expected-baseline"
+    cmp "$TEST_TEMP_DIR/expected-baseline" "$TEST_TEMP_DIR/work/baseline/README.md"
+
+    run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = pr_created ]
+    local proposal=refs/heads/scorecards-remediation/09-scorecard-badge/42-1
+    git --git-dir="$REMOTE" show "$proposal:README.md" > "$TEST_TEMP_DIR/published-readme"
+    cmp "$TEST_TEMP_DIR/work/tree/README.md" "$TEST_TEMP_DIR/published-readme"
+    [ "$(git --git-dir="$REMOTE" ls-tree "$proposal" README.md | cut -d' ' -f1)" = 100755 ]
+    [ "$(git --git-dir="$REMOTE" diff --name-only "$BASE_SHA" "$proposal")" = README.md ]
     [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
 }
 
