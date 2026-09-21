@@ -40,16 +40,25 @@ it('publishes compiled UI without deleting domain configuration or concurrent ca
     put('main-repo/docs/dist/index.html', 'compiled UI');
     put('main-repo/docs/dist/api-explorer.html', 'compiled explorer');
     execFileSync('bash', ['-euo', 'pipefail', '-c', step('Sync catalog UI files')], { cwd: root });
-    execFileSync('bash', ['-euo', 'pipefail', '-c', step('Commit and push to catalog')], { cwd: root, stdio: 'pipe' });
-    expect(git(root, '--git-dir=remote.git', 'show', 'catalog:docs/index.html').toString()).toBe('compiled UI');
-    expect(git(root, '--git-dir=remote.git', 'show', 'catalog:results.json').toString()).toBe('concurrent results');
+    execFileSync('bash', ['-euo', 'pipefail', '-c', step('Commit and push to catalog')], {
+      cwd: root,
+      stdio: 'pipe',
+    });
+    expect(git(root, '--git-dir=remote.git', 'show', 'catalog:docs/index.html').toString()).toBe(
+      'compiled UI'
+    );
+    expect(git(root, '--git-dir=remote.git', 'show', 'catalog:results.json').toString()).toBe(
+      'concurrent results'
+    );
     expect(readFileSync(join(catalog, 'docs/CNAME'), 'utf8')).toBe('catalog.example.invalid\n');
     expect(existsSync(join(catalog, 'docs/.nojekyll'))).toBe(true);
     expect(existsSync(join(catalog, 'docs/obsolete.js'))).toBe(false);
     expect(readFileSync(join(catalog, 'docs/api-explorer.html'), 'utf8')).toBe('compiled explorer');
     // An unchanged UI must still reach artifact upload without requiring a new commit.
     const before = git(catalog, 'rev-parse', 'HEAD').toString();
-    execFileSync('bash', ['-euo', 'pipefail', '-c', step('Commit and push to catalog')], { cwd: root });
+    execFileSync('bash', ['-euo', 'pipefail', '-c', step('Commit and push to catalog')], {
+      cwd: root,
+    });
     expect(git(catalog, 'rev-parse', 'HEAD').toString()).toBe(before);
   } finally {
     rmSync(root, { recursive: true, force: true });
