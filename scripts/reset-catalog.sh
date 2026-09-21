@@ -308,12 +308,12 @@ EOF
 cat > README.md << 'EOF'
 # Scorecards - Catalog Branch
 
-This is the **catalog branch** of the scorecards system. It serves as the data storage and GitHub Pages hosting branch.
+This is the **catalog branch** of the scorecards system. It stores catalog data and UI files.
 
 ## Purpose
 
 - **Data Storage**: Stores scorecard results, badges, and service registry
-- **GitHub Pages**: Hosts the web-based catalog interface
+- **Publication**: Follow the [deployment procedure on main](../../blob/main/docs/README.md#deployment)
 - **No System Code**: Does not contain action code or check definitions (those are on the main branch)
 
 ## Structure
@@ -348,7 +348,7 @@ git commit -m "Reset catalog branch to clean state
 - Copy documentation from $MAIN_BRANCH branch
 - Add README files explaining directory purposes
 
-This catalog branch serves as the GitHub Pages source and data storage
+This catalog branch stores data and UI files
 for the distributed scorecards system." > /dev/null
 
 print_success "Catalog structure committed"
@@ -424,7 +424,7 @@ cat << EOF
 ${YELLOW}Next Steps:${NC}
 
   ${BLUE}1.${NC} Service repositories will repopulate the catalog when they run scorecards
-  ${BLUE}2.${NC} GitHub Pages will redeploy automatically (may take a few minutes)
+  ${BLUE}2.${NC} For publication, follow docs/README.md#deployment on the main branch
   ${BLUE}3.${NC} All existing scorecard data has been cleared
 EOF
 

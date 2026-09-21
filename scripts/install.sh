@@ -461,12 +461,12 @@ EOF
 cat > README.md << 'EOF'
 # Scorecards - Catalog Branch
 
-This is the **catalog branch** of the scorecards system. It serves as the data storage and GitHub Pages hosting branch.
+This is the **catalog branch** of the scorecards system. It stores catalog data and UI files.
 
 ## Purpose
 
 - **Data Storage**: Stores scorecard results, badges, and service registry
-- **GitHub Pages**: Hosts the web-based catalog interface
+- **Publication**: Follow the [deployment procedure on main](../../blob/main/docs/README.md#deployment)
 - **No System Code**: Does not contain action code or check definitions (those are on the main branch)
 
 ## Structure
@@ -498,7 +498,7 @@ git commit -m "Initialize catalog branch
 - Copy documentation from main branch
 - Add README files explaining directory purposes
 
-This catalog branch serves as the GitHub Pages source and data storage
+This catalog branch stores data and UI files
 for the distributed scorecards system."
 
 print_success "Catalog branch created"
@@ -618,7 +618,7 @@ fi
 # Get Pages URL
 PAGES_URL="https://$REPO_OWNER.github.io/$REPO_NAME"
 print_info "Pages URL: $PAGES_URL"
-print_warning "Note: It may take a few minutes for Pages to deploy"
+print_warning "Complete publication using https://github.com/$FULL_REPO/blob/main/docs/README.md#deployment"
 
 # Step 9: Success message
 print_header "Installation Complete!"
@@ -629,7 +629,7 @@ ${GREEN}✓${NC} Scorecards system successfully installed to ${BLUE}$FULL_REPO${
 
 ${YELLOW}Next Steps:${NC}
 
-${BLUE}1. View your catalog:${NC}
+${BLUE}1. Follow the deployment procedure above, then view your catalog:${NC}
    $PAGES_URL
 
 ${BLUE}2. Add scorecards to your services:${NC}
