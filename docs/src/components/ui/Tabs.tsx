@@ -41,6 +41,8 @@ export function Tabs({
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const leftArrowRef = useRef<HTMLButtonElement>(null);
+  const rightArrowRef = useRef<HTMLButtonElement>(null);
 
   // Use controlled or uncontrolled active tab
   const activeTab = controlledActiveTab ?? internalActiveTab;
@@ -59,8 +61,17 @@ export function Tabs({
     if (!container || !showScrollArrows) {return;}
 
     const { scrollLeft, scrollWidth, clientWidth } = container;
-    setShowLeftArrow(scrollLeft > 0);
-    setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 1);
+    const canScrollLeft = scrollLeft > 0;
+    const canScrollRight = scrollLeft + clientWidth < scrollWidth - 1;
+    const active = document.activeElement;
+    if ((!canScrollLeft && active === leftArrowRef.current) ||
+        (!canScrollRight && active === rightArrowRef.current)) {
+      const buttons = container.querySelectorAll<HTMLButtonElement>('button:not([disabled])');
+      const target = active === leftArrowRef.current ? buttons[0] : buttons[buttons.length - 1];
+      target?.focus({ preventScroll: true });
+    }
+    setShowLeftArrow(canScrollLeft);
+    setShowRightArrow(canScrollRight);
   }, [showScrollArrows]);
 
   // Scroll tabs left/right
@@ -95,6 +106,7 @@ export function Tabs({
       <div className="tabs-wrapper">
         {showScrollArrows && showLeftArrow && (
           <button
+            ref={leftArrowRef}
             type="button"
             className="tab-scroll-arrow tab-scroll-left"
             onClick={() => scrollTabs('left')}
@@ -128,6 +140,7 @@ export function Tabs({
 
         {showScrollArrows && showRightArrow && (
           <button
+            ref={rightArrowRef}
             type="button"
             className="tab-scroll-arrow tab-scroll-right"
             onClick={() => scrollTabs('right')}

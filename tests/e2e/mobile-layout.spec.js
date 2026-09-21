@@ -52,6 +52,9 @@ for (const [width, height] of sizes) {
     await visitTabs(page, team, ['Services', 'Distribution', 'Check Adoption', 'GitHub']);
     await page.screenshot({ path: testInfo.outputPath('team-github.png'), animations: 'disabled' });
     await page.keyboard.press('Escape');
+    await openTeamModal(page, 'platform');
+    await expect(team.getByRole('heading', { level: 2 })).toBeFocused();
+    await page.keyboard.press('Escape');
     await openCheckAdoptionDashboard(page);
     const adoption = page.locator('#check-adoption-modal');
     await contained(adoption);
@@ -68,6 +71,28 @@ for (const [width, height] of sizes) {
     await expect(adoption).toBeHidden();
   });
 }
+
+test('tab arrow disappearance transfers keyboard focus to the reached tab', async ({ catalogPage: page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await openServiceModal(page, 'test-repo-perfect');
+  const modal = page.locator('#service-modal');
+  for (const [direction, name] of [['right', 'Badges'], ['left', 'Check Results']]) {
+    const arrow = modal.getByRole('button', { name: `Scroll tabs ${direction}`, exact: true });
+    await expect(arrow).toBeVisible();
+    await expect(async () => {
+      if (await arrow.isVisible()) {
+        await arrow.focus();
+        await page.keyboard.press('Enter');
+      }
+      await expect(arrow).toHaveCount(0, { timeout: 1000 });
+    }).toPass();
+    const reached = modal.getByRole('button', { name, exact: true });
+    await expect(reached).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(reached).toHaveAttribute('aria-pressed', 'true');
+    await contained(modal);
+  }
+});
 
 test('Settings reflows at doubled root text and retains usable close target', async ({ catalogPage: page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });

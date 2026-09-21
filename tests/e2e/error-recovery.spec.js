@@ -85,6 +85,49 @@ test.describe('Network Failure Recovery', () => {
     expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
 
+  test('workflow retry retains dialog focus through repeated failure and recovery', async ({ page }) => {
+    await mockCatalogRequests(page);
+    await page.goto('/scorecards/');
+    await waitForCatalogLoad(page);
+    await openSettingsModal(page);
+    const settings = page.locator('#settings-modal');
+    await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill(mockPAT);
+    await settings.getByRole('button', { name: 'Save Token' }).click();
+    await expect(settings.getByRole('heading', { name: 'GitHub API Mode' })).toBeVisible();
+    await closeSettingsModal(page);
+
+    let failing = true;
+    let releaseRuns;
+    let runsReady = Promise.resolve();
+    await page.route('**/api.github.com/repos/feddericovonwernich/test-repo-perfect/actions/runs*', async route => {
+      await runsReady;
+      await route.fulfill({
+        status: failing ? 503 : 200,
+        json: failing ? { message: 'Workflow fixture unavailable' } : { workflow_runs: [], total_count: 0 },
+      });
+    });
+    await openServiceModal(page, 'test-repo-perfect');
+    const modal = page.locator('#service-modal');
+    await modal.getByRole('button', { name: 'Workflow Runs', exact: true }).click();
+    await modal.getByRole('combobox', { name: 'Auto-refresh interval' }).selectOption('0');
+    await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
+    for (const failsAgain of [true, false]) {
+      failing = failsAgain;
+      runsReady = new Promise(resolve => { releaseRuns = resolve; });
+      await modal.getByRole('button', { name: 'Try Again', exact: true }).focus();
+      await page.keyboard.press('Enter');
+      await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
+      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      releaseRuns();
+      if (failsAgain) {
+        await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
+      } else {
+        await expect(modal.getByText('No workflow runs found', { exact: true })).toBeVisible();
+      }
+      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    }
+  });
+
 
   test('should handle 404 not found errors for missing resources', async ({ page }) => {
     await mockCatalogRequests(page);

@@ -93,13 +93,6 @@ export function Modal({
     };
   }, [isOpen]);
 
-  useLayoutEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog?.open && document.activeElement === document.body) {
-      focusDialogContent(dialog);
-    }
-  });
-
   if (!isOpen) {
     return null;
   }

@@ -117,17 +117,24 @@ test.describe('Settings Modal', () => {
 
     // Switch to API mode
     await expect(modal).toContainText(/GitHub API|API mode/i, { timeout: 5000 });
+    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
 
     // Click Check Rate to update rate limit
     await page.getByRole('button', { name: 'Check Rate' }).click();
 
     // Update rate limit
     await expect(modal.locator('.settings-rate-limit')).toContainText(/5000/, { timeout: 5000 });
+    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
 
     await closeSettingsModal(page);
 
     // Settings button indicator
     const settingsButton = page.getByRole('button', { name: /Settings.*PAT/i });
     await expect(settingsButton).toBeVisible();
+    await openSettingsModal(page);
+    await modal.getByRole('button', { name: 'Clear Token' }).click();
+    await expect(modal.getByRole('heading', { name: 'Public CDN Mode' })).toBeVisible();
+    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    await closeSettingsModal(page);
   });
 });

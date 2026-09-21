@@ -374,3 +374,76 @@ test.describe('Service Modal - Case-Insensitive Categories', () => {
     await expect(modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })).toBeVisible();
   });
 });
+
+test.describe('Service Modal - Workflow Dispatch Lifetime', () => {
+  for (const { outcome, status } of [
+    { outcome: 'success', status: 204 },
+    { outcome: 'failure', status: 500 },
+  ]) {
+    test(`should not show late workflow dispatch ${outcome} after reopening another service`, async ({ catalogPage }) => {
+      await setGitHubPAT(catalogPage, mockPAT);
+
+      let releaseDispatch;
+      let dispatchStarted;
+      const dispatchReady = new Promise(resolve => { releaseDispatch = resolve; });
+      const dispatchStartedPromise = new Promise(resolve => { dispatchStarted = resolve; });
+      await catalogPage.route('**/api.github.com/repos/**/actions/workflows/*/dispatches', async route => {
+        dispatchStarted();
+        await dispatchReady;
+        await route.fulfill({
+          status,
+          body: status === 204 ? '' : JSON.stringify({ message: 'Workflow dispatch failed' }),
+          headers: { 'Content-Type': 'application/json' },
+        });
+      });
+
+      await openServiceModal(catalogPage, 'test-repo-stale');
+      await catalogPage.locator('#service-modal').getByRole('button', { name: 'Run Scorecard' }).click();
+      await dispatchStartedPromise;
+      await closeServiceModal(catalogPage);
+
+      await openServiceModal(catalogPage, 'test-repo-perfect');
+      const modal = catalogPage.locator('#service-modal');
+      await expect(modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })).toBeVisible();
+
+      const response = catalogPage.waitForResponse(res => res.url().includes('/dispatches'));
+      releaseDispatch();
+      const completed = await response;
+      expect(completed.status()).toBe(status);
+      await catalogPage.evaluate(() => new Promise(requestAnimationFrame));
+      await expect(modal.getByRole('status')).toHaveCount(0);
+      await expect(modal.getByRole('alert')).toHaveCount(0);
+    });
+  }
+
+  test('should not show late workflow dispatch feedback after reopening the same service', async ({ catalogPage }) => {
+    await setGitHubPAT(catalogPage, mockPAT);
+
+    let releaseDispatch;
+    let dispatchStarted;
+    const dispatchReady = new Promise(resolve => { releaseDispatch = resolve; });
+    const dispatchStartedPromise = new Promise(resolve => { dispatchStarted = resolve; });
+    await catalogPage.route('**/api.github.com/repos/**/actions/workflows/*/dispatches', async route => {
+      dispatchStarted();
+      await dispatchReady;
+      await route.fulfill({ status: 204 });
+    });
+
+    await openServiceModal(catalogPage, 'test-repo-stale');
+    await catalogPage.locator('#service-modal').getByRole('button', { name: 'Run Scorecard' }).click();
+    await dispatchStartedPromise;
+    await closeServiceModal(catalogPage);
+
+    await openServiceModal(catalogPage, 'test-repo-stale');
+    const modal = catalogPage.locator('#service-modal');
+    await expect(modal.getByRole('heading', { name: 'test-repo-stale', exact: true })).toBeVisible();
+
+    const response = catalogPage.waitForResponse(res => res.url().includes('/dispatches'));
+    releaseDispatch();
+    const completed = await response;
+    expect(completed.status()).toBe(204);
+    await catalogPage.evaluate(() => new Promise(requestAnimationFrame));
+    await expect(modal.getByRole('status')).toHaveCount(0);
+    await expect(modal.getByRole('alert')).toHaveCount(0);
+  });
+});

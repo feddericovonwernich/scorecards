@@ -4,7 +4,7 @@
  * Premium design with staggered animations and visual hierarchy
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal } from '../../ui/Modal.js';
 import { Toast } from '../../ui/Toast.js';
 import {
@@ -155,6 +155,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isCheckingRate, setIsCheckingRate] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [infoExpanded, setInfoExpanded] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   const showToast = (message: string, type: ToastMessage['type']) => {
     setToast({ message, type });
@@ -233,6 +234,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       return;
     }
 
+    headingRef.current?.focus({ preventScroll: true });
     setIsValidating(true);
     showToast('Validating token...', 'info');
 
@@ -265,6 +267,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, [inputValue, setAuth, setAuthUser, fetchRateLimit]);
 
   const handleClearPAT = useCallback(() => {
+    headingRef.current?.focus({ preventScroll: true });
     clearToken();
     setAuth(null, false);
     setAuthUser(null);
@@ -274,6 +277,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, [setAuth, setAuthUser, fetchRateLimit]);
 
   const handleCheckRateLimit = useCallback(async () => {
+    headingRef.current?.focus({ preventScroll: true });
     setIsCheckingRate(true);
     await fetchRateLimit();
     setIsCheckingRate(false);
@@ -320,7 +324,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <SettingsIcon />
             </div>
             <div className="settings-header-text">
-              <h2>Settings</h2>
+              <h2 ref={headingRef} tabIndex={-1}>Settings</h2>
               <p>Configure GitHub authentication</p>
             </div>
           </div>

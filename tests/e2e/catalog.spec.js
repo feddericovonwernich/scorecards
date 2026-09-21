@@ -362,6 +362,74 @@ test.describe('Static routing compatibility', () => {
   });
 });
 
+test.describe('Teams catalog initialization', () => {
+  test('derives registered and service-only teams after a delayed direct teams load and reload', async ({ page }) => {
+    const delayedCatalog = {
+      services: [
+        {
+          org: 'fixture',
+          repo: 'platform-api',
+          name: 'platform-api',
+          team: 'Platform',
+          score: 76,
+          rank: 'gold',
+          installed: false,
+        },
+        {
+          org: 'fixture',
+          repo: 'platform-worker',
+          name: 'platform-worker',
+          team: 'Platform',
+          score: 80,
+          rank: 'gold',
+          installed: true,
+        },
+        {
+          org: 'fixture',
+          repo: 'reliability-tool',
+          name: 'reliability-tool',
+          team: 'Reliability',
+          score: 91,
+          rank: 'gold',
+          installed: true,
+        },
+      ],
+      generated_at: '2026-01-01T00:00:00Z',
+      count: 3,
+    };
+
+    await mockCatalogRequests(page);
+    let releaseCatalog;
+    let catalogReady;
+    await page.route('**/raw.githubusercontent.com/**/registry/all-services.json*', async (route) => {
+      await catalogReady;
+      await route.fulfill({ json: delayedCatalog });
+    });
+
+    for (const navigate of [
+      () => page.goto('/scorecards/#/teams'),
+      () => page.reload(),
+    ]) {
+      catalogReady = new Promise(resolve => { releaseCatalog = resolve; });
+      await navigate();
+
+      const teamsGrid = page.locator('.teams-grid');
+      await expect(teamsGrid.locator('.team-card')).toHaveCount(3);
+
+      const platform = teamsGrid.locator('.team-card').filter({ hasText: 'Platform' });
+      await expect(platform.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')).toHaveText('0');
+      releaseCatalog();
+      await expect(teamsGrid.locator('.team-card')).toHaveCount(4);
+      await expect(platform.locator('.team-stat').filter({ hasText: 'Avg Score' }).locator('.team-stat-value')).toHaveText('78');
+      await expect(platform.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')).toHaveText('2');
+
+      const reliability = teamsGrid.locator('.team-card').filter({ hasText: 'Reliability' });
+      await expect(reliability.locator('.team-stat').filter({ hasText: 'Avg Score' }).locator('.team-stat-value')).toHaveText('91');
+      await expect(reliability.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')).toHaveText('1');
+    }
+  });
+});
+
 test.describe('Mobile catalog controls', () => {
   test('keeps Services controls in viewport before the first service card at 320px', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 844 });
