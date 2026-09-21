@@ -21,6 +21,8 @@ The Scorecards system groups workflows into four categories:
 
 **Security and results:** Ships disabled, checks out `github.sha` without persisted credentials and pins third-party actions. `SCORECARDS_WORKFLOW_TOKEN` is host-only, with no catalog-token fallback. A generated outcome is retained as `remediation-result.json` and a run summary; cancellation may prevent output. Workflow success is not evidence of a PR or a passing score. See the authoritative [flow, diagrams and activation prerequisites](../architecture/flows/remediation-flow.md).
 
+For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [runtime publication procedure](../architecture/flows/remediation-flow.md#publicación-del-runtime).
+
 ## Development & Quality Workflows
 
 ### test.yml

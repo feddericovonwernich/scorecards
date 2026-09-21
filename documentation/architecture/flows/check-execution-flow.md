@@ -152,14 +152,7 @@ check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
 **Dockerfile**: `action/Dockerfile`
 
-**Multi-Runtime Support**:
-
-```dockerfile
-FROM ubuntu:22.04
-RUN apt-get install -y python3 python3-pip
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-RUN apt-get install -y nodejs bash grep sed awk jq curl git
-```
+**Build inputs and local smoke command:** See the authoritative [runtime build reference](../../reference/action-reference.md#runtime-build).
 
 **Why Multi-Runtime**:
 
@@ -167,10 +160,7 @@ RUN apt-get install -y nodejs bash grep sed awk jq curl git
 - Some in Python (complex parsing, linting)
 - Some in JavaScript (package.json analysis, npm checks)
 
-**Build Flags**:
-
-- `--no-cache`: Ensures fresh build with latest dependencies
-- `-t scorecards-runner:latest`: Tagged for reference
+**Build invocation:** The [Action entrypoint](../../../action/entrypoint.sh) owns the scoring build flags and local image tag.
 
 ### 4. Run Check
 

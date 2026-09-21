@@ -39,17 +39,18 @@ Publication and runner access are separate gates; see
 
 ### Pilot build evidence (2026-09-21)
 
-Source: parent `911a80a5e3a550ffbbf894a80302ea601e66c134` plus the runtime
-changes accompanying this record. Docker Engine 29.6.0, Linux amd64. Two
+Source inputs: `b66e7a5918708db498d2842df0ad8f74fba3be64`, before documentation
+and formatting housekeeping. The hashes below identify that historical build,
+not subsequent revisions. Docker Engine 29.6.0, Linux amd64. Two
 `--pull --no-cache` builds using the command above succeeded; both executed apt
 against `20260921T000000Z` and installed the same 261 OS packages and the same
 17 production npm packages. All 351 action-lock entries (including development
 dependencies not installed in the image) preserve root-lock versions and integrity.
 
-| Input | SHA-256 |
-| --- | --- |
-| `action/Dockerfile` | `666e4362fbb013b852be762758a08448ee667bbb58b3d6dc91581e7a7c640cec` |
-| `action/package.json` | `6b764f5be39351801426f87e39b9d3e0121403db890d184b9a63e4d518191d4e` |
+| Input                      | SHA-256                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| `action/Dockerfile`        | `666e4362fbb013b852be762758a08448ee667bbb58b3d6dc91581e7a7c640cec` |
+| `action/package.json`      | `6b764f5be39351801426f87e39b9d3e0121403db890d184b9a63e4d518191d4e` |
 | `action/package-lock.json` | `ac102b46828bf06cfe2aa2a9bd5f6e5747a9398701b48ad5d88089a592eae418` |
 
 Local image IDs **differed**:

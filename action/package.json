@@ -15,7 +15,12 @@
     "lint": "eslint docs/**/*.js checks/**/*.js",
     "format": "prettier --write '**/*.{js,json,md,yml,yaml}'"
   },
-  "keywords": ["quality", "scoring", "github-action", "catalog"],
+  "keywords": [
+    "quality",
+    "scoring",
+    "github-action",
+    "catalog"
+  ],
   "license": "Apache-2.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
