@@ -32,6 +32,36 @@ build_results_json() {
     local checks_count="${scr_ref[checks_count]}"
     local installed="${scr_ref[installed]}"
 
+    local service_sha="${svc_ref[service_sha]:-}"
+    local suite_repository="${scr_ref[suite_repository]:-}"
+    local suite_sha="${scr_ref[suite_sha]:-}"
+    local run_id="${scr_ref[run_id]:-}"
+    local run_attempt="${scr_ref[run_attempt]:-}"
+    local evaluation='null'
+
+    if [[ "$service_org/$service_repo" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] &&
+        [[ "$service_sha" =~ ^[0-9a-fA-F]{40}$ ]] &&
+        [[ "$suite_repository" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] &&
+        [[ "$suite_sha" =~ ^[0-9a-fA-F]{40}$ ]] &&
+        [[ "$run_id" =~ ^[0-9]+$ ]] &&
+        [[ "$run_attempt" =~ ^[1-9][0-9]*$ ]]; then
+        evaluation=$(jq -cn \
+            --arg service_repository "$service_org/$service_repo" \
+            --arg service_sha "$service_sha" \
+            --arg suite_repository "$suite_repository" \
+            --arg suite_sha "$suite_sha" \
+            --arg run_id "$run_id" \
+            --argjson run_attempt "$run_attempt" \
+            '{
+                service_repository: $service_repository,
+                service_sha: $service_sha,
+                suite_repository: $suite_repository,
+                suite_sha: $suite_sha,
+                run_id: $run_id,
+                run_attempt: $run_attempt
+            }')
+    fi
+
     log_debug "[build_results_json] Extracted values:" >&2
     log_debug "  score=[$score], rank=[$rank]" >&2
     log_debug "  passed_checks=[$passed_checks], total_checks=[$total_checks]" >&2
@@ -44,6 +74,7 @@ build_results_json() {
     log_debug "  links_json length: ${#links_json}" >&2
     log_debug "  openapi_json length: ${#openapi_json}" >&2
     log_debug "  excluded_checks_json length: ${#excluded_checks_json}" >&2
+    log_debug "  evaluation available: $([ "$evaluation" != "null" ] && echo true || echo false)" >&2
 
     # Build the complete results JSON
     # Note: team is now an object with primary, all, source, last_discovered
@@ -69,6 +100,7 @@ build_results_json() {
         --argjson checks "$checks_json" \
         --argjson links "$links_json" \
         --argjson openapi "$openapi_json" \
+        --argjson evaluation "$evaluation" \
         '{
             service: {
                 org: $service_org,
@@ -95,7 +127,7 @@ build_results_json() {
             installed: $installed,
             recent_contributors: $recent_contributors,
             checks: $checks
-        }'
+        } + (if $evaluation == null then {} else {evaluation: $evaluation} end)'
 }
 
 # Build checks metadata JSON

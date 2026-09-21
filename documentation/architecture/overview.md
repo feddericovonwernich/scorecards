@@ -78,6 +78,7 @@ The GitHub Action that performs scoring:
 - **Score Calculator** - Computes overall score from check results
 - **Badge Generator** - Creates score badge
 - **Registry Updater** - Updates central registry
+- **Remediation Action** (`action/remediate/`) - Separate, opt-in executor that proposes an allowed correction through a PR; disabled by default
 
 ### Checks
 
@@ -168,6 +169,8 @@ When checks are modified, a SHA256 hash is generated and stored in the catalog b
   - Runs within your organization's GitHub environment
   - Uses GitHub's security model and access controls
 
+Scoring remains read-only. Optional [remediation](flows/remediation-flow.md) uses a separate central workflow, tokenless recipe sandbox and trusted branch/PR publisher. The publisher never writes default or merges; activation additionally requires verified destination rules with no publisher bypass. A write-capable PAT is not itself a PR-only permission.
+
 ### Data Visibility
 
 **Catalog UI (GitHub Pages):**
@@ -208,3 +211,4 @@ When checks are modified, a SHA256 hash is generated and stored in the catalog b
 - [Check Execution Flow](flows/check-execution-flow.md) - How checks are discovered and run
 - [Installation Flow](flows/installation-flow.md) - Service onboarding via automated PRs
 - [Staleness Detection Flow](flows/staleness-detection-flow.md) - Detecting outdated scorecards
+- [Remediation Flow](flows/remediation-flow.md) - Deterministic recipes, provenance, PR-only publication and activation safeguards

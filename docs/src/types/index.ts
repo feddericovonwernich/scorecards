@@ -51,6 +51,7 @@ export interface WorkflowConfig {
     triggerService: string;
     createInstallPR: string;
     scorecard: string;
+    remediateCheck: string;
   };
   polling: {
     default: number;
@@ -89,7 +90,23 @@ export interface CheckResult {
   duration: number;
   stdout?: string;
   stderr?: string;
+  remediation?: RemediationDescriptor;
 }
+
+export interface RemediationDescriptor {
+  version: 1;
+  label: string;
+}
+
+export interface EvaluationSource {
+  service_repository: string;
+  service_sha: string;
+  suite_repository: string;
+  suite_sha: string;
+  run_id: string;
+  run_attempt: number;
+}
+
 
 export interface InstallationPR {
   number: number;
@@ -201,6 +218,25 @@ export interface FetchResult {
   usedAPI: boolean;
 }
 
+
+export type DispatchReceipt =
+  | { accepted: true; runId?: string; runUrl?: string; reason?: string }
+  | { accepted: false; status?: number; reason: string };
+
+export interface RemediationRequest {
+  org: string;
+  repo: string;
+  check_id: string;
+  service_sha: string;
+  suite_sha: string;
+  request_id: string;
+}
+
+export interface RemediationPullRequest {
+  url: string;
+  number: number;
+}
+
 export interface WorkflowRun {
   id: number;
   name: string;
@@ -217,6 +253,10 @@ export interface WorkflowRun {
   org?: string;
   repo?: string;
   service_name?: string;
+  display_title?: string;
+  workflow_id?: number;
+  event?: string;
+  run_attempt?: number;
 }
 
 export interface WorkflowJob {

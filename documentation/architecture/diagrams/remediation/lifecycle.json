@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Remediación · ciclo de una solicitud",
+    "quality_profile": "showcase",
+    "viewBox": [
+      980,
+      600
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "Solicitud autorizada"
+    },
+    {
+      "id": "outcomes",
+      "label": "Salidas sin escritura a la base"
+    },
+    {
+      "id": "terminal",
+      "label": "Resultado de la propuesta"
+    }
+  ],
+  "states": [
+    {
+      "id": "failed",
+      "type": "start",
+      "label": "Check fallido",
+      "sublabel": "Receta opcional",
+      "lane": "main",
+      "col": 0
+    },
+    {
+      "id": "requested",
+      "type": "active",
+      "label": "Solicitado",
+      "sublabel": "Dispatch autorizado",
+      "lane": "main",
+      "col": 1
+    },
+    {
+      "id": "valid",
+      "type": "decision",
+      "label": "Validación",
+      "sublabel": "Actor, SHA y receta",
+      "lane": "main",
+      "col": 2
+    },
+    {
+      "id": "execute",
+      "type": "active",
+      "label": "Preparación",
+      "sublabel": "Receta determinista",
+      "lane": "main",
+      "col": 3
+    },
+    {
+      "id": "review",
+      "type": "active",
+      "label": "Publicación",
+      "sublabel": "Crear o enlazar PR",
+      "lane": "main",
+      "col": 4
+    },
+    {
+      "id": "blocked",
+      "type": "neutral",
+      "label": "No elegible",
+      "sublabel": "Denegado u obsoleto",
+      "lane": "outcomes",
+      "col": 0
+    },
+    {
+      "id": "stopped",
+      "type": "neutral",
+      "label": "Sin publicación",
+      "sublabel": "Sin diff o ejecución fallida",
+      "lane": "outcomes",
+      "col": 1
+    },
+    {
+      "id": "prfail",
+      "type": "neutral",
+      "label": "Fallo al crear PR",
+      "sublabel": "Sin escribir la base",
+      "lane": "outcomes",
+      "col": 2
+    },
+    {
+      "id": "opened",
+      "type": "waiting",
+      "label": "En revisión",
+      "sublabel": "Merge humano pendiente",
+      "lane": "terminal",
+      "col": 2,
+      "yOffset": -70
+    }
+  ],
+  "transitions": [
+    {
+      "from": "valid",
+      "to": "blocked",
+      "label": "Rechazo",
+      "variant": "security",
+      "labelDy": 55
+    },
+    {
+      "from": "execute",
+      "to": "stopped",
+      "label": "Sin cambio válido",
+      "variant": "dashed",
+      "labelDy": 55
+    },
+    {
+      "from": "review",
+      "to": "prfail",
+      "label": "API rechaza creación",
+      "variant": "security",
+      "labelDy": 55
+    },
+    {
+      "from": "review",
+      "to": "opened",
+      "label": "PR confirmado",
+      "fromSide": "right",
+      "toSide": "right",
+      "variant": "emphasis",
+      "route": "right-channel",
+      "labelDx": 70
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Concurrencia acotada",
+      "items": [
+        "Una ejecución por destino y check; sin cancelación activa.",
+        "Si ya hay pull request abierto, enlazarlo sin sobrescribir."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "El check sigue fallido",
+      "items": [
+        "Cierre sin merge: no remediado; nuevo intento explícito.",
+        "Merge humano y reevaluación: pass o fail real."
+      ]
+    }
+  ]
+}

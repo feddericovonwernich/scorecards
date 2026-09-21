@@ -3,7 +3,7 @@
  * Fetches and parses service registry data from GitHub
  */
 
-import { getToken } from '../services/auth.js';
+import { getToken, clearToken } from '../services/auth.js';
 import { DEPLOYMENT } from '../config/deployment.js';
 import type { ServiceData, TeamsData, CurrentChecksResponse } from '../types/index.js';
 
@@ -61,11 +61,10 @@ export async function fetchWithHybridAuth(
       usedAPI = true;
 
       // Handle rate limit or auth errors gracefully
-      if (
-        response.status === 403 ||
-        response.status === 429 ||
-        response.status === 401
-      ) {
+      if (response.status === 401) {
+        clearToken();
+        usedAPI = false;
+      } else if (response.status === 403 || response.status === 429) {
         console.warn(
           `API fetch failed with status ${response.status}, falling back to CDN`
         );

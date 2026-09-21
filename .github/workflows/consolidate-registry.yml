@@ -179,8 +179,8 @@ jobs:
           # We need to fetch it from the default branch
           git fetch origin main --depth=1 || git fetch origin master --depth=1 || true
 
-          # Create temp directory for checks metadata
-          mkdir -p /tmp/checks-metadata
+          # The catalog branch has only generated data; validate metadata from the
+          # same trusted source revision that supplies the checks.
 
           # Try to get checks from main/master branch
           if git show origin/main:checks/ > /dev/null 2>&1; then
@@ -201,6 +201,13 @@ jobs:
 
           echo "Using checks from $checks_ref"
 
+          source_dir=$(mktemp -d)
+          trap 'rm -rf "$source_dir"' EXIT
+          git archive "$checks_ref" action/lib/remediation.sh action/config/remediation.json checks |
+            tar -x -C "$source_dir"
+          source "$source_dir/action/lib/remediation.sh"
+          remediation_policy="$source_dir/action/config/remediation.json"
+
           # Get list of check directories
           check_dirs=$(git ls-tree --name-only "$checks_ref" checks/ | sort)
 
@@ -219,14 +226,20 @@ jobs:
             # Read metadata
             metadata=$(git show "$checks_ref:$check_dir/metadata.json")
 
+            remediation='null'
+            if ! remediation=$(load_remediation_descriptor "$source_dir/$check_dir" "$remediation_policy"); then
+              echo "Invalid remediation descriptor for $check_id; omitting capability" >&2
+              remediation='null'
+            fi
+
             # Extract fields and add check_id
-            check_json=$(echo "$metadata" | jq --arg id "$check_id" '{
+            check_json=$(echo "$metadata" | jq --arg id "$check_id" --argjson remediation "$remediation" '{
               id: $id,
               name: .name,
               description: .description,
               category: .category,
               weight: .weight
-            }')
+            } + (if $remediation == null then {} else {remediation: $remediation} end)')
 
             # Add to checks array
             checks_json=$(echo "$checks_json" | jq --argjson check "$check_json" '. + [$check]')

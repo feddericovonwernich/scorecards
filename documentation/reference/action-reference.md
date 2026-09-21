@@ -8,20 +8,14 @@ Technical specification for the Scorecards GitHub Action.
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `github-token` | Yes | - | GitHub token for authentication. Use `${{ secrets.GITHUB_TOKEN }}` or a PAT with `repo` scope for committing to the central repository. |
+| `github-token` | Yes | - | Token with write access to the central catalog, normally `${{ secrets.SCORECARDS_CATALOG_TOKEN }}`. A service's `GITHUB_TOKEN` does not automatically have cross-repository access. |
 | `scorecards-repo` | No | Auto-detected | Central scorecards repository where results are stored (format: `owner/repo`). If not provided, detected from action source. |
 | `scorecards-branch` | No | `catalog` | Branch to commit results to in the central repository. |
+| `service-workspace` | No | `GITHUB_WORKSPACE` | Service checkout directory when Scorecards is checked out separately; prevents platform files from being scored as service files. |
 
 ### Example
 
-```yaml
-- name: Run Scorecards
-  uses: feddericovonwernich-org/scorecards/action@main
-  with:
-    github-token: ${{ secrets.SCORECARDS_PAT }}
-    scorecards-repo: 'your-org/scorecards'
-    scorecards-branch: 'catalog'
-```
+Use the maintained [workflow template](../examples/scorecard-workflow-template.yml) for separate service/platform checkouts and actual revision provenance. The older remote Action invocation remains usable for scoring but may omit remediation eligibility when source identity cannot be established.
 
 ## Outputs
 
@@ -40,7 +34,7 @@ Technical specification for the Scorecards GitHub Action.
   id: scorecard
   uses: feddericovonwernich-org/scorecards/action@main
   with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+    github-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 
 - name: Use Scorecard Results
   run: |

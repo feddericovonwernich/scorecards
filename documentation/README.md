@@ -14,5 +14,6 @@
 ## Understanding the System
 
 - **[Architecture](architecture/)** - System design and flows
+- **[Remediation](architecture/flows/remediation-flow.md)** - PR-only correction architecture, security boundaries, activation and rollback
 - **[Reference](reference/)** - Technical specifications
 - **[Contributing](../CONTRIBUTING.md)** - Contribute to Scorecards

@@ -4,11 +4,21 @@ This document provides detailed documentation for all GitHub Actions workflows i
 
 ## Overview
 
-The Scorecards system uses 8 workflows across three categories:
+The Scorecards system groups workflows into three categories:
 
 - **Development & Quality** - Testing and maintenance of the scorecards system itself
 - **Service Onboarding** - Installing scorecards in service repositories
 - **Execution & Maintenance** - Running checks and maintaining the catalog
+
+### Optional remediation
+
+**Path:** `.github/workflows/remediate-check.yml`
+
+**Trigger:** Central `workflow_dispatch` with `org`, `repo`, `check_id`, `service_sha`, `suite_sha` and `request_id`. Run title: `remediation:<request_id>`.
+
+**Jobs:** A read-only validator checks the trusted active revision and explicit actor/target policy before the writer credential is used. A per-repository/check concurrency group then invokes `action/remediate/` to prepare a tokenless sandbox correction and publish only a fresh branch and PR. Pending runs can replace older pending runs; this is not a durable FIFO queue.
+
+**Security and results:** Ships disabled, checks out `github.sha` without persisted credentials and pins third-party actions. `SCORECARDS_WORKFLOW_TOKEN` is host-only, with no catalog-token fallback. A generated outcome is retained as `remediation-result.json` and a run summary; cancellation may prevent output. Workflow success is not evidence of a PR or a passing score. See the authoritative [flow, diagrams and activation prerequisites](../architecture/flows/remediation-flow.md).
 
 ## Development & Quality Workflows
 

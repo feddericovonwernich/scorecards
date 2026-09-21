@@ -47,6 +47,10 @@ Before running the installation script, ensure you have:
 
 See [Token Requirements Guide](../reference/token-requirements.md) for token creation instructions.
 
+### Optional PR-only remediation
+
+Remediation is shipped **disabled** and needs no additional service workflow. Do not enable it as an installation side effect. Configure the reviewed runtime digest and explicit target/check/actor allowlists only after verifying the existing workflow-token holder and effective default-branch rules without bypass. See the [activation checklist and rollback](../architecture/flows/remediation-flow.md#activación-prerrequisitos-externos-obligatorios); inability to verify those controls means keeping `enabled: false`.
+
 ## Manual Installation
 
 If you prefer to set up manually:

@@ -85,9 +85,16 @@ test.describe('Workflow Triggers - Bulk Operations', () => {
     await expect(page.locator('.toast').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('should trigger bulk workflows with PAT and handle success', async ({ page }) => {
+  test('should trigger bulk workflows with a validated 200 receipt', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
-    await mockWorkflowDispatch(page, { status: 204 });
+    await mockWorkflowDispatch(page, {
+      status: 200,
+      body: {
+        workflow_run_id: 42,
+        run_url: 'https://api.github.com/repos/feddericovonwernich/scorecards/actions/runs/42',
+        html_url: 'https://github.com/feddericovonwernich/scorecards/actions/runs/42',
+      },
+    });
 
     let dialogShown = false;
     page.on('dialog', async dialog => {

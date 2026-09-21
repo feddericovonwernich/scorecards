@@ -46,7 +46,7 @@ check_meaningful_changes() {
         return 0
     fi
 
-    # Define filter once (extracts meaningful fields excluding timestamp, commit_sha, stdout, stderr, duration)
+    # Keep score/status comparisons compact, but publish source identity and capability changes.
     local jq_filter='{
         score: .score,
         rank: .rank,
@@ -56,6 +56,14 @@ check_meaningful_changes() {
         checks_count: .checks_count,
         installed: .installed,
         recent_contributors: .recent_contributors,
+        evaluation: (
+            if .evaluation? == null then null else {
+                service_repository: .evaluation.service_repository,
+                service_sha: .evaluation.service_sha,
+                suite_repository: .evaluation.suite_repository,
+                suite_sha: .evaluation.suite_sha
+            } end
+        ),
         service: {
             name: .service.name,
             team: .service.team,
@@ -65,7 +73,8 @@ check_meaningful_changes() {
         checks: [.checks[] | {
             check_id: .check_id,
             status: .status,
-            exit_code: .exit_code
+            exit_code: .exit_code,
+            remediation: .remediation?
         }]
     }'
 

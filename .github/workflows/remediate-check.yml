@@ -1,0 +1,92 @@
+name: Remediate Check
+run-name: 'remediation:${{ inputs.request_id }}'
+
+on:
+  workflow_dispatch:
+    inputs:
+      org:
+        description: 'Target owner'
+        required: true
+        type: string
+      repo:
+        description: 'Target repository'
+        required: true
+        type: string
+      check_id:
+        description: 'Configured check identifier'
+        required: true
+        type: string
+      service_sha:
+        description: 'Commit evaluated in the service'
+        required: true
+        type: string
+      suite_sha:
+        description: 'Commit of the trusted check suite'
+        required: true
+        type: string
+      request_id:
+        description: 'Client-generated correlation UUID'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    outputs:
+      repository_key: ${{ steps.validate.outputs.repository_key }}
+      check_id: ${{ steps.validate.outputs.check_id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate trusted policy and request
+        id: validate
+        env:
+          REQUEST_JSON: ${{ toJSON(inputs) }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          request="$RUNNER_TEMP/remediation-request.json"
+          printf '%s\n' "$REQUEST_JSON" > "$request"
+          validated=$(bash action/utils/run-remediation.sh validate "$request" action/config/remediation.json "$GITHUB_WORKSPACE")
+          jq -r '"repository_key=\(.repository_key)", "check_id=\(.check_id)"' <<< "$validated" >> "$GITHUB_OUTPUT"
+
+  remediate:
+    needs: validate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: remediation-${{ needs.validate.outputs.repository_key }}-${{ needs.validate.outputs.check_id }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Prepare request file
+        env:
+          REQUEST_JSON: ${{ toJSON(inputs) }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$REQUEST_JSON" > "$RUNNER_TEMP/remediation-request.json"
+      - name: Propose a correction through a pull request
+        id: remediation
+        uses: ./action/remediate
+        env:
+          GH_TOKEN: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
+        with:
+          request-file: ${{ runner.temp }}/remediation-request.json
+          policy-file: ${{ github.workspace }}/action/config/remediation.json
+      - name: Retain remediation outcome
+        if: ${{ always() && steps.remediation.outputs.result-file != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: remediation-result
+          path: ${{ steps.remediation.outputs.result-file }}
+          if-no-files-found: ignore

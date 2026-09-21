@@ -10,6 +10,13 @@
     transition: all var(--duration-fast) var(--ease-in-out-smooth);
 }
 
+.check-result > .trigger-btn {
+    margin-top: var(--space-3);
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
 .check-result:hover {
     transform: translateX(4px);
 }

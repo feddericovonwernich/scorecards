@@ -39,6 +39,13 @@ export const TIMING = {
   LIVE_DURATION_UPDATE: 1000,
 } as const;
 
+export const REMEDIATION_DISCOVERY = {
+  interval: 5000,
+  timeout: 60000,
+  maxPages: 5,
+  perPage: 100,
+} as const;
+
 // LocalStorage Keys
 export const STORAGE_KEYS = {
   WIDGET_POLL_INTERVAL: 'widget_poll_interval',

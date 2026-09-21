@@ -21,6 +21,11 @@ inputs:
     required: false
     default: 'catalog'
 
+
+  service-workspace:
+    description: 'Checked-out service directory when the platform uses a separate checkout'
+    required: false
+    default: ''
 outputs:
   score:
     description: 'The calculated score (0-100)'
@@ -53,6 +58,7 @@ runs:
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
         INPUT_SCORECARDS_REPO: ${{ inputs.scorecards-repo }}
         INPUT_SCORECARDS_BRANCH: ${{ inputs.scorecards-branch }}
+        INPUT_SERVICE_WORKSPACE: ${{ inputs.service-workspace }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}
         GITHUB_SHA: ${{ github.sha }}

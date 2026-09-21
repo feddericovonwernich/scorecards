@@ -243,67 +243,43 @@ jobs:
       PR_STATE: ${{ needs.create-installation-pr-placeholder.outputs.pr-state || needs.check-status.outputs.pr-state }}
       PR_URL: ${{ needs.create-installation-pr-placeholder.outputs.pr-url || format('https://github.com/{0}/pull/{1}', github.repository, needs.check-status.outputs.pr-number) }}
     steps:
-      - name: Get current date
-        id: date
-        run: echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
-
-      - name: Restore cached results
-        id: cache
-        uses: actions/cache/restore@v4
-        with:
-          path: scorecard-results.json
-          key: scorecards-results-${{ github.repository }}-${{ steps.date.outputs.date }}
-
-      - name: Extract cached outputs
-        if: steps.cache.outputs.cache-hit == 'true'
-        id: cached-results
-        run: |
-          echo "📦 Using cached results from today"
-          echo "score=$(jq -r '.score' scorecard-results.json)" >> $GITHUB_OUTPUT
-          echo "rank=$(jq -r '.rank' scorecard-results.json)" >> $GITHUB_OUTPUT
-          echo "passed-checks=$(jq -r '.passed_checks' scorecard-results.json)" >> $GITHUB_OUTPUT
-          echo "total-checks=$(jq -r '.total_checks' scorecard-results.json)" >> $GITHUB_OUTPUT
-          echo "results-file=scorecard-results.json" >> $GITHUB_OUTPUT
-
       - name: Checkout service repository
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: service
+
+      - name: Checkout Scorecards platform
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ inputs.scorecards-repo }}
+          # Resolve the central default branch rather than assuming its name.
+          token: ${{ secrets.scorecards-catalog-token }}
+          path: .scorecards-platform
+          persist-credentials: false
 
       - name: Run Scorecards Action
-        if: steps.cache.outputs.cache-hit != 'true'
         id: scorecards
-        uses: feddericovonwernich/scorecards/action@main
+        uses: ./.scorecards-platform/action
         with:
           github-token: ${{ secrets.scorecards-catalog-token }}
           scorecards-repo: ${{ inputs.scorecards-repo }}
           scorecards-branch: ${{ inputs.scorecards-branch }}
+          service-workspace: ${{ github.workspace }}/service
 
       - name: Set final outputs
         id: final-outputs
         run: |
-          if [ "${{ steps.cache.outputs.cache-hit }}" = "true" ]; then
-            echo "score=${{ steps.cached-results.outputs.score }}" >> $GITHUB_OUTPUT
-            echo "rank=${{ steps.cached-results.outputs.rank }}" >> $GITHUB_OUTPUT
-            echo "passed-checks=${{ steps.cached-results.outputs.passed-checks }}" >> $GITHUB_OUTPUT
-            echo "total-checks=${{ steps.cached-results.outputs.total-checks }}" >> $GITHUB_OUTPUT
-            echo "results-file=${{ steps.cached-results.outputs.results-file }}" >> $GITHUB_OUTPUT
-          else
-            echo "score=${{ steps.scorecards.outputs.score }}" >> $GITHUB_OUTPUT
-            echo "rank=${{ steps.scorecards.outputs.rank }}" >> $GITHUB_OUTPUT
-            echo "passed-checks=${{ steps.scorecards.outputs.passed-checks }}" >> $GITHUB_OUTPUT
-            echo "total-checks=${{ steps.scorecards.outputs.total-checks }}" >> $GITHUB_OUTPUT
-            echo "results-file=${{ steps.scorecards.outputs.results-file }}" >> $GITHUB_OUTPUT
-          fi
+          echo "score=${{ steps.scorecards.outputs.score }}" >> $GITHUB_OUTPUT
+          echo "rank=${{ steps.scorecards.outputs.rank }}" >> $GITHUB_OUTPUT
+          echo "passed-checks=${{ steps.scorecards.outputs.passed-checks }}" >> $GITHUB_OUTPUT
+          echo "total-checks=${{ steps.scorecards.outputs.total-checks }}" >> $GITHUB_OUTPUT
+          echo "results-file=${{ steps.scorecards.outputs.results-file }}" >> $GITHUB_OUTPUT
 
       - name: Display Results
         run: |
           echo "## 🎯 Scorecards Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ steps.cache.outputs.cache-hit }}" = "true" ]; then
-            echo "📦 **Using cached results from today**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
 
           echo "**Score**: ${{ steps.final-outputs.outputs.score }}/100" >> $GITHUB_STEP_SUMMARY
           echo "**Rank**: ${{ steps.final-outputs.outputs.rank }}" >> $GITHUB_STEP_SUMMARY
@@ -329,13 +305,6 @@ jobs:
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
           fi
-
-      - name: Cache results
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ steps.final-outputs.outputs.results-file }}
-          key: scorecards-results-${{ github.repository }}-${{ steps.date.outputs.date }}
 
       - name: Upload results artifact
         uses: actions/upload-artifact@v4

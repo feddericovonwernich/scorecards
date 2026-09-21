@@ -4,6 +4,9 @@ set -euo pipefail
 
 # Source common utilities for colors and logging
 source /action/lib/common.sh
+source /action/lib/remediation.sh
+
+REMEDIATION_POLICY_FILE="/action/config/remediation.json"
 
 # Usage: run-checks.sh <checks_dir> <repo_path> <output_file>
 HOST_CHECKS_DIR="${1:-/host-checks}"
@@ -79,6 +82,12 @@ while IFS= read -r check_dir; do
     timeout=$(jq -r '.timeout // 30' "$metadata_file")
     category=$(jq -r '.category // "general"' "$metadata_file")
 
+    remediation='null'
+    if ! remediation=$(load_remediation_descriptor "$check_dir" "$REMEDIATION_POLICY_FILE"); then
+        echo -e "${YELLOW}Warning: Invalid remediation descriptor for $check_name; omitting capability${NC}" >&2
+        remediation='null'
+    fi
+
     # Check if this check is excluded
     if [ -n "${EXCLUDED_MAP[$check_name]:-}" ]; then
         echo -e "${YELLOW}SKIP${NC} $name (excluded)"
@@ -90,6 +99,7 @@ while IFS= read -r check_dir; do
             --arg description "$description" \
             --arg category "$category" \
             --argjson weight "$weight" \
+            --argjson remediation "$remediation" \
             '{
                 check_id: $check_id,
                 name: $name,
@@ -101,7 +111,7 @@ while IFS= read -r check_dir; do
                 duration: 0,
                 stdout: "",
                 stderr: ""
-            }')
+            } + (if $remediation == null then {} else {remediation: $remediation} end)')
 
         # Append to results array
         results=$(echo "$results" | jq --argjson result "$result" '. + [$result]')
@@ -192,6 +202,7 @@ while IFS= read -r check_dir; do
         --argjson duration "$duration" \
         --argjson stdout "$stdout_content" \
         --argjson stderr "$stderr_content" \
+        --argjson remediation "$remediation" \
         '{
             check_id: $check_id,
             name: $name,
@@ -203,7 +214,7 @@ while IFS= read -r check_dir; do
             duration: $duration,
             stdout: $stdout,
             stderr: $stderr
-        }')
+        } + (if $remediation == null then {} else {remediation: $remediation} end)')
 
     # Append to results array
     results=$(echo "$results" | jq --argjson result "$result" '. + [$result]')

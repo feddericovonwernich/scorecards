@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "enabled": false,
+  "timeout_max_seconds": 300,
+  "diff_max_bytes": 1048576,
+  "output_max_bytes": 65536,
+  "memory_max_bytes": 536870912,
+  "pids_max": 128,
+  "cpu_max": "1",
+  "runtime_image": null,
+  "targets": {}
+}

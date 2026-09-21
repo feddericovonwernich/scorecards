@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Scorecards · remediación opcional",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1200,
+      670
+    ]
+  },
+  "components": [
+    {
+      "id": "checks",
+      "type": "backend",
+      "label": "Checks y Action",
+      "sublabel": "Actual · código de plataforma",
+      "pos": [
+        70,
+        110
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "scoring",
+      "type": "cloud",
+      "label": "Evaluación del servicio",
+      "sublabel": "Actual · GitHub Actions",
+      "pos": [
+        490,
+        110
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "catalog",
+      "type": "database",
+      "label": "Rama catalog",
+      "sublabel": "Actual · resultados, no autoridad",
+      "pos": [
+        910,
+        110
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Catálogo y botón",
+      "sublabel": "Opt-in · solo identificadores",
+      "pos": [
+        910,
+        450
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "runner",
+      "type": "security",
+      "label": "Action de remediación",
+      "sublabel": "Opt-in · revisión fijada",
+      "pos": [
+        490,
+        450
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "pr",
+      "type": "external",
+      "label": "Rama y pull request",
+      "sublabel": "Opt-in · repositorio destino",
+      "pos": [
+        70,
+        450
+      ],
+      "size": [
+        210,
+        72
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Plataforma mantiene definiciones",
+      "wraps": [
+        "checks"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "security-group",
+      "label": "Ejecución central confiable",
+      "wraps": [
+        "runner"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "Dueño del servicio revisa; nunca auto-merge",
+      "wraps": [
+        "pr"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "from": "checks",
+      "to": "scoring",
+      "label": "Ejecuta checks"
+    },
+    {
+      "from": "scoring",
+      "to": "catalog",
+      "label": "Publica resultados"
+    },
+    {
+      "from": "catalog",
+      "to": "ui",
+      "label": "Lectura informativa",
+      "labelDy": 110
+    },
+    {
+      "from": "ui",
+      "to": "runner",
+      "label": "workflow_dispatch",
+      "variant": "security"
+    },
+    {
+      "from": "runner",
+      "to": "pr",
+      "label": "Push solo a rama nueva",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Límite de seguridad",
+      "items": [
+        "Política deshabilitada de fábrica.",
+        "Credencial sin bypass y reglas de rama: requisito de activación."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Resultado real",
+      "items": [
+        "Abrir un pull request no aprueba el check.",
+        "Solo una nueva evaluación cambia el resultado."
+      ]
+    }
+  ]
+}

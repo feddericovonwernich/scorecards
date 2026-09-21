@@ -9,6 +9,8 @@ import { useAppStore, selectPAT } from '../stores/appStore.js';
 import { API_CONFIG, TIMING, STORAGE_KEYS } from '../config/constants.js';
 import { getRepoOwner, getRepoName } from '../api/registry.js';
 import type { WorkflowRun, WorkflowStatus } from '../types/index.js';
+import { clearToken } from '../services/auth.js';
+
 
 export interface WorkflowFilterCounts {
   all: number;
@@ -78,6 +80,10 @@ interface GitHubWorkflowRunResponse {
     head_sha?: string;
     head_branch?: string;
     jobs_url?: string;
+    display_title?: string;
+    workflow_id?: number;
+    event?: string;
+    run_attempt?: number;
   }>;
 }
 
@@ -166,6 +172,7 @@ export function useWorkflowPolling(options: UseWorkflowPollingOptions = {}): Use
       );
 
       if (!response.ok) {
+        if (response.status === 401) {clearToken();}
         throw new Error(`Failed to fetch workflow runs: ${response.status}`);
       }
 

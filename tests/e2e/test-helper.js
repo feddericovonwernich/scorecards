@@ -442,12 +442,13 @@ export async function getVisibleServiceNames(page) {
  * @param {import('@playwright/test').Page} page
  * @param {Object} options - Mock options
  * @param {number} options.status - HTTP status code (default: 204 for success)
+ * @param {Object} options.body - Optional JSON response body
  * @param {boolean} options.requireAuth - Whether to require authorization header (default: true)
  * @param {number} options.delay - Delay in ms before responding (default: 0, useful for testing loading states)
  */
 export async function mockWorkflowDispatch(
   page,
-  { status = 204, requireAuth = true, delay = 0 } = {}
+  { status = 204, body, requireAuth = true, delay = 0 } = {}
 ) {
   const pattern = '**/api.github.com/repos/**/actions/workflows/*/dispatches';
   console.log(
@@ -491,8 +492,8 @@ export async function mockWorkflowDispatch(
 
     // Return the configured status
     await route.fulfill({
-      status: status,
-      body: status === 204 ? '' : JSON.stringify({ message: 'Workflow dispatch failed' }),
+      status,
+      body: status === 204 ? '' : JSON.stringify(body || { message: 'Workflow dispatch failed' }),
       headers: {
         'Content-Type': 'application/json',
       },

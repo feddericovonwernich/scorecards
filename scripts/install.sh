@@ -645,14 +645,26 @@ ${BLUE}2. Add scorecards to your services:${NC}
      scorecards:
        runs-on: ubuntu-latest
        steps:
-         - uses: actions/checkout@v4
+         - name: Checkout service repository
+           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+           with:
+             path: service
+
+         - name: Checkout Scorecards platform
+           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+           with:
+             repository: '$FULL_REPO'
+             token: \${{ secrets.SCORECARDS_CATALOG_TOKEN }}
+             path: .scorecards-platform
+             persist-credentials: false
 
          - name: Run Scorecards
-           uses: $FULL_REPO/action@main
+           uses: ./.scorecards-platform/action
            with:
              github-token: \${{ secrets.SCORECARDS_CATALOG_TOKEN }}
              scorecards-repo: '$FULL_REPO'
-             scorecards-branch: 'catalog'${NC}
+             scorecards-branch: 'catalog'
+             service-workspace: \${{ github.workspace }}/service${NC}
 
 ${BLUE}3. Create a Personal Access Token for services:${NC}
    - Go to: https://github.com/settings/tokens/new

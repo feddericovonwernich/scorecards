@@ -56,6 +56,10 @@ COPY utils/ /scorecard/utils/
 # Copy library files for checks
 COPY lib/ /action/lib/
 
+# Remediation descriptor validation uses the same policy as the trusted action.
+COPY config/ /action/config/
+RUN chmod -R a-w /action/config
+
 # Create /checks directory and symlink node_modules for ES module resolution
 # This is necessary because ES modules don't respect NODE_PATH
 RUN mkdir -p /checks && ln -s /action/node_modules /checks/node_modules

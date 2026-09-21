@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Remediación · del fallo al pull request",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      1400,
+      660
+    ]
+  },
+  "participants": [
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Catálogo"
+    },
+    {
+      "id": "api",
+      "type": "cloud",
+      "label": "GitHub API"
+    },
+    {
+      "id": "run",
+      "type": "security",
+      "label": "Action central"
+    },
+    {
+      "id": "recipe",
+      "type": "backend",
+      "label": "Receta aislada"
+    },
+    {
+      "id": "svc",
+      "type": "external",
+      "label": "Servicio"
+    }
+  ],
+  "messages": [
+    {
+      "from": "ui",
+      "to": "api",
+      "y": 160,
+      "label": "POST dispatch · IDs, SHA, request_id",
+      "variant": "security"
+    },
+    {
+      "from": "api",
+      "to": "ui",
+      "y": 192,
+      "label": "200 con run / 204 sin ID; errores bloquean",
+      "variant": "return"
+    },
+    {
+      "from": "api",
+      "to": "run",
+      "y": 224,
+      "label": "workflow_dispatch · workflow confiable",
+      "variant": "emphasis"
+    },
+    {
+      "from": "run",
+      "to": "api",
+      "y": 256,
+      "label": "Validar actor, política y revisión",
+      "variant": "security"
+    },
+    {
+      "from": "run",
+      "to": "svc",
+      "y": 288,
+      "label": "Leer default branch y SHA actual",
+      "variant": "default"
+    },
+    {
+      "from": "run",
+      "to": "recipe",
+      "y": 320,
+      "label": "Reevaluar check; obsoleto o aprobado: parar",
+      "variant": "security"
+    },
+    {
+      "from": "run",
+      "to": "svc",
+      "y": 352,
+      "label": "Buscar pull request abierto por head/base",
+      "variant": "default"
+    },
+    {
+      "from": "run",
+      "to": "recipe",
+      "y": 384,
+      "label": "Sin existente: ejecutar receta sin token",
+      "variant": "emphasis"
+    },
+    {
+      "from": "recipe",
+      "to": "run",
+      "y": 416,
+      "label": "Fallo o sin diff: resultado, sin publicación",
+      "variant": "dashed"
+    },
+    {
+      "from": "run",
+      "to": "svc",
+      "y": 448,
+      "label": "Diff válido: push solo a rama nueva",
+      "variant": "security"
+    },
+    {
+      "from": "run",
+      "to": "api",
+      "y": 480,
+      "label": "Crear pull request; fallo: jamás escribir base",
+      "variant": "security"
+    },
+    {
+      "from": "run",
+      "to": "api",
+      "y": 512,
+      "label": "Summary + artifact: run URL, resultado, PR URL",
+      "variant": "default"
+    },
+    {
+      "from": "ui",
+      "to": "api",
+      "y": 544,
+      "label": "Buscar run por request_id; leer enlaces",
+      "variant": "default"
+    },
+    {
+      "from": "svc",
+      "to": "api",
+      "y": 576,
+      "label": "Tras merge humano: nueva evaluación",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Frontera de autoridad",
+      "items": [
+        "El navegador no envía shell, rutas ni refs ejecutables.",
+        "API autoriza el dispatch; workflow autoriza el destino."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Estado verificable",
+      "items": [
+        "200 enlaza el run; 204 requiere correlación.",
+        "La reevaluación, no el pull request, decide el check."
+      ]
+    }
+  ]
+}

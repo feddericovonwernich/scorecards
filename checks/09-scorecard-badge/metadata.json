@@ -3,5 +3,16 @@
   "description": "Checks that the README displays scorecard badges. Badges promote transparency and help users quickly assess repository quality.",
   "weight": 5,
   "timeout": 10,
-  "category": "Scorecards Setup"
+  "category": "Scorecards Setup",
+  "remediation": {
+    "version": 1,
+    "label": "Proponer badge de Scorecards",
+    "timeout": 30,
+    "allowed_paths": [
+      "README.md",
+      "README.rst",
+      "README.txt",
+      "README"
+    ]
+  }
 }

@@ -1,0 +1,66 @@
+name: 'Scorecards Remediation'
+description: 'Prepare a deterministic correction and propose it exclusively through a pull request'
+inputs:
+  request-file:
+    description: 'JSON request produced by the trusted central workflow'
+    required: true
+  policy-file:
+    description: 'Policy from the trusted Scorecards checkout'
+    required: true
+outputs:
+  status:
+    description: 'Remediation outcome, not a scorecard status'
+    value: ${{ steps.result.outputs.status }}
+  run-url:
+    description: 'Workflow execution URL'
+    value: ${{ steps.result.outputs.run-url }}
+  pr-url:
+    description: 'Created or existing pull request URL, when present'
+    value: ${{ steps.result.outputs.pr-url }}
+  result-file:
+    description: 'Machine-readable outcome file, when produced'
+    value: ${{ steps.result.outputs.result-file }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare isolated correction
+      id: prepare
+      shell: bash
+      env:
+        REQUEST_FILE: ${{ inputs.request-file }}
+        POLICY_FILE: ${{ inputs.policy-file }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        suite=$(realpath "$ACTION_PATH/../..")
+        work="$RUNNER_TEMP/scorecards-remediation-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+        bash "$suite/action/utils/run-remediation.sh" prepare "$REQUEST_FILE" "$POLICY_FILE" "$suite" "$work"
+    - name: Publish only a new branch and pull request
+      if: steps.prepare.outcome == 'success'
+      shell: bash
+      env:
+        POLICY_FILE: ${{ inputs.policy-file }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        suite=$(realpath "$ACTION_PATH/../..")
+        work="$RUNNER_TEMP/scorecards-remediation-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+        if [ -f "$work/prepared.json" ]; then
+          bash "$suite/action/utils/run-remediation.sh" publish "$work/prepared.json" "$POLICY_FILE" "$work"
+        fi
+    - name: Expose outcome links
+      id: result
+      if: always()
+      shell: bash
+      run: |
+        set -euo pipefail
+        result="$RUNNER_TEMP/scorecards-remediation-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/remediation-result.json"
+        if [ -f "$result" ]; then
+          printf 'result-file=%s\n' "$result" >> "$GITHUB_OUTPUT"
+          jq -r '"status=\(.status)", "run-url=\(.run_url)", "pr-url=\(.pr_url // "")"' "$result" >> "$GITHUB_OUTPUT"
+          case "$(jq -r '.status' "$result")" in
+            unauthorized|ambiguous_existing_pr|check_failed_to_run|execution_failed|invalid_diff|pr_failed)
+              exit 1
+              ;;
+          esac
+        fi

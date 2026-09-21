@@ -9,15 +9,15 @@ Scorecards uses two GitHub Personal Access Tokens (PATs) for different purposes:
 | Token | Purpose | Scopes | Required? |
 |-------|---------|--------|-----------|
 | `SCORECARDS_CATALOG_TOKEN` | Write results to catalog branch | `repo` | **Yes** |
-| `SCORECARDS_WORKFLOW_TOKEN` | Create PRs with workflow files | `repo`, `workflow` | Optional* |
+| `SCORECARDS_WORKFLOW_TOKEN` | Installation PRs and explicitly enabled remediation | Classic: `repo`; `workflow` additionally for installation files | Optional* |
 
-*Only required if using `install.yml` or `create-installation-pr.yml` for automated installation
+*Required for automated installation or enabled remediation; remediation is disabled by default.
 
 ## Why Two Tokens?
 
 **SCORECARDS_CATALOG_TOKEN** - Every scorecard execution writes results to the catalog branch. This token needs `repo` scope to write to the catalog.
 
-**SCORECARDS_WORKFLOW_TOKEN** - GitHub blocks PRs that modify `.github/workflows/` files unless the token has the `workflow` scope. This is a security measure. Since installation PRs add workflow files, this special token is needed only for automated installation workflows.
+**SCORECARDS_WORKFLOW_TOKEN** - Installation writes `.github/workflows/` and therefore requires the classic `workflow` scope in addition to repository access. The optional remediation executor reuses this configured secret without enlarging its scope or falling back to the catalog token. The badge recipe cannot modify workflows.
 
 ## Creating SCORECARDS_CATALOG_TOKEN
 
@@ -49,9 +49,9 @@ This token allows Scorecards to write results to the catalog branch.
 
 ## Creating SCORECARDS_WORKFLOW_TOKEN
 
-This token allows creating PRs that modify workflow files.
+This token allows installation PRs and, only after explicit activation, remediation branches and PRs.
 
-> **Note:** Fine-grained tokens don't support the `workflow` scope yet. Use a classic token.
+Classic scopes and fine-grained repository permissions are different models. A fine-grained token should select only the required repositories and grant Contents/Pull requests write, plus Workflows write when installing workflow files. Verify organization approval and current endpoint support; do not grant Workflows write solely for the badge pilot. The existing classic-token setup is shown below.
 
 ### Step 1: Generate Classic Token
 
@@ -88,12 +88,22 @@ Each service repository needs access to `SCORECARDS_CATALOG_TOKEN` to write resu
 - Add `SCORECARDS_CATALOG_TOKEN` to each service's Settings → Secrets and variables → Actions
 - Required if not using organization-wide secrets
 
+## Remediation Authorization
+
+The browser uses the user's own PAT to dispatch/read the **central** workflow (fine-grained Actions write/read, or appropriate classic repository access). It never receives the central publication secret. Dispatch permission alone is not remediation authorization: both GitHub actor identities must match the destination's explicit `actors` policy.
+
+The central executor's `SCORECARDS_WORKFLOW_TOKEN` must read the trusted central revision, read/write contents in the allowlisted destination and read/create its PRs. `/user` must identify the configured `publisher_login`. Only the host publisher sees this token; the recipe container receives no token, credential helper, Git metadata, network or Docker socket.
+
+**Contents write is not PR-only or branch-scoped.** Before activation, verify effective default-branch restrictions requiring human review and excluding the publisher from bypass/direct writes and auto-merge. Protect the central policy/workflow and secret access as well. Record evidence in the target's `protection_evidence`; a nonempty string is not proof that controls are effective. If the holder or rules cannot be verified, keep remediation disabled.
+
+See [activation, threat boundaries and rollback](../architecture/flows/remediation-flow.md). This implementation does not create/rotate secrets, broaden permissions or activate targets.
+
 ## Token Security Best Practices
 
 ### Scope Minimization
-- `SCORECARDS_CATALOG_TOKEN`: Only `repo` scope
-- `SCORECARDS_WORKFLOW_TOKEN`: Only `repo` + `workflow` scopes
-- Never grant additional scopes
+- Prefer fine-grained tokens selecting only required repositories and permissions.
+- For classic tokens, catalog writes require repository access; installation additionally requires `workflow`.
+- Grant no new scope merely to enable remediation; verify the existing holder and branch protections first.
 
 ### Expiration
 - Set 30-90 day expiration
@@ -119,5 +129,5 @@ When rotating:
 
 - [GitHub PAT Documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 - [Organization Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization)
-- [Platform Installation Guide](platform-installation.md)
-- [Service Installation Guide](service-installation.md)
+- [Platform Installation Guide](../guides/platform-installation.md)
+- [Service Installation Guide](../guides/service-installation.md)

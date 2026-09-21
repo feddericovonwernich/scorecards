@@ -3,13 +3,13 @@
  * Handles triggering scorecards workflows via GitHub API
  */
 
-import { getToken, clearToken } from '../services/auth.js';
+import { getToken } from '../services/auth.js';
 import { showToastGlobal } from '../components/ui/Toast.js';
-import { DEPLOYMENT } from '../config/deployment.js';
-import { WORKFLOWS, getWorkflowDispatchUrl } from '../config/workflows.js';
+import { WORKFLOWS } from '../config/workflows.js';
 import * as storeAccessor from '../stores/accessor.js';
 import type { ServiceData } from '../types/index.js';
 import { getRepoOwner, getRepoName } from './registry.js';
+import { triggerWorkflowDispatch } from './github.js';
 import { isServiceStale } from '../services/staleness.js';
 
 // Window types are defined in types/globals.d.ts
@@ -40,9 +40,7 @@ export async function triggerServiceWorkflow(
   org: string,
   repo: string
 ): Promise<boolean> {
-  const token = getToken();
-
-  if (!token) {
+  if (!getToken()) {
     showToastGlobal(
       'Please configure a GitHub PAT in Settings to trigger workflows',
       'warning'
@@ -53,42 +51,22 @@ export async function triggerServiceWorkflow(
 
   try {
     const { owner, name } = getRepoInfo();
-    const response = await fetch(
-      getWorkflowDispatchUrl(owner, name, WORKFLOWS.files.triggerService),
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/vnd.github+json',
-          Authorization: `Bearer ${token}`,
-          'X-GitHub-Api-Version': DEPLOYMENT.api.version,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ref: 'main',
-          inputs: { org, repo },
-        }),
-      }
+    const receipt = await triggerWorkflowDispatch(
+      owner, name, WORKFLOWS.files.triggerService, { org, repo }
     );
-
-    if (response.status === 204) {
+    if (receipt.accepted) {
       showToastGlobal(`Scorecard workflow triggered for ${org}/${repo}`, 'success');
       return true;
-    } else if (response.status === 401) {
-      clearToken();
+    }
+    if (receipt.status === 401) {
       showToastGlobal(
         'Invalid GitHub token. Please enter a valid token in Settings.',
         'error'
       );
       return false;
-    } else {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Failed to trigger workflow:', response.status, errorData);
-      showToastGlobal(
-        `Failed to trigger workflow: ${(errorData as { message?: string }).message || response.statusText}`,
-        'error'
-      );
-      return false;
     }
+    showToastGlobal(`Failed to trigger workflow: ${receipt.reason}`, 'error');
+    return false;
   } catch (error) {
     console.error('Error triggering workflow:', error);
     showToastGlobal(
@@ -107,9 +85,7 @@ export async function installService(
   org: string,
   repo: string
 ): Promise<boolean> {
-  const token = getToken();
-
-  if (!token) {
+  if (!getToken()) {
     showToastGlobal(
       'GitHub token is required to create installation PRs',
       'error'
@@ -119,57 +95,31 @@ export async function installService(
 
   try {
     const { owner, name } = getRepoInfo();
-    const response = await fetch(
-      getWorkflowDispatchUrl(owner, name, WORKFLOWS.files.createInstallPR),
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/vnd.github+json',
-          Authorization: `Bearer ${token}`,
-          'X-GitHub-Api-Version': DEPLOYMENT.api.version,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ref: 'main',
-          inputs: { org, repo },
-        }),
-      }
+    const receipt = await triggerWorkflowDispatch(
+      owner, name, WORKFLOWS.files.createInstallPR, { org, repo }
     );
-
-    if (response.status === 204) {
+    if (receipt.accepted) {
       showToastGlobal(
         `Installation PR creation started for ${org}/${repo}`,
         'success'
       );
-
       setTimeout(() => {
         showToastGlobal(
           'Note: PR status will appear in the catalog in 3-5 minutes due to GitHub Pages deployment.',
           'info'
         );
       }, 2000);
-
       return true;
-    } else if (response.status === 401) {
-      clearToken();
+    }
+    if (receipt.status === 401) {
       showToastGlobal(
         'Invalid GitHub token. Please enter a valid token with workflow permissions.',
         'error'
       );
       return false;
-    } else {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(
-        'Failed to create installation PR:',
-        response.status,
-        errorData
-      );
-      showToastGlobal(
-        `Failed to create installation PR: ${(errorData as { message?: string }).message || response.statusText}`,
-        'error'
-      );
-      return false;
     }
+    showToastGlobal(`Failed to create installation PR: ${receipt.reason}`, 'error');
+    return false;
   } catch (error) {
     console.error('Error creating installation PR:', error);
     showToastGlobal(
@@ -187,63 +137,36 @@ export async function installService(
 export async function triggerBulkWorkflows(
   services: ServiceData[]
 ): Promise<boolean> {
-  const token = getToken();
-
-  if (!token) {
+  if (!getToken()) {
     showToastGlobal('GitHub token is required to trigger workflows', 'error');
     return false;
   }
 
   try {
-    const servicesArray = services.map((s) => ({ org: s.org, repo: s.repo }));
     const { owner, name } = getRepoInfo();
-
-    const response = await fetch(
-      getWorkflowDispatchUrl(owner, name, WORKFLOWS.files.triggerService),
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/vnd.github+json',
-          Authorization: `Bearer ${token}`,
-          'X-GitHub-Api-Version': DEPLOYMENT.api.version,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ref: 'main',
-          inputs: {
-            services: JSON.stringify(servicesArray),
-          },
-        }),
-      }
+    const receipt = await triggerWorkflowDispatch(
+      owner,
+      name,
+      WORKFLOWS.files.triggerService,
+      { services: JSON.stringify(services.map((service) => ({ org: service.org, repo: service.repo }))) }
     );
-
-    if (response.status === 204) {
+    if (receipt.accepted) {
       const count = services.length;
       showToastGlobal(
         `Triggered workflows for ${count} service${count !== 1 ? 's' : ''}`,
         'success'
       );
       return true;
-    } else if (response.status === 401) {
-      clearToken();
+    }
+    if (receipt.status === 401) {
       showToastGlobal(
         'Invalid GitHub token. Please enter a valid token in Settings.',
         'error'
       );
       return false;
-    } else {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(
-        'Failed to trigger bulk workflows:',
-        response.status,
-        errorData
-      );
-      showToastGlobal(
-        `Failed to trigger workflows: ${(errorData as { message?: string }).message || response.statusText}`,
-        'error'
-      );
-      return false;
     }
+    showToastGlobal(`Failed to trigger workflows: ${receipt.reason}`, 'error');
+    return false;
   } catch (error) {
     console.error('Error triggering bulk workflows:', error);
     showToastGlobal(

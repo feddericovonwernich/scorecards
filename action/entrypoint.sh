@@ -19,6 +19,53 @@ source "$SCRIPT_DIR/lib/results-builder.sh"
 # Configuration and Environment
 # ============================================================================
 
+# The action may live beside, rather than inside, the repository being scored.
+SERVICE_WORKSPACE="${INPUT_SERVICE_WORKSPACE:-$GITHUB_WORKSPACE}"
+if [ ! -d "$SERVICE_WORKSPACE" ]; then
+    die "Service workspace does not exist: $SERVICE_WORKSPACE" 1
+fi
+
+repository_from_remote() {
+    local remote="$1"
+    local repository
+
+    case "$remote" in
+        *://*)
+            repository="${remote#*://}"
+            repository="${repository#*/}"
+            ;;
+        *@*:*)
+            repository="${remote#*:}"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+
+    repository="${repository%/}"
+    repository="${repository%.git}"
+    [[ "$repository" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || return 1
+    printf '%s\n' "$repository"
+}
+
+# Capture the revisions actually evaluated before changing directories.
+SERVICE_SHA=""
+if ! SERVICE_SHA=$(git -C "$SERVICE_WORKSPACE" rev-parse --verify HEAD 2>/dev/null); then
+    log_warning "Service workspace is not a Git checkout; omitting evaluation provenance"
+fi
+
+SUITE_SHA=""
+SUITE_REPOSITORY=""
+if SUITE_SHA=$(git -C "$SCRIPT_DIR" rev-parse --verify HEAD 2>/dev/null) &&
+    suite_remote=$(git -C "$SCRIPT_DIR" remote get-url origin 2>/dev/null) &&
+    SUITE_REPOSITORY=$(repository_from_remote "$suite_remote"); then
+    log_info "Suite source: $SUITE_REPOSITORY@$SUITE_SHA"
+else
+    SUITE_SHA=""
+    SUITE_REPOSITORY=""
+    log_warning "Action source is not a Git checkout with a recognized origin; omitting evaluation provenance"
+fi
+
 # Sanitize token by removing any trailing whitespace/newlines
 GITHUB_TOKEN=$(echo -n "${INPUT_GITHUB_TOKEN}" | tr -d '\n\r\t ')
 SCORECARDS_REPO="${INPUT_SCORECARDS_REPO}"
@@ -44,8 +91,8 @@ initialize_environment
 log_info "========================================"
 log_info "Scorecards - Service Quality Measurement"
 log_info "========================================"
-log_info "Service: $GITHUB_REPOSITORY"
-log_info "Commit: $GITHUB_SHA"
+log_info "Service source: ${SERVICE_SHA:-unavailable}"
+log_info "Workflow event SHA: $GITHUB_SHA"
 
 # ============================================================================
 # Fetch PR Info (with fallback if not provided via environment)
@@ -80,7 +127,7 @@ log_success "Default branch: $DEFAULT_BRANCH"
 # ============================================================================
 
 HAS_CONFIG=false
-if has_scorecard_config "$GITHUB_WORKSPACE"; then
+if has_scorecard_config "$SERVICE_WORKSPACE"; then
     log_success "Configuration file found: .scorecard/config.yml"
     HAS_CONFIG=true
 else
@@ -93,15 +140,15 @@ fi
 # ============================================================================
 
 if [ "$HAS_CONFIG" = "true" ]; then
-    SERVICE_NAME=$(get_service_name "$GITHUB_WORKSPACE" "$SERVICE_REPO")
-    MANUAL_TEAM=$(get_team_name "$GITHUB_WORKSPACE")
+    SERVICE_NAME=$(get_service_name "$SERVICE_WORKSPACE" "$SERVICE_REPO")
+    MANUAL_TEAM=$(get_team_name "$SERVICE_WORKSPACE")
     OVERRIDE_DISCOVERY="false"
-    if should_override_discovery "$GITHUB_WORKSPACE"; then
+    if should_override_discovery "$SERVICE_WORKSPACE"; then
         OVERRIDE_DISCOVERY="true"
     fi
-    CONFIG_ADDITIONAL_TEAMS=$(get_additional_teams "$GITHUB_WORKSPACE")
-    LINKS_JSON=$(parse_links_array "$GITHUB_WORKSPACE")
-    OPENAPI_JSON=$(parse_openapi_config "$GITHUB_WORKSPACE")
+    CONFIG_ADDITIONAL_TEAMS=$(get_additional_teams "$SERVICE_WORKSPACE")
+    LINKS_JSON=$(parse_links_array "$SERVICE_WORKSPACE")
+    OPENAPI_JSON=$(parse_openapi_config "$SERVICE_WORKSPACE")
 
     # Validate LINKS_JSON is not empty and contains valid JSON
     if [ -z "$LINKS_JSON" ] || ! echo "$LINKS_JSON" | jq empty 2>/dev/null; then
@@ -137,7 +184,7 @@ EXCLUDED_CHECKS_JSON="[]"
 EXCLUDED_CHECK_IDS=""
 
 if [ "$HAS_CONFIG" = "true" ]; then
-    EXCLUDED_CHECKS_JSON=$(parse_excluded_checks "$GITHUB_WORKSPACE")
+    EXCLUDED_CHECKS_JSON=$(parse_excluded_checks "$SERVICE_WORKSPACE")
     EXCLUDED_CHECK_IDS=$(echo "$EXCLUDED_CHECKS_JSON" | jq -r '[.[].check] | join(",")')
 
     # Log excluded checks for visibility
@@ -169,7 +216,7 @@ if [ "$OVERRIDE_DISCOVERY" = "true" ] && [ -n "$MANUAL_TEAM" ]; then
             last_discovered: $timestamp
         }')
 else
-    TEAM_DISCOVERY_JSON=$(discover_team "$GITHUB_WORKSPACE" "$SERVICE_ORG" "$SERVICE_REPO" "$GITHUB_TOKEN" "$MANUAL_TEAM")
+    TEAM_DISCOVERY_JSON=$(discover_team "$SERVICE_WORKSPACE" "$SERVICE_ORG" "$SERVICE_REPO" "$GITHUB_TOKEN" "$MANUAL_TEAM")
 
     # Merge additional teams from config if present
     if [ "$CONFIG_ADDITIONAL_TEAMS" != "[]" ]; then
@@ -206,7 +253,7 @@ echo
 
 # Check if scorecards workflow is installed
 INSTALLED="false"
-if check_workflow_installed "$GITHUB_WORKSPACE"; then
+if check_workflow_installed "$SERVICE_WORKSPACE"; then
     log_info "Installed: true (workflow detected)"
     INSTALLED="true"
 else
@@ -241,7 +288,7 @@ RESULTS_FILE="$OUTPUT_DIR/results.json"
 # Run Docker container with checks
 if ! docker run --rm \
     -v "$CHECKS_DIR:/host-checks:ro" \
-    -v "$GITHUB_WORKSPACE:/workspace:ro" \
+    -v "$SERVICE_WORKSPACE:/workspace:ro" \
     -v "$OUTPUT_DIR:/output" \
     -e "EXCLUDED_CHECKS=$EXCLUDED_CHECK_IDS" \
     scorecards-runner:latest \
@@ -313,7 +360,7 @@ echo
 # Analyze Recent Contributors
 # ============================================================================
 
-CONTRIBUTORS_JSON=$(analyze_contributors "$GITHUB_WORKSPACE" 20)
+CONTRIBUTORS_JSON=$(analyze_contributors "$SERVICE_WORKSPACE" 20)
 
 # Validate CONTRIBUTORS_JSON is not empty and contains valid JSON
 if [ -z "$CONTRIBUTORS_JSON" ] || ! echo "$CONTRIBUTORS_JSON" | jq empty 2>/dev/null; then
@@ -373,6 +420,7 @@ declare -A service_context=(
     [team_github_slug]="$TEAM_GITHUB_SLUG"
     [has_api]="$HAS_API"
     [default_branch]="$DEFAULT_BRANCH"
+    [service_sha]="$SERVICE_SHA"
 )
 
 declare -A score_context=(
@@ -384,6 +432,10 @@ declare -A score_context=(
     [checks_hash]="$CHECKS_HASH"
     [checks_count]="$CHECKS_COUNT"
     [installed]="$INSTALLED"
+    [suite_repository]="$SUITE_REPOSITORY"
+    [suite_sha]="$SUITE_SHA"
+    [run_id]="${GITHUB_RUN_ID:-}"
+    [run_attempt]="${GITHUB_RUN_ATTEMPT:-}"
 )
 
 log_debug "========================================"
@@ -451,7 +503,7 @@ fi
 # ============================================================================
 
 # Copy results file to workspace for artifact upload
-RESULTS_FILE_PATH="$GITHUB_WORKSPACE/scorecard-results.json"
+RESULTS_FILE_PATH="$SERVICE_WORKSPACE/scorecard-results.json"
 cp "$OUTPUT_DIR/final-results.json" "$RESULTS_FILE_PATH"
 
 # GitHub Actions set output syntax

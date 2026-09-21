@@ -35,6 +35,12 @@ Each check must have a `metadata.json` file with the following structure:
 - **timeout** (optional, number, default: 30): Max execution time in seconds
 - **category** (optional, string): Grouping category for the catalog UI
 
+### Optional remediation recipe
+
+A check may declare `remediation` metadata and exactly one `remediate.sh`, `remediate.py` or `remediate.js` beside its check script. This is executable trusted code, not a free-form command accepted from the catalog. Review its explicit allowed paths, idempotence, timeout and behavior against an untrusted service tree. It must not run service hooks or dependencies.
+
+The initial recipe only adds a Scorecards badge to a safe existing README; it does not invent one. See the canonical [metadata, sandbox and exit-code contract](../architecture/flows/remediation-flow.md#contrato-del-check). Declaring a recipe does not enable a destination: the central policy remains authoritative and disabled until activation prerequisites are met.
+
 ## Check Script Interface
 
 ### Input
