@@ -28,7 +28,7 @@ See `/checks/lib/README.md` for documentation on available shared utilities.
 ## Code Style
 
 - **Shell scripts:** Follow Google Shell Style Guide, use shellcheck
-- **JavaScript:** Follow Airbnb style guide, use ESLint
+- **JavaScript:** Use ESLint with the repository's [configured rules](.eslintrc.json)
 - **Python:** Follow PEP 8, use flake8
 
 ## Testing

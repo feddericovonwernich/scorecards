@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
 - Keep API Explorer's long source URLs, expanded schemas and responses reachable on narrow screens without horizontal page overflow.
 
 ### Changed
+
 - **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
   - Replaced ES6 modules with React functional components
   - Replaced manual DOM manipulation with React declarative rendering
@@ -21,12 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 263 E2E tests passing post-migration
 
 ### Added
+
 - CHANGELOG.md to track project changes
 - Glossary of domain-specific terms
 
 ## [1.0.0] - 2025-01-20
 
 ### Added
+
 - Initial release of Scorecards quality measurement system
 - GitHub Action for running quality checks
 - 15 built-in quality checks across 5 categories
@@ -44,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration schema and examples
 
 ### Security
+
 - Token security best practices documentation
 - Minimal permission requirements documented
 - Secure token storage via GitHub Secrets
