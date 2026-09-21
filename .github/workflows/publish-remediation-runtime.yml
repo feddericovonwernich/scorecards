@@ -18,8 +18,10 @@ jobs:
       cancel-in-progress: false
     env:
       IMAGE: ghcr.io/feddericovonwernich/scorecards-remediation-runtime
-      DOCKER_CONFIG: ${{ runner.temp }}/runtime-docker-auth
     steps:
+      - name: Configure ephemeral registry login
+        shell: bash
+        run: printf 'DOCKER_CONFIG=%s/runtime-docker-auth\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.sha }}
