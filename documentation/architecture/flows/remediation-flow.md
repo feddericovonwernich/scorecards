@@ -117,10 +117,49 @@ Más de uno es ambiguo: no se elige arbitrariamente. Un PR abierto se devuelve s
 
 Abrir o cerrar un PR no actualiza el score. Sólo una nueva evaluación después de una decisión humana publica el resultado correspondiente. No existe una base de trabajos adicional en `catalog`.
 
+## Publicación del runtime
+
+`publish-remediation-runtime.yml` sólo admite `workflow_dispatch`, sin inputs, en
+`feddericovonwernich/scorecards:main`. Hace checkout del SHA del evento, no de código
+de forks ni de una revisión elegida mediante input. **No ejecutarlo hasta revisar
+e integrar su cambio mediante PR con aprobación del captain.** El filtro de rama
+no demuestra revisión: proteger main y autorizar su integración siguen siendo
+prerrequisitos externos. Abrir el PR no publica nada.
+
+Construye el [runtime compartido](../../reference/action-reference.md#runtime-build),
+ejecuta el smoke real y publica exclusivamente
+`ghcr.io/feddericovonwernich/scorecards-remediation-runtime:<SHA completo>`.
+Usa sólo `GITHUB_TOKEN` efímero con `contents: read` y `packages: write`; no requiere
+PAT ni secrets nuevos. Las Actions externas están fijadas por commit. La etiqueta
+OCI `org.opencontainers.image.source` enlaza el repositorio y `revision` registra
+el SHA. El artefacto `remediation-runtime-evidence` conserva fuente, hashes de
+entradas, build, versiones instaladas, smoke, manifest remoto y referencia por digest.
+El digest se consulta al registro después del push y se descarga/verifica contra
+el SHA; un ID o RepoDigest local no sustituye esa comprobación.
+
+Según [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry),
+un paquete nuevo es privado por defecto. El token del workflow lo enlaza al
+repositorio; si ya existía sin enlace/permisos heredados, el owner debe comprobar
+«Manage Actions access» para **este repositorio**, sin ampliar permisos de cuenta.
+Un push denegado no se resuelve añadiendo un PAT o borrando el paquete.
+
+El executor actual no inicia sesión en GHCR: necesita descarga anónima. El workflow
+comprueba el manifest con configuración Docker vacía después de publicar; si falla,
+conserva el recibo de publicación pero **no está listo para activar**. El owner debe
+revisar explícitamente la visibilidad pública del paquete, o tramitar otro diseño
+de acceso por PR. Este workflow no cambia visibilidad ni permisos. Verificar además
+un pull anónimo por digest desde el runner antes de configurar `runtime_image`.
+No se afirma un bloqueo de permisos concreto antes de intentar el workflow revisado:
+el inventario autenticado previo devolvió 403, no prueba ausencia del paquete.
+
+Sólo después de publicación y acceso comprobados, llevar la referencia de
+`runtime-image.txt` a una revisión de política independiente. Ningún paso activa,
+despacha remediación ni integra el PR resultante automáticamente.
+
 ## Activación: prerrequisitos externos obligatorios
 
 1. Revisar y desplegar lectores tolerantes, productores con procedencia, código central y workflow. **Todavía mantener `enabled: false`.**
-2. Revisar/publicar por separado una imagen reproducible de runtime, obtener su digest inmutable y configurar `runtime_image`. La imagen de scoring construida con tags móviles no constituye evidencia de reproducibilidad.
+2. Revisar/publicar por separado el runtime con entradas fijadas y evidencia según [publicación del runtime](#publicación-del-runtime), verificar acceso remoto y configurar `runtime_image` por digest inmutable. Entradas fijadas, artefacto inmutable y reproducibilidad bit a bit son garantías distintas; no se afirma la última.
 3. Identificar el titular de `SCORECARDS_WORKFLOW_TOKEN` sin revelar su valor. El executor exige coincidencia con `publisher_login`; no usa `SCORECARDS_CATALOG_TOKEN` como fallback.
 4. Verificar reglas efectivas de la rama predeterminada en cada destino: revisión humana requerida, sin escritura directa ni bypass para ese titular, sin auto-merge del bot. Registrar la evidencia y fecha en `protection_evidence`. Este campo no sustituye la revisión de reglas ni garantiza que nunca cambien.
 5. Añadir sólo el destino piloto y `09-scorecard-badge` a `targets`, con `actors`, `publisher_login` y `protection_evidence`. Aprobar expresamente la activación y cambiar `enabled` en una revisión protegida.

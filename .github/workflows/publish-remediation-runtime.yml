@@ -1,0 +1,76 @@
+name: Publish Remediation Runtime
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.repository == 'feddericovonwernich/scorecards' && github.ref == 'refs/heads/main' && github.event.repository.default_branch == 'main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: publish-remediation-runtime
+      cancel-in-progress: false
+    env:
+      IMAGE: ghcr.io/feddericovonwernich/scorecards-remediation-runtime
+      DOCKER_CONFIG: ${{ runner.temp }}/runtime-docker-auth
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build reviewed source and exercise runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/runtime-evidence"
+          git rev-parse HEAD > "$RUNNER_TEMP/runtime-evidence/source.txt"
+          sha256sum action/Dockerfile action/package.json action/package-lock.json > "$RUNNER_TEMP/runtime-evidence/inputs.sha256"
+          docker version > "$RUNNER_TEMP/runtime-evidence/docker.txt"
+          docker build --pull --platform linux/amd64 \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag "$IMAGE:$GITHUB_SHA" --file action/Dockerfile action \
+            2>&1 | tee "$RUNNER_TEMP/runtime-evidence/build.log"
+          python3 tests/runtime-smoke.py "$IMAGE:$GITHUB_SHA" \
+            | tee "$RUNNER_TEMP/runtime-evidence/smoke.json"
+          docker run --rm --network none --entrypoint dpkg-query "$IMAGE:$GITHUB_SHA" \
+            -W '-f=${Package}\t${Version}\n' > "$RUNNER_TEMP/runtime-evidence/packages.txt"
+      - name: Publish only the authorized package
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:$GITHUB_SHA"
+          docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA" --format '{{json .Manifest}}' \
+            > "$RUNNER_TEMP/runtime-evidence/registry.json"
+          digest=$(jq -er '.digest | select(test("^sha256:[0-9a-f]{64}$"))' "$RUNNER_TEMP/runtime-evidence/registry.json")
+          printf '%s@%s\n' "$IMAGE" "$digest" > "$RUNNER_TEMP/runtime-evidence/runtime-image.txt"
+          docker pull "$IMAGE@$digest"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE@$digest")" = "$GITHUB_SHA"
+          printf 'Published source `%s` as `%s@%s`. Activation remains separate.\n' "$GITHUB_SHA" "$IMAGE" "$digest" >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify anonymous access required by the current executor
+        shell: bash
+        run: |
+          set -euo pipefail
+          reference=$(cat "$RUNNER_TEMP/runtime-evidence/runtime-image.txt")
+          mkdir -p "$RUNNER_TEMP/runtime-anonymous"
+          DOCKER_CONFIG="$RUNNER_TEMP/runtime-anonymous" docker buildx imagetools inspect "$reference" \
+            > "$RUNNER_TEMP/runtime-evidence/anonymous-access.txt"
+      - name: Remove ephemeral registry login
+        if: always()
+        shell: bash
+        run: rm -rf -- "$DOCKER_CONFIG"
+      - name: Retain source, inputs and registry receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: remediation-runtime-evidence
+          path: ${{ runner.temp }}/runtime-evidence/
+          if-no-files-found: error

@@ -1,5 +1,5 @@
 {
-  "_comment": "NOTE: This file is duplicated from ../package.json for Docker build context. Keep both files in sync!",
+  "_comment": "Runtime dependency subset of ../package.json. Keep shared ranges aligned; commit package-lock.json and use npm ci.",
   "name": "scorecards",
   "version": "1.0.0",
   "description": "Automated quality scoring for service repositories",

@@ -1,11 +1,22 @@
 # Scorecard Runner - Multi-runtime environment for executing checks
-FROM ubuntu:22.04
+FROM node:20.20.2-bookworm@sha256:8f693eaa7e0a8e71560c9a82b55fd54c2ae920a2ba5d2cde28bac7d1c01c9ba5 AS node
+FROM ubuntu:22.04@sha256:b8b6ee6aa931ecd9d0d952abc34dc0e5f7c6a30c6bb71b079fe399fde0329c02
+
+LABEL org.opencontainers.image.source="https://github.com/feddericovonwernich/scorecards"
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install base tools and runtimes
-RUN apt-get update && apt-get install -y \
+# Bootstrap snapshot HTTPS from the pinned stage before Ubuntu installs its own CAs.
+COPY --from=node /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+# Signed, dated archive fixes apt's entire dependency closure, not just direct packages.
+# No fallback to the live archive: snapshot expiry/unavailability must fail the build.
+RUN snapshot=20260921T000000Z \
+    && printf 'deb https://snapshot.ubuntu.com/ubuntu/%s %s main restricted universe multiverse\n' \
+    "$snapshot" jammy "$snapshot" jammy-updates "$snapshot" jammy-security \
+    > /etc/apt/sources.list \
+    && apt-get update --error-on=any && apt-get install -y \
     # Base tools
     curl \
     wget \
@@ -28,20 +39,18 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js LTS (v20)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+# Official Node binaries and npm, verified by the image digest; no remote installer.
+COPY --from=node /usr/local/ /usr/local/
 
 # Create symlinks for common aliases
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# Copy package.json and install Node.js dependencies locally
-COPY package.json /action/package.json
+# Keep the runtime dependency closure separate from frontend development packages.
+COPY package.json package-lock.json /action/
 
 # Install npm packages locally (required for ES module resolution)
 RUN cd /action && \
-    npm install --omit=dev && \
+    npm ci --omit=dev --ignore-scripts --no-audit --no-fund && \
     npm cache clean --force
 
 # Set NODE_PATH so ES modules can find packages in /action/node_modules
