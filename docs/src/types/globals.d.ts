@@ -27,6 +27,8 @@ declare global {
     openTeamDashboard?: () => void;
     openTeamEditModal?: (mode?: 'create' | 'edit', teamId?: string) => void;
     openCheckAdoptionDashboard?: () => void;
+    refreshTeamsView?: () => Promise<void>;
+    openApiExplorer?: (org: string, repo: string) => void;
 
     // ============= Legacy (to be removed) =============
     // These are only used during transition and should be removed

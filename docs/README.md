@@ -175,6 +175,14 @@ The workflow `.github/workflows/sync-docs.yml` handles synchronization:
 3. Built files are committed to catalog branch
 4. GitHub Pages serves from catalog branch
 
+Publish `docs/dist/` intact, including Vite's compiled `api-explorer.html`; copying
+the source HTML over it breaks its module and stylesheet URLs. Catalog navigation
+uses `/scorecards/#/services` and `/scorecards/#/teams`. The public `services/` and
+`teams/` entries redirect older path URLs, preserving query parameters.
+
+Verify `tests/e2e/static-delivery.spec.js` against a file server without SPA
+fallback as well as Vite preview: missing resources must remain 404 responses.
+
 ## Key Patterns
 
 ### Configuration Constants

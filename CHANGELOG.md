@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Preserve the compiled API Explorer during publication; use Pages-compatible hash routes with legacy Services/Teams entry redirects.
+- Keep mobile service/team panels and adoption statistics visible, with scrolling confined to wide tables and code.
+- Place persistent filters beside search, remove duplicated controls, and make sorting and category disclosures keyboard accessible.
+- Use named native dialogs with isolated background interaction, nested focus return, and one Settings opening authority.
+- Improve Settings contrast and enlarged-text reflow, enlarge compact touch targets, and clear stale service errors on retry.
+
 ### Changed
 - **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
   - Replaced ES6 modules with React functional components

@@ -153,9 +153,7 @@ test.describe('Check Filter Modal', () => {
     await expect(modal.locator('.check-option-card').nth(1).locator('.state-any')).toHaveClass(/active/);
   });
 
-  // Keep this test unchanged - category accordion behavior
-  test('should collapse and expand categories', async ({ page }) => {
-    // Open modal
+  test('supports keyboard category disclosure and state controls', async ({ page }) => {
     await openCheckFilterModal(page);
 
     const modal = page.locator('#check-filter-modal');
@@ -163,20 +161,22 @@ test.describe('Check Filter Modal', () => {
     const categoryHeader = categorySection.locator('.check-category-header');
     const categoryContent = categorySection.locator('.check-category-content');
 
-    // Initially expanded
-    await expect(categorySection).not.toHaveClass(/collapsed/);
+    await expect(categoryHeader).toHaveAttribute('aria-expanded', 'true');
     await expect(categoryContent).toBeVisible();
 
-    // Click header to collapse
-    await categoryHeader.click();
+    await categoryHeader.focus();
+    await page.keyboard.press('Enter');
+    await expect(categoryHeader).toHaveAttribute('aria-expanded', 'false');
+    await expect(categoryContent).toBeHidden();
 
-    // Should be collapsed
-    await expect(categorySection).toHaveClass(/collapsed/);
+    await page.keyboard.press('Space');
+    await expect(categoryHeader).toHaveAttribute('aria-expanded', 'true');
+    await expect(categoryContent).toBeVisible();
 
-    // Click again to expand
-    await categoryHeader.click();
-
-    // Should be expanded again
-    await expect(categorySection).not.toHaveClass(/collapsed/);
+    const firstCheck = categoryContent.locator('.check-option-card').first();
+    await page.keyboard.press('Tab');
+    await expect(firstCheck.locator('.state-any')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(firstCheck.locator('.state-pass')).toBeFocused();
   });
 });

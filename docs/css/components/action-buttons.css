@@ -5,6 +5,7 @@
 .github-button {
     display: inline-flex;
     align-items: center;
+    min-height: 44px;
     gap: var(--space-2);
     background: #18181B;
     color: white;
@@ -42,6 +43,7 @@
 .pr-button {
     display: inline-flex;
     align-items: center;
+    min-height: 44px;
     gap: var(--space-2);
     color: white;
     padding: var(--space-3) var(--space-4);
@@ -82,6 +84,7 @@
 .install-button {
     display: inline-flex;
     align-items: center;
+    min-height: 44px;
     gap: var(--space-2);
     background: var(--color-success);
     color: white;
@@ -118,6 +121,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-height: 44px;
     gap: var(--space-2);
     background: var(--color-warning);
     color: white;
@@ -159,9 +163,9 @@
 
 /* Icon-only trigger button */
 .trigger-btn-icon {
-    padding: var(--space-2);
-    width: 32px;
-    height: 32px;
+    padding: 0;
+    width: 44px;
+    height: 44px;
     border-radius: var(--radius-full);
 }
 
@@ -197,6 +201,8 @@
    ============================================== */
 
 .widget-refresh-btn {
+    min-width: 44px;
+    min-height: 44px;
     background: none;
     border: 1px solid var(--color-border);
     padding: var(--space-2);
@@ -226,8 +232,8 @@
     cursor: pointer;
     color: var(--color-text-muted);
     padding: 0;
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -243,6 +249,7 @@
 /* Widget Filter Buttons (Segmented) */
 .widget-filter-btn {
     flex: 1;
+    min-height: 44px;
     padding: var(--space-2) var(--space-3);
     background: none;
     border: 1px solid var(--color-border);
@@ -289,6 +296,8 @@
     position: absolute;
     right: var(--space-3);
     top: var(--space-3);
+    min-width: 44px;
+    min-height: 44px;
     background: var(--color-accent);
     color: white;
     border: none;

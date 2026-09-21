@@ -91,22 +91,17 @@ test.describe('Teams View - Search and Sort', () => {
     await expect(teamsViewPage.locator('.team-card').first()).toContainText('frontend');
   });
 
-  test('should sort teams by different criteria', async ({ teamsViewPage }) => {
-    // Find the sort select by ID for more reliable selection
-    const sortSelect = teamsViewPage.locator('#sort-select');
-
-    // Skip if sort select is not visible (may be hidden on mobile view)
-    if (!(await sortSelect.isVisible())) {
-      // Sort select may be hidden on current viewport - test passes as structure exists
-      return;
-    }
-
-    // Sort by name
-    const options = await sortSelect.locator('option').allTextContents();
-    if (options.some(o => o.includes('Name'))) {
-      await sortSelect.selectOption({ label: 'Name: A to Z' });
-      await expect(teamsViewPage.locator('.team-card').first()).toContainText('backend');
-    }
+  test('sorts Teams through its named keyboard control', async ({ teamsViewPage: page }) => {
+    const sort = page.getByRole('combobox', { name: 'Sort by', exact: true });
+    await sort.focus();
+    await page.keyboard.press('End');
+    await page.keyboard.press('Enter');
+    await expect(sort).toHaveValue('name-desc');
+    await expect(page.locator('.team-card').first()).toContainText(/platform/i);
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(sort).toHaveValue('name-asc');
+    await expect(page.locator('.team-card').first()).toContainText(/backend/i);
   });
 
   test('should have action buttons', async ({ teamsViewPage }) => {

@@ -318,3 +318,85 @@ test.describe('StatCard 3-State Filtering', () => {
     }).toPass({ timeout: 3000 });
   });
 });
+
+// ============================================================================
+// STATIC ROUTING AND MOBILE CONTROL PLACEMENT
+// ============================================================================
+
+test.describe('Static routing compatibility', () => {
+  test('preserves canonical and legacy hash routes across reload and history navigation', async ({ page }) => {
+    await mockCatalogRequests(page);
+    await page.goto('/scorecards/#/services');
+    await waitForCatalogLoad(page);
+    await expect(page).toHaveURL(/\/scorecards\/#\/services$/);
+
+    await page.reload();
+    await waitForCatalogLoad(page);
+    await expect(page).toHaveURL(/\/scorecards\/#\/services$/);
+
+    await page.locator('[data-view="teams"]').click();
+    await expect(page).toHaveURL(/\/scorecards\/#\/teams$/);
+    await expect(page.locator('.teams-grid')).toBeVisible();
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/scorecards\/#\/services$/);
+    await waitForCatalogLoad(page);
+
+    await page.goForward();
+    await expect(page).toHaveURL(/\/scorecards\/#\/teams$/);
+    await expect(page.locator('.teams-grid')).toBeVisible();
+
+    await page.goto('/scorecards/#services');
+    // A legacy fragment is canonicalized at document startup, not on hash-only navigation.
+    await page.reload();
+    await waitForCatalogLoad(page);
+    await expect(page).toHaveURL(/\/scorecards\/#\/services$/);
+    await page.goto('/scorecards/?filter=gold#services');
+    await waitForCatalogLoad(page);
+    await expect(page).toHaveURL(/\/scorecards\/\?filter=gold#\/services$/);
+
+
+    await page.goto('/scorecards/#teams');
+    await expect(page).toHaveURL(/\/scorecards\/#\/teams$/);
+    await expect(page.locator('.teams-grid')).toBeVisible();
+  });
+});
+
+test.describe('Mobile catalog controls', () => {
+  test('keeps Services controls in viewport before the first service card at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 844 });
+    await mockCatalogRequests(page);
+    await page.goto('/scorecards/#/services');
+    await waitForCatalogLoad(page);
+
+    const controls = page.locator('.controls').filter({
+      has: page.locator('#search-input'),
+    }).first();
+    const requiredControls = [
+      controls.locator('#search-input'),
+      controls.locator('#sort-select'),
+      controls.locator('.team-filter-toggle'),
+      controls.locator('.check-filter-toggle'),
+    ];
+
+    for (const control of requiredControls) {
+      await expect(control).toBeVisible();
+      const box = await control.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box.x + box.width).toBeLessThanOrEqual(320);
+    }
+
+    const [controlsBox, firstCardBox, dimensions] = await Promise.all([
+      controls.boundingBox(),
+      page.locator('.service-card').first().boundingBox(),
+      page.evaluate(() => ({
+        width: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      })),
+    ]);
+    expect(controlsBox).not.toBeNull();
+    expect(firstCardBox).not.toBeNull();
+    expect(controlsBox.y).toBeLessThan(firstCardBox.y);
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.width + 1);
+  });
+});

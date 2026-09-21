@@ -10,7 +10,7 @@ import { isServiceStale } from '../services/staleness.js';
 import { filterByCheckCriteria } from '../utils/check-statistics.js';
 import type {
   ServiceData,
-  TeamData,
+  TeamWithStats,
   WorkflowRun,
   WorkflowStatus,
   FilterMode,
@@ -28,8 +28,8 @@ export interface ServicesState {
 }
 
 export interface TeamsState {
-  all: TeamData[];
-  filtered: TeamData[];
+  all: TeamWithStats[];
+  filtered: TeamWithStats[];
   sort: string;
   search: string;
   activeFilters: Map<string, FilterMode>;
@@ -119,8 +119,8 @@ export interface AppState {
   filterAndSortServices: () => void;
 
   // Teams actions
-  setTeams: (teams: TeamData[]) => void;
-  setFilteredTeams: (teams: TeamData[]) => void;
+  setTeams: (teams: TeamWithStats[]) => void;
+  setFilteredTeams: (teams: TeamWithStats[]) => void;
   updateTeamsState: (updates: Partial<TeamsState>) => void;
   filterAndSortTeams: () => void;
 

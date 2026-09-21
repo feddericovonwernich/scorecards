@@ -62,11 +62,6 @@ describe('ServiceCard', () => {
     expect(screen.getByText('Core Team')).toBeInTheDocument();
   });
 
-  it('does not render team section when team is null', () => {
-    const service = createMockService({ team: null });
-    render(<ServiceCard service={service} />);
-    expect(screen.queryByText('Team:')).not.toBeInTheDocument();
-  });
 
   it('renders GitHub link', () => {
     const service = createMockService({ org: 'myorg', repo: 'myrepo' });
@@ -80,10 +75,8 @@ describe('ServiceCard', () => {
     const service = createMockService({ org: 'click-org', repo: 'click-repo' });
     render(<ServiceCard service={service} onCardClick={mockOnClick} />);
 
-    // Use DOM selector since there are multiple buttons (card + team link)
-    const card = document.querySelector('.service-card');
-    expect(card).toBeInTheDocument();
-    fireEvent.click(card!);
+    const card = screen.getByRole('button', { name: /click-org\/click-repo/ });
+    fireEvent.click(card);
 
     expect(mockOnClick).toHaveBeenCalledWith('click-org', 'click-repo');
   });
@@ -118,21 +111,12 @@ describe('ServiceCard', () => {
     const service = createMockService();
     render(<ServiceCard service={service} onCardClick={mockOnClick} />);
 
-    // Use DOM selector since there are multiple buttons (card + team link)
-    const card = document.querySelector('.service-card');
-    expect(card).toBeInTheDocument();
-    fireEvent.keyDown(card!, { key: 'Enter' });
+    const card = screen.getByRole('button', { name: /Test Service/ });
+    fireEvent.keyDown(card, { key: 'Enter' });
 
-    expect(mockOnClick).toHaveBeenCalled();
+    expect(mockOnClick).toHaveBeenCalledWith('test-org', 'test-repo');
   });
 
-  it('renders stale indicator when isStale is true', () => {
-    const service = createMockService();
-    render(<ServiceCard service={service} isStale={true} />);
-    // Stale badge is part of ServiceBadges
-    const container = document.querySelector('.service-card');
-    expect(container).toBeInTheDocument();
-  });
 
   it('renders trigger button when stale and installed', () => {
     const service = createMockService({ installed: true });
@@ -146,10 +130,9 @@ describe('ServiceCard', () => {
     const service = createMockService({ org: 'trig-org', repo: 'trig-repo', installed: true });
     render(<ServiceCard service={service} isStale={true} onTriggerWorkflow={mockOnTrigger} />);
 
-    const triggerBtn = screen.getByRole('button', { name: /Re-run scorecard workflow/ });
-    fireEvent.click(triggerBtn);
+    fireEvent.click(screen.getByRole('button', { name: /Re-run scorecard workflow/ }));
 
-    expect(mockOnTrigger).toHaveBeenCalledWith('trig-org', 'trig-repo', expect.any(HTMLButtonElement));
+    expect(mockOnTrigger).toHaveBeenCalledWith('trig-org', 'trig-repo');
   });
 
   it('renders installation PR link when not installed and PR exists', () => {
@@ -187,19 +170,10 @@ describe('ServiceGrid', () => {
     const services = [createMockService({ name: 'Clickable', org: 'click', repo: 'me' })];
     render(<ServiceGrid services={services} onCardClick={mockOnCardClick} />);
 
-    // Find the service card (the main card, not the team link button)
-    const card = document.querySelector('.service-card');
-    expect(card).toBeInTheDocument();
-    fireEvent.click(card!);
+    const card = screen.getByRole('button', { name: /Clickable/ });
+    fireEvent.click(card);
 
     expect(mockOnCardClick).toHaveBeenCalledWith('click', 'me');
   });
 
-  it('applies staleness check to services', () => {
-    const services = [createMockService({ checks_hash: 'old-hash' })];
-    const isServiceStale = jest.fn<(service: ServiceData, checksHash: string) => boolean>().mockReturnValue(true);
-    render(<ServiceGrid services={services} checksHash="new-hash" isServiceStale={isServiceStale} />);
-
-    expect(isServiceStale).toHaveBeenCalled();
-  });
 });

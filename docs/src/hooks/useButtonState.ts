@@ -34,7 +34,7 @@ export function useButtonState(
 ): UseButtonStateReturn {
   const { autoResetDelay = 3000 } = options;
   const [state, setState] = useState<ButtonState>('idle');
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Clear any pending timeout on unmount
   useEffect(() => {

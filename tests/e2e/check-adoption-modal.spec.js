@@ -149,32 +149,69 @@ test.describe('Check Adoption Dashboard - Table', () => {
     await expect(rows.first().locator('.progress-bar-inline')).toBeVisible();
 
     // Test Team column sorting
-    const teamHeader = modal.locator('.adoption-table th:has-text("Team")');
-    await teamHeader.click();
+    const teamHeader = modal.getByRole('columnheader', { name: /Team/ });
+    const teamSortButton = modal.getByRole('button', { name: 'Team', exact: true });
+    await teamSortButton.click();
+    await expect(teamHeader).toHaveAttribute('aria-sort', 'descending');
     await expect(teamHeader.locator('.sort-indicator')).toBeVisible();
 
     // Test Adoption column sorting
-    const adoptionHeader = modal.locator('.adoption-table th:has-text("Adoption")');
-    await adoptionHeader.click();
+    const adoptionHeader = modal.getByRole('columnheader', { name: /Adoption/ });
+    const adoptionSortButton = modal.getByRole('button', { name: 'Adoption', exact: true });
+    await adoptionSortButton.click();
+    await expect(adoptionHeader).toHaveAttribute('aria-sort', 'descending');
     const sortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
     expect(sortIndicator).toMatch(/[↑↓]/);
 
     // Click again to reverse
-    await adoptionHeader.click();
-    await expect(async () => {
-      const newSortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
-      expect(newSortIndicator).not.toBe(sortIndicator);
-    }).toPass({ timeout: 3000 });
+    await adoptionSortButton.click();
+    await expect(adoptionHeader).toHaveAttribute('aria-sort', 'ascending');
 
     await closeCheckAdoptionModal(page);
   });
 
-  test('clicking team row opens team detail modal', async ({ page }) => {
+  test('supports keyboard sorting and nested team-modal escape', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
+    const adoptionButton = page.getByRole('button', { name: 'Check Adoption', exact: true });
 
-    const teamRow = modal.locator('.adoption-row:not(.no-team)').first();
-    if (await teamRow.count() > 0) {
-      await teamRow.click();
+    await closeCheckAdoptionModal(page);
+    const bodyOverflow = await page.evaluate(() => document.body.style.overflow);
+    await adoptionButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(modal).toBeVisible();
+
+    const beforeSort = await modal.locator('.team-name-button').allTextContents();
+    const teamSortButton = modal.getByRole('button', { name: 'Team', exact: true });
+    await teamSortButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(modal.getByRole('columnheader', { name: /Team/ })).toHaveAttribute('aria-sort', 'descending');
+    expect(await modal.locator('.team-name-button').allTextContents()).not.toEqual(beforeSort);
+
+    const adoptionSortButton = modal.getByRole('button', { name: 'Adoption', exact: true });
+    await adoptionSortButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(modal.getByRole('columnheader', { name: /Adoption/ })).toHaveAttribute('aria-sort', 'descending');
+
+    const teamButton = modal.locator('.team-name-button').first();
+    await teamButton.focus();
+    await page.keyboard.press('Space');
+    await expect(page.locator('#team-modal')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#team-modal')).toBeHidden();
+    await expect(modal).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+    await expect(adoptionButton).toBeFocused();
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe(bodyOverflow);
+  });
+
+  test('team-name button opens team detail modal', async ({ page }) => {
+    const modal = page.locator('#check-adoption-modal');
+    const teamButton = modal.locator('.team-name-button').first();
+    if (await teamButton.count() > 0) {
+      await teamButton.click();
       await expect(page.locator('#team-modal')).toBeVisible();
     }
   });

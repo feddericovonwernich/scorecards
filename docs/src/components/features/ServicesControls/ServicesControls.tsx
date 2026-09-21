@@ -13,6 +13,8 @@ import { refreshData } from '../../../app-init';
 import { isServiceStale } from '../../../services/staleness';
 import { showToastGlobal } from '../../ui/Toast';
 import type { ServiceData } from '../../../types/index';
+import { TeamFilterControl } from '../TeamFilterDropdown';
+import { CheckFilterToggle } from '../CheckFilterToggle';
 
 export function ServicesControls() {
   const updateFilters = useAppStore((state) => state.updateFilters);
@@ -130,6 +132,8 @@ export function ServicesControls() {
         <option value="updated-desc">Recently Updated</option>
       </select>
 
+      <TeamFilterControl />
+      <CheckFilterToggle />
       <button
         id="refresh-btn"
         className="refresh-btn"

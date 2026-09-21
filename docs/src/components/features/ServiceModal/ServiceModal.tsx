@@ -222,6 +222,7 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
   const handleRefresh = useCallback(async () => {
     if (!org || !repo) {return;}
 
+    setError(null);
     setLoading(true);
     try {
       const { fetchWithHybridAuth } = await import('../../../api/registry.js');
@@ -472,6 +473,7 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
 
   return (
     <Modal
+      aria-label="Service details"
       isOpen={isOpen}
       onClose={onClose}
       className="service-modal-wrapper"

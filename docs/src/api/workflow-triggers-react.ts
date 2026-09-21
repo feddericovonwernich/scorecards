@@ -15,7 +15,5 @@ import type { ServiceData } from '../types/index.js';
 export async function triggerBulkWorkflows(
   services: ServiceData[]
 ): Promise<boolean> {
-  // Create a dummy button for the vanilla function
-  const dummyButton = document.createElement('button');
-  return await triggerBulkWorkflowsVanilla(services, dummyButton);
+  return triggerBulkWorkflowsVanilla(services);
 }

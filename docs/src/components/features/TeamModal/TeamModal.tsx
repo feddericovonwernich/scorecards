@@ -97,7 +97,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
           return;
         }
 
-        setTeamData(team as TeamWithStats);
+        setTeamData(team);
 
         // Get services for this team (case-insensitive match)
         const { getTeamName } = await import('../../../utils/team-statistics.js');
@@ -338,6 +338,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
 
   return (
     <Modal
+      aria-label="Team details"
       isOpen={isOpen}
       onClose={onClose}
       className="team-modal-wrapper"

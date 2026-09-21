@@ -3,6 +3,7 @@
    ============================================== */
 
 .controls {
+    box-sizing: border-box;
     background: var(--color-surface);
     padding: var(--space-5);
     border-radius: var(--radius-xl);

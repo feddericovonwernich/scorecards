@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teams – Scorecards</title>
+</head>
+<body>
+  <p>Opening Teams… <a href="../#/teams">Open Teams</a></p>
+  <script>
+    const target = new URL('../', location.href);
+    target.search = location.search;
+    target.hash = '/teams';
+    location.replace(target.href);
+  </script>
+</body>
+</html>

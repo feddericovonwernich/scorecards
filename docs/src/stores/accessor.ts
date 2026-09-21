@@ -8,7 +8,7 @@
  */
 
 import { useAppStore } from './appStore';
-import type { ServiceData, TeamData, TeamWithStats } from '../types/index';
+import type { ServiceData, TeamWithStats } from '../types/index';
 
 /**
  * Get full store state from non-React code
@@ -38,19 +38,19 @@ export function setFilteredServices(services: ServiceData[]): void {
 
 // ============= Teams Accessors =============
 
-export function getAllTeams(): TeamData[] | TeamWithStats[] {
+export function getAllTeams(): TeamWithStats[] {
   return useAppStore.getState().teams.all;
 }
 
-export function getFilteredTeams(): TeamData[] | TeamWithStats[] {
+export function getFilteredTeams(): TeamWithStats[] {
   return useAppStore.getState().teams.filtered;
 }
 
-export function setAllTeams(teams: TeamData[] | TeamWithStats[]): void {
+export function setAllTeams(teams: TeamWithStats[]): void {
   useAppStore.getState().setTeams(teams);
 }
 
-export function setFilteredTeams(teams: TeamData[] | TeamWithStats[]): void {
+export function setFilteredTeams(teams: TeamWithStats[]): void {
   useAppStore.getState().setFilteredTeams(teams);
 }
 

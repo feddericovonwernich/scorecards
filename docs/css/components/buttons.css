@@ -14,6 +14,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-height: 44px;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-4);
     background: var(--color-accent);
@@ -123,11 +124,13 @@
    ============================================== */
 
 .modal-close {
+    width: 44px;
+    height: 44px;
     background: none;
     border: none;
     font-size: var(--text-xl);
     cursor: pointer;
-    padding: var(--space-2);
+    padding: 0;
     color: var(--color-text-muted);
     line-height: 1;
     flex-shrink: 0;
@@ -169,10 +172,6 @@
     border-bottom-color: var(--color-accent);
 }
 
-/* Tabs Scroll Buttons (Mobile) */
-.tabs-scroll-btn {
-    display: none;
-}
 
 /* ==============================================
    SPIN ANIMATION

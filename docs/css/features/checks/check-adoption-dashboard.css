@@ -415,7 +415,8 @@
 
 /* Premium Stats Row */
 .adoption-stats-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
     gap: var(--space-4);
     padding: var(--space-6);
     background: var(--color-surface-secondary);
@@ -423,7 +424,7 @@
 }
 
 .adoption-stat-card {
-    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -469,6 +470,7 @@
 }
 
 .adoption-stat-label {
+    overflow-wrap: anywhere;
     font-family: var(--font-family-primary);
     font-size: var(--text-xs);
     font-weight: var(--font-weight-semibold);
@@ -538,12 +540,15 @@
 
 .check-card-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-3);
     margin-bottom: var(--space-3);
 }
 
 .check-card-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-family: var(--font-family-primary);
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-base);
@@ -551,6 +556,8 @@
 }
 
 .check-card-category {
+    max-width: 100%;
+    overflow-wrap: anywhere;
     font-family: var(--font-family-primary);
     font-size: var(--text-xs);
     font-weight: var(--font-weight-medium);
@@ -747,16 +754,33 @@
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: var(--tracking-wide);
+}
+
+.adoption-sort-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding: 0 var(--space-2);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
     cursor: pointer;
-    transition: color var(--duration-fast) var(--ease-in-out-smooth);
 }
 
-.adoption-table th:first-child {
-    padding-left: var(--space-6);
-}
-
-.adoption-table th:hover {
+.adoption-sort-button:hover {
     color: var(--color-text);
+}
+
+.adoption-sort-button:focus-visible,
+.team-name-button:focus-visible,
+.adoption-table-container:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .adoption-table tbody {
@@ -795,6 +819,17 @@
     color: var(--color-text);
 }
 
+.team-name-button {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding: 0 var(--space-2);
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
 .team-services {
     font-size: var(--text-xs);
     color: var(--color-text-muted);
@@ -831,13 +866,12 @@
     }
 
     .adoption-stats-row {
-        gap: var(--space-6);
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, max(7rem, calc(50% - var(--space-3) / 2))), 1fr));
+        gap: var(--space-3);
+        padding: var(--space-4);
     }
 
-    .check-selector-large select {
-        min-width: 100%;
-    }
-
+    .check-selector-large select,
     .check-selector-dropdown {
         min-width: 100%;
     }

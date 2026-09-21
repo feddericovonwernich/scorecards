@@ -7,6 +7,15 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.js';
 
+const legacyHashRoutes: Record<string, string> = {
+  '#services': '/services',
+  '#teams': '/teams',
+};
+const legacyHashRoute = legacyHashRoutes[window.location.hash];
+if (legacyHashRoute) {
+  window.location.hash = legacyHashRoute;
+}
+
 // Mount React app
 const container = document.getElementById('root');
 if (container) {

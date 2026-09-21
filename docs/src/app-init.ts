@@ -231,11 +231,6 @@ export async function initializeApp(): Promise<void> {
 
     // Stats are now automatically updated by React (ServicesStatsSection component)
 
-    // Re-initialize teams view if hash is #teams (handles direct navigation)
-    // This fixes the race condition where handleHashChange() runs before services load
-    if (window.location.hash === '#teams' && window.initTeamsView) {
-      window.initTeamsView();
-    }
   } catch (error) {
     console.error('Error loading services:', error);
     // Error state is now handled by React components

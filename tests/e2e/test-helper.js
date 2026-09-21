@@ -13,14 +13,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * @param {import('@playwright/test').Page} page
  */
 export async function mockCatalogRequests(page) {
-  // Override window.location.hostname to simulate GitHub Pages environment
-  // This prevents the app from using 'localhost' as REPO_OWNER
-  await page.addInitScript(() => {
-    Object.defineProperty(window.location, 'hostname', {
-      writable: true,
-      value: 'feddericovonwernich.github.io'
-    });
-  });
+  // Isolated auth fixtures must never reach GitHub, including unmocked writes.
+  // Page-specific fixture handlers take precedence over this context safety net.
+  await page.context().route('https://api.github.com/**', route =>
+    route.fulfill({
+      status: 404,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'No isolated API fixture for this request' }),
+    })
+  );
 
   await page.route('**/raw.githubusercontent.com/**', async (route) => {
     const url = new URL(route.request().url());
@@ -189,6 +190,9 @@ export async function closeServiceModal(page) {
 export async function openSettingsModal(page) {
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.waitForSelector('#settings-modal', { state: 'visible' });
+  await page.locator('#settings-modal').evaluate(async (modal) => {
+    await Promise.all(modal.getAnimations({ subtree: true }).map(animation => animation.finished));
+  });
 }
 
 /**

@@ -34,8 +34,9 @@ export function Tabs({
   showScrollArrows = false,
 }: TabsProps) {
   const visibleTabs = tabs.filter((tab) => !tab.hidden);
-  const initialTab = defaultTab || visibleTabs[0]?.id || '';
+  const tabSignature = visibleTabs.map((tab) => `${tab.id}:${tab.label}`).join('|');
 
+  const initialTab = defaultTab || visibleTabs[0]?.id || '';
   const [internalActiveTab, setInternalActiveTab] = useState(initialTab);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -74,12 +75,17 @@ export function Tabs({
     });
   };
 
-  // Check arrows on mount and resize
+  // Recalculate when tab content or the scroll container's width changes.
   useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) {return;}
+
+    const resizeObserver = new ResizeObserver(checkScrollArrows);
+    resizeObserver.observe(container);
     checkScrollArrows();
-    window.addEventListener('resize', checkScrollArrows);
-    return () => window.removeEventListener('resize', checkScrollArrows);
-  }, [visibleTabs.length, checkScrollArrows]);
+
+    return () => resizeObserver.disconnect();
+  }, [tabSignature, checkScrollArrows]);
 
   // Find active tab content
   const activeTabContent = visibleTabs.find((tab) => tab.id === activeTab)?.content;
@@ -89,6 +95,7 @@ export function Tabs({
       <div className="tabs-wrapper">
         {showScrollArrows && showLeftArrow && (
           <button
+            type="button"
             className="tab-scroll-arrow tab-scroll-left"
             onClick={() => scrollTabs('left')}
             aria-label="Scroll tabs left"
@@ -106,11 +113,13 @@ export function Tabs({
         >
           {visibleTabs.map((tab) => (
             <button
+              type="button"
               key={tab.id}
               className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => handleTabClick(tab.id)}
               disabled={tab.disabled}
               data-tab={tab.id}
+              aria-pressed={activeTab === tab.id}
             >
               {tab.label}
             </button>
@@ -119,6 +128,7 @@ export function Tabs({
 
         {showScrollArrows && showRightArrow && (
           <button
+            type="button"
             className="tab-scroll-arrow tab-scroll-right"
             onClick={() => scrollTabs('right')}
             aria-label="Scroll tabs right"

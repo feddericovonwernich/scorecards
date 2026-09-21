@@ -207,7 +207,7 @@ export function TeamEditModal({
 
   if (!pat && isOpen) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} contentClassName="max-w-md">
+      <Modal aria-label="PAT Required" isOpen={isOpen} onClose={onClose} contentClassName="max-w-md">
         <div className="p-6 text-center">
           <h2 className="text-xl font-semibold text-text mb-4">PAT Required</h2>
           <p className="text-text-muted mb-4">
@@ -230,6 +230,7 @@ export function TeamEditModal({
   return (
     <>
       <Modal
+        aria-label={mode === 'create' ? 'Create Team' : 'Edit Team'}
         isOpen={isOpen}
         onClose={onClose}
         contentClassName="team-edit-modal max-w-lg"
@@ -422,11 +423,11 @@ export function TeamEditModal({
             </div>
           )}
         </div>
+        {toast && (
+          <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        )}
       </Modal>
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
     </>
   );
 }

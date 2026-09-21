@@ -57,8 +57,9 @@
 }
 
 .team-modal-stats {
-    display: flex;
-    gap: var(--space-8);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+    gap: var(--space-5);
     margin-bottom: var(--space-6);
     padding: 0;
     background: transparent;
@@ -67,6 +68,8 @@
 .team-modal-stat {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .team-modal-stat .stat-value {

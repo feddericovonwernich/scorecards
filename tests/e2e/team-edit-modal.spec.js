@@ -89,6 +89,13 @@ test.describe('Team Edit Modal', () => {
       // Use getByRole within the dialog to avoid matching both HTML and React buttons
       const configureButton = page.getByRole('dialog').getByRole('button', { name: /Configure Token/i });
       await expect(configureButton).toBeVisible();
+      await configureButton.click();
+      const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+      await expect(settings).toBeVisible();
+      await expect(page.getByRole('dialog', { name: 'PAT Required' })).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await expect(settings).toBeHidden();
+      await expect(page.getByRole('button', { name: /Create Team/i })).toBeVisible();
     });
   });
 

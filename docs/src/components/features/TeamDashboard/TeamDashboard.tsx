@@ -174,6 +174,7 @@ export function TeamDashboard({ isOpen, onClose, onCreateTeam: _onCreateTeam, on
 
   return (
     <Modal
+      aria-label="Team Dashboard"
       isOpen={isOpen}
       onClose={onClose}
       contentClassName="team-dashboard-modal"

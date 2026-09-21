@@ -307,6 +307,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <>
       <Modal
+        aria-label="Settings"
         isOpen={isOpen}
         onClose={onClose}
         contentClassName="settings-modal-content"
@@ -525,16 +526,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </div>
         </div>
+        {/* Toast notifications */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </Modal>
 
-      {/* Toast notifications */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </>
   );
 }

@@ -108,9 +108,7 @@ export function TeamsView() {
         />
       </section>
 
-      <section className="controls teams-controls">
-        <TeamsControls />
-      </section>
+      <TeamsControls />
 
       <TeamGridContainer />
     </div>
