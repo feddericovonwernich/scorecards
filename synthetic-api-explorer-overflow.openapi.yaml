@@ -1,0 +1,29 @@
+openapi: 3.0.0
+info:
+  title: Synthetic Explorer Overflow Fixture
+  description: Dummy data for read-only layout validation; not a real API.
+  version: 1.0.0
+servers:
+  - url: https://example.invalid
+paths:
+  /test:
+    get:
+      summary: Test endpoint
+      responses:
+        '200':
+          description: Synthetic response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResponse'
+components:
+  schemas:
+    TestResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: https://example.invalid/this-is-a-long-response-value-that-must-remain-readable-without-widening-the-document/end-of-response
+        identifier:
+          type: string
+          example: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

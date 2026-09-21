@@ -1,0 +1,9 @@
+{
+  "service": {
+    "name": "Synthetic Explorer Overflow Fixture",
+    "openapi": {
+      "spec_file": "synthetic-api-explorer-overflow.openapi.yaml",
+      "branch": "catalog"
+    }
+  }
+}
