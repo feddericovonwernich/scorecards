@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve remediation source contents, reuse mixed-case destination PRs, retain accepted requests and verified run links when discovery fails, and align installation template consumers.
+
 - Keep API Explorer's long source URLs, expanded schemas and responses reachable on narrow screens without horizontal page overflow.
 - Preserve the compiled API Explorer during publication; use Pages-compatible hash routes with legacy Services/Teams entry redirects.
 - Keep mobile service/team panels and adoption statistics visible, with scrolling confined to wide tables and code.

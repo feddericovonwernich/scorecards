@@ -291,14 +291,14 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
             ? [{ href: receipt.runUrl, label: 'View remediation run' }]
             : [];
           if (receipt.runId) {
-            const pullRequest = await findRemediationPullRequest(request, receipt.runId, controller.signal);
+            const pullRequest = await findRemediationPullRequest(request, receipt.runId, controller.signal).catch(() => null);
             if (pullRequest) {
               links.push({ href: pullRequest.url, label: `View pull request #${pullRequest.number}` });
             }
           }
           if (workflowLifetimeRef.current === lifetime) {
             setWorkflowFeedback({
-              message: receipt.reason || 'Remediation request accepted. The check result remains failed until reevaluation.',
+              message: receipt.reason || `Remediation request accepted. The check result remains failed until reevaluation.${receipt.runUrl && links.length === 1 ? ' See the remediation run summary for the pull request or outcome.' : ''}`,
               type: 'success',
               links,
             });

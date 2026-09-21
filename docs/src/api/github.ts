@@ -35,7 +35,6 @@ interface RepositoryResponse {
 
 interface DispatchResponse {
   workflow_run_id?: number | string;
-  run_id?: number | string;
   html_url?: string;
   run_url?: string;
 }
@@ -114,7 +113,7 @@ function receiptFromDispatchBody(data: unknown, org: string, repo: string): Disp
     return { accepted: false, status: 200, reason: 'GitHub returned an invalid workflow dispatch receipt' };
   }
   const receipt = data as DispatchResponse;
-  const runId = receipt.workflow_run_id ?? receipt.run_id;
+  const runId = receipt.workflow_run_id;
   if ((typeof runId !== 'number' && typeof runId !== 'string') || !/^[1-9]\d*$/.test(String(runId))) {
     return { accepted: false, status: 200, reason: 'GitHub returned an invalid workflow dispatch receipt' };
   }
@@ -397,9 +396,13 @@ export async function triggerCheckRemediation(
       ? { accepted: true, reason: 'Dispatch outcome is uncertain; no retry was sent. Check Actions before requesting again.' }
       : receipt;
   }
-  return receipt.runId
-    ? verifyRemediationRun(request, receipt, workflow, options.signal)
-    : { accepted: true, ...await correlateRemediationRun(request, workflow, requestedAt, options) };
+  try {
+    return receipt.runId
+      ? await verifyRemediationRun(request, receipt, workflow, options.signal)
+      : { accepted: true, ...await correlateRemediationRun(request, workflow, requestedAt, options) };
+  } catch {
+    return { accepted: true, reason: 'Dispatch accepted; unable to locate its workflow run' };
+  }
 }
 
 async function remediationPublisher(
@@ -463,7 +466,7 @@ export async function findRemediationPullRequest(
   ]);
   if (!branch || !publisher) {return null;}
   const marker = `<!-- scorecards-remediation:v1 check_id=${request.check_id} -->`;
-  const prefix = `scorecards-remediation/${request.check_id}/${runId}-`;
+  const prefix = `scorecards-remediation/${request.check_id}/`;
   const repository = `${request.org}/${request.repo}`.toLowerCase();
   const candidates: PullRequestResponse[] = [];
   for (let page = 1; page <= REMEDIATION_DISCOVERY.maxPages; page += 1) {

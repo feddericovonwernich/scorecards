@@ -37,8 +37,10 @@ create_remote() {
     git init "$seed" >/dev/null
     git -C "$seed" config user.name tester
     git -C "$seed" config user.email tester@example.invalid
-    printf '# Service\n' > "$seed/README.md"
-    git -C "$seed" add README.md
+    printf '# Service\n$Format:%%H$\n' > "$seed/README.md"
+    printf 'README.md export-subst\ntracked-export-ignore export-ignore\n' > "$seed/.gitattributes"
+    printf 'retained\n' > "$seed/tracked-export-ignore"
+    git -C "$seed" add README.md .gitattributes tracked-export-ignore
     git -C "$seed" commit -m initial >/dev/null
     git -C "$seed" branch -M trunk
     git -C "$seed" remote add origin "$REMOTE"
@@ -89,13 +91,20 @@ case " $* " in
   *" /repos/acme/scorecards/git/ref/heads/main "*"--jq .object.sha "*) printf '%s\n' "$GITHUB_SHA" ;;
   *" /repos/acme/scorecards "*"--jq .default_branch "*) printf '%s\n' main ;;
   *" /repos/acme/service/pulls?state=open"*)
-    if [ "${GH_MODE:-}" = existing ] || [ "${GH_MODE:-}" = ambiguous ]; then
-      printf '%s\n' '[{"html_url":"https://github.com/acme/service/pull/1","body":"<!-- scorecards-remediation:v1 check_id=09-scorecard-badge -->","base":{"ref":"trunk"},"head":{"ref":"scorecards-remediation/09-scorecard-badge/old","repo":{"full_name":"acme/service"}},"user":{"login":"publisher"}}]' |
-        jq 'if env.GH_MODE == "ambiguous" then . + [.[0] | .html_url = "https://github.com/acme/service/pull/2" | .head.ref = "scorecards-remediation/09-scorecard-badge/other"] else . end'
-    else
-      printf '%s\n' '[]'
-    fi ;;
-  *" --method POST "*) exit 1 ;;
+    case "${GH_MODE:-}" in
+      existing|mixedcase|ambiguous) ;;
+      reconciledmixed) [ -f "$TEST_TEMP_DIR/gh-posted" ] || { printf '%s\n' '[]'; exit 0; } ;;
+      *) printf '%s\n' '[]'; exit 0 ;;
+    esac
+    printf '%s\n' '[{"html_url":"https://github.com/acme/service/pull/1","body":"<!-- scorecards-remediation:v1 check_id=09-scorecard-badge -->","base":{"ref":"trunk"},"head":{"ref":"scorecards-remediation/09-scorecard-badge/old","repo":{"full_name":"acme/service"}},"user":{"login":"publisher"}}]' |
+      jq 'if env.GH_MODE == "ambiguous" then . + [.[0] | .html_url = "https://github.com/acme/service/pull/2" | .head.ref = "scorecards-remediation/09-scorecard-badge/other"] elif env.GH_MODE == "mixedcase" then .[0].head.repo.full_name = "AcMe/SeRvIcE" elif env.GH_MODE == "reconciledmixed" then .[0].head.repo.full_name = "AcMe/SeRvIcE" | .[0].head.ref = "scorecards-remediation/09-scorecard-badge/42-1" else . end' ;;
+  *" --method POST "*)
+    if [ "${GH_MODE:-}" = created ]; then
+      printf '%s\n' https://github.com/acme/service/pull/1
+      exit 0
+    fi
+    [ "${GH_MODE:-}" = reconciledmixed ] && touch "$TEST_TEMP_DIR/gh-posted"
+    exit 1 ;;
   *) printf '%s\n' '[]' ;;
 esac
 SH
@@ -200,15 +209,31 @@ SH
     [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = "stale_service" ]
     [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
 }
+@test "a tracked symlink is rejected before sandbox execution" {
+    ln -s README.md "$TEST_TEMP_DIR/seed/readme-link"
+    git -C "$TEST_TEMP_DIR/seed" add readme-link
+    git -C "$TEST_TEMP_DIR/seed" commit -m symlink >/dev/null
+    git -C "$TEST_TEMP_DIR/seed" push origin trunk >/dev/null
+    export BASE_SHA="$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)"
+    write_request
 
-@test "an attributable existing PR prevents recipe execution and push" {
-    export GH_MODE="existing"
+    run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = invalid_diff ]
+    [ ! -f "$DOCKER_ARGS" ]
+    [ "$(git --git-dir="$REMOTE" for-each-ref refs/heads --format='%(refname)')" = refs/heads/trunk ]
+}
+
+
+@test "a mixed-case attributable PR prevents recipe execution and push" {
+    export GH_MODE="mixedcase"
 
     run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
     [ "$status" -eq 0 ]
     [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = "existing_pr" ]
     [ ! -f "$DOCKER_ARGS" ]
     [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
+    [ "$(git --git-dir="$REMOTE" for-each-ref refs/heads --format='%(refname)')" = refs/heads/trunk ]
 }
 
 @test "a successful recipe with no diff has no prepared candidate" {
@@ -250,6 +275,23 @@ SH
     [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
     git --git-dir="$REMOTE" show-ref --verify refs/heads/scorecards-remediation/09-scorecard-badge/42-1
     [ "$(git --git-dir="$REMOTE" for-each-ref refs/heads --format='%(refname)' | wc -l)" -eq 2 ]
+}
+
+@test "publication preserves literal exported source files" {
+    export GH_MODE=created
+
+    run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    grep -Fqx '$Format:%H$' "$TEST_TEMP_DIR/work/baseline/README.md"
+    [ -f "$TEST_TEMP_DIR/work/baseline/tracked-export-ignore" ]
+    [ ! -e "$TEST_TEMP_DIR/work/tree/.git" ]
+
+    run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = pr_created ]
+    git --git-dir="$REMOTE" show refs/heads/scorecards-remediation/09-scorecard-badge/42-1:README.md | grep -Fqx '$Format:%H$'
+    git --git-dir="$REMOTE" cat-file -e refs/heads/scorecards-remediation/09-scorecard-badge/42-1:tracked-export-ignore
+    [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
 }
 
 @test "a missing README is not applicable and creates no proposal" {
@@ -324,11 +366,21 @@ SH
 @test "a proposal appearing after preparation prevents a duplicate push" {
     run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
     [ "$status" -eq 0 ]
-    export GH_MODE=existing
+    export GH_MODE=mixedcase
     run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
     [ "$status" -eq 0 ]
     [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = existing_pr ]
     [ "$(git --git-dir="$REMOTE" for-each-ref refs/heads --format='%(refname)')" = refs/heads/trunk ]
+}
+
+@test "mixed-case PR reconciliation reuses the attributable proposal" {
+    run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    export GH_MODE=reconciledmixed
+    run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = existing_pr ]
+    [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
 }
 
 @test "ambiguous attributable proposals never create another branch" {

@@ -9,7 +9,7 @@ source "$ACTION_DIR/lib/config-parser.sh"
 source "$ACTION_DIR/lib/remediation.sh"
 
 # Standard sysexits categories preserve rejection reasons across command substitution.
-readonly EX_TEMPFAIL=75 EX_NOPERM=77
+readonly EX_DATAERR=65 EX_TEMPFAIL=75 EX_NOPERM=77
 
 usage() {
     printf 'usage: %s validate REQUEST_JSON POLICY_FILE TRUSTED_SUITE_DIR\n' "$0" >&2
@@ -257,7 +257,7 @@ existing_prs() {
     jq -ce --arg repository "$repository" --arg default_branch "$default_branch" --arg prefix "$prefix" --arg publisher_login "$publisher_login" --arg marker "$marker" '
         [ .[] | if type == "array" then .[] else . end
           | select(.base.ref == $default_branch)
-          | select(.head.repo.full_name == $repository)
+          | select(((.head.repo.full_name // "") | ascii_downcase) == $repository)
           | select(.head.ref | startswith($prefix))
           | select(.user.login == $publisher_login)
           | select((.body // "") | contains($marker))
@@ -282,7 +282,7 @@ copy_service_tree() {
     local baseline_dir="$work_dir/baseline"
     local remote_url="${REMEDIATION_SERVICE_REMOTE_URL:-https://github.com/$repository.git}"
     local askpass="$work_dir/git-askpass"
-    local previous_umask
+    local previous_umask entry mode type object path actual_service_sha
 
     [ -n "${GH_TOKEN:-}" ] || return 1
     previous_umask="$(umask)"
@@ -295,11 +295,29 @@ SH
     umask "$previous_umask"
     mkdir -p "$work_dir/git-home"
     GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" GIT_TERMINAL_PROMPT=0 GIT_ASKPASS="$askpass" git -c core.hooksPath=/dev/null clone --no-checkout "$remote_url" "$clone_dir" >/dev/null 2>&1 || return 1
-    GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" GIT_TERMINAL_PROMPT=0 GIT_ASKPASS="$askpass" git -C "$clone_dir" -c core.hooksPath=/dev/null checkout --detach "$service_sha" >/dev/null 2>&1 || return 1
-    [ "$(GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$clone_dir" rev-parse HEAD)" = "$service_sha" ] || return 1
-    mkdir -p "$tree_dir" "$baseline_dir"
-    git -C "$clone_dir" archive --format=tar "$service_sha" | tar -x -C "$tree_dir"
-    cp -a "$tree_dir/." "$baseline_dir/"
+    actual_service_sha="$(GIT_CONFIG_NOSYSTEM=1 HOME="$work_dir/git-home" git -C "$clone_dir" rev-parse "$service_sha^{commit}")" || return 1
+    [ "$actual_service_sha" = "$service_sha" ] || return 1
+    mkdir -p "$tree_dir" "$baseline_dir" || return 1
+    git -C "$clone_dir" ls-tree -rz --full-tree "$service_sha" > "$work_dir/service-tree" || return 1
+    while IFS= read -r -d '' entry; do
+        mode="${entry%% *}"
+        entry="${entry#* }"
+        type="${entry%% *}"
+        entry="${entry#* }"
+        object="${entry%%$'\t'*}"
+        path="${entry#*$'\t'}"
+        case "$mode:$type" in
+            100644:blob|100755:blob) ;;
+            *) return "$EX_DATAERR" ;;
+        esac
+        case "$path" in
+            ""|/*|.|..|.git|*/../*|*/.git|.git/*|*/.git/*) return "$EX_DATAERR" ;;
+        esac
+        mkdir -p "$tree_dir/$(dirname "$path")" || return 1
+        git -C "$clone_dir" cat-file blob "$object" > "$tree_dir/$path" || return 1
+        chmod "${mode#100}" "$tree_dir/$path" || return 1
+    done < "$work_dir/service-tree"
+    cp -a "$tree_dir/." "$baseline_dir/" || return 1
     rm -f "$askpass"
 
     git -C "$clone_dir" remote set-url origin "$remote_url"
@@ -401,7 +419,10 @@ prepare() {
     esac
 
     copy_service_tree "$(jq -r '.repository' <<< "$context")" "$(jq -r '.service_sha' <<< "$context")" "$work_dir" || {
-        write_result "$work_dir" check_failed_to_run "$context" "$policy_file"
+        validation_rc=$?
+        validation_status=check_failed_to_run
+        [ "$validation_rc" -ne "$EX_DATAERR" ] || validation_status=invalid_diff
+        write_result "$work_dir" "$validation_status" "$context" "$policy_file"
         return 0
     }
     tree_is_regular "$work_dir/tree" || {

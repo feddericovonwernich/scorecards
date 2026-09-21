@@ -163,7 +163,7 @@ test.describe('Optional check remediation', () => {
   });
 
 
-  test('links a pull request only when its marker, branch, base, repository, and publisher match', async ({ page }) => {
+  test('links an attributable reused pull request from an earlier run', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
     await mockRemediationApi(page);
     await page.route('**/api.github.com/repos/feddericovonwernich/test-repo-stale/pulls*', (route) =>
@@ -176,8 +176,8 @@ test.describe('Optional check remediation', () => {
           body: '<!-- scorecards-remediation:v1 check_id=04-tests -->',
           base: { ref: 'trunk' },
           head: {
-            ref: 'scorecards-remediation/04-tests/42-1',
-            repo: { full_name: 'feddericovonwernich/test-repo-stale' },
+            ref: 'scorecards-remediation/04-tests/17-1',
+            repo: { full_name: 'Feddericovonwernich/Test-Repo-Stale' },
           },
           user: { login: 'scorecard-bot' },
         }]),
@@ -239,6 +239,83 @@ test.describe('Optional check remediation', () => {
     await expect(page.locator('#service-modal').getByRole('link', { name: 'View remediation run' }))
       .toHaveAttribute('href', /actions\/runs\/42$/, { timeout: 7000 });
     expect(polls).toBe(2);
+  });
+
+  for (const status of [200, 204]) {
+    for (const failure of ['transport', 'json']) {
+      test(`keeps ${status} dispatch accepted after ${failure} run discovery failure`, async ({ page }) => {
+        await setGitHubPAT(page, mockPAT);
+        await mockRemediationApi(page, status === 204 ? { dispatch: { status } } : {});
+        let dispatches = 0;
+        page.on('request', (request) => {
+          if (request.method() === 'POST' && request.url().endsWith('/dispatches')) {dispatches += 1;}
+        });
+        const endpoint = status === 200
+          ? '**/api.github.com/repos/feddericovonwernich/scorecards/actions/runs/42'
+          : '**/api.github.com/repos/feddericovonwernich/scorecards/actions/workflows/remediate-check.yml/runs*';
+        await page.route(endpoint, (route) => failure === 'transport'
+          ? route.abort('failed')
+          : route.fulfill({ status: 200, contentType: 'application/json', body: '{' }));
+
+        await openServiceModal(page, 'test-repo-stale');
+        await page.getByRole('button', { name: 'Propose test coverage' }).click();
+        const modal = page.locator('#service-modal');
+        await expect(modal.getByRole('button', { name: 'Requested', exact: true })).toBeVisible();
+        await expect(modal.getByRole('status')).toContainText('Dispatch accepted');
+        await expect(modal.getByRole('alert')).toHaveCount(0);
+        await expect(modal.getByRole('link', { name: 'View remediation run' })).toHaveCount(0);
+        expect(dispatches).toBe(1);
+      });
+    }
+  }
+
+  for (const failure of ['policy transport', 'pull request json']) {
+    test(`preserves the accepted run link after optional ${failure} failure`, async ({ page }) => {
+      await setGitHubPAT(page, mockPAT);
+      await mockRemediationApi(page);
+      let dispatches = 0;
+      page.on('request', (request) => {
+        if (request.method() === 'POST' && request.url().endsWith('/dispatches')) {dispatches += 1;}
+      });
+      if (failure === 'policy transport') {
+        await page.route('**/api.github.com/repos/feddericovonwernich/scorecards/contents/action/config/remediation.json*',
+          (route) => route.abort('failed'));
+      } else {
+        await page.route('**/api.github.com/repos/feddericovonwernich/test-repo-stale/pulls*',
+          (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{' }));
+      }
+
+      await openServiceModal(page, 'test-repo-stale');
+      await page.getByRole('button', { name: 'Propose test coverage' }).click();
+      const modal = page.locator('#service-modal');
+      await expect(modal.getByRole('button', { name: 'Requested', exact: true })).toBeVisible();
+      await expect(modal.getByRole('link', { name: 'View remediation run' }))
+        .toHaveAttribute('href', 'https://github.com/feddericovonwernich/scorecards/actions/runs/42');
+      await expect(modal.getByRole('link', { name: /View pull request/ })).toHaveCount(0);
+      await expect(modal.getByRole('alert')).toHaveCount(0);
+      await expect(modal.locator('.check-result.fail').filter({ hasText: 'Test Coverage' })).toBeVisible();
+      expect(dispatches).toBe(1);
+    });
+  }
+
+  test('rejects the unsupported run_id dispatch alias', async ({ page }) => {
+    await setGitHubPAT(page, mockPAT);
+    await mockRemediationApi(page, {
+      dispatch: {
+        status: 200,
+        body: {
+          run_id: 42,
+          run_url: 'https://api.github.com/repos/feddericovonwernich/scorecards/actions/runs/42',
+          html_url: 'https://github.com/feddericovonwernich/scorecards/actions/runs/42',
+        },
+      },
+    });
+    await openServiceModal(page, 'test-repo-stale');
+    await page.getByRole('button', { name: 'Propose test coverage' }).click();
+    const modal = page.locator('#service-modal');
+    await expect(modal.getByRole('button', { name: 'Request failed', exact: true })).toBeVisible();
+    await expect(modal.getByRole('alert')).toBeVisible();
+    await expect(modal.getByRole('link', { name: 'View remediation run' })).toHaveCount(0);
   });
 
   test('rejects malformed receipts and wrong-workflow runs without links', async ({ page }) => {
