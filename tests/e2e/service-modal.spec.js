@@ -10,6 +10,34 @@ import {
 } from './test-helper.js';
 
 test.describe('Service Modal - Basic Behavior', () => {
+  test('late service results leave refresh available after switching services', async ({ catalogPage }) => {
+    let releaseResults;
+    let resultsStarted;
+    const ready = new Promise(resolve => { releaseResults = resolve; });
+    const started = new Promise(resolve => { resultsStarted = resolve; });
+    await catalogPage.route('**/results/feddericovonwernich/test-repo-stale/results.json*', async route => {
+      resultsStarted();
+      await ready;
+      await route.fallback();
+    });
+    await catalogPage.locator('.service-card').filter({ hasText: 'test-repo-stale' }).click();
+    await started;
+    const modal = catalogPage.locator('#service-modal');
+    await expect(modal.getByText('Loading service details...')).toBeVisible();
+    await closeServiceModal(catalogPage);
+    await openServiceModal(catalogPage, 'test-repo-perfect');
+    const response = catalogPage.waitForResponse(res => res.url().includes('/test-repo-stale/results.json'));
+    releaseResults();
+    expect((await response).status()).toBe(200);
+    await catalogPage.evaluate(() => new Promise(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    ));
+    await expect(modal.getByText('Loading service details...')).toHaveCount(0);
+    await modal.getByRole('button', { name: 'Refresh Data', exact: true }).click();
+    await expect(modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })).toBeVisible();
+    await expect(modal.locator('.check-result').first()).toBeVisible();
+  });
+
   // Consolidated test: Task 1 - Modal Open/Close Journey
   // Combines: open/display/close and close with Escape key tests
   test('should open modal, display service info, and close via X button or Escape key', async ({ catalogPage }) => {

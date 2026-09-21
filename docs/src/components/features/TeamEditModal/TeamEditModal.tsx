@@ -4,7 +4,7 @@
  * Replaces vanilla JS ui/team-edit-modal.ts
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal } from '../../ui/Modal.js';
 import { Toast } from '../../ui/Toast.js';
 import { useAppStore, selectPAT } from '../../../stores/appStore.js';
@@ -61,6 +61,7 @@ export function TeamEditModal({
     oncall_rotation: '',
   });
   const [aliasInput, setAliasInput] = useState('');
+  const aliasInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -123,6 +124,7 @@ export function TeamEditModal({
   };
 
   const handleRemoveAlias = (aliasToRemove: string) => {
+    aliasInputRef.current?.focus({ preventScroll: true });
     setFormData((prev) => ({
       ...prev,
       aliases: prev.aliases.filter((a) => a !== aliasToRemove),
@@ -315,6 +317,7 @@ export function TeamEditModal({
                 </label>
                 <div className="flex gap-2 mb-2">
                   <input
+                    ref={aliasInputRef}
                     type="text"
                     value={aliasInput}
                     onChange={(e) => setAliasInput(e.target.value)}

@@ -85,7 +85,7 @@ test.describe('Network Failure Recovery', () => {
     expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
 
-  test('workflow retry retains dialog focus through repeated failure and recovery', async ({ page }) => {
+  test('workflow retry retains dialog focus through polling, repeated failure and recovery', async ({ page }) => {
     await mockCatalogRequests(page);
     await page.goto('/scorecards/');
     await waitForCatalogLoad(page);
@@ -108,14 +108,19 @@ test.describe('Network Failure Recovery', () => {
     });
     await openServiceModal(page, 'test-repo-perfect');
     const modal = page.locator('#service-modal');
+    await page.clock.install();
     await modal.getByRole('button', { name: 'Workflow Runs', exact: true }).click();
-    await modal.getByRole('combobox', { name: 'Auto-refresh interval' }).selectOption('0');
     await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
-    for (const failsAgain of [true, false]) {
+    for (const transition of ['poll', 'manual', 'poll-success']) {
+      const failsAgain = transition !== 'poll-success';
       failing = failsAgain;
       runsReady = new Promise(resolve => { releaseRuns = resolve; });
       await modal.getByRole('button', { name: 'Try Again', exact: true }).focus();
-      await page.keyboard.press('Enter');
+      if (transition === 'manual') {
+        await page.keyboard.press('Enter');
+      } else {
+        await page.clock.fastForward(30000);
+      }
       await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
       expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
       releaseRuns();
@@ -125,6 +130,17 @@ test.describe('Network Failure Recovery', () => {
         await expect(modal.getByText('No workflow runs found', { exact: true })).toBeVisible();
       }
       expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      if (transition === 'poll') {
+        const interval = modal.getByRole('combobox', { name: 'Auto-refresh interval' });
+        await interval.focus();
+        runsReady = new Promise(resolve => { releaseRuns = resolve; });
+        await page.clock.fastForward(30000);
+        await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
+        await expect(interval).toBeFocused();
+        releaseRuns();
+        await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
+        await expect(interval).toBeFocused();
+      }
     }
   });
 

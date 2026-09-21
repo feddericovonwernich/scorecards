@@ -222,9 +222,11 @@ test.describe('Team Edit Modal', () => {
       await expect(modal).toContainText('removable-alias');
 
       // Remove alias
-      const removeButton = modal.locator('button:has-text("×")').last();
-      await removeButton.click();
+      const removeButton = modal.getByRole('button', { name: 'Remove alias removable-alias', exact: true });
+      await removeButton.focus();
+      await page.keyboard.press('Enter');
       await expect(modal).not.toContainText('removable-alias');
+      await expect(aliasInput).toBeFocused();
 
       // Try to add duplicate
       await aliasInput.fill('test-alias');

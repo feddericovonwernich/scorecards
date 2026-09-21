@@ -27,6 +27,7 @@ type SortBy = 'name' | 'percentage';
 export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboardProps) {
   const services = useAppStore(selectServicesAll);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLButtonElement>(null);
 
   const [checksData, setChecksData] = useState<ChecksData | null>(null);
   const [selectedCheckId, setSelectedCheckId] = useState<string | null>(null);
@@ -128,6 +129,7 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
   const selectedCheck = checksData?.checks.find((c) => c.id === selectedCheckId);
 
   const handleSelectCheck = (checkId: string) => {
+    selectorRef.current?.focus({ preventScroll: true });
     setSelectedCheckId(checkId);
     setDropdownOpen(false);
   };
@@ -163,6 +165,7 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
           {/* Check Card Selector */}
           <div className="check-card-selector" ref={dropdownRef}>
             <button
+              ref={selectorRef}
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className={cn('check-card-selected', dropdownOpen && 'open')}
             >

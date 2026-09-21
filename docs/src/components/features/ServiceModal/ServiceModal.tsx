@@ -131,9 +131,7 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
   const [isStale, setIsStale] = useState(false);
   const workflowLifetimeRef = useRef(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const service = serviceData?.service.org === org && serviceData?.service.repo === repo
-    ? serviceData.service
-    : null;
+  const service = serviceData?.service;
 
   useLayoutEffect(() => {
     setWorkflowFeedback(null);
@@ -381,7 +379,7 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
   const renderContent = () => {
     let content;
 
-    if (loading || (!error && !service)) {
+    if (loading) {
       content = <div className="loading">Loading service details...</div>;
     } else if (error) {
       content = (

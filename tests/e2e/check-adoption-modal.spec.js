@@ -100,8 +100,10 @@ test.describe('Check Adoption Dashboard - Check Selector', () => {
 
     // Changes update the dashboard
     const initialCheckName = await modal.locator('.check-card-selected .check-card-name').textContent();
-    await modal.locator('.check-card-option').nth(1).click();
+    await modal.locator('.check-card-option').nth(1).focus();
+    await page.keyboard.press('Enter');
     await expect(modal.locator('.check-card-dropdown.open')).not.toBeVisible();
+    await expect(toggle).toBeFocused();
 
     const newCheckName = await modal.locator('.check-card-selected .check-card-name').textContent();
     expect(newCheckName).not.toBe(initialCheckName);

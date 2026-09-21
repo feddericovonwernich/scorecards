@@ -306,17 +306,23 @@ test.describe('Team Modal - Check Adoption Tab', () => {
     await expect(modal).toContainText(/Failing/i);
   });
 
-  test('should allow changing check selection', async ({ teamModalPage }) => {
+  test('should return focus to the check selector after keyboard selection', async ({ teamModalPage }) => {
     await clickTeamModalTab(teamModalPage, 'Check Adoption');
-
     const modal = teamModalPage.locator('#team-modal');
-    const checkSelector = modal.locator('button').filter({ hasText: /README|Documentation/i }).first();
-    await checkSelector.click();
-
-    await expect(async () => {
-      const hasOptions = await modal.locator('button, [role="option"]').filter({ hasText: /License|CI/i }).count() > 0;
-      expect(hasOptions).toBe(true);
-    }).toPass({ timeout: 3000 });
+    const selector = modal.locator('.check-card-selected');
+    await expect(selector).toBeVisible();
+    await selector.focus();
+    await teamModalPage.keyboard.press('Enter');
+    const option = modal.locator('.check-card-option').nth(1);
+    const checkName = await option.locator('.check-card-name').textContent();
+    await option.focus();
+    await teamModalPage.keyboard.press('Enter');
+    await expect(modal.locator('.check-card-dropdown')).toBeHidden();
+    await expect(selector).toContainText(checkName);
+    await expect(selector).toBeFocused();
+    await expect(modal.locator('.adoption-progress')).toBeVisible();
+    await teamModalPage.keyboard.press('Enter');
+    await expect(modal.locator('.check-card-dropdown')).toBeVisible();
   });
 });
 
