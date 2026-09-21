@@ -71,25 +71,21 @@ interface RemediationPolicy {
   targets?: Record<string, { publisher_login?: string }>;
 }
 
-function isGitHubUrl(value: unknown, path: string): value is string {
+function isGitHubUrl(value: unknown, path: string, origin = 'https://github.com'): value is string {
   if (typeof value !== 'string') {return false;}
   try {
     const url = new URL(value);
-    return url.origin === 'https://github.com'
+    const segments = url.pathname.split('/');
+    const expected = path.split('/');
+    const repositoryIndex = origin === 'https://api.github.com' ? 2 : 1;
+    return url.origin === origin
       && !url.search && !url.hash && !url.username && !url.password
-      && url.pathname === path;
-  } catch {
-    return false;
-  }
-}
-
-function isApiRunUrl(value: unknown, path: string): value is string {
-  if (typeof value !== 'string') {return false;}
-  try {
-    const url = new URL(value);
-    return url.origin === 'https://api.github.com'
-      && !url.search && !url.hash && !url.username && !url.password
-      && url.pathname === path;
+      && segments.length === expected.length
+      && segments.every((segment, index) =>
+        index === repositoryIndex || index === repositoryIndex + 1
+          ? segment.toLowerCase() === expected[index].toLowerCase()
+          : segment === expected[index]
+      );
   } catch {
     return false;
   }
@@ -120,7 +116,7 @@ function receiptFromDispatchBody(data: unknown, org: string, repo: string): Disp
   const id = String(runId);
   const apiPath = `/repos/${org}/${repo}/actions/runs/${id}`;
   const htmlPath = `/${org}/${repo}/actions/runs/${id}`;
-  if (!isApiRunUrl(receipt.run_url, apiPath) || !isGitHubUrl(receipt.html_url, htmlPath)) {
+  if (!isGitHubUrl(receipt.run_url, apiPath, 'https://api.github.com') || !isGitHubUrl(receipt.html_url, htmlPath)) {
     return { accepted: false, status: 200, reason: 'GitHub returned an invalid workflow dispatch receipt' };
   }
   return { accepted: true, runId: id, runUrl: receipt.html_url };
@@ -494,6 +490,7 @@ export async function findRemediationPullRequest(
       && isGitHubUrl(candidate.html_url, `/${request.org}/${request.repo}/pull/${candidate.number}`)
     ));
     if (pulls.length < REMEDIATION_DISCOVERY.perPage) {break;}
+    if (page === REMEDIATION_DISCOVERY.maxPages) {return null;}
   }
   return candidates.length === 1 && candidates[0].number && candidates[0].html_url
     ? { number: candidates[0].number, url: candidates[0].html_url }

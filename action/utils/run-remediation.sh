@@ -280,7 +280,7 @@ copy_service_tree() {
     local clone_dir="$work_dir/service-clone"
     local tree_dir="$work_dir/tree"
     local baseline_dir="$work_dir/baseline"
-    local remote_url="${REMEDIATION_SERVICE_REMOTE_URL:-https://github.com/$repository.git}"
+    local remote_url="https://github.com/$repository.git"
     local askpass="$work_dir/git-askpass"
     local previous_umask entry mode type object path actual_service_sha
 
@@ -557,7 +557,7 @@ publish() {
     mkdir -p "$work_dir/git-home"
     writer_dir="$work_dir/writer"
     rm -rf "$writer_dir"
-    remote_url="$(git -C "$work_dir/service-clone" remote get-url origin)"
+    remote_url="https://github.com/$repository.git"
     askpass="$work_dir/publish-askpass"
     cat > "$askpass" <<'SH'
 #!/bin/sh

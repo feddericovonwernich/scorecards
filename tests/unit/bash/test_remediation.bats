@@ -47,7 +47,10 @@ create_remote() {
     git -C "$seed" push origin trunk >/dev/null
     git --git-dir="$REMOTE" symbolic-ref HEAD refs/heads/trunk
     export BASE_SHA="$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)"
-    export REMEDIATION_SERVICE_REMOTE_URL="$REMOTE"
+    export GIT_CONFIG_COUNT=1
+    export GIT_CONFIG_KEY_0="url.$REMOTE.insteadOf"
+    export GIT_CONFIG_VALUE_0="https://github.com/acme/service.git"
+    export GIT_ALLOW_PROTOCOL=file
 }
 
 write_policy() {
@@ -276,6 +279,35 @@ SH
     [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
     git --git-dir="$REMOTE" show-ref --verify refs/heads/scorecards-remediation/09-scorecard-badge/42-1
     [ "$(git --git-dir="$REMOTE" for-each-ref refs/heads --format='%(refname)' | wc -l)" -eq 2 ]
+}
+
+@test "a rejected push leaves the default branch and remote refs unchanged" {
+    run "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ -f "$TEST_TEMP_DIR/work/prepared.json" ]
+    printf '#!/bin/sh\nexit 1\n' > "$REMOTE/hooks/pre-receive"
+    chmod +x "$REMOTE/hooks/pre-receive"
+
+    run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = pr_failed ]
+    [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
+    [ "$(git --git-dir="$REMOTE" for-each-ref refs/heads --format='%(refname)')" = refs/heads/trunk ]
+}
+
+@test "publication derives its destination from the authorized repository" {
+    export GH_MODE=created
+    run env REMEDIATION_SERVICE_REMOTE_URL="$TEST_TEMP_DIR/unauthorized.git" "$RUNNER" prepare "$REQUEST" "$POLICY" "$SUITE" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    git clone --bare "$REMOTE" "$TEST_TEMP_DIR/other.git"
+    git -C "$TEST_TEMP_DIR/work/service-clone" remote set-url origin "$TEST_TEMP_DIR/other.git"
+
+    run "$RUNNER" publish "$TEST_TEMP_DIR/work/prepared.json" "$POLICY" "$TEST_TEMP_DIR/work"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r .status "$TEST_TEMP_DIR/work/remediation-result.json")" = pr_created ]
+    git --git-dir="$REMOTE" show-ref --verify refs/heads/scorecards-remediation/09-scorecard-badge/42-1
+    [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/trunk)" = "$BASE_SHA" ]
+    [ "$(git --git-dir="$TEST_TEMP_DIR/other.git" for-each-ref refs/heads --format='%(refname)')" = refs/heads/trunk ]
 }
 
 @test "publication preserves literal exported source files" {

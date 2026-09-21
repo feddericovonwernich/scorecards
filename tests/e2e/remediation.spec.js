@@ -49,8 +49,8 @@ async function mockRemediationApi(page, { dispatch = {
   status: 200,
   body: {
     workflow_run_id: 42,
-    run_url: 'https://api.github.com/repos/feddericovonwernich/scorecards/actions/runs/42',
-    html_url: 'https://github.com/feddericovonwernich/scorecards/actions/runs/42',
+    run_url: 'https://api.github.com/repos/FeddericoVonWernich/Scorecards/actions/runs/42',
+    html_url: 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42',
   },
 }, runs = [] } = {}) {
   await page.route('**/api.github.com/repos/feddericovonwernich/scorecards', (route) =>
@@ -88,7 +88,7 @@ async function mockRemediationApi(page, { dispatch = {
           event: 'workflow_dispatch',
           display_title: `remediation:${requestId}`,
           head_sha: '3'.repeat(40),
-          html_url: 'https://github.com/feddericovonwernich/scorecards/actions/runs/42',
+          html_url: 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42',
         }),
       });
     }
@@ -144,8 +144,8 @@ test.describe('Optional check remediation', () => {
         contentType: 'application/json',
         body: JSON.stringify({
           workflow_run_id: 42,
-          run_url: 'https://api.github.com/repos/feddericovonwernich/scorecards/actions/runs/42',
-          html_url: 'https://github.com/feddericovonwernich/scorecards/actions/runs/42',
+          run_url: 'https://api.github.com/repos/FeddericoVonWernich/Scorecards/actions/runs/42',
+          html_url: 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42',
         }),
       });
     });
@@ -163,7 +163,7 @@ test.describe('Optional check remediation', () => {
   });
 
 
-  test('links an attributable reused pull request from an earlier run', async ({ page }) => {
+  test('links a canonical-case attributable reused pull request from an earlier run', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
     await mockRemediationApi(page);
     await page.route('**/api.github.com/repos/feddericovonwernich/test-repo-stale/pulls*', (route) =>
@@ -172,7 +172,7 @@ test.describe('Optional check remediation', () => {
         contentType: 'application/json',
         body: JSON.stringify([{
           number: 7,
-          html_url: 'https://github.com/feddericovonwernich/test-repo-stale/pull/7',
+          html_url: 'https://github.com/FeddericoVonWernich/Test-Repo-Stale/pull/7',
           body: '<!-- scorecards-remediation:v1 check_id=04-tests -->',
           base: { ref: 'trunk' },
           head: {
@@ -189,6 +189,75 @@ test.describe('Optional check remediation', () => {
     await expect(page.locator('#service-modal').getByRole('link', { name: 'View pull request #7' })).toHaveAttribute('href', /pull\/7$/);
   });
 
+  for (const exhausted of [false, true]) {
+    test(`only links a PR when bounded pagination is exhausted: ${exhausted}`, async ({ page }) => {
+      await setGitHubPAT(page, mockPAT);
+      await mockRemediationApi(page);
+      const pages = [];
+      await page.route('**/api.github.com/repos/feddericovonwernich/test-repo-stale/pulls*', (route) => {
+        const pageNumber = Number(new URL(route.request().url()).searchParams.get('page'));
+        pages.push(pageNumber);
+        const pulls = Array.from({ length: exhausted && pageNumber === 5 ? 99 : 100 }, () => ({
+          body: '', base: { ref: 'trunk' },
+        }));
+        if (pageNumber === 1 || pageNumber === 6) {
+          pulls[0] = {
+            number: pageNumber === 1 ? 7 : 8,
+            html_url: `https://github.com/FeddericoVonWernich/Test-Repo-Stale/pull/${pageNumber === 1 ? 7 : 8}`,
+            body: '<!-- scorecards-remediation:v1 check_id=04-tests -->',
+            base: { ref: 'trunk' },
+            head: { ref: `scorecards-remediation/04-tests/${pageNumber}-1`, repo: { full_name: service } },
+            user: { login: 'scorecard-bot' },
+          };
+        }
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(pulls) });
+      });
+
+      await openServiceModal(page, 'test-repo-stale');
+      await page.getByRole('button', { name: 'Propose test coverage' }).click();
+      const modal = page.locator('#service-modal');
+      await expect(modal.getByRole('button', { name: 'Requested', exact: true })).toBeVisible();
+      await expect(modal.getByRole('link', { name: 'View remediation run' }))
+        .toHaveAttribute('href', 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42');
+      if (exhausted) {
+        await expect(modal.getByRole('link', { name: 'View pull request #7' })).toBeVisible();
+      } else {
+        await expect(modal.getByRole('link', { name: /View pull request/ })).toHaveCount(0);
+        await expect(modal.getByRole('status')).toContainText('run summary');
+      }
+      expect(pages).toEqual([1, 2, 3, 4, 5]);
+    });
+  }
+
+  for (const [field, url] of [
+    ['run_url', 'https://api.github.com/Repos/FeddericoVonWernich/Scorecards/actions/runs/42'],
+    ['run_url', 'https://api.github.com/repos/FeddericoVonWernich/Scorecards/actions/runs/43'],
+    ['run_url', 'https://api.github.com/repos/other/Scorecards/actions/runs/42'],
+    ['html_url', 'https://github.com/FeddericoVonWernich/Scorecards/Actions/runs/42'],
+    ['html_url', 'https://github.com.evil.invalid/FeddericoVonWernich/Scorecards/actions/runs/42'],
+    ['html_url', 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42?other=1'],
+  ]) {
+    test(`rejects a mismatched receipt URL: ${url}`, async ({ page }) => {
+      await setGitHubPAT(page, mockPAT);
+      await mockRemediationApi(page, {
+        dispatch: {
+          status: 200,
+          body: {
+            workflow_run_id: 42,
+            run_url: 'https://api.github.com/repos/FeddericoVonWernich/Scorecards/actions/runs/42',
+            html_url: 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42',
+            [field]: url,
+          },
+        },
+      });
+      await openServiceModal(page, 'test-repo-stale');
+      await page.getByRole('button', { name: 'Propose test coverage' }).click();
+      const modal = page.locator('#service-modal');
+      await expect(modal.getByRole('button', { name: 'Request failed', exact: true })).toBeVisible();
+      await expect(modal.getByRole('link', { name: 'View remediation run' })).toHaveCount(0);
+    });
+  }
+
   test('accepts 204 only after correlating the matching workflow run, never the newest unrelated run', async ({ page }) => {
     await setGitHubPAT(page, mockPAT);
     await mockRemediationApi(page, {
@@ -202,7 +271,7 @@ test.describe('Optional check remediation', () => {
         {
           id: 42, workflow_id: 123, event: 'workflow_dispatch',
           display_title: `remediation:${requestId}`, created_at: new Date().toISOString(),
-          html_url: 'https://github.com/feddericovonwernich/scorecards/actions/runs/42',
+          html_url: 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42',
         },
       ],
     });
@@ -290,7 +359,7 @@ test.describe('Optional check remediation', () => {
       const modal = page.locator('#service-modal');
       await expect(modal.getByRole('button', { name: 'Requested', exact: true })).toBeVisible();
       await expect(modal.getByRole('link', { name: 'View remediation run' }))
-        .toHaveAttribute('href', 'https://github.com/feddericovonwernich/scorecards/actions/runs/42');
+        .toHaveAttribute('href', 'https://github.com/FeddericoVonWernich/Scorecards/actions/runs/42');
       await expect(modal.getByRole('link', { name: /View pull request/ })).toHaveCount(0);
       await expect(modal.getByRole('alert')).toHaveCount(0);
       await expect(modal.locator('.check-result.fail').filter({ hasText: 'Test Coverage' })).toBeVisible();
