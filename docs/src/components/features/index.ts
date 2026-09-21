@@ -23,5 +23,5 @@ export { ActionsWidget } from './ActionsWidget/index.js';
 export { TeamDashboard } from './TeamDashboard/index.js';
 export { TeamEditModal } from './TeamEditModal/index.js';
 export { CheckAdoptionDashboard } from './CheckAdoptionDashboard/index.js';
-export { TeamFilterDropdown, TeamFilterDropdownPortal } from './TeamFilterDropdown.js';
-export { CheckFilterToggle, CheckFilterTogglePortal } from './CheckFilterToggle.js';
+export { TeamFilterDropdown, TeamFilterControl } from './TeamFilterDropdown.js';
+export { CheckFilterToggle } from './CheckFilterToggle.js';

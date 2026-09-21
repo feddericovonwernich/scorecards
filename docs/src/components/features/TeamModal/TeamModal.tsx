@@ -97,7 +97,7 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
           return;
         }
 
-        setTeamData(team as TeamWithStats);
+        setTeamData(team);
 
         // Get services for this team (case-insensitive match)
         const { getTeamName } = await import('../../../utils/team-statistics.js');
@@ -212,6 +212,8 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
     handleServiceClick,
   ]);
 
+  const dominantRank = getDominantRank(teamData?.rankDistribution ?? {});
+
   // Render content
   const renderContent = () => {
     if (loading) {
@@ -231,31 +233,11 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
       return <div className="empty-state">Team not found</div>;
     }
 
-    const dominantRank = getDominantRank(teamData.rankDistribution ?? {});
     const teamId =
       teamData.id || teamData.name.toLowerCase().replace(/\s+/g, '-');
 
     return (
       <>
-        {/* Header - title row with badge */}
-        <div className="service-modal-title-row">
-          <h2>
-            {teamData.name}
-            <button
-              className="edit-icon-btn"
-              onClick={handleEditClick}
-              title="Edit Team"
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z" />
-              </svg>
-            </button>
-          </h2>
-          <div className={`rank-badge modal-header-badge ${dominantRank}`}>
-            {capitalize(dominantRank)}
-          </div>
-        </div>
-
         {/* Metadata */}
         <div className="team-metadata">
           <span className="team-id">ID: {teamId}</span>
@@ -338,13 +320,39 @@ export function TeamModal({ isOpen, onClose, teamName }: TeamModalProps) {
 
   return (
     <Modal
+      aria-label="Team details"
       isOpen={isOpen}
       onClose={onClose}
       className="team-modal-wrapper"
       contentClassName="team-modal-content"
       testId="team-modal"
     >
-      <div id="team-detail">{renderContent()}</div>
+      <div id="team-detail">
+        {/* Header - title row with badge */}
+        <div className="service-modal-title-row">
+          <h2 tabIndex={-1}>
+            {teamName}
+            {!loading && !error && teamData && (
+              <button
+                className="edit-icon-btn"
+                onClick={handleEditClick}
+                title="Edit Team"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 00-.064.108l-.558 1.953 1.953-.558a.253.253 0 00.108-.064l6.286-6.286zm1.238-3.763a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086z" />
+                </svg>
+              </button>
+            )}
+          </h2>
+          {!loading && !error && teamData && (
+            <div className={`rank-badge modal-header-badge ${dominantRank}`}>
+              {capitalize(dominantRank)}
+            </div>
+          )}
+        </div>
+
+        {renderContent()}
+      </div>
     </Modal>
   );
 }

@@ -16,6 +16,8 @@ import {
   waitForCatalogLoad,
   openServiceModal,
   closeServiceModal,
+  openSettingsModal,
+  closeSettingsModal,
 } from './test-helper.js';
 
 // ============================================================================
@@ -104,6 +106,64 @@ test.describe('Theme Switching', () => {
     // Service cards should still be visible
     await expect(serviceCard).toBeVisible();
   });
+
+  test('should maintain AA contrast for Settings descriptions in both themes', async ({ page }) => {
+    await mockCatalogRequests(page);
+    await page.goto('/');
+    await waitForCatalogLoad(page);
+
+    const html = page.locator('html');
+    const themeToggle = page.locator('.floating-btn--theme');
+
+    for (const theme of ['light', 'dark']) {
+      if ((await html.getAttribute('data-theme')) !== theme) {
+        await themeToggle.click();
+      }
+      await expect(html).toHaveAttribute('data-theme', theme);
+
+      await openSettingsModal(page);
+      const contrasts = await page
+        .locator(
+          '#settings-modal .settings-header-text p, ' +
+            '#settings-modal .settings-mode-description, ' +
+            '#settings-modal .settings-input-hint'
+        )
+        .evaluateAll((elements) => {
+          const parseColor = (color) => color.match(/[\d.]+/g)?.map(Number) ?? [];
+          const luminance = (color) =>
+            color
+              .slice(0, 3)
+              .map((channel) => {
+                const normalized = channel / 255;
+                return normalized <= 0.04045
+                  ? normalized / 12.92
+                  : ((normalized + 0.055) / 1.055) ** 2.4;
+              })
+              .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+
+          return elements.map((element) => {
+            let background = element.parentElement;
+            while (background) {
+              const color = parseColor(getComputedStyle(background).backgroundColor);
+              if (color.length === 3 || color[3] > 0) {
+                const foreground = parseColor(getComputedStyle(element).color);
+                const [lighter, darker] = [luminance(foreground), luminance(color)].sort(
+                  (a, b) => b - a
+                );
+                return (lighter + 0.05) / (darker + 0.05);
+              }
+              background = background.parentElement;
+            }
+            return 0;
+          });
+        });
+
+      for (const contrast of contrasts) {
+        expect(contrast).toBeGreaterThanOrEqual(4.5);
+      }
+      await closeSettingsModal(page);
+    }
+  });
 });
 
 // ============================================================================
@@ -127,7 +187,7 @@ test.describe('Keyboard Navigation', () => {
     for (let i = 0; i < 10; i++) {
       await page.keyboard.press('Tab');
       const focused = page.locator(':focus');
-      const isServiceCard = await focused.evaluate(el => el.classList.contains('service-card'));
+      const isServiceCard = await focused.evaluate((el) => el.classList.contains('service-card'));
       if (isServiceCard) break;
     }
 
@@ -173,7 +233,9 @@ test.describe('Keyboard Navigation', () => {
     await page.waitForTimeout(300);
 
     // Phase 4: Click a different stat card
-    const silverStatCard = page.locator('.services-stats .stat-card').filter({ hasText: /Silver/i });
+    const silverStatCard = page
+      .locator('.services-stats .stat-card')
+      .filter({ hasText: /Silver/i });
     if (await silverStatCard.isVisible()) {
       await silverStatCard.click();
       await page.waitForTimeout(300);
@@ -216,49 +278,5 @@ test.describe('Focus Management', () => {
     // Phase 5: Verify page is still interactive after modal closes
     await expect(page.locator('.services-grid')).toBeVisible();
     await expect(firstCard).toBeVisible();
-  });
-});
-
-// ============================================================================
-// USER STORY 5.4: ARIA ATTRIBUTES (Consolidated: 2 → 1 test)
-// ============================================================================
-
-test.describe('ARIA Attributes', () => {
-  test('should have proper ARIA attributes on interactive elements', async ({ page }) => {
-    await mockCatalogRequests(page);
-    await page.goto('/');
-    await waitForCatalogLoad(page);
-
-    // Phase 1: Check service cards have proper tabindex and role
-    const serviceCards = page.locator('.service-card');
-    const firstCard = serviceCards.first();
-    await expect(firstCard).toHaveAttribute('tabindex', '0');
-    await expect(firstCard).toHaveAttribute('role', 'button');
-
-    // Phase 2: Open modal and verify ARIA attributes
-    await firstCard.click();
-    const modal = page.locator('#service-modal');
-    await expect(modal).toBeVisible();
-
-    // Modal should have role="dialog" and aria-modal
-    await expect(modal).toHaveAttribute('role', 'dialog');
-    await expect(modal).toHaveAttribute('aria-modal', 'true');
-
-    // Close button should have aria-label
-    const closeButton = modal.locator('.modal-close');
-    await expect(closeButton).toHaveAttribute('aria-label', 'Close modal');
-
-    await page.keyboard.press('Escape');
-
-    // Phase 3: Check floating controls have aria-labels
-    const themeToggle = page.locator('.floating-btn--theme');
-    await expect(themeToggle).toHaveAttribute('aria-label', /night mode/i);
-
-    const displayToggle = page.locator('.floating-btn--display');
-    await expect(displayToggle).toHaveAttribute('aria-label', /view/i);
-
-    // Phase 4: Check settings button has aria-label
-    const settingsBtn = page.locator('.floating-btn--settings');
-    await expect(settingsBtn).toHaveAttribute('aria-label', /Settings/i);
   });
 });

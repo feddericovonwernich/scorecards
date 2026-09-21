@@ -31,9 +31,7 @@ export function ServicesView() {
         />
       </section>
 
-      <section className="controls">
-        <ServicesControls />
-      </section>
+      <ServicesControls />
 
       <ServiceGridContainer />
     </div>

@@ -8,11 +8,118 @@ import {
   setGitHubPAT,
   clickServiceModalTab,
 } from './test-helper.js';
+async function mockOpenApiSpec(page) {
+  await page.route(
+    'https://raw.githubusercontent.com/feddericovonwernich/test-repo-perfect/main/openapi.yaml',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/yaml',
+        path: 'tests/fixtures/openapi/valid-spec.yaml',
+      })
+  );
+}
+
+async function installClipboardSeam(
+  page,
+  { clipboardSucceeds, clipboardAvailable = true, fallbackSucceeds, fallbackThrows = false }
+) {
+  await page.evaluate(
+    ({ clipboardSucceeds, clipboardAvailable, fallbackSucceeds, fallbackThrows }) => {
+      window.copyProbe = [];
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: clipboardAvailable
+          ? {
+              writeText(text) {
+                window.copyProbe.push({ method: 'clipboard', text });
+                return clipboardSucceeds
+                  ? Promise.resolve()
+                  : Promise.reject(new Error('Clipboard unavailable'));
+              },
+            }
+          : undefined,
+      });
+      document.execCommand = (command) => {
+        const active = document.activeElement;
+        window.copyProbe.push({
+          method: 'fallback',
+          command,
+          value: active instanceof HTMLTextAreaElement ? active.value : null,
+          selection:
+            active instanceof HTMLTextAreaElement
+              ? active.value.slice(active.selectionStart, active.selectionEnd)
+              : null,
+          dialogId: active?.closest('dialog')?.id ?? null,
+        });
+        if (fallbackThrows) {
+          throw new Error('Copy command failed');
+        }
+        return fallbackSucceeds;
+      };
+    },
+    { clipboardSucceeds, clipboardAvailable, fallbackSucceeds, fallbackThrows }
+  );
+}
+
+async function openRawSpec(page) {
+  await mockOpenApiSpec(page);
+  await clickServiceModalTab(page, 'API Specification');
+  await page.getByText(/View Raw Specification/i).click();
+  await expect(page.locator('#api-tab .spec-code')).toContainText('openapi: 3.0.0');
+}
+
+async function copyProbe(page) {
+  return page.evaluate(() => window.copyProbe);
+}
 
 test.describe('Service Modal - Basic Behavior', () => {
+  test('late service results leave refresh available after switching services', async ({
+    catalogPage,
+  }) => {
+    let releaseResults;
+    let resultsStarted;
+    const ready = new Promise((resolve) => {
+      releaseResults = resolve;
+    });
+    const started = new Promise((resolve) => {
+      resultsStarted = resolve;
+    });
+    await catalogPage.route(
+      '**/results/feddericovonwernich/test-repo-stale/results.json*',
+      async (route) => {
+        resultsStarted();
+        await ready;
+        await route.fallback();
+      }
+    );
+    await catalogPage.locator('.service-card').filter({ hasText: 'test-repo-stale' }).click();
+    await started;
+    const modal = catalogPage.locator('#service-modal');
+    await expect(modal.getByText('Loading service details...')).toBeVisible();
+    await closeServiceModal(catalogPage);
+    await openServiceModal(catalogPage, 'test-repo-perfect');
+    const response = catalogPage.waitForResponse((res) =>
+      res.url().includes('/test-repo-stale/results.json')
+    );
+    releaseResults();
+    expect((await response).status()).toBe(200);
+    await catalogPage.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    );
+    await expect(modal.getByText('Loading service details...')).toHaveCount(0);
+    await modal.getByRole('button', { name: 'Refresh Data', exact: true }).click();
+    await expect(
+      modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })
+    ).toBeVisible();
+    await expect(modal.locator('.check-result').first()).toBeVisible();
+  });
+
   // Consolidated test: Task 1 - Modal Open/Close Journey
   // Combines: open/display/close and close with Escape key tests
-  test('should open modal, display service info, and close via X button or Escape key', async ({ catalogPage }) => {
+  test('should open modal, display service info, and close via X button or Escape key', async ({
+    catalogPage,
+  }) => {
     await openServiceModal(catalogPage, 'test-repo-perfect');
     const modal = catalogPage.locator('#service-modal');
 
@@ -48,7 +155,9 @@ test.describe('Service Modal - Basic Behavior', () => {
 test.describe('Service Modal - Check Results Tab', () => {
   // Consolidated test: Task 12 - Check Results Display and Categories
   // Combines: display all check information, check categories, specific pass/fail status
-  test('should display check results with categories, pass/fail indicators, and collapse/expand', async ({ serviceModalPage }) => {
+  test('should display check results with categories, pass/fail indicators, and collapse/expand', async ({
+    serviceModalPage,
+  }) => {
     const modal = serviceModalPage.locator('#service-modal');
 
     // Check count and indicators
@@ -72,8 +181,12 @@ test.describe('Service Modal - Check Results Tab', () => {
     await expect(statValue).toBeVisible();
 
     // Categories
-    await expect(modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })).toBeVisible();
-    await expect(modal.locator('.category-name').filter({ hasText: 'Documentation' })).toBeVisible();
+    await expect(
+      modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })
+    ).toBeVisible();
+    await expect(
+      modal.locator('.category-name').filter({ hasText: 'Documentation' })
+    ).toBeVisible();
 
     const categories = modal.locator('.check-category');
     expect(await categories.count()).toBeGreaterThan(0);
@@ -100,7 +213,9 @@ test.describe('Service Modal - Check Results Tab', () => {
     const readmeCheck = modal.locator('.check-result').filter({ hasText: 'README Documentation' });
     await expect(readmeCheck).toContainText('✓');
 
-    const configCheck = modal.locator('.check-result').filter({ hasText: 'Scorecard Configuration' });
+    const configCheck = modal
+      .locator('.check-result')
+      .filter({ hasText: 'Scorecard Configuration' });
     await expect(configCheck).toContainText('✗');
   });
 });
@@ -108,7 +223,11 @@ test.describe('Service Modal - Check Results Tab', () => {
 test.describe('Service Modal - API Specification Tab', () => {
   // Consolidated test: Task 7 - API Specification Tab Complete View
   // Combines: display API spec info, expandable raw spec, environment config
-  test('should display API specification info, expandable raw spec, and environment config', async ({ serviceModalPage }) => {
+  test('should display API specification info, expandable raw spec, and environment config', async ({
+    serviceModalPage,
+  }) => {
+    await mockOpenApiSpec(serviceModalPage);
+
     await clickServiceModalTab(serviceModalPage, 'API Specification');
 
     const modal = serviceModalPage.locator('#service-modal');
@@ -130,13 +249,112 @@ test.describe('Service Modal - API Specification Tab', () => {
     const rawSpecToggle = modal.getByText(/View Raw Specification/i);
     await expect(rawSpecToggle).toBeVisible();
     await rawSpecToggle.click();
-    await expect(async () => {
-      const hasCodeBlock = await modal.locator('pre, code').count() > 0;
-      expect(hasCodeBlock).toBe(true);
-    }).toPass({ timeout: 3000 });
+    await expect(modal.locator('#api-tab .spec-code')).toContainText('openapi: 3.0.0');
 
     // Environment config
-    await expect(modal).toContainText(/Configure environments|\.scorecard\/config\.yml|API Explorer/i);
+    await expect(modal).toContainText(
+      /Configure environments|\.scorecard\/config\.yml|API Explorer/i
+    );
+  });
+
+  test('copies the OpenAPI fixture through the Clipboard API and retains focus', async ({
+    serviceModalPage,
+  }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: true,
+      fallbackSucceeds: true,
+    });
+    await openRawSpec(serviceModalPage);
+
+    const copyButton = serviceModalPage.locator('#api-tab .copy-spec-button');
+    const expectedText = await serviceModalPage.locator('#api-tab .spec-code').textContent();
+    await copyButton.click();
+
+    const [attempt] = await copyProbe(serviceModalPage);
+    expect(attempt).toMatchObject({ method: 'clipboard' });
+    expect(attempt.text).toBe(expectedText);
+    await expect(copyButton).toHaveAccessibleName('Copied!');
+    await expect(copyButton).toBeFocused();
+  });
+
+  for (const clipboardAvailable of [false, true]) {
+    test(`keeps fallback selections inside the service dialog with Clipboard API ${clipboardAvailable ? 'rejected' : 'unavailable'}`, async ({
+      serviceModalPage,
+    }) => {
+      await installClipboardSeam(serviceModalPage, {
+        clipboardAvailable,
+        clipboardSucceeds: false,
+        fallbackSucceeds: true,
+      });
+      await clickServiceModalTab(serviceModalPage, 'Badges');
+
+      const badgeCopy = serviceModalPage.locator('#badges-tab .copy-button').first();
+      const expectedBadge = await serviceModalPage
+        .locator('#badges-tab .badge-code-block')
+        .first()
+        .textContent();
+      await badgeCopy.click();
+      await expect(badgeCopy).toHaveAccessibleName('Copied!');
+      await expect(badgeCopy).toBeFocused();
+
+      await openRawSpec(serviceModalPage);
+      const apiCopy = serviceModalPage.locator('#api-tab .copy-spec-button');
+      const expectedSpec = await serviceModalPage.locator('#api-tab .spec-code').textContent();
+      await apiCopy.click();
+      await expect(apiCopy).toHaveAccessibleName('Copied!');
+      await expect(apiCopy).toBeFocused();
+
+      const fallbacks = (await copyProbe(serviceModalPage)).filter(
+        (attempt) => attempt.method === 'fallback'
+      );
+      expect(fallbacks).toHaveLength(2);
+      expect(fallbacks[0]).toMatchObject({
+        command: 'copy',
+        dialogId: 'service-modal',
+        value: expectedBadge,
+        selection: expectedBadge,
+      });
+      expect(fallbacks[1]).toMatchObject({
+        command: 'copy',
+        dialogId: 'service-modal',
+        value: expectedSpec,
+        selection: expectedSpec,
+      });
+    });
+  }
+
+  test('reports failed fallback copies inline without claiming success', async ({
+    serviceModalPage,
+  }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: false,
+      clipboardAvailable: false,
+      fallbackSucceeds: false,
+    });
+    await clickServiceModalTab(serviceModalPage, 'Badges');
+
+    const badgeCopy = serviceModalPage.locator('#badges-tab .copy-button').first();
+    await badgeCopy.click();
+    await expect(serviceModalPage.locator('#service-modal').getByRole('alert')).toContainText(
+      'Unable to copy'
+    );
+    await expect(badgeCopy).toHaveAccessibleName('Copy');
+
+    await expect(badgeCopy).toBeFocused();
+
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: false,
+      fallbackSucceeds: false,
+      fallbackThrows: true,
+    });
+
+    await openRawSpec(serviceModalPage);
+    const apiCopy = serviceModalPage.locator('#api-tab .copy-spec-button');
+    await apiCopy.click();
+    const modal = serviceModalPage.locator('#service-modal');
+    await expect(modal.getByRole('alert')).toContainText('Unable to copy');
+    await expect(modal.getByRole('button', { name: 'Copied!' })).toHaveCount(0);
+    await expect(apiCopy).toBeFocused();
   });
 });
 
@@ -193,35 +411,43 @@ test.describe('Service Modal - Badges Tab', () => {
     expect(await copyButtons.count()).toBeGreaterThanOrEqual(2);
   });
 
-  test('should copy badge markdown to clipboard', async ({ serviceModalPage }) => {
-    await serviceModalPage.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  test('copies badge markdown through the Clipboard API and retains focus', async ({
+    serviceModalPage,
+  }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: true,
+      fallbackSucceeds: true,
+    });
     await clickServiceModalTab(serviceModalPage, 'Badges');
 
-    const modal = serviceModalPage.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    await expect(modal).toContainText(/Copied/i);
-
-    // Wait for reset
-    await expect(async () => {
-      const resetButton = modal.getByRole('button', { name: 'Copy' }).first();
-      await expect(resetButton).toBeVisible();
-    }).toPass({ timeout: 5000 });
+    for (const index of [0, 1]) {
+      const copyButton = serviceModalPage.locator('#badges-tab .copy-button').nth(index);
+      const expectedText = await serviceModalPage
+        .locator('#badges-tab .badge-code-block')
+        .nth(index)
+        .textContent();
+      await copyButton.click();
+      await expect(copyButton).toHaveAccessibleName('Copied!');
+      await expect(copyButton).toBeFocused();
+      const attempt = (await copyProbe(serviceModalPage))[index];
+      expect(attempt).toEqual({ method: 'clipboard', text: expectedText });
+    }
   });
 });
 
 test.describe('Service Modal - Workflow Runs Tab', () => {
   // Consolidated test: Task 11 - Workflow Runs Tab PAT States
   // Combines: PAT required message, workflow controls with PAT, display workflow runs
-  test('should show PAT prompt without token, then controls and data with valid token', async ({ catalogPage }) => {
+  test('should show PAT prompt without token, then controls and data with valid token', async ({
+    catalogPage,
+  }) => {
     await openServiceModal(catalogPage, 'test-repo-perfect');
     await clickServiceModalTab(catalogPage, 'Workflow Runs');
 
     const modal = catalogPage.locator('#service-modal');
 
     // No token state
-    const hasPrompt = await modal.getByText(/Configure|Token|PAT|GitHub/i).count() > 0;
+    const hasPrompt = (await modal.getByText(/Configure|Token|PAT|GitHub/i).count()) > 0;
     expect(hasPrompt).toBe(true);
     const configButton = modal.getByRole('button', { name: /Configure Token/i });
     await expect(configButton).toBeVisible();
@@ -235,11 +461,17 @@ test.describe('Service Modal - Workflow Runs Tab', () => {
       await route.fulfill({
         status: 200,
         body: JSON.stringify({
-          workflow_runs: [{
-            id: 123456, name: 'CI', status: 'completed', conclusion: 'success',
-            run_number: 42, created_at: '2025-01-01T12:00:00Z',
-            html_url: 'https://github.com/test/repo/actions/runs/123456',
-          }],
+          workflow_runs: [
+            {
+              id: 123456,
+              name: 'CI',
+              status: 'completed',
+              conclusion: 'success',
+              run_number: 42,
+              created_at: '2025-01-01T12:00:00Z',
+              html_url: 'https://github.com/test/repo/actions/runs/123456',
+            },
+          ],
           total_count: 1,
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -264,7 +496,9 @@ test.describe('Service Modal - Workflow Runs Tab', () => {
 test.describe('Service Modal - Links Tab', () => {
   // Keep unchanged - edge case testing conditional rendering
   test('should not show Links tab when service has no links', async ({ serviceModalPage }) => {
-    const linksTab = serviceModalPage.locator('#service-modal').getByRole('button', { name: 'Links', exact: true });
+    const linksTab = serviceModalPage
+      .locator('#service-modal')
+      .getByRole('button', { name: 'Links', exact: true });
     expect(await linksTab.count()).toBe(0);
   });
 });
@@ -272,18 +506,20 @@ test.describe('Service Modal - Links Tab', () => {
 test.describe('Service Modal - Tab Navigation', () => {
   // Consolidated test: Task 6 - Tab Navigation Complete Journey
   // Combines: default tab and switch correctly, keyboard accessible tabs
-  test('should navigate tabs via click and keyboard, preserving active state', async ({ serviceModalPage }) => {
+  test('should navigate tabs via click and keyboard, preserving active state', async ({
+    serviceModalPage,
+  }) => {
     const modal = serviceModalPage.locator('#service-modal');
 
     // Check Results should be active by default
     const checkResultsTab = modal.getByRole('button', { name: 'Check Results' });
-    expect(await checkResultsTab.evaluate(el => el.classList.contains('active'))).toBe(true);
+    expect(await checkResultsTab.evaluate((el) => el.classList.contains('active'))).toBe(true);
     await expect(modal).toContainText(/passed|failed|Weight/i);
 
     // Switch to API tab
     await clickServiceModalTab(serviceModalPage, 'API Specification');
     const apiTab = modal.getByRole('button', { name: 'API Specification' });
-    expect(await apiTab.evaluate(el => el.classList.contains('active'))).toBe(true);
+    expect(await apiTab.evaluate((el) => el.classList.contains('active'))).toBe(true);
     await expect(modal).toContainText(/OpenAPI|API|paths/i);
 
     // Switch to Contributors tab
@@ -318,7 +554,9 @@ test.describe('Service Modal - Mobile Tab Scroll', () => {
 
   // Consolidated test: Task 10 - Mobile Tab Scroll Complete Behavior
   // Combines: tabs container and scroll on mobile, hide scroll arrows on desktop
-  test('should show scroll arrows on mobile and hide on desktop when content fits', async ({ page }) => {
+  test('should show scroll arrows on mobile and hide on desktop when content fits', async ({
+    page,
+  }) => {
     // Mobile viewport
     await openServiceModal(page, 'test-repo-perfect');
 
@@ -335,14 +573,14 @@ test.describe('Service Modal - Mobile Tab Scroll', () => {
 
     // Test scroll if right arrow exists
     const rightArrow = page.locator('.tab-scroll-right');
-    if (await rightArrow.count() > 0) {
-      const initialScrollLeft = await tabs.evaluate(el => el.scrollLeft);
+    if ((await rightArrow.count()) > 0) {
+      const initialScrollLeft = await tabs.evaluate((el) => el.scrollLeft);
       expect(initialScrollLeft).toBe(0);
 
       await rightArrow.click();
 
       await expect(async () => {
-        expect(await tabs.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
+        expect(await tabs.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
       }).toPass({ timeout: 3000 });
 
       await expect(page.locator('.tab-scroll-left')).toBeVisible();
@@ -364,13 +602,120 @@ test.describe('Service Modal - Mobile Tab Scroll', () => {
 
 test.describe('Service Modal - Case-Insensitive Categories', () => {
   // Keep unchanged - specific edge case behavior
-  test('should group checks by category with case-insensitive matching', async ({ serviceModalPage }) => {
+  test('should group checks by category with case-insensitive matching', async ({
+    serviceModalPage,
+  }) => {
     const modal = serviceModalPage.locator('#service-modal');
 
     const categories = modal.locator('.check-category');
     expect(await categories.count()).toBeGreaterThan(0);
 
-    await expect(modal.locator('.category-name').filter({ hasText: 'Documentation' })).toBeVisible();
-    await expect(modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })).toBeVisible();
+    await expect(
+      modal.locator('.category-name').filter({ hasText: 'Documentation' })
+    ).toBeVisible();
+    await expect(
+      modal.locator('.category-name').filter({ hasText: 'Scorecards Setup' })
+    ).toBeVisible();
+  });
+});
+
+test.describe('Service Modal - Workflow Dispatch Lifetime', () => {
+  for (const { outcome, status } of [
+    { outcome: 'success', status: 204 },
+    { outcome: 'failure', status: 500 },
+  ]) {
+    test(`should not show late workflow dispatch ${outcome} after reopening another service`, async ({
+      catalogPage,
+    }) => {
+      await setGitHubPAT(catalogPage, mockPAT);
+
+      let releaseDispatch;
+      let dispatchStarted;
+      const dispatchReady = new Promise((resolve) => {
+        releaseDispatch = resolve;
+      });
+      const dispatchStartedPromise = new Promise((resolve) => {
+        dispatchStarted = resolve;
+      });
+      await catalogPage.route(
+        '**/api.github.com/repos/**/actions/workflows/*/dispatches',
+        async (route) => {
+          dispatchStarted();
+          await dispatchReady;
+          await route.fulfill({
+            status,
+            body: status === 204 ? '' : JSON.stringify({ message: 'Workflow dispatch failed' }),
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      );
+
+      await openServiceModal(catalogPage, 'test-repo-stale');
+      await catalogPage
+        .locator('#service-modal')
+        .getByRole('button', { name: 'Run Scorecard' })
+        .click();
+      await dispatchStartedPromise;
+      await closeServiceModal(catalogPage);
+
+      await openServiceModal(catalogPage, 'test-repo-perfect');
+      const modal = catalogPage.locator('#service-modal');
+      await expect(
+        modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })
+      ).toBeVisible();
+
+      const response = catalogPage.waitForResponse((res) => res.url().includes('/dispatches'));
+      releaseDispatch();
+      const completed = await response;
+      expect(completed.status()).toBe(status);
+      await catalogPage.evaluate(() => new Promise(requestAnimationFrame));
+      await expect(modal.getByRole('status')).toHaveCount(0);
+      await expect(modal.getByRole('alert')).toHaveCount(0);
+    });
+  }
+
+  test('should not show late workflow dispatch feedback after reopening the same service', async ({
+    catalogPage,
+  }) => {
+    await setGitHubPAT(catalogPage, mockPAT);
+
+    let releaseDispatch;
+    let dispatchStarted;
+    const dispatchReady = new Promise((resolve) => {
+      releaseDispatch = resolve;
+    });
+    const dispatchStartedPromise = new Promise((resolve) => {
+      dispatchStarted = resolve;
+    });
+    await catalogPage.route(
+      '**/api.github.com/repos/**/actions/workflows/*/dispatches',
+      async (route) => {
+        dispatchStarted();
+        await dispatchReady;
+        await route.fulfill({ status: 204 });
+      }
+    );
+
+    await openServiceModal(catalogPage, 'test-repo-stale');
+    await catalogPage
+      .locator('#service-modal')
+      .getByRole('button', { name: 'Run Scorecard' })
+      .click();
+    await dispatchStartedPromise;
+    await closeServiceModal(catalogPage);
+
+    await openServiceModal(catalogPage, 'test-repo-stale');
+    const modal = catalogPage.locator('#service-modal');
+    await expect(
+      modal.getByRole('heading', { name: 'test-repo-stale', exact: true })
+    ).toBeVisible();
+
+    const response = catalogPage.waitForResponse((res) => res.url().includes('/dispatches'));
+    releaseDispatch();
+    const completed = await response;
+    expect(completed.status()).toBe(204);
+    await catalogPage.evaluate(() => new Promise(requestAnimationFrame));
+    await expect(modal.getByRole('status')).toHaveCount(0);
+    await expect(modal.getByRole('alert')).toHaveCount(0);
   });
 });

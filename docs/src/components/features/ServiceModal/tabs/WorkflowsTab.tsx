@@ -43,11 +43,17 @@ export function WorkflowsTab({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const refreshRef = useRef<HTMLButtonElement>(null);
+  const retryRef = useRef<HTMLButtonElement>(null);
 
   // Fetch workflow runs
   const fetchRuns = useCallback(async () => {
     if (!org || !repo || !pat) {return;}
 
+    if (document.activeElement === refreshRef.current || document.activeElement === retryRef.current) {
+      contentRef.current?.focus({ preventScroll: true });
+    }
     setLoading(true);
     setError(null);
 
@@ -167,6 +173,7 @@ export function WorkflowsTab({
               ))}
             </select>
             <button
+              ref={refreshRef}
               className="widget-refresh-btn"
               onClick={fetchRuns}
               title="Refresh"
@@ -182,14 +189,20 @@ export function WorkflowsTab({
       </div>
 
       {/* Content */}
-      <div id="service-workflows-content">
+      <div
+        id="service-workflows-content"
+        ref={contentRef}
+        role="region"
+        aria-label="Workflow runs"
+        tabIndex={-1}
+      >
         {loading && runs.length === 0 && (
           <div className="loading">Loading workflow runs...</div>
         )}
         {error && (
           <div className="error-state">
             <p>{error}</p>
-            <button onClick={fetchRuns} className="btn-primary">
+            <button ref={retryRef} onClick={fetchRuns} className="btn-primary">
               Try Again
             </button>
           </div>

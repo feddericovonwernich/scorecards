@@ -4,9 +4,12 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import type { ServiceData } from '../../types/index.js';
-import { useAppStore, selectServicesAll } from '../../stores/index.js';
+import {
+  useAppStore,
+  selectServicesAll,
+  selectTeamFilter,
+} from '../../stores/appStore.js';
 
 // Special value for "No Team Assigned"
 const NO_TEAM_VALUE = '__no_team__';
@@ -197,63 +200,27 @@ export function TeamFilterDropdown({
 }
 
 /**
- * TeamFilterDropdownPortal - Renders into #team-filter-container
+ * TeamFilterControl - Store-connected team filter.
  */
-export function TeamFilterDropdownPortal() {
-  // Find container after component mounts (DOM is guaranteed to be ready)
-  const [container, setContainer] = useState<HTMLElement | null>(null);
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-
-  // Get services from Zustand store (reactive)
+export function TeamFilterControl() {
   const services = useAppStore(selectServicesAll);
+  const teamFilter = useAppStore(selectTeamFilter);
+  const updateFilters = useAppStore((state) => state.updateFilters);
+  const selectedTeams = teamFilter ? teamFilter.split(',') : [];
 
-  // Find container element after mount
-  useEffect(() => {
-    const el = document.getElementById('team-filter-container');
-    if (el) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Portal container lookup is intentionally once on mount
-      setContainer(el);
-    }
-  }, []);
+  const handleTeamsChange = useCallback(
+    (teams: string[]) => {
+      updateFilters({ teamFilter: teams.length ? teams.join(',') : null });
+    },
+    [updateFilters]
+  );
 
-  // Handle team filter changes
-  const handleTeamsChange = useCallback((teams: string[]) => {
-    setSelectedTeams(teams);
-
-    // Update filter state in Zustand store and trigger re-filter
-    const store = useAppStore.getState();
-
-    // Convert teams array to filter format
-    let teamFilter: string | null = null;
-    if (teams.length === 1) {
-      teamFilter = teams[0];
-    } else if (teams.length > 1) {
-      teamFilter = teams.join(',');
-    }
-
-    // Update store
-    store.updateFilters({ teamFilter });
-
-    // Trigger filtering through the store method
-    store.filterAndSortServices();
-
-    // Also dispatch event for any legacy listeners
-    window.dispatchEvent(
-      new CustomEvent('team-filter-changed', { detail: { teams } })
-    );
-  }, []);
-
-  if (!container) {
-    return null;
-  }
-
-  return createPortal(
+  return (
     <TeamFilterDropdown
       services={services}
       selectedTeams={selectedTeams}
       onTeamsChange={handleTeamsChange}
-    />,
-    container
+    />
   );
 }
 

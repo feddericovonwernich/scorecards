@@ -50,9 +50,6 @@ jobs:
           # Vite compiles TypeScript to JavaScript in docs/dist/
           rsync -av --delete main-repo/docs/dist/ catalog-repo/docs/
 
-          # Copy standalone HTML files not included in Vite build
-          cp main-repo/docs/api-explorer.html catalog-repo/docs/
-
       - name: Commit and push to catalog
         run: |
           cd catalog-repo

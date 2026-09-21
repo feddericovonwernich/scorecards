@@ -4,6 +4,8 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { copyText } from '../../../../utils/clipboard.js';
+
 
 interface BadgesTabProps {
   org: string;
@@ -17,6 +19,8 @@ export function BadgesTab({ org, repo }: BadgesTabProps) {
   const [rawBaseUrl, setRawBaseUrl] = useState('');
   const [copiedScore, setCopiedScore] = useState(false);
   const [copiedRank, setCopiedRank] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
+
 
   // Get raw base URL on mount
   useEffect(() => {
@@ -40,11 +44,16 @@ export function BadgesTab({ org, repo }: BadgesTabProps) {
   const scoreBadgeMarkdown = `![Score](${scoreBadgeUrl})`;
   const rankBadgeMarkdown = `![Rank](${rankBadgeUrl})`;
 
-  // Copy to clipboard
   const handleCopy = useCallback(
-    async (text: string, type: 'score' | 'rank') => {
-      try {
-        await navigator.clipboard.writeText(text);
+    async (text: string, type: 'score' | 'rank', invoker: HTMLButtonElement) => {
+      setCopyError(null);
+      if (type === 'score') {
+        setCopiedScore(false);
+      } else {
+        setCopiedRank(false);
+      }
+
+      if (await copyText(text, invoker)) {
         if (type === 'score') {
           setCopiedScore(true);
           setTimeout(() => setCopiedScore(false), 2000);
@@ -52,25 +61,13 @@ export function BadgesTab({ org, repo }: BadgesTabProps) {
           setCopiedRank(true);
           setTimeout(() => setCopiedRank(false), 2000);
         }
-      } catch {
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        if (type === 'score') {
-          setCopiedScore(true);
-          setTimeout(() => setCopiedScore(false), 2000);
-        } else {
-          setCopiedRank(true);
-          setTimeout(() => setCopiedRank(false), 2000);
-        }
+      } else {
+        setCopyError('Unable to copy. Please copy manually.');
       }
     },
     []
   );
+
 
   return (
     <div className="tab-panel" id="badges-tab">
@@ -84,10 +81,13 @@ export function BadgesTab({ org, repo }: BadgesTabProps) {
         Add to Your README
       </h4>
       <p className="tab-section-description">Copy the markdown below:</p>
+      {copyError && <p role="alert">{copyError}</p>}
+
 
       <div style={{ position: 'relative', marginBottom: 15 }}>
         <button
-          onClick={() => handleCopy(scoreBadgeMarkdown, 'score')}
+          onClick={(event) => handleCopy(scoreBadgeMarkdown, 'score', event.currentTarget)}
+
           className={`copy-button ${copiedScore ? 'copied' : ''}`}
         >
           {copiedScore ? 'Copied!' : 'Copy'}
@@ -97,7 +97,8 @@ export function BadgesTab({ org, repo }: BadgesTabProps) {
 
       <div style={{ position: 'relative' }}>
         <button
-          onClick={() => handleCopy(rankBadgeMarkdown, 'rank')}
+          onClick={(event) => handleCopy(rankBadgeMarkdown, 'rank', event.currentTarget)}
+
           className={`copy-button ${copiedRank ? 'copied' : ''}`}
         >
           {copiedRank ? 'Copied!' : 'Copy'}

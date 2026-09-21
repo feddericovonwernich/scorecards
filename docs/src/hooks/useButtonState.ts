@@ -29,12 +29,10 @@ interface UseButtonStateReturn {
  * @param options.autoResetDelay Time in ms before auto-reset (default: 3000)
  * @returns Button state and control functions
  */
-export function useButtonState(
-  options: UseButtonStateOptions = {}
-): UseButtonStateReturn {
+export function useButtonState(options: UseButtonStateOptions = {}): UseButtonStateReturn {
   const { autoResetDelay = 3000 } = options;
   const [state, setState] = useState<ButtonState>('idle');
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Clear any pending timeout on unmount
   useEffect(() => {

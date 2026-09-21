@@ -17,7 +17,9 @@ test.describe('Check Filter Modal', () => {
 
   // Consolidated test: Task 5 - Check Filter Modal Open/Close Interactions
   // Combines: button visibility, open modal, close with X, close outside, close with Escape
-  test('should open and close check filter modal through various interactions', async ({ page }) => {
+  test('should open and close check filter modal through various interactions', async ({
+    page,
+  }) => {
     // Button visibility
     const checksButton = page.getByRole('button', { name: /Check Filter/i });
     await expect(checksButton).toBeVisible();
@@ -77,7 +79,10 @@ test.describe('Check Filter Modal', () => {
     // Search functionality
     const searchInput = modal.locator('#check-filter-search');
     await expect(searchInput).toBeVisible();
-    await expect(searchInput).toHaveAttribute('placeholder', 'Search checks by name or description...');
+    await expect(searchInput).toHaveAttribute(
+      'placeholder',
+      'Search checks by name or description...'
+    );
   });
 
   // Keep this test unchanged - dynamic search filtering with count comparison
@@ -149,13 +154,34 @@ test.describe('Check Filter Modal', () => {
     await openCheckFilterModal(page);
     await modal.locator('.check-filter-summary .check-clear-btn').click();
     await expect(modal.locator('.check-filter-summary')).toBeHidden();
-    await expect(modal.locator('.check-option-card').nth(0).locator('.state-any')).toHaveClass(/active/);
-    await expect(modal.locator('.check-option-card').nth(1).locator('.state-any')).toHaveClass(/active/);
+    await expect(modal.locator('.check-option-card').nth(0).locator('.state-any')).toHaveClass(
+      /active/
+    );
+    await expect(modal.locator('.check-option-card').nth(1).locator('.state-any')).toHaveClass(
+      /active/
+    );
+  });
+  test('moves keyboard focus to search after Clear all removes its button', async ({ page }) => {
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
+    await modal.locator('.check-option-card').first().locator('.state-pass').click();
+
+    const searchInput = modal.locator('#check-filter-search');
+    const clearButton = modal.getByRole('button', { name: 'Clear all', exact: true });
+    await clearButton.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(searchInput).toBeFocused();
+    await expect(modal.locator('.check-filter-summary')).toBeHidden();
+    await expect(modal.locator('.check-option-card').first().locator('.state-any')).toHaveClass(
+      /active/
+    );
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: /Check Filter/i })).toHaveText('Check Filter');
   });
 
-  // Keep this test unchanged - category accordion behavior
-  test('should collapse and expand categories', async ({ page }) => {
-    // Open modal
+  test('supports keyboard category disclosure and state controls', async ({ page }) => {
     await openCheckFilterModal(page);
 
     const modal = page.locator('#check-filter-modal');
@@ -163,20 +189,22 @@ test.describe('Check Filter Modal', () => {
     const categoryHeader = categorySection.locator('.check-category-header');
     const categoryContent = categorySection.locator('.check-category-content');
 
-    // Initially expanded
-    await expect(categorySection).not.toHaveClass(/collapsed/);
+    await expect(categoryHeader).toHaveAttribute('aria-expanded', 'true');
     await expect(categoryContent).toBeVisible();
 
-    // Click header to collapse
-    await categoryHeader.click();
+    await categoryHeader.focus();
+    await page.keyboard.press('Enter');
+    await expect(categoryHeader).toHaveAttribute('aria-expanded', 'false');
+    await expect(categoryContent).toBeHidden();
 
-    // Should be collapsed
-    await expect(categorySection).toHaveClass(/collapsed/);
+    await page.keyboard.press('Space');
+    await expect(categoryHeader).toHaveAttribute('aria-expanded', 'true');
+    await expect(categoryContent).toBeVisible();
 
-    // Click again to expand
-    await categoryHeader.click();
-
-    // Should be expanded again
-    await expect(categorySection).not.toHaveClass(/collapsed/);
+    const firstCheck = categoryContent.locator('.check-option-card').first();
+    await page.keyboard.press('Tab');
+    await expect(firstCheck.locator('.state-any')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(firstCheck.locator('.state-pass')).toBeFocused();
   });
 });

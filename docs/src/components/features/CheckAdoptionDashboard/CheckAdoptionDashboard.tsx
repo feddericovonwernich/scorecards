@@ -27,6 +27,7 @@ type SortBy = 'name' | 'percentage';
 export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboardProps) {
   const services = useAppStore(selectServicesAll);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLButtonElement>(null);
 
   const [checksData, setChecksData] = useState<ChecksData | null>(null);
   const [selectedCheckId, setSelectedCheckId] = useState<string | null>(null);
@@ -128,6 +129,7 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
   const selectedCheck = checksData?.checks.find((c) => c.id === selectedCheckId);
 
   const handleSelectCheck = (checkId: string) => {
+    selectorRef.current?.focus({ preventScroll: true });
     setSelectedCheckId(checkId);
     setDropdownOpen(false);
   };
@@ -151,10 +153,11 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="check-adoption-modal max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+      aria-label="Check Adoption"
+      contentClassName="check-adoption-modal max-w-3xl"
       testId="check-adoption-modal"
     >
-      <div className="flex flex-col h-full">
+      <div>
         {/* Header */}
         <div className="check-adoption-header">
           <h2>Check Adoption Dashboard</h2>
@@ -162,6 +165,7 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
           {/* Check Card Selector */}
           <div className="check-card-selector" ref={dropdownRef}>
             <button
+              ref={selectorRef}
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className={cn('check-card-selected', dropdownOpen && 'open')}
             >
@@ -245,7 +249,7 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
         )}
 
         {/* Team Table */}
-        <div className="flex-1 overflow-y-auto">
+        <div>
           {loading ? (
             <div className="flex items-center justify-center h-40">
               <div className="text-text-muted">Loading checks...</div>
@@ -255,71 +259,94 @@ export function CheckAdoptionDashboard({ isOpen, onClose }: CheckAdoptionDashboa
               <div className="text-text-muted">No team data available</div>
             </div>
           ) : (
-            <table className="adoption-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('name')}>
-                    Team
-                    {sortBy === 'name' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th onClick={() => handleSort('percentage')} style={{ textAlign: 'center', width: '100px' }}>
-                    Adoption
-                    {sortBy === 'percentage' && (
-                      <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th style={{ textAlign: 'center', width: '160px' }}>
-                    Progress
-                  </th>
-                  <th style={{ textAlign: 'center', width: '80px' }}>
-                    Passing
-                  </th>
-                  <th style={{ textAlign: 'center', width: '64px' }}>
-                    Excl.
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {teamStats.map((team) => {
-                  const isNoTeam = team.teamName === 'No Team' || team.teamName === 'Unassigned';
-                  return (
-                    <tr
-                      key={team.teamName}
-                      className={cn('adoption-row', isNoTeam && 'no-team')}
-                      onClick={() => {
-                        if (!isNoTeam && window.showTeamModal) {
-                          window.showTeamModal(team.teamName);
-                        }
-                      }}
+            <div
+              className="adoption-table-container"
+              role="region"
+              aria-label="Team adoption results"
+              tabIndex={0}
+            >
+              <table className="adoption-table">
+                <thead>
+                  <tr>
+                    <th
+                      scope="col"
+                      aria-sort={sortBy === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                     >
-                      <td className="adoption-cell">
-                        <div className="team-name">{team.teamName}</div>
-                        <div className="team-services">{team.total} service{team.total !== 1 ? 's' : ''}</div>
-                      </td>
-                      <td className="adoption-cell" style={{ textAlign: 'center' }}>
-                        <span className="adoption-percentage">{team.percentage}%</span>
-                      </td>
-                      <td className="adoption-cell">
-                        <div className="progress-bar-inline">
-                          <div
-                            className={cn('progress-fill', getProgressClass(team.percentage))}
-                            style={{ width: `${team.percentage}%` }}
-                          />
-                        </div>
-                      </td>
-                      <td className="adoption-cell" style={{ textAlign: 'center' }}>
-                        <span className="passing-count">{team.passing}</span>
-                      </td>
-                      <td className={cn('adoption-cell', team.excluded > 0 && 'has-excluded')} style={{ textAlign: 'center' }}>
-                        <span className="excluded-count">{team.excluded > 0 ? team.excluded : '—'}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      <button type="button" className="adoption-sort-button" onClick={() => handleSort('name')}>
+                        Team
+                        {sortBy === 'name' && (
+                          <span className="sort-indicator" aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th
+                      scope="col"
+                      aria-sort={sortBy === 'percentage' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                      style={{ textAlign: 'center', width: '100px' }}
+                    >
+                      <button type="button" className="adoption-sort-button" onClick={() => handleSort('percentage')}>
+                        Adoption
+                        {sortBy === 'percentage' && (
+                          <span className="sort-indicator" aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th scope="col" style={{ textAlign: 'center', width: '160px' }}>
+                      Progress
+                    </th>
+                    <th scope="col" style={{ textAlign: 'center', width: '80px' }}>
+                      Passing
+                    </th>
+                    <th scope="col" style={{ textAlign: 'center', width: '64px' }}>
+                      Excl.
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamStats.map((team) => {
+                    const isNoTeam = team.teamName === 'No Team' || team.teamName === 'Unassigned';
+                    return (
+                      <tr
+                        key={team.teamName}
+                        className={cn('adoption-row', isNoTeam && 'no-team')}
+                      >
+                        <td className="adoption-cell">
+                          {isNoTeam ? (
+                            <div className="team-name">{team.teamName}</div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="team-name team-name-button"
+                              onClick={() => window.showTeamModal?.(team.teamName)}
+                            >
+                              {team.teamName}
+                            </button>
+                          )}
+                          <div className="team-services">{team.total} service{team.total !== 1 ? 's' : ''}</div>
+                        </td>
+                        <td className="adoption-cell" style={{ textAlign: 'center' }}>
+                          <span className="adoption-percentage">{team.percentage}%</span>
+                        </td>
+                        <td className="adoption-cell">
+                          <div className="progress-bar-inline">
+                            <div
+                              className={cn('progress-fill', getProgressClass(team.percentage))}
+                              style={{ width: `${team.percentage}%` }}
+                            />
+                          </div>
+                        </td>
+                        <td className="adoption-cell" style={{ textAlign: 'center' }}>
+                          <span className="passing-count">{team.passing}</span>
+                        </td>
+                        <td className={cn('adoption-cell', team.excluded > 0 && 'has-excluded')} style={{ textAlign: 'center' }}>
+                          <span className="excluded-count">{team.excluded > 0 ? team.excluded : '—'}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

@@ -15,6 +15,7 @@
 .view-tabs {
     position: relative;
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
     margin-top: var(--space-8);
     margin-bottom: var(--space-6);
@@ -114,8 +115,18 @@
    MODAL TABS - Underline Style
    ============================================== */
 
+.tabs-wrapper {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+}
+
 .tabs {
     display: flex;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
     gap: var(--space-1);
     border-bottom: 1px solid var(--color-border);
     margin-bottom: var(--space-5);
@@ -123,6 +134,8 @@
 }
 
 .tabs button {
+    min-inline-size: 44px;
+    min-block-size: 44px;
     padding: var(--space-3) var(--space-4);
     background: transparent;
     border: none;
@@ -132,6 +145,7 @@
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
+    white-space: nowrap;
     transition: all var(--duration-fast) var(--ease-in-out-smooth);
     position: relative;
 }
@@ -167,6 +181,8 @@
 
 .tab-content {
     display: none;
+    min-width: 0;
+    max-width: 100%;
     animation: fadeSlideIn var(--duration-normal) var(--ease-out-expo);
 }
 
@@ -179,48 +195,34 @@
    ============================================== */
 
 .tabs-container {
-    position: relative;
+    min-width: 0;
+    max-width: 100%;
     margin-top: var(--space-8);
 }
 
-/* Scroll indicators for mobile */
-.tabs-scroll-left,
-.tabs-scroll-right {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+.tab-scroll-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    min-inline-size: 44px;
+    min-block-size: 44px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
-    width: 32px;
-    height: 32px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
     color: var(--color-text-muted);
-    box-shadow: var(--shadow-md);
+    cursor: pointer;
     transition: all var(--duration-fast) var(--ease-in-out-smooth);
-    z-index: 10;
 }
 
-.tabs-scroll-left {
-    left: -16px;
-}
-
-.tabs-scroll-right {
-    right: -16px;
-}
-
-.tabs-scroll-left:hover,
-.tabs-scroll-right:hover {
+.tab-scroll-arrow:hover {
     background: var(--color-surface-secondary);
     color: var(--color-text);
     border-color: var(--color-border-strong);
 }
 
-/* Show scroll buttons on overflow */
-.tabs-container.has-overflow .tabs-scroll-left,
-.tabs-container.has-overflow .tabs-scroll-right {
-    display: flex;
+.tabs button:focus-visible,
+.tab-scroll-arrow:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }

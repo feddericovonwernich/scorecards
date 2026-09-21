@@ -8,13 +8,13 @@ The catalog UI is a React single-page application served via GitHub Pages from t
 
 ## Technology Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19.2.0 | Component-based UI framework |
-| TypeScript | 5.9.3 | Static typing and IDE support |
-| Vite | 5.4.0 | Build tool with HMR |
-| Zustand | 5.0.9 | Lightweight state management |
-| React Router | 7.10.1 | Client-side routing |
+| Technology   | Version | Purpose                       |
+| ------------ | ------- | ----------------------------- |
+| React        | 19.2.0  | Component-based UI framework  |
+| TypeScript   | 5.9.3   | Static typing and IDE support |
+| Vite         | 5.4.0   | Build tool with HMR           |
+| Zustand      | 5.0.9   | Lightweight state management  |
+| React Router | 7.10.1  | Client-side routing           |
 
 ## Architecture
 
@@ -91,75 +91,21 @@ docs/src/
 
 ### State Management
 
-The application uses Zustand for global state with a single store:
+The single Zustand store groups `services`, `teams`, `filters`, `auth`, `ui`, modal data, and Actions widget state.
 
-```typescript
-// stores/appStore.ts
-interface AppState {
-  // Data
-  services: Service[];
-  teams: Team[];
-  checksHash: string | null;
+Service controls keep their filter state in `filters`: rank filters (`active`), search text, sort order, selected teams (`teamFilter`), and check filters (`checkFilters`). Store-connected controls update these fields with `updateFilters`; `filterAndSortServices` derives the displayed service list. Team search and sorting are separate `teams` state.
 
-  // UI State
-  filters: FilterState;
-  sortConfig: SortConfig;
-  searchQuery: string;
+`ui.activeModal` is the single authority for the Settings modal: `ModalOrchestrator` selects it, opens it with `openModal('settings')`, and closes it with `closeModal`. The orchestrator keeps the visibility and data of its other modals in local component state.
 
-  // Modal State
-  activeModal: ModalType | null;
-  modalData: ModalData | null;
-
-  // Theme
-  theme: 'light' | 'dark';
-
-  // Actions
-  setServices: (services: Service[]) => void;
-  setFilters: (filters: Partial<FilterState>) => void;
-  openModal: (type: ModalType, data?: ModalData) => void;
-  closeModal: () => void;
-  toggleTheme: () => void;
-}
-```
-
-**Usage in components:**
-
-```typescript
-import { useAppStore } from '../stores/appStore';
-
-function ServicesView() {
-  const { services, filters, setFilters } = useAppStore();
-  // Component logic
-}
-```
+The shared `Modal` primitive is a portalled native `<dialog>`: it uses `showModal()`, manages body scroll and focus restoration, and handles Escape and intentional backdrop clicks according to its close options.
 
 ### Routing
 
-React Router provides client-side navigation:
+For hash-based route structure, legacy route handling, and static-hosting constraints, see the [Routing guide](../../docs/README.md#routing).
 
-```typescript
-// App.tsx
-<BrowserRouter basename="/scorecards">
-  <Routes>
-    <Route path="/" element={<Navigate to="/services" />} />
-    <Route path="/services" element={<ServicesView />} />
-    <Route path="/teams" element={<TeamsView />} />
-  </Routes>
-</BrowserRouter>
-```
+### Static Delivery
 
-**URL Parameters:**
-- `/services?service=org/repo` - Opens service modal
-- `/teams?team=team-name` - Opens team modal
-
-### Sync Workflow
-
-The UI is kept in sync via the `sync-docs.yml` workflow:
-
-1. Changes to `docs/` on main branch trigger sync workflow
-2. Vite builds the production bundle
-3. Built files are committed to catalog branch
-4. GitHub Pages automatically updates from catalog branch
+For the catalog build, catalog-branch publication, and GitHub Pages configuration, see the [Deployment guide](../../docs/README.md#deployment).
 
 ## Core Features
 
@@ -168,7 +114,8 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Location**: `components/views/ServicesView.tsx`
 
 **Capabilities:**
-- **Grid display** - Responsive card grid of all services
+
+- **Grid display** - Responsive card grid; narrow layouts stack controls and use a single service column
 - **Search** - Real-time filtering by service name, team, description
 - **Rank filtering** - Filter by Platinum, Gold, Silver, Bronze
 - **Check filtering** - Include/exclude by specific check results
@@ -182,6 +129,7 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Location**: `components/features/ServiceModal/`
 
 **Tabs:**
+
 - **Checks** - Individual check results with pass/fail status
 - **API** - OpenAPI spec viewer (if available)
 - **Contributors** - Repository contributors with Gravatar
@@ -194,6 +142,7 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Location**: `components/views/TeamsView.tsx`
 
 **Features:**
+
 - **Team cards** - Aggregated statistics per team
 - **Check adoption** - Which checks each team has adopted
 - **Score distribution** - Team-level rank breakdown
@@ -201,6 +150,7 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 ### Staleness Detection
 
 **How it works:**
+
 1. Each service's registry entry includes `checks_hash`
 2. UI fetches `current-checks-hash.txt` from catalog branch
 3. Compares service hash vs current hash
@@ -217,12 +167,14 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Purpose:** Configure GitHub PAT for enhanced API access
 
 **Features:**
+
 - Token validation before saving
 - Rate limit display
 - Permission scope checking
-- Secure localStorage storage
+- In-memory token storage
 
 **Why Needed:**
+
 - Unauthenticated GitHub API: 60 requests/hour
 - Authenticated GitHub API: 5000 requests/hour
 - Enables workflow triggering (requires write access)
@@ -234,6 +186,7 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Purpose:** Real-time monitoring of running scorecard workflows
 
 **Features:**
+
 - **Auto-refresh** - Adaptive polling intervals:
   - 15s when workflows running
   - 30s when recently completed
@@ -247,11 +200,13 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Location**: `api/workflow-triggers-react.ts`
 
 **Capabilities:**
+
 - Single service trigger
 - Bulk trigger for stale services
 - Manual dispatch via `workflow_dispatch` API
 
 **Requirements:**
+
 - GitHub PAT with `workflow` scope
 - Target service must have scorecards.yml installed
 
@@ -260,6 +215,7 @@ The UI is kept in sync via the `sync-docs.yml` workflow:
 **Location**: `docs/api-explorer.html`, `pages/ApiExplorer/`
 
 **Features:**
+
 - Swagger UI integration
 - Auto-detection of OpenAPI specs
 - Support for OpenAPI 2.0, 3.0, 3.1
@@ -282,16 +238,16 @@ main.tsx
 
 ```
 User clicks ServiceCard
-  └── ModalOrchestrator receives event
-        └── appStore.openModal('service', { org, repo })
-              └── ServiceModal renders with data
+  └── window.showServiceDetail(org, repo)
+        └── ModalOrchestrator updates local service-modal state
+              └── ServiceModal renders and loads its data
 ```
 
 ### Workflow Triggering
 
 ```
 User clicks "Trigger Update"
-  └── Validate PAT in localStorage
+  └── Obtain configured PAT
         └── POST workflow_dispatch to GitHub API
               └── ActionsWidget polls for status
                     └── Catalog updates when workflow commits
@@ -299,24 +255,24 @@ User clicks "Trigger Update"
 
 ## Custom Hooks
 
-| Hook | Purpose |
-|------|---------|
-| `useTheme()` | Theme state and toggle |
-| `useDebounce(value, delay)` | Debounced value updates |
-| `useWorkflowPolling()` | Workflow status polling |
-| `useButtonState()` | Button loading/success states |
+| Hook                        | Purpose                       |
+| --------------------------- | ----------------------------- |
+| `useTheme()`                | Theme state and toggle        |
+| `useDebounce(value, delay)` | Debounced value updates       |
+| `useWorkflowPolling()`      | Workflow status polling       |
+| `useButtonState()`          | Button loading/success states |
 
 ## Configuration
 
 Configuration constants live in `src/config/`:
 
-| File | Contents |
-|------|----------|
-| `constants.ts` | Timing values, API params, storage keys |
-| `deployment.ts` | Repository owner, API version |
-| `scoring.ts` | Rank thresholds (90/75/50), colors |
-| `workflows.ts` | Workflow filenames, polling intervals |
-| `icons.ts` | SVG icon definitions |
+| File            | Contents                                |
+| --------------- | --------------------------------------- |
+| `constants.ts`  | Timing values, API params, storage keys |
+| `deployment.ts` | Repository owner, API version           |
+| `scoring.ts`    | Rank thresholds (90/75/50), colors      |
+| `workflows.ts`  | Workflow filenames, polling intervals   |
+| `icons.ts`      | SVG icon definitions                    |
 
 ## Testing
 
@@ -334,12 +290,12 @@ Uses Jest + React Testing Library for component tests.
 npm run test:e2e
 ```
 
-Uses Playwright for full integration testing. **263 E2E tests** covering all major user flows.
+See the [test suite guide](../../tests/README.md) for Playwright usage and fixtures.
 
 ## Security Considerations
 
 - **Client-side only** - No backend server; all processing in browser
-- **Token storage** - PAT stored in localStorage (user's browser only)
+- **Token storage** - PAT stays in memory for the current page session
 - **No token transmission** - Token sent only to GitHub API
 - **HTTPS enforced** - GitHub Pages requires HTTPS
 - **Read-only default** - Most features work without authentication

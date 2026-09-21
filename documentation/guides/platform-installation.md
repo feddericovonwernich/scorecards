@@ -7,6 +7,7 @@ This guide is for **Platform/DevOps teams** who want to set up the central Score
 ## Overview
 
 The central Scorecards repository contains:
+
 - GitHub Action for running quality checks
 - Catalog UI hosted on GitHub Pages
 - Check definitions and scoring system
@@ -22,6 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/feddericovonwernich-org/scorecards/
 ```
 
 The installation script will:
+
 1. Validate prerequisites (git, gh CLI, jq)
 2. Prompt for your target repository (org/repo)
 3. Create the repository if it doesn't exist
@@ -69,13 +71,7 @@ git push -u origin catalog
 
 ### Step 3: Enable GitHub Pages
 
-1. Go to repository Settings → Pages
-2. Set Source to `catalog` branch, `/docs`
-3. Wait for Pages to deploy (check Settings → Pages for the URL)
-
-### Step 4: Verify Installation
-
-Once GitHub Pages deploys, visit your catalog URL to confirm the UI is accessible.
+Follow the [Deployment guide](../../docs/README.md#deployment) to publish the compiled catalog UI from the catalog branch.
 
 ## Customization
 
@@ -121,9 +117,11 @@ Modify check weights in `checks/*/metadata.json` to change how checks impact sco
 Protect your branches from accidental changes while allowing automation to function:
 
 **To configure:**
+
 1. Go to repository **Settings → Branches → Add branch protection rule**
 
 **For `main` branch** (system code):
+
 - Pattern: `main`
 - Enable: **Require a pull request before merging** (1 approval)
 - Enable: **Require status checks to pass** (if you have tests)
@@ -132,6 +130,7 @@ Protect your branches from accidental changes while allowing automation to funct
 - **Don't enable** "Require linear history" (breaks automation)
 
 **For `catalog` branch** (scorecard data):
+
 - Pattern: `catalog`
 - Enable: **Restrict deletions** (prevent accidental removal)
 - **Don't require** pull requests (would block service workflows)
@@ -146,6 +145,7 @@ If you have a unified CI system or want to proactively onboard services, you can
 ### How It Works
 
 The install workflow runs in service repositories and:
+
 1. Calculates the service's current scorecard score
 2. Creates an automated PR with scorecards configuration files
 3. Shows results in the PR description (even before merging)
@@ -186,7 +186,7 @@ jobs:
 
   # Add scorecards automated onboarding
   scorecards:
-    uses: your-org/scorecards/.github/workflows/install.yml@main  # Replace with YOUR org's scorecards repo
+    uses: your-org/scorecards/.github/workflows/install.yml@main # Replace with YOUR org's scorecards repo
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
@@ -194,6 +194,7 @@ jobs:
 ```
 
 **What to customize:**
+
 - `uses`: Replace `your-org/scorecards` with your organization's scorecards repository (e.g., `acme-corp/scorecards`)
 
 ### Benefits
@@ -223,9 +224,7 @@ After setting up the central system:
 
 ### GitHub Pages Not Deploying
 
-- Check Settings → Pages shows the `catalog` branch is selected
-- Verify the `catalog` branch has the `/docs` directory with catalog UI files
-- Wait 2-3 minutes for initial deployment
+See the [Deployment guide](../../docs/README.md#deployment) for publication prerequisites and GitHub Pages configuration.
 
 ### Services Not Appearing in Catalog
 

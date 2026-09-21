@@ -35,98 +35,140 @@ import {
 // ============================================================================
 
 test.describe('Network Failure Recovery', () => {
-  test('should handle initial catalog load failure gracefully', async ({ page }) => {
-    // Phase 1: Mock complete catalog failure (500 error)
-    await page.route('**/raw.githubusercontent.com/**', async (route) => {
-      const url = route.request().url();
-      // Fail all registry/catalog requests
-      if (url.includes('registry') || url.includes('all-services') || url.includes('all-checks')) {
-        await route.fulfill({
-          status: 500,
-          body: JSON.stringify({ error: 'Internal Server Error' }),
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } else {
-        await route.continue();
-      }
-    });
-
-    await page.goto('/');
-
-    // Verify page loads (doesn't crash)
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
-
-    // Should show error state or empty state - app doesn't crash
-    // The app may show error message, empty services, or loading placeholder
-    await expect(async () => {
-      const hasErrorMessage = await page.getByText(/error|failed|unable/i).count() > 0;
-      const hasEmptyState = await page.getByText(/no services|loading/i).count() > 0;
-      const pageLoaded = await body.textContent();
-      // Either we see an error, empty state, or the page simply loads without services
-      expect(hasErrorMessage || hasEmptyState || pageLoaded.length > 0).toBe(true);
-    }).toPass({ timeout: 5000 });
-  });
-
-  test('should recover when API becomes available after initial failure', async ({ page }) => {
-    let requestCount = 0;
-    const failFirstNRequests = 2;
-
-    // Fail first N requests, then succeed
-    await page.route('**/raw.githubusercontent.com/**', async (route) => {
-      requestCount++;
-      if (requestCount <= failFirstNRequests) {
-        await route.abort('failed');
-      } else {
-        await route.continue();
-      }
-    });
-
-    // Set up successful mocks (will be used after failures)
+  test('service modal retry replaces stale error and preserves later failures', async ({
+    page,
+  }) => {
     await mockCatalogRequests(page);
-    await page.goto('/');
-
-    // Wait for page to stabilize
-    await page.waitForTimeout(500);
-
-    // Verify page is usable (may or may not have loaded services)
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
-  });
-
-  test('should handle 403 rate limit error with fallback', async ({ page }) => {
-    let usesFallback = false;
-
-    // Mock GitHub API to return 403 (rate limit)
-    await page.route('**/api.github.com/**', async (route) => {
-      await route.fulfill({
-        status: 403,
-        body: JSON.stringify({
-          message: 'API rate limit exceeded',
-          documentation_url: 'https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting'
-        }),
-        headers: { 'Content-Type': 'application/json' },
+    await page.goto('/scorecards/');
+    await waitForCatalogLoad(page);
+    const resultsPath = '**/results/feddericovonwernich/test-repo-perfect/results.json*';
+    let failing = true;
+    let releaseResults;
+    let resultsReady = Promise.resolve();
+    await page.route(resultsPath, async (route) => {
+      await resultsReady;
+      return failing
+        ? route.fulfill({ status: 503, contentType: 'application/json', body: '{}' })
+        : route.fallback();
+    });
+    await page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).click();
+    const modal = page.locator('#service-modal');
+    await expect(modal.getByText('Error loading service')).toBeVisible();
+    // The same dialog stays mounted throughout retries, rather than masking the bug by reopening.
+    const original = await modal.elementHandle();
+    for (const action of ['Try Again', 'Refresh Data', 'Try Again']) {
+      failing = action === 'Refresh Data';
+      resultsReady = new Promise((resolve) => {
+        releaseResults = resolve;
       });
+      const registryResponse = page.waitForResponse((res) =>
+        res.url().includes('/registry/feddericovonwernich/test-repo-perfect.json')
+      );
+      const response = page.waitForResponse((res) =>
+        res.url().includes('/results/feddericovonwernich/test-repo-perfect/results.json')
+      );
+      await modal.getByRole('button', { name: action, exact: true }).click();
+      await expect(modal.getByText('Loading service details...')).toBeVisible();
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+      releaseResults();
+      expect((await registryResponse).status()).toBe(200);
+      expect((await response).status()).toBe(failing ? 503 : 200);
+      if (failing) {
+        await expect(modal.getByText('Error loading service')).toBeVisible();
+      } else {
+        await expect(modal.locator('.check-result').first()).toBeVisible();
+        await expect(modal.getByText('Error loading service')).toHaveCount(0);
+        await expect(
+          modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })
+        ).toBeVisible();
+      }
+      expect(await original.evaluate((node) => node.isConnected)).toBe(true);
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    }
+    await modal.getByRole('button', { name: 'Close modal' }).click();
+    resultsReady = new Promise((resolve) => {
+      releaseResults = resolve;
     });
+    await page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).click();
+    await expect(modal.getByText('Loading service details...')).toBeVisible();
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    releaseResults();
+    await expect(modal.locator('.check-result').first()).toBeVisible();
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+  });
 
-    // Track if app falls back to raw.githubusercontent.com
-    await page.route('**/raw.githubusercontent.com/**', async (route) => {
-      usesFallback = true;
-      await route.continue();
-    });
-
+  test('workflow retry retains dialog focus through polling, repeated failure and recovery', async ({
+    page,
+  }) => {
     await mockCatalogRequests(page);
-    await page.goto('/');
+    await page.goto('/scorecards/');
+    await waitForCatalogLoad(page);
+    await openSettingsModal(page);
+    const settings = page.locator('#settings-modal');
+    await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill(mockPAT);
+    await settings.getByRole('button', { name: 'Save Token' }).click();
+    await expect(settings.getByRole('heading', { name: 'GitHub API Mode' })).toBeVisible();
+    await closeSettingsModal(page);
 
-    // Wait for load attempt
-    await page.waitForTimeout(1000);
-
-    // App should still function (using fallback or showing error gracefully)
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
+    let failing = true;
+    let releaseRuns;
+    let runsReady = Promise.resolve();
+    await page.route(
+      '**/api.github.com/repos/feddericovonwernich/test-repo-perfect/actions/runs*',
+      async (route) => {
+        await runsReady;
+        await route.fulfill({
+          status: failing ? 503 : 200,
+          json: failing
+            ? { message: 'Workflow fixture unavailable' }
+            : { workflow_runs: [], total_count: 0 },
+        });
+      }
+    );
+    await openServiceModal(page, 'test-repo-perfect');
+    const modal = page.locator('#service-modal');
+    await page.clock.install();
+    await modal.getByRole('button', { name: 'Workflow Runs', exact: true }).click();
+    await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
+    for (const transition of ['poll', 'manual', 'poll-success']) {
+      const failsAgain = transition !== 'poll-success';
+      failing = failsAgain;
+      runsReady = new Promise((resolve) => {
+        releaseRuns = resolve;
+      });
+      await modal.getByRole('button', { name: 'Try Again', exact: true }).focus();
+      if (transition === 'manual') {
+        await page.keyboard.press('Enter');
+      } else {
+        await page.clock.fastForward(30000);
+      }
+      await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+      releaseRuns();
+      if (failsAgain) {
+        await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
+      } else {
+        await expect(modal.getByText('No workflow runs found', { exact: true })).toBeVisible();
+      }
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+      if (transition === 'poll') {
+        const interval = modal.getByRole('combobox', { name: 'Auto-refresh interval' });
+        await interval.focus();
+        runsReady = new Promise((resolve) => {
+          releaseRuns = resolve;
+        });
+        await page.clock.fastForward(30000);
+        await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
+        await expect(interval).toBeFocused();
+        releaseRuns();
+        await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
+        await expect(interval).toBeFocused();
+      }
+    }
   });
 
   test('should handle 404 not found errors for missing resources', async ({ page }) => {
+    await mockCatalogRequests(page);
     // Mock specific resource to return 404
     await page.route('**/raw.githubusercontent.com/**/teams/**', async (route) => {
       await route.fulfill({
@@ -136,31 +178,12 @@ test.describe('Network Failure Recovery', () => {
       });
     });
 
-    await mockCatalogRequests(page);
     await page.goto('/');
 
     // Services should still load even if teams fail
     await waitForCatalogLoad(page);
     const count = await getServiceCount(page);
     expect(count).toBeGreaterThan(0);
-  });
-
-  test('should handle network timeout gracefully', async ({ page }) => {
-    // Mock extremely slow response that will likely timeout
-    await page.route('**/raw.githubusercontent.com/**/all-checks.json', async (route) => {
-      // Delay for 10 seconds (should trigger timeout)
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      await route.continue();
-    });
-
-    await mockCatalogRequests(page);
-
-    // Navigate with a shorter timeout expectation
-    await page.goto('/');
-
-    // Page should still load (services may work, checks may timeout)
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
   });
 });
 
@@ -192,8 +215,8 @@ test.describe('Token Validation Edge Cases', () => {
       await saveButton.click();
       // Should show validation error or toast
       await expect(async () => {
-        const hasError = await page.getByText(/empty|required|enter|invalid/i).count() > 0;
-        const hasToast = await page.locator('.toast').count() > 0;
+        const hasError = (await page.getByText(/empty|required|enter|invalid/i).count()) > 0;
+        const hasToast = (await page.locator('.toast').count()) > 0;
         expect(hasError || hasToast).toBe(true);
       }).toPass({ timeout: 3000 });
     } else {
@@ -219,8 +242,8 @@ test.describe('Token Validation Edge Cases', () => {
       await saveButton.click();
       // Should reject whitespace token
       await expect(async () => {
-        const hasError = await page.getByText(/empty|required|invalid|whitespace/i).count() > 0;
-        const hasToast = await page.locator('.toast').count() > 0;
+        const hasError = (await page.getByText(/empty|required|invalid|whitespace/i).count()) > 0;
+        const hasToast = (await page.locator('.toast').count()) > 0;
         expect(hasError || hasToast).toBe(true);
       }).toPass({ timeout: 3000 });
     } else {
@@ -251,22 +274,29 @@ test.describe('Token Validation Edge Cases', () => {
 
     // Should show authentication error
     await expect(async () => {
-      const hasError = await page.getByText(/invalid|unauthorized|credentials|failed/i).count() > 0;
-      const hasErrorToast = await page.locator('.toast').filter({ hasText: /error|failed|invalid/i }).count() > 0;
+      const hasError =
+        (await page.getByText(/invalid|unauthorized|credentials|failed/i).count()) > 0;
+      const hasErrorToast =
+        (await page
+          .locator('.toast')
+          .filter({ hasText: /error|failed|invalid/i })
+          .count()) > 0;
       expect(hasError || hasErrorToast).toBe(true);
     }).toPass({ timeout: 5000 });
 
     await closeSettingsModal(page);
   });
 
-  test('should handle 403 forbidden response for token without required scopes', async ({ page }) => {
+  test('should handle 403 forbidden response for token without required scopes', async ({
+    page,
+  }) => {
     // Mock 403 response (token valid but lacks permissions)
     await page.route('**/api.github.com/user', async (route) => {
       await route.fulfill({
         status: 403,
         body: JSON.stringify({
           message: 'Resource not accessible by integration',
-          documentation_url: 'https://docs.github.com/rest/reference/repos'
+          documentation_url: 'https://docs.github.com/rest/reference/repos',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
@@ -282,8 +312,8 @@ test.describe('Token Validation Edge Cases', () => {
 
     // Should show permission error
     await expect(async () => {
-      const hasError = await page.getByText(/permission|access|forbidden|scope/i).count() > 0;
-      const hasToast = await page.locator('.toast').count() > 0;
+      const hasError = (await page.getByText(/permission|access|forbidden|scope/i).count()) > 0;
+      const hasToast = (await page.locator('.toast').count()) > 0;
       expect(hasError || hasToast).toBe(true);
     }).toPass({ timeout: 5000 });
 
@@ -306,8 +336,8 @@ test.describe('Token Validation Edge Cases', () => {
 
     // Should show network error
     await expect(async () => {
-      const hasError = await page.getByText(/network|connection|failed|error/i).count() > 0;
-      const hasToast = await page.locator('.toast').count() > 0;
+      const hasError = (await page.getByText(/network|connection|failed|error/i).count()) > 0;
+      const hasToast = (await page.locator('.toast').count()) > 0;
       expect(hasError || hasToast).toBe(true);
     }).toPass({ timeout: 5000 });
 
@@ -467,7 +497,7 @@ test.describe('Concurrent API Calls', () => {
     let dispatchCount = 0;
     await page.route('**/api.github.com/repos/**/actions/workflows/*/dispatches', async (route) => {
       dispatchCount++;
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       await route.fulfill({
         status: 204,
         body: '',
@@ -487,7 +517,10 @@ test.describe('Concurrent API Calls', () => {
     const staleCard = page.locator('.service-card').filter({ hasText: 'STALE' }).first();
 
     if (await staleCard.isVisible()) {
-      const rerunButton = staleCard.locator('button').filter({ hasText: /re-?run|trigger/i }).first();
+      const rerunButton = staleCard
+        .locator('button')
+        .filter({ hasText: /re-?run|trigger/i })
+        .first();
       if (await rerunButton.isVisible()) {
         // Click once and verify response
         await rerunButton.click({ force: true });
@@ -570,8 +603,8 @@ test.describe('Additional Error Edge Cases', () => {
             limit: 5000,
             remaining: 0,
             reset: Math.floor(Date.now() / 1000) + 3600,
-            used: 5000
-          }
+            used: 5000,
+          },
         }),
         headers: { 'Content-Type': 'application/json' },
       });

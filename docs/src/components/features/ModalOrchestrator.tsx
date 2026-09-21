@@ -12,14 +12,15 @@ import { ActionsWidget } from './ActionsWidget/index.js';
 import { TeamDashboard } from './TeamDashboard/index.js';
 import { TeamEditModal } from './TeamEditModal/index.js';
 import { CheckAdoptionDashboard } from './CheckAdoptionDashboard/index.js';
-import { useAppStore } from '../../stores/appStore.js';
+import { useAppStore, selectActiveModal, selectCheckFilters, selectServicesAll } from '../../stores/appStore.js';
 import type { CheckFilter } from '../../types/index.js';
 
 export function ModalOrchestrator() {
   const toggleActionsWidget = useAppStore((state) => state.toggleActionsWidget);
 
   // Modal states
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const activeModal = useAppStore(selectActiveModal);
+  const settingsModalOpen = activeModal?.type === 'settings';
   const [teamDashboardOpen, setTeamDashboardOpen] = useState(false);
   const [checkAdoptionOpen, setCheckAdoptionOpen] = useState(false);
   const [teamEditModalOpen, setTeamEditModalOpen] = useState(false);
@@ -34,9 +35,7 @@ export function ModalOrchestrator() {
   const [teamModalName, setTeamModalName] = useState<string | null>(null);
 
   const [checkFilterModalOpen, setCheckFilterModalOpen] = useState(false);
-  const [checkFilters, setCheckFilters] = useState<Map<string, CheckFilter>>(
-    new Map()
-  );
+  const checkFilters = useAppStore(selectCheckFilters);
 
   // Modal handlers
   const openServiceModal = useCallback((org: string, repo: string) => {
@@ -68,20 +67,20 @@ export function ModalOrchestrator() {
 
   const handleCheckFiltersChange = useCallback(
     (filters: Map<string, CheckFilter>) => {
-      setCheckFilters(filters);
-      window.dispatchEvent(
-        new CustomEvent('check-filters-changed', { detail: { filters } })
-      );
+      useAppStore.getState().updateFilters({ checkFilters: new Map(filters) });
     },
     []
   );
 
   const openSettingsModal = useCallback(() => {
-    setSettingsModalOpen(true);
+    useAppStore.getState().openModal('settings');
   }, []);
 
   const closeSettingsModal = useCallback(() => {
-    setSettingsModalOpen(false);
+    const state = useAppStore.getState();
+    if (state.ui.activeModal?.type === 'settings') {
+      state.closeModal();
+    }
   }, []);
 
   const openTeamDashboard = useCallback(() => {
@@ -210,7 +209,7 @@ export function ModalOrchestrator() {
     openCheckAdoptionDashboard,
   ]);
 
-  const services = useAppStore.getState().services.all || [];
+  const services = useAppStore(selectServicesAll);
 
   return (
     <>

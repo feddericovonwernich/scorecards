@@ -2,66 +2,50 @@
  * Navigation Component Tests
  */
 
-import { jest } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { Navigation } from './Navigation';
 
+function LocationDisplay() {
+  const { pathname } = useLocation();
+  return <output data-testid="location">{pathname}</output>;
+}
+
+function renderNavigation(initialEntry: string) {
+  render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Navigation />
+      <LocationDisplay />
+    </MemoryRouter>
+  );
+}
+
 describe('Navigation', () => {
-  const mockOnViewChange = jest.fn();
-
-  beforeEach(() => {
-    mockOnViewChange.mockClear();
-  });
-
   it('renders Services and Teams tabs', () => {
-    render(<Navigation activeView="services" onViewChange={mockOnViewChange} />);
-    expect(screen.getByRole('button', { name: /Services/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Teams/ })).toBeInTheDocument();
+    renderNavigation('/services');
+
+    expect(screen.getByRole('tab', { name: 'Services' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Teams' })).toBeInTheDocument();
   });
 
-  it('marks Services tab as active when activeView is services', () => {
-    render(<Navigation activeView="services" onViewChange={mockOnViewChange} />);
-    const servicesTab = screen.getByRole('button', { name: /Services/ });
-    // Active state uses bg-accent class in Tailwind
-    expect(servicesTab).toHaveClass('bg-accent');
-    const teamsTab = screen.getByRole('button', { name: /Teams/ });
-    expect(teamsTab).not.toHaveClass('bg-accent');
+  it('selects the tab for the current route', () => {
+    renderNavigation('/teams');
+
+    expect(screen.getByRole('tab', { name: 'Services' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tab', { name: 'Teams' })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('marks Teams tab as active when activeView is teams', () => {
-    render(<Navigation activeView="teams" onViewChange={mockOnViewChange} />);
-    const servicesTab = screen.getByRole('button', { name: /Services/ });
-    expect(servicesTab).not.toHaveClass('bg-accent');
-    const teamsTab = screen.getByRole('button', { name: /Teams/ });
-    // Active state uses bg-accent class in Tailwind
-    expect(teamsTab).toHaveClass('bg-accent');
+  it('navigates to the selected tab route', () => {
+    renderNavigation('/services');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Teams' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/teams');
   });
 
-  it('calls onViewChange with "services" when Services tab is clicked', () => {
-    render(<Navigation activeView="teams" onViewChange={mockOnViewChange} />);
-    const servicesTab = screen.getByRole('button', { name: /Services/ });
-    fireEvent.click(servicesTab);
-    expect(mockOnViewChange).toHaveBeenCalledWith('services');
-  });
+  it('exposes its tabs in a tab list', () => {
+    renderNavigation('/services');
 
-  it('calls onViewChange with "teams" when Teams tab is clicked', () => {
-    render(<Navigation activeView="services" onViewChange={mockOnViewChange} />);
-    const teamsTab = screen.getByRole('button', { name: /Teams/ });
-    fireEvent.click(teamsTab);
-    expect(mockOnViewChange).toHaveBeenCalledWith('teams');
-  });
-
-  it('has proper navigation role', () => {
-    render(<Navigation activeView="services" onViewChange={mockOnViewChange} />);
-    const nav = screen.getByRole('navigation');
-    expect(nav).toBeInTheDocument();
-  });
-
-  it('has data-view attributes for each tab', () => {
-    render(<Navigation activeView="services" onViewChange={mockOnViewChange} />);
-    const servicesTab = screen.getByRole('button', { name: /Services/ });
-    const teamsTab = screen.getByRole('button', { name: /Teams/ });
-    expect(servicesTab).toHaveAttribute('data-view', 'services');
-    expect(teamsTab).toHaveAttribute('data-view', 'teams');
+    expect(screen.getByRole('tablist')).toBeInTheDocument();
   });
 });

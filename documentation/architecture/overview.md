@@ -58,7 +58,7 @@ The `main` branch is the source of truth for the Scorecards system, containing a
 - **action/** - GitHub Action entrypoint and orchestration scripts
 - **.github/workflows/** - Automation workflows (installation, triggering, hash updates, etc.)
 - **documentation/** - System architecture and flow documentation
-- **docs/** - Catalog UI static files (synced to catalog branch for GitHub Pages)
+- **docs/** - Catalog UI source; see the [Deployment guide](../../docs/README.md#deployment) for publication
 
 This branch is where development happens and can be forked/cloned for organization-specific customization of checks, weights, categories, and workflows.
 
@@ -109,15 +109,18 @@ Static web application that displays scores in a sortable, filterable table with
 The system uses GitHub Actions workflows for automation across three categories:
 
 ### Development & Quality
+
 - **test.yml** - Test suite and linting for PR/push validation
 - **update-checks-hash.yml** - Staleness detection hash updates
-- **sync-docs.yml** - Catalog UI deployment to GitHub Pages
+- **sync-docs.yml** - Catalog UI publication; see the [Deployment guide](../../docs/README.md#deployment)
 
 ### Service Onboarding
+
 - **create-installation-pr.yml** - Manual installation PR creation
 - **install.yml** - Reusable workflow for automated installation
 
 ### Execution & Maintenance
+
 - **scorecards.yml** - Service-side check execution (template)
 - **trigger-service-workflow.yml** - Remote workflow triggering
 - **consolidate-registry.yml** - Registry aggregation
@@ -168,16 +171,19 @@ When checks are modified, a SHA256 hash is generated and stored in the catalog b
 ### Data Visibility
 
 **Catalog UI (GitHub Pages):**
+
 - **Public repositories** → Catalog is publicly accessible
 - **Private repositories** → Depends on your GitHub plan:
   - With **GitHub Enterprise**: Pages can be restricted to organization members
   - Without Enterprise: Pages are **publicly accessible** even though the repo is private
 
 **Important**: If you're using a private scorecards repository, verify your GitHub Pages settings:
+
 - Go to Repository Settings → Pages → Visibility
 - Ensure it matches your security requirements
 
 **Results Storage:**
+
 - Stored in `catalog` branch of the scorecards repository
 - Access controlled by repository permissions
 - Only users with repository access can view raw results files

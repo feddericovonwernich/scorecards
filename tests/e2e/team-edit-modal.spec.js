@@ -52,13 +52,16 @@ async function closeTeamEditModal(page) {
  * @param {Object} options
  */
 async function mockWorkflowDispatch(page, { status = 204 } = {}) {
-  await page.route('**/api.github.com/repos/**/actions/workflows/update-team-registry.yml/dispatches', async (route) => {
-    await route.fulfill({
-      status,
-      body: '',
-      headers: { 'Content-Type': 'application/json' },
-    });
-  });
+  await page.route(
+    '**/api.github.com/repos/**/actions/workflows/update-team-registry.yml/dispatches',
+    async (route) => {
+      await route.fulfill({
+        status,
+        body: '',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  );
 }
 
 test.describe('Team Edit Modal', () => {
@@ -87,8 +90,17 @@ test.describe('Team Edit Modal', () => {
       // Modal uses .modal class
       await page.waitForSelector('.modal', { state: 'visible', timeout: 5000 });
       // Use getByRole within the dialog to avoid matching both HTML and React buttons
-      const configureButton = page.getByRole('dialog').getByRole('button', { name: /Configure Token/i });
+      const configureButton = page
+        .getByRole('dialog')
+        .getByRole('button', { name: /Configure Token/i });
       await expect(configureButton).toBeVisible();
+      await configureButton.click();
+      const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+      await expect(settings).toBeVisible();
+      await expect(page.getByRole('dialog', { name: 'PAT Required' })).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await expect(settings).toBeHidden();
+      await expect(page.getByRole('button', { name: /Create Team/i })).toBeVisible();
     });
   });
 
@@ -115,7 +127,9 @@ test.describe('Team Edit Modal', () => {
       await expect(modal.locator('input').first()).toHaveValue('');
     });
 
-    test('should display all form fields with correct labels and controls in create mode', async ({ page }) => {
+    test('should display all form fields with correct labels and controls in create mode', async ({
+      page,
+    }) => {
       await openCreateTeamModal(page);
 
       const modal = page.locator(TEAM_EDIT_MODAL_SELECTOR);
@@ -193,7 +207,9 @@ test.describe('Team Edit Modal', () => {
       await mockWorkflowDispatch(page);
     });
 
-    test('should manage aliases through complete workflow - add via button, add via Enter, remove, and prevent duplicates', async ({ page }) => {
+    test('should manage aliases through complete workflow - add via button, add via Enter, remove, and prevent duplicates', async ({
+      page,
+    }) => {
       await openCreateTeamModal(page);
 
       const modal = page.locator(TEAM_EDIT_MODAL_SELECTOR);
@@ -215,9 +231,14 @@ test.describe('Team Edit Modal', () => {
       await expect(modal).toContainText('removable-alias');
 
       // Remove alias
-      const removeButton = modal.locator('button:has-text("×")').last();
-      await removeButton.click();
+      const removeButton = modal.getByRole('button', {
+        name: 'Remove alias removable-alias',
+        exact: true,
+      });
+      await removeButton.focus();
+      await page.keyboard.press('Enter');
       await expect(modal).not.toContainText('removable-alias');
+      await expect(aliasInput).toBeFocused();
 
       // Try to add duplicate
       await aliasInput.fill('test-alias');
@@ -234,27 +255,45 @@ test.describe('Team Edit Modal', () => {
   test.describe('Form Submission', () => {
     test.beforeEach(async ({ page }) => {
       await setGitHubPAT(page, mockPAT);
-      await mockWorkflowDispatch(page);
     });
 
-    test('should show correct feedback during form submission workflow - triggering and success', async ({ page }) => {
+    test('keeps focus in the dialog while an authenticated team save succeeds and then closes', async ({
+      page,
+    }) => {
+      let releaseDispatch;
+      let dispatchStarted;
+      const dispatchReady = new Promise((resolve) => {
+        releaseDispatch = resolve;
+      });
+      const dispatchStartedPromise = new Promise((resolve) => {
+        dispatchStarted = resolve;
+      });
+      await page.route(
+        '**/api.github.com/repos/**/actions/workflows/update-team-registry.yml/dispatches',
+        async (route) => {
+          dispatchStarted();
+          await dispatchReady;
+          await route.fulfill({ status: 204 });
+        }
+      );
+
       await openCreateTeamModal(page);
-
       const modal = page.locator(TEAM_EDIT_MODAL_SELECTOR);
-
-      // Fill required fields
+      const heading = modal.getByRole('heading', { name: 'Create Team', exact: true });
       const nameInput = page.locator('input[placeholder="e.g., Platform Team"]');
+      const createButton = modal.getByRole('button', { name: 'Create Team', exact: true });
       await nameInput.fill('New Test Team');
+      await createButton.focus();
+      await page.keyboard.press('Enter');
+      await dispatchStartedPromise;
 
-      // Submit
-      const createButton = modal.getByRole('button', { name: /Create Team/i });
-      await createButton.click();
+      await expect(modal.getByRole('button', { name: 'Saving...', exact: true })).toBeDisabled();
+      await expect(heading).toBeFocused();
+      await expect(modal.getByText('Triggering workflow...', { exact: true })).toBeVisible();
 
-      // Should show workflow triggering message
-      await expect(page.locator('body')).toContainText(/Triggering workflow|Team creation workflow/i);
-
-      // Wait for success toast
-      await expect(page.getByText(/workflow triggered|Changes will appear/i)).toBeVisible({ timeout: 5000 });
+      releaseDispatch();
+      await expect(modal.getByText(/Team creation workflow triggered/i)).toBeVisible();
+      await expect(modal).toBeHidden({ timeout: 3000 });
     });
   });
 
@@ -267,48 +306,56 @@ test.describe('Team Edit Modal', () => {
       await openCreateTeamModal(page);
 
       // The Create Team button should be disabled when name is empty
-      const createButton = page.locator(TEAM_EDIT_MODAL_SELECTOR).getByRole('button', { name: /Create Team/i });
+      const createButton = page
+        .locator(TEAM_EDIT_MODAL_SELECTOR)
+        .getByRole('button', { name: /Create Team/i });
       await expect(createButton).toBeDisabled();
     });
 
-    test('should show error toast on API failures (403, 500)', async ({ page }) => {
-      // Test 403 error
-      await page.route('**/api.github.com/repos/**/actions/workflows/update-team.yml/dispatches', async (route) => {
-        await route.fulfill({
-          status: 403,
-          body: JSON.stringify({ message: 'Resource not accessible' }),
-          headers: { 'Content-Type': 'application/json' },
-        });
+    test('keeps focus in the dialog and shows inline feedback when an authenticated team save fails', async ({
+      page,
+    }) => {
+      let releaseDispatch;
+      let dispatchStarted;
+      const dispatchReady = new Promise((resolve) => {
+        releaseDispatch = resolve;
       });
+      const dispatchStartedPromise = new Promise((resolve) => {
+        dispatchStarted = resolve;
+      });
+      await page.route(
+        '**/api.github.com/repos/**/actions/workflows/update-team-registry.yml/dispatches',
+        async (route) => {
+          dispatchStarted();
+          await dispatchReady;
+          await route.fulfill({
+            status: 403,
+            body: JSON.stringify({ message: 'Resource not accessible' }),
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      );
 
       await openCreateTeamModal(page);
-
-      const nameInput = page.locator('input[placeholder="e.g., Platform Team"]');
-      await nameInput.fill('Test Team 403');
-
       const modal = page.locator(TEAM_EDIT_MODAL_SELECTOR);
-      await modal.getByRole('button', { name: /Create Team/i }).click();
+      const heading = modal.getByRole('heading', { name: 'Create Team', exact: true });
+      const nameInput = page.locator('input[placeholder="e.g., Platform Team"]');
+      const createButton = modal.getByRole('button', { name: 'Create Team', exact: true });
+      await nameInput.fill('Test Team 403');
+      await createButton.focus();
+      await page.keyboard.press('Enter');
+      await dispatchStartedPromise;
 
-      await expect(page.getByText(/Failed to save/i)).toBeVisible({ timeout: 5000 });
+      await expect(modal.getByRole('button', { name: 'Saving...', exact: true })).toBeDisabled();
+      await expect(heading).toBeFocused();
+      await expect(modal.getByText('Triggering workflow...', { exact: true })).toBeVisible();
 
-      await closeTeamEditModal(page);
-
-      // Test 500 error - unroute first then set new route
-      await page.unroute('**/api.github.com/repos/**/actions/workflows/update-team.yml/dispatches');
-      await page.route('**/api.github.com/repos/**/actions/workflows/update-team.yml/dispatches', async (route) => {
-        await route.fulfill({
-          status: 500,
-          body: JSON.stringify({ message: 'Internal Server Error' }),
-          headers: { 'Content-Type': 'application/json' },
-        });
-      });
-
-      await openCreateTeamModal(page);
-
-      await nameInput.fill('Test Team 500');
-      await modal.getByRole('button', { name: /Create Team/i }).click();
-
-      await expect(page.getByText(/Failed to save/i)).toBeVisible({ timeout: 5000 });
+      releaseDispatch();
+      await expect(
+        modal.getByText('Failed to save: Resource not accessible', { exact: true })
+      ).toBeVisible();
+      await expect(createButton).toBeEnabled();
+      await expect(heading).toBeFocused();
     });
   });
 
@@ -331,7 +378,10 @@ test.describe('Team Edit Modal', () => {
       await page.waitForSelector('#team-modal', { state: 'visible', timeout: 5000 });
 
       // Click the Edit Team button in the team modal header
-      await page.locator('#team-modal').getByRole('button', { name: /Edit Team/i }).click();
+      await page
+        .locator('#team-modal')
+        .getByRole('button', { name: /Edit Team/i })
+        .click();
 
       // Wait for edit modal to appear
       await page.waitForSelector('.modal', { state: 'visible', timeout: 5000 });
@@ -345,7 +395,9 @@ test.describe('Team Edit Modal', () => {
       await expect(modal).toContainText('Edit Team');
     });
 
-    test('should pre-populate all form fields with existing team data in edit mode', async ({ page }) => {
+    test('should pre-populate all form fields with existing team data in edit mode', async ({
+      page,
+    }) => {
       await openEditTeamModal(page, 'Platform');
 
       const modal = page.locator(TEAM_EDIT_MODAL_SELECTOR);
@@ -393,11 +445,11 @@ test.describe('Team Edit Modal', () => {
       await nameInput.clear();
       await nameInput.fill('Platform Updated');
 
-      // Click save
-      await page.locator(TEAM_EDIT_MODAL_SELECTOR).getByRole('button', { name: /Save Changes/i }).click();
-
-      // Should show success message
-      await expect(page.getByText(/workflow triggered|Changes will appear/i)).toBeVisible();
+      const modal = page.locator(TEAM_EDIT_MODAL_SELECTOR);
+      await modal.getByRole('button', { name: 'Save Changes', exact: true }).focus();
+      await page.keyboard.press('Enter');
+      await expect(modal.getByRole('heading', { name: 'Edit Team', exact: true })).toBeFocused();
+      await expect(modal.getByText(/workflow triggered|Changes will appear/i)).toBeVisible();
     });
   });
 });

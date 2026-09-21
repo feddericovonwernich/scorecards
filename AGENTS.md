@@ -32,7 +32,7 @@ All code must pass `npm run lint`. Key enforced rules:
 - **MANDATORY**: Run Playwright tests synchronously - NEVER use `run_in_background: true` for test commands. Background test processes accumulate and cause confusion about test state.
 - Prevent HTML report blocking: Use `PLAYWRIGHT_HTML_OPEN=never npx playwright test`
 - Test frontend changes with fresh browser context (ES modules cache aggressively)
-- Kill leftover servers before testing: `pkill -f "python3 -m http.server"`
+- Stop only test servers owned by the current session; do not kill shared servers by process-name pattern.
 
 ## Module Structure
 

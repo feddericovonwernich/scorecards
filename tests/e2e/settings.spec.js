@@ -1,5 +1,7 @@
 import { test, expect } from './coverage.js';
-import { mockPAT } from './fixtures.js';
+import AxeBuilder from '@axe-core/playwright';
+
+import { mockPAT, rateLimitResponses } from './fixtures.js';
 import {
   mockCatalogRequests,
   waitForCatalogLoad,
@@ -28,6 +30,34 @@ test.describe('Settings Modal', () => {
 
     const modal = page.locator('#settings-modal');
     await expect(modal).not.toBeVisible();
+  });
+
+  test('should have no serious or critical accessibility violations', async ({ page }) => {
+    let rate = rateLimitResponses.low;
+    await page.route('**/api.github.com/rate_limit', (route) => route.fulfill({ json: { rate } }));
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => localStorage.setItem('theme', value), theme);
+      for (const state of ['low', 'critical']) {
+        rate = rateLimitResponses[state];
+        await page.reload();
+        await waitForCatalogLoad(page);
+        await openSettingsModal(page);
+        await expect(page.locator('.settings-rate-limit-current')).toHaveText(
+          String(rate.remaining)
+        );
+        const results = await new AxeBuilder({ page })
+          .include('#settings-modal')
+          .withTags(['wcag2a', 'wcag2aa'])
+          .analyze();
+        expect(
+          results.violations.filter(
+            (violation) => violation.impact === 'critical' || violation.impact === 'serious'
+          ),
+          `${theme} theme, ${state} rate limit`
+        ).toHaveLength(0);
+        await closeSettingsModal(page);
+      }
+    }
   });
 
   test('should display all settings modal UI elements correctly', async ({ page }) => {
@@ -92,17 +122,24 @@ test.describe('Settings Modal', () => {
 
     // Switch to API mode
     await expect(modal).toContainText(/GitHub API|API mode/i, { timeout: 5000 });
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
 
     // Click Check Rate to update rate limit
     await page.getByRole('button', { name: 'Check Rate' }).click();
 
     // Update rate limit
     await expect(modal.locator('.settings-rate-limit')).toContainText(/5000/, { timeout: 5000 });
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
 
     await closeSettingsModal(page);
 
     // Settings button indicator
     const settingsButton = page.getByRole('button', { name: /Settings.*PAT/i });
     await expect(settingsButton).toBeVisible();
+    await openSettingsModal(page);
+    await modal.getByRole('button', { name: 'Clear Token' }).click();
+    await expect(modal.getByRole('heading', { name: 'Public CDN Mode' })).toBeVisible();
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    await closeSettingsModal(page);
   });
 });

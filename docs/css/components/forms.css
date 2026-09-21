@@ -19,6 +19,13 @@
     transition: all var(--duration-fast) var(--ease-in-out-smooth);
 }
 
+@media (max-width: 768px) {
+    .search-box {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
 .search-box::placeholder {
     color: var(--color-text-placeholder);
 }

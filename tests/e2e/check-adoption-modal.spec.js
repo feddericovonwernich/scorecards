@@ -19,7 +19,9 @@ test.describe('Check Adoption Dashboard - Modal Structure', () => {
     await waitForCatalogLoad(page);
   });
 
-  test('should open modal with correct structure and close via X button and Escape key', async ({ page }) => {
+  test('should open modal with correct structure and close via X button and Escape key', async ({
+    page,
+  }) => {
     await openCheckAdoptionDashboard(page);
 
     const modal = page.locator('#check-adoption-modal');
@@ -29,7 +31,11 @@ test.describe('Check Adoption Dashboard - Modal Structure', () => {
     await expect(modal.getByRole('button', { name: 'Close modal' })).toBeVisible();
 
     // Check selector
-    const hasSelector = await modal.locator('button, select').filter({ hasText: /README|Documentation|License|Select/i }).count() > 0;
+    const hasSelector =
+      (await modal
+        .locator('button, select')
+        .filter({ hasText: /README|Documentation|License|Select/i })
+        .count()) > 0;
     expect(hasSelector).toBe(true);
 
     // Adoption rate
@@ -74,7 +80,9 @@ test.describe('Check Adoption Dashboard - Check Selector', () => {
     await openCheckAdoptionDashboard(page);
   });
 
-  test('should interact with check selector through complete workflow - open, search, select, and dismiss', async ({ page }) => {
+  test('should interact with check selector through complete workflow - open, search, select, and dismiss', async ({
+    page,
+  }) => {
     const modal = page.locator('#check-adoption-modal');
     const toggle = modal.locator('.check-card-selected');
 
@@ -99,9 +107,13 @@ test.describe('Check Adoption Dashboard - Check Selector', () => {
     await searchInput.clear();
 
     // Changes update the dashboard
-    const initialCheckName = await modal.locator('.check-card-selected .check-card-name').textContent();
-    await modal.locator('.check-card-option').nth(1).click();
+    const initialCheckName = await modal
+      .locator('.check-card-selected .check-card-name')
+      .textContent();
+    await modal.locator('.check-card-option').nth(1).focus();
+    await page.keyboard.press('Enter');
     await expect(modal.locator('.check-card-dropdown.open')).not.toBeVisible();
+    await expect(toggle).toBeFocused();
 
     const newCheckName = await modal.locator('.check-card-selected .check-card-name').textContent();
     expect(newCheckName).not.toBe(initialCheckName);
@@ -129,7 +141,9 @@ test.describe('Check Adoption Dashboard - Table', () => {
     await openCheckAdoptionDashboard(page);
   });
 
-  test('should display table with correct structure and support column sorting', async ({ page }) => {
+  test('should display table with correct structure and support column sorting', async ({
+    page,
+  }) => {
     const modal = page.locator('#check-adoption-modal');
     const table = modal.locator('.adoption-table');
     await expect(table).toBeVisible();
@@ -149,32 +163,75 @@ test.describe('Check Adoption Dashboard - Table', () => {
     await expect(rows.first().locator('.progress-bar-inline')).toBeVisible();
 
     // Test Team column sorting
-    const teamHeader = modal.locator('.adoption-table th:has-text("Team")');
-    await teamHeader.click();
+    const teamHeader = modal.getByRole('columnheader', { name: /Team/ });
+    const teamSortButton = modal.getByRole('button', { name: 'Team', exact: true });
+    await teamSortButton.click();
+    await expect(teamHeader).toHaveAttribute('aria-sort', 'descending');
     await expect(teamHeader.locator('.sort-indicator')).toBeVisible();
 
     // Test Adoption column sorting
-    const adoptionHeader = modal.locator('.adoption-table th:has-text("Adoption")');
-    await adoptionHeader.click();
+    const adoptionHeader = modal.getByRole('columnheader', { name: /Adoption/ });
+    const adoptionSortButton = modal.getByRole('button', { name: 'Adoption', exact: true });
+    await adoptionSortButton.click();
+    await expect(adoptionHeader).toHaveAttribute('aria-sort', 'descending');
     const sortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
     expect(sortIndicator).toMatch(/[↑↓]/);
 
     // Click again to reverse
-    await adoptionHeader.click();
-    await expect(async () => {
-      const newSortIndicator = await adoptionHeader.locator('.sort-indicator').textContent();
-      expect(newSortIndicator).not.toBe(sortIndicator);
-    }).toPass({ timeout: 3000 });
+    await adoptionSortButton.click();
+    await expect(adoptionHeader).toHaveAttribute('aria-sort', 'ascending');
 
     await closeCheckAdoptionModal(page);
   });
 
-  test('clicking team row opens team detail modal', async ({ page }) => {
+  test('supports keyboard sorting and nested team-modal escape', async ({ page }) => {
     const modal = page.locator('#check-adoption-modal');
+    const adoptionButton = page.getByRole('button', { name: 'Check Adoption', exact: true });
 
-    const teamRow = modal.locator('.adoption-row:not(.no-team)').first();
-    if (await teamRow.count() > 0) {
-      await teamRow.click();
+    await closeCheckAdoptionModal(page);
+    const bodyOverflow = await page.evaluate(() => document.body.style.overflow);
+    await adoptionButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(modal).toBeVisible();
+
+    const beforeSort = await modal.locator('.team-name-button').allTextContents();
+    const teamSortButton = modal.getByRole('button', { name: 'Team', exact: true });
+    await teamSortButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(modal.getByRole('columnheader', { name: /Team/ })).toHaveAttribute(
+      'aria-sort',
+      'descending'
+    );
+    expect(await modal.locator('.team-name-button').allTextContents()).not.toEqual(beforeSort);
+
+    const adoptionSortButton = modal.getByRole('button', { name: 'Adoption', exact: true });
+    await adoptionSortButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(modal.getByRole('columnheader', { name: /Adoption/ })).toHaveAttribute(
+      'aria-sort',
+      'descending'
+    );
+
+    const teamButton = modal.locator('.team-name-button').first();
+    await teamButton.focus();
+    await page.keyboard.press('Space');
+    await expect(page.locator('#team-modal')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#team-modal')).toBeHidden();
+    await expect(modal).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+    await expect(adoptionButton).toBeFocused();
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe(bodyOverflow);
+  });
+
+  test('team-name button opens team detail modal', async ({ page }) => {
+    const modal = page.locator('#check-adoption-modal');
+    const teamButton = modal.locator('.team-name-button').first();
+    if ((await teamButton.count()) > 0) {
+      await teamButton.click();
       await expect(page.locator('#team-modal')).toBeVisible();
     }
   });
@@ -183,7 +240,7 @@ test.describe('Check Adoption Dashboard - Table', () => {
     const modal = page.locator('#check-adoption-modal');
     const noTeamRow = modal.locator('.adoption-row:has-text("No Team")');
 
-    if (await noTeamRow.count() > 0) {
+    if ((await noTeamRow.count()) > 0) {
       await expect(noTeamRow).toHaveClass(/no-team/);
     }
   });
@@ -192,10 +249,10 @@ test.describe('Check Adoption Dashboard - Table', () => {
     const modal = page.locator('#check-adoption-modal');
 
     const zeroPercentRow = modal.locator('.adoption-row').filter({
-      has: page.locator('.adoption-cell', { hasText: /^0%$/ })
+      has: page.locator('.adoption-cell', { hasText: /^0%$/ }),
     });
 
-    if (await zeroPercentRow.count() > 0) {
+    if ((await zeroPercentRow.count()) > 0) {
       const progressFill = zeroPercentRow.first().locator('.progress-fill');
       await expect(progressFill).toHaveClass(/none/);
     }
@@ -214,7 +271,9 @@ test.describe('Check Adoption - Exclusion Feature', () => {
     await openCheckAdoptionDashboard(page);
   });
 
-  test('should display exclusion data correctly in stats, table rows, and handle teams without exclusions', async ({ page }) => {
+  test('should display exclusion data correctly in stats, table rows, and handle teams without exclusions', async ({
+    page,
+  }) => {
     const modal = page.locator('#check-adoption-modal');
 
     // Select OpenAPI Specification check which has exclusions
@@ -230,7 +289,7 @@ test.describe('Check Adoption - Exclusion Feature', () => {
 
     // Excluded count in table rows
     const frontendRow = modal.locator('.adoption-row').filter({ hasText: 'frontend' });
-    if (await frontendRow.count() > 0) {
+    if ((await frontendRow.count()) > 0) {
       const excludedCell = frontendRow.locator('.adoption-cell.has-excluded');
       await expect(excludedCell).toBeVisible();
 
@@ -245,7 +304,9 @@ test.describe('Check Adoption - Exclusion Feature', () => {
     await expect(rows.first()).toBeVisible({ timeout: 5000 });
 
     // Services Passing with active count
-    const servicesPassingCard = modal.locator('.adoption-stat-card').filter({ hasText: 'Services Passing' });
+    const servicesPassingCard = modal
+      .locator('.adoption-stat-card')
+      .filter({ hasText: 'Services Passing' });
     await expect(servicesPassingCard).toBeVisible();
     const value = await servicesPassingCard.locator('.adoption-stat-value').textContent();
     expect(value).toMatch(/^\d+\/\d+$/);
@@ -267,7 +328,9 @@ test.describe('Team Modal - Check Adoption with Exclusions', () => {
     await openTeamModal(page, 'frontend');
   });
 
-  test('should display check adoption tab with exclusions, styling, and percentage calculation', async ({ page }) => {
+  test('should display check adoption tab with exclusions, styling, and percentage calculation', async ({
+    page,
+  }) => {
     const modal = page.locator('#team-modal');
     const checkAdoptionTab = modal.getByRole('button', { name: 'Check Adoption' });
     await checkAdoptionTab.click();
@@ -286,8 +349,10 @@ test.describe('Team Modal - Check Adoption with Exclusions', () => {
     const adoptionLists = modal.locator('.adoption-lists');
     if (await adoptionLists.isVisible()) {
       const excludedList = modal.locator('.adoption-list-excluded');
-      if (await excludedList.count() > 0) {
-        const hasThreeColumns = await adoptionLists.evaluate(el => el.classList.contains('three-columns'));
+      if ((await excludedList.count()) > 0) {
+        const hasThreeColumns = await adoptionLists.evaluate((el) =>
+          el.classList.contains('three-columns')
+        );
         expect(hasThreeColumns).toBe(true);
 
         // Excluded services with styling

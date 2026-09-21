@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright configuration for Scorecards Catalog UI Tests
  *
- * Tests run against a local HTTP server serving the docs/ directory.
+ * Tests run against the production artifact on a static server without SPA fallback.
  * API requests are mocked via page.route() to serve test fixtures.
  *
  * Coverage:
@@ -30,11 +30,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter to use
-  reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
-    ...(process.env.CI ? [['github']] : []),
-  ],
+  reporter: [['html', { open: 'never' }], ['list'], ...(process.env.CI ? [['github']] : [])],
 
   // Shared settings for all projects
   use: {
@@ -59,22 +55,25 @@ export default defineConfig({
   ],
 
   // Build and serve the production build before starting the tests
-  // Uses Vite preview mode which serves pre-built files (no dep optimization issues)
-  // Tests use request mocking via page.route() to serve test fixtures
-  // from tests/e2e/fixtures/ instead of fetching from GitHub
+  // A temporary /scorecards alias mirrors the publication prefix. Root URLs remain
+  // available for existing fixtures; missing files receive real 404 responses.
   webServer: {
     // When COVERAGE is enabled, pass COVERAGE env to build for instrumentation
-    command: COVERAGE
-      ? `COVERAGE=true npm run build && npm run preview -- --port ${TEST_PORT}`
-      : `npm run build && npm run preview -- --port ${TEST_PORT}`,
+    command:
+      `${COVERAGE ? 'COVERAGE=true ' : ''}npm run build && ` +
+      'stage=$(mktemp -d) && trap \'rm -rf "$stage"\' EXIT && ' +
+      'cp -a docs/dist/. "$stage/" && ln -s . "$stage/scorecards" && ' +
+      `python3 -m http.server ${TEST_PORT} --directory "$stage"`,
     port: TEST_PORT,
     reuseExistingServer: false,
     timeout: 120 * 1000,
   },
 
   // Global setup/teardown for coverage collection
-  ...(COVERAGE ? {
-    globalSetup: './tests/e2e/coverage-setup.js',
-    globalTeardown: './tests/e2e/coverage-teardown.js',
-  } : {}),
+  ...(COVERAGE
+    ? {
+        globalSetup: './tests/e2e/coverage-setup.js',
+        globalTeardown: './tests/e2e/coverage-teardown.js',
+      }
+    : {}),
 });

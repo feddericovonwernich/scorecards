@@ -3,10 +3,13 @@ import {
   mockCatalogRequests,
   waitForCatalogLoad,
   getServiceCount,
+  getVisibleServiceNames,
   switchToTeamsView,
   switchToServicesView,
   searchServices,
   selectSort,
+  openCheckFilterModal,
+  closeCheckFilterModal,
 } from './test-helper.js';
 
 // ============================================================================
@@ -70,6 +73,62 @@ test.describe('Filter State Persistence', () => {
       expect(count).toBeGreaterThanOrEqual(combinedCount);
     }).toPass({ timeout: 3000 });
   });
+
+  test('should retain team and check selections through view changes, close, No Team, clear, and search', async ({
+    page,
+  }) => {
+    await page.locator('.team-filter-toggle').click();
+    await page.locator('.team-option').filter({ hasText: 'platform' }).locator('input').click();
+    await expect(async () => {
+      expect(await getServiceCount(page)).toBe(2);
+    }).toPass({ timeout: 3000 });
+    expect(await getVisibleServiceNames(page)).toEqual(
+      expect.arrayContaining(['test-repo-perfect', 'test-repo-stale'])
+    );
+
+    await openCheckFilterModal(page);
+    const modal = page.locator('#check-filter-modal');
+    await modal.locator('[data-check-id="01-readme"] .state-pass').click();
+    await expect(modal.locator('.check-filter-summary')).toContainText('1 filter active');
+    await closeCheckFilterModal(page);
+
+    await switchToTeamsView(page);
+    await switchToServicesView(page);
+    await expect(page.locator('.team-filter-toggle')).toContainText('platform');
+    await expect(page.locator('.check-filter-toggle')).toContainText('Check Filter (1)');
+    expect(await getVisibleServiceNames(page)).toEqual(
+      expect.arrayContaining(['test-repo-perfect', 'test-repo-stale'])
+    );
+
+    await openCheckFilterModal(page);
+    await expect(modal.locator('[data-check-id="01-readme"] .state-pass')).toHaveClass(/active/);
+    await modal.locator('.check-clear-btn').click();
+    await closeCheckFilterModal(page);
+    await expect(page.locator('.check-filter-toggle')).toHaveText('Check Filter');
+
+    await page.locator('.team-filter-toggle').click();
+    await page.locator('.team-clear-btn').click();
+    await page
+      .locator('.team-option')
+      .filter({ hasText: 'No Team Assigned' })
+      .locator('input')
+      .click();
+    await expect(async () => {
+      expect(await getServiceCount(page)).toBe(3);
+    }).toPass({ timeout: 3000 });
+    expect(await getVisibleServiceNames(page)).toEqual(
+      expect.arrayContaining(['test-repo-empty', 'test-repo-minimal', 'test-repo-no-docs'])
+    );
+
+    await searchServices(page, 'empty');
+    await expect(page.locator('.service-card')).toHaveCount(1);
+    await expect(page.locator('.service-card')).toContainText('test-repo-empty');
+
+    await page.locator('.team-clear-btn').click();
+    await expect(async () => {
+      expect(await getServiceCount(page)).toBe(1);
+    }).toPass({ timeout: 3000 });
+  });
 });
 
 // ============================================================================
@@ -85,7 +144,9 @@ test.describe('Sort State Persistence', () => {
 
   // Consolidated test: Task 9 - Sort State Persistence and Verification
   // Combines: default sort and persist after modal, sort correctly in all directions
-  test('should maintain sort selection across interactions and verify all directions', async ({ page }) => {
+  test('should maintain sort selection across interactions and verify all directions', async ({
+    page,
+  }) => {
     const sortSelect = page.locator('#sort-select');
 
     // Verify default
@@ -142,7 +203,9 @@ test.describe('Team Filter Dropdown State', () => {
 
   // Consolidated test: Task 10 - Team Filter Dropdown Interaction
   // Combines: close dropdown when clicking outside or pressing Escape, persist selection after closing
-  test('should handle team filter dropdown interactions and persist selections', async ({ page }) => {
+  test('should handle team filter dropdown interactions and persist selections', async ({
+    page,
+  }) => {
     // Open dropdown
     await page.locator('.team-filter-toggle').click();
     await expect(page.locator('.team-dropdown-menu')).toBeVisible();
@@ -176,7 +239,10 @@ test.describe('Team Filter Dropdown State', () => {
 
     // Reopen and verify selections persist
     await page.locator('.team-filter-toggle').click();
-    const frontendCheckbox = page.locator('.team-option').filter({ hasText: 'frontend' }).locator('input');
+    const frontendCheckbox = page
+      .locator('.team-option')
+      .filter({ hasText: 'frontend' })
+      .locator('input');
     expect(await frontendCheckbox.isChecked()).toBe(true);
   });
 });
@@ -196,7 +262,7 @@ test.describe('View State Persistence', () => {
   test('should default to Services view and remember view after modal close', async ({ page }) => {
     // Verify default Services view is active
     const servicesTab = page.locator('[data-view="services"]');
-    let hasActiveClass = await servicesTab.evaluate(el => el.classList.contains('active'));
+    let hasActiveClass = await servicesTab.evaluate((el) => el.classList.contains('active'));
     expect(hasActiveClass).toBe(true);
 
     // Switch to Teams view and open/close modal
@@ -208,7 +274,7 @@ test.describe('View State Persistence', () => {
 
     // Should still be in Teams view
     const teamsTab = page.locator('[data-view="teams"]');
-    hasActiveClass = await teamsTab.evaluate(el => el.classList.contains('active'));
+    hasActiveClass = await teamsTab.evaluate((el) => el.classList.contains('active'));
     expect(hasActiveClass).toBe(true);
 
     // Switch back and verify Services view persists after settings modal
@@ -218,7 +284,7 @@ test.describe('View State Persistence', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('#settings-modal')).not.toBeVisible();
 
-    hasActiveClass = await servicesTab.evaluate(el => el.classList.contains('active'));
+    hasActiveClass = await servicesTab.evaluate((el) => el.classList.contains('active'));
     expect(hasActiveClass).toBe(true);
   });
 });

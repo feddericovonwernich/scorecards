@@ -92,7 +92,7 @@ export function ActionsWidget() {
       )}
 
       {/* Sidebar */}
-      <div className={cn('widget-sidebar', isOpen && 'open')}>
+      <div className={cn('widget-sidebar', isOpen && 'open')} inert={!isOpen}>
         {/* Header */}
         <div className="widget-header">
           <h3>

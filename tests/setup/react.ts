@@ -5,6 +5,9 @@
 
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
+import { TextDecoder, TextEncoder } from 'node:util';
+
+Object.assign(globalThis, { TextDecoder, TextEncoder });
 
 // Mock Zustand store
 // This creates a mock that returns null for PAT by default

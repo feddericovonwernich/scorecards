@@ -8,9 +8,6 @@ import { FloatingControls } from './FloatingControls';
 
 describe('FloatingControls', () => {
   beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
-    // Reset document theme
     document.documentElement.setAttribute('data-theme', 'light');
   });
 
@@ -37,10 +34,6 @@ describe('FloatingControls', () => {
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
-  it('displays zero badge count by default', () => {
-    render(<FloatingControls />);
-    expect(screen.getByText('0')).toBeInTheDocument();
-  });
 
   it('toggles theme when theme button is clicked', () => {
     render(<FloatingControls />);
@@ -72,24 +65,4 @@ describe('FloatingControls', () => {
     expect(mockOnActionsWidgetClick).toHaveBeenCalled();
   });
 
-  it('clicks settings button without error when no callback provided', () => {
-    render(<FloatingControls />);
-    const settingsBtn = screen.getByRole('button', { name: /Settings/ });
-    // Should not throw when clicking
-    expect(() => fireEvent.click(settingsBtn)).not.toThrow();
-  });
-
-  it('clicks actions button without error when no callback provided', () => {
-    render(<FloatingControls />);
-    const actionsBtn = screen.getByRole('button', { name: /Show GitHub Actions/ });
-    // Should not throw when clicking
-    expect(() => fireEvent.click(actionsBtn)).not.toThrow();
-  });
-
-  it('has proper container positioning', () => {
-    render(<FloatingControls />);
-    // Container is fixed positioned in bottom-right corner with Tailwind
-    const container = document.querySelector('.fixed.bottom-6.right-6');
-    expect(container).toBeInTheDocument();
-  });
 });

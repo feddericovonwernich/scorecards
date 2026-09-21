@@ -38,6 +38,7 @@ export function CheckAdoptionTab({
   teamName: _teamName,
 }: CheckAdoptionTabProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLButtonElement>(null);
   const [checks, setChecks] = useState<CheckMetadata[]>([]);
   const [selectedCheckId, setSelectedCheckId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,8 +70,8 @@ export function CheckAdoptionTab({
         );
         const checksData = await loadChecksApi();
         setChecks(checksData.checks || []);
-        if (checksData.checks?.length > 0 && !selectedCheckId) {
-          setSelectedCheckId(checksData.checks[0].id);
+        if (checksData.checks?.length > 0) {
+          setSelectedCheckId((prev) => prev ?? checksData.checks[0].id);
         }
       } catch (err) {
         setError(
@@ -82,7 +83,7 @@ export function CheckAdoptionTab({
     };
 
     loadChecks();
-  }, [selectedCheckId]);
+  }, []);
 
   // Calculate adoption stats for selected check
   const stats = useMemo((): AdoptionStats | null => {
@@ -131,6 +132,7 @@ export function CheckAdoptionTab({
 
   // Handle check selection
   const handleSelectCheck = useCallback((checkId: string) => {
+    selectorRef.current?.focus({ preventScroll: true });
     setSelectedCheckId(checkId);
     setDropdownOpen(false);
   }, []);
@@ -194,6 +196,7 @@ export function CheckAdoptionTab({
         {/* Check Card Selector */}
         <div className="check-card-selector" ref={dropdownRef}>
           <button
+            ref={selectorRef}
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className={cn('check-card-selected', dropdownOpen && 'open')}
           >

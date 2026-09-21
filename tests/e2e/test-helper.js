@@ -13,14 +13,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * @param {import('@playwright/test').Page} page
  */
 export async function mockCatalogRequests(page) {
-  // Override window.location.hostname to simulate GitHub Pages environment
-  // This prevents the app from using 'localhost' as REPO_OWNER
-  await page.addInitScript(() => {
-    Object.defineProperty(window.location, 'hostname', {
-      writable: true,
-      value: 'feddericovonwernich.github.io'
-    });
-  });
+  // Isolated auth fixtures must never reach GitHub, including unmocked writes.
+  // Page-specific fixture handlers take precedence over this context safety net.
+  await page.context().route('https://api.github.com/**', (route) =>
+    route.fulfill({
+      status: 404,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'No isolated API fixture for this request' }),
+    })
+  );
 
   await page.route('**/raw.githubusercontent.com/**', async (route) => {
     const url = new URL(route.request().url());
@@ -76,7 +77,10 @@ export async function mockCatalogRequests(page) {
     const headers = route.request().headers();
     const hasAuth = headers['authorization'] && headers['authorization'].startsWith('token ');
 
-    console.log('Mock intercepted: api.github.com/rate_limit', hasAuth ? '(authenticated)' : '(unauthenticated)');
+    console.log(
+      'Mock intercepted: api.github.com/rate_limit',
+      hasAuth ? '(authenticated)' : '(unauthenticated)'
+    );
 
     await route.fulfill({
       status: 200,
@@ -85,8 +89,8 @@ export async function mockCatalogRequests(page) {
           limit: hasAuth ? 5000 : 60,
           remaining: hasAuth ? 4999 : 59,
           reset: Math.floor(Date.now() / 1000) + 3600,
-          used: hasAuth ? 1 : 1
-        }
+          used: hasAuth ? 1 : 1,
+        },
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -99,7 +103,10 @@ export async function mockCatalogRequests(page) {
     const headers = route.request().headers();
     const hasAuth = headers['authorization'] && headers['authorization'].startsWith('token ');
 
-    console.log('Mock intercepted: api.github.com/user', hasAuth ? '(authenticated)' : '(unauthenticated)');
+    console.log(
+      'Mock intercepted: api.github.com/user',
+      hasAuth ? '(authenticated)' : '(unauthenticated)'
+    );
 
     if (hasAuth) {
       await route.fulfill({
@@ -107,7 +114,7 @@ export async function mockCatalogRequests(page) {
         body: JSON.stringify({
           login: 'testuser',
           id: 12345,
-          name: 'Test User'
+          name: 'Test User',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +124,7 @@ export async function mockCatalogRequests(page) {
       await route.fulfill({
         status: 401,
         body: JSON.stringify({
-          message: 'Requires authentication'
+          message: 'Requires authentication',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -189,6 +196,11 @@ export async function closeServiceModal(page) {
 export async function openSettingsModal(page) {
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.waitForSelector('#settings-modal', { state: 'visible' });
+  await page.locator('#settings-modal').evaluate(async (modal) => {
+    await Promise.all(
+      modal.getAnimations({ subtree: true }).map((animation) => animation.finished)
+    );
+  });
 }
 
 /**
@@ -398,7 +410,7 @@ export async function openCheckFilterModal(page) {
   // Wait for at least one check card to be present
   await page.waitForSelector('#check-filter-modal .check-option-card', {
     state: 'visible',
-    timeout: 5000
+    timeout: 5000,
   });
 }
 
@@ -433,23 +445,37 @@ export async function getVisibleServiceNames(page) {
  * @param {boolean} options.requireAuth - Whether to require authorization header (default: true)
  * @param {number} options.delay - Delay in ms before responding (default: 0, useful for testing loading states)
  */
-export async function mockWorkflowDispatch(page, { status = 204, requireAuth = true, delay = 0 } = {}) {
+export async function mockWorkflowDispatch(
+  page,
+  { status = 204, requireAuth = true, delay = 0 } = {}
+) {
   const pattern = '**/api.github.com/repos/**/actions/workflows/*/dispatches';
-  console.log('Setting up workflow dispatch mock with pattern:', pattern, delay > 0 ? `(${delay}ms delay)` : '');
+  console.log(
+    'Setting up workflow dispatch mock with pattern:',
+    pattern,
+    delay > 0 ? `(${delay}ms delay)` : ''
+  );
 
   await page.route(pattern, async (route) => {
     const headers = route.request().headers();
-    const hasAuth = headers['authorization'] && (headers['authorization'].startsWith('Bearer ') || headers['authorization'].startsWith('token '));
+    const hasAuth =
+      headers['authorization'] &&
+      (headers['authorization'].startsWith('Bearer ') ||
+        headers['authorization'].startsWith('token '));
     const url = route.request().url();
 
-    console.log('Mock intercepted: workflow dispatch', url, hasAuth ? '(authenticated)' : '(unauthenticated)');
+    console.log(
+      'Mock intercepted: workflow dispatch',
+      url,
+      hasAuth ? '(authenticated)' : '(unauthenticated)'
+    );
 
     // If auth is required but not provided, return 401
     if (requireAuth && !hasAuth) {
       await route.fulfill({
         status: 401,
         body: JSON.stringify({
-          message: 'Requires authentication'
+          message: 'Requires authentication',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -460,7 +486,7 @@ export async function mockWorkflowDispatch(page, { status = 204, requireAuth = t
 
     // Apply delay if specified (useful for testing loading states)
     if (delay > 0) {
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
 
     // Return the configured status
@@ -558,7 +584,10 @@ export async function waitForToast(page, type = 'any') {
   if (type === 'any') {
     await page.waitForSelector('.toast', { state: 'visible', timeout: 5000 });
   } else {
-    await page.waitForSelector(`.toast-react--${type}, .toast.${type}`, { state: 'visible', timeout: 5000 });
+    await page.waitForSelector(`.toast-react--${type}, .toast.${type}`, {
+      state: 'visible',
+      timeout: 5000,
+    });
   }
 }
 
@@ -582,7 +611,10 @@ export async function dismissToast(page) {
  * @param {Object} options - Mock options
  * @param {Array} options.runs - Array of workflow run objects
  */
-export async function mockWorkflowRuns(page, { runs = { workflow_runs: [], total_count: 0 } } = {}) {
+export async function mockWorkflowRuns(
+  page,
+  { runs = { workflow_runs: [], total_count: 0 } } = {}
+) {
   await page.route('**/api.github.com/repos/**/actions/runs*', async (route) => {
     await route.fulfill({
       status: 200,

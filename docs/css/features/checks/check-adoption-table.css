@@ -3,14 +3,16 @@
    ============================================ */
 
 .adoption-table-container {
-    max-height: 400px;
-    overflow-y: auto;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
 }
 
 .adoption-table {
     width: 100%;
+    min-width: 640px;
     border-collapse: collapse;
 }
 
@@ -34,16 +36,6 @@
     user-select: none;
 }
 
-.adoption-table th.sortable {
-    cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-in-out-smooth);
-}
-
-.adoption-table th.sortable:hover {
-    background: var(--color-surface-tertiary);
-    color: var(--color-text);
-}
-
 .adoption-table th .sort-indicator {
     margin-left: var(--space-1);
     color: var(--color-accent);
@@ -55,7 +47,6 @@
 }
 
 .adoption-row {
-    cursor: pointer;
     transition: background var(--duration-fast) var(--ease-in-out-smooth);
 }
 

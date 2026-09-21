@@ -37,8 +37,12 @@ test.describe('Teams View - Navigation and Stats', () => {
 
     // Check for stat cards (scope to teamsStats to avoid matching team modal stats)
     await expect(teamsStats.locator('.stat-card').filter({ hasText: 'Total Teams' })).toBeVisible();
-    await expect(teamsStats.locator('.stat-card').filter({ hasText: 'Average Score' })).toBeVisible();
-    await expect(teamsStats.locator('.stat-card').filter({ hasText: 'Total Services' })).toBeVisible();
+    await expect(
+      teamsStats.locator('.stat-card').filter({ hasText: 'Average Score' })
+    ).toBeVisible();
+    await expect(
+      teamsStats.locator('.stat-card').filter({ hasText: 'Total Services' })
+    ).toBeVisible();
 
     // Rank distribution
     const ranks = ['Platinum', 'Gold', 'Silver', 'Bronze'];
@@ -91,22 +95,17 @@ test.describe('Teams View - Search and Sort', () => {
     await expect(teamsViewPage.locator('.team-card').first()).toContainText('frontend');
   });
 
-  test('should sort teams by different criteria', async ({ teamsViewPage }) => {
-    // Find the sort select by ID for more reliable selection
-    const sortSelect = teamsViewPage.locator('#sort-select');
-
-    // Skip if sort select is not visible (may be hidden on mobile view)
-    if (!(await sortSelect.isVisible())) {
-      // Sort select may be hidden on current viewport - test passes as structure exists
-      return;
-    }
-
-    // Sort by name
-    const options = await sortSelect.locator('option').allTextContents();
-    if (options.some(o => o.includes('Name'))) {
-      await sortSelect.selectOption({ label: 'Name: A to Z' });
-      await expect(teamsViewPage.locator('.team-card').first()).toContainText('backend');
-    }
+  test('sorts Teams through its named keyboard control', async ({ teamsViewPage: page }) => {
+    const sort = page.getByRole('combobox', { name: 'Sort by', exact: true });
+    await sort.focus();
+    await page.keyboard.press('End');
+    await page.keyboard.press('Enter');
+    await expect(sort).toHaveValue('name-desc');
+    await expect(page.locator('.team-card').first()).toContainText(/platform/i);
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(sort).toHaveValue('name-asc');
+    await expect(page.locator('.team-card').first()).toContainText(/backend/i);
   });
 
   test('should have action buttons', async ({ teamsViewPage }) => {
@@ -144,8 +143,16 @@ test.describe('Team Filter', () => {
 
   test('should support multi-select and clear filter', async ({ catalogPage }) => {
     await catalogPage.locator('.team-filter-toggle').click();
-    await catalogPage.locator('.team-option').filter({ hasText: 'frontend' }).locator('input').click();
-    await catalogPage.locator('.team-option').filter({ hasText: 'backend' }).locator('input').click();
+    await catalogPage
+      .locator('.team-option')
+      .filter({ hasText: 'frontend' })
+      .locator('input')
+      .click();
+    await catalogPage
+      .locator('.team-option')
+      .filter({ hasText: 'backend' })
+      .locator('input')
+      .click();
 
     await expect(async () => {
       expect(await getServiceCount(catalogPage)).toBe(4);
@@ -162,9 +169,15 @@ test.describe('Team Filter', () => {
 
   test('should filter to services without team', async ({ catalogPage }) => {
     await catalogPage.locator('.team-filter-toggle').click();
-    await expect(catalogPage.locator('.team-option').filter({ hasText: 'No Team Assigned' })).toBeVisible();
+    await expect(
+      catalogPage.locator('.team-option').filter({ hasText: 'No Team Assigned' })
+    ).toBeVisible();
 
-    await catalogPage.locator('.team-option').filter({ hasText: 'No Team Assigned' }).locator('input').click();
+    await catalogPage
+      .locator('.team-option')
+      .filter({ hasText: 'No Team Assigned' })
+      .locator('input')
+      .click();
 
     await expect(async () => {
       expect(await getServiceCount(catalogPage)).toBe(3);
@@ -182,7 +195,9 @@ test.describe('Team Filter', () => {
 // ============================================================================
 
 test.describe('Team Modal - Basic Behavior', () => {
-  test('should open modal, navigate through all tabs, and close via multiple methods', async ({ teamModalPage }) => {
+  test('should open modal, navigate through all tabs, and close via multiple methods', async ({
+    teamModalPage,
+  }) => {
     const modal = teamModalPage.locator('#team-modal');
 
     // Modal opening and basic info
@@ -242,7 +257,7 @@ test.describe('Team Modal - Services Tab', () => {
 
     // Services tab is default
     const servicesTab = modal.getByRole('button', { name: 'Services', exact: true });
-    expect(await servicesTab.evaluate(el => el.classList.contains('active'))).toBe(true);
+    expect(await servicesTab.evaluate((el) => el.classList.contains('active'))).toBe(true);
 
     // Should show services
     await expect(modal).toContainText('test-repo-perfect');
@@ -254,7 +269,10 @@ test.describe('Team Modal - Services Tab', () => {
 
   test('should open service modal when clicking service', async ({ teamModalPage }) => {
     const modal = teamModalPage.locator('#team-modal');
-    const serviceItem = modal.locator('[role="button"], button').filter({ hasText: 'test-repo-perfect' }).first();
+    const serviceItem = modal
+      .locator('[role="button"], button')
+      .filter({ hasText: 'test-repo-perfect' })
+      .first();
     await serviceItem.click();
 
     await expect(teamModalPage.locator('#service-modal')).toBeVisible();
@@ -271,7 +289,7 @@ test.describe('Team Modal - Distribution Tab', () => {
 
     const modal = teamModalPage.locator('#team-modal');
     const distributionTab = modal.getByRole('button', { name: 'Distribution', exact: true });
-    expect(await distributionTab.evaluate(el => el.classList.contains('active'))).toBe(true);
+    expect(await distributionTab.evaluate((el) => el.classList.contains('active'))).toBe(true);
 
     // All ranks should be visible
     const ranks = ['Platinum', 'Gold', 'Silver', 'Bronze'];
@@ -300,7 +318,11 @@ test.describe('Team Modal - Check Adoption Tab', () => {
 
     // Should have check selector (wait for it to load)
     await expect(async () => {
-      const hasSelector = await modal.locator('button, select').filter({ hasText: /README|Documentation|License/i }).count() > 0;
+      const hasSelector =
+        (await modal
+          .locator('button, select')
+          .filter({ hasText: /README|Documentation|License/i })
+          .count()) > 0;
       expect(hasSelector).toBe(true);
     }).toPass({ timeout: 5000 });
 
@@ -311,17 +333,25 @@ test.describe('Team Modal - Check Adoption Tab', () => {
     await expect(modal).toContainText(/Failing/i);
   });
 
-  test('should allow changing check selection', async ({ teamModalPage }) => {
+  test('should return focus to the check selector after keyboard selection', async ({
+    teamModalPage,
+  }) => {
     await clickTeamModalTab(teamModalPage, 'Check Adoption');
-
     const modal = teamModalPage.locator('#team-modal');
-    const checkSelector = modal.locator('button').filter({ hasText: /README|Documentation/i }).first();
-    await checkSelector.click();
-
-    await expect(async () => {
-      const hasOptions = await modal.locator('button, [role="option"]').filter({ hasText: /License|CI/i }).count() > 0;
-      expect(hasOptions).toBe(true);
-    }).toPass({ timeout: 3000 });
+    const selector = modal.locator('.check-card-selected');
+    await expect(selector).toBeVisible();
+    await selector.focus();
+    await teamModalPage.keyboard.press('Enter');
+    const option = modal.locator('.check-card-option').nth(1);
+    const checkName = await option.locator('.check-card-name').textContent();
+    await option.focus();
+    await teamModalPage.keyboard.press('Enter');
+    await expect(modal.locator('.check-card-dropdown')).toBeHidden();
+    await expect(selector).toContainText(checkName);
+    await expect(selector).toBeFocused();
+    await expect(modal.locator('.adoption-progress')).toBeVisible();
+    await teamModalPage.keyboard.press('Enter');
+    await expect(modal.locator('.check-card-dropdown')).toBeVisible();
   });
 });
 
@@ -335,7 +365,7 @@ test.describe('Team Modal - GitHub Tab', () => {
 
     const modal = teamModalPage.locator('#team-modal');
     const githubTab = modal.getByRole('button', { name: 'GitHub', exact: true });
-    expect(await githubTab.evaluate(el => el.classList.contains('active'))).toBe(true);
+    expect(await githubTab.evaluate((el) => el.classList.contains('active'))).toBe(true);
 
     // Platform team is configured with github_org
     const githubLink = modal.locator('a[href*="github.com"]');
@@ -359,8 +389,16 @@ test.describe('Team Modal - GitHub Tab', () => {
       await route.fulfill({
         status: 200,
         body: JSON.stringify([
-          { login: 'testuser1', avatar_url: 'https://avatars.githubusercontent.com/u/1', html_url: 'https://github.com/testuser1' },
-          { login: 'testuser2', avatar_url: 'https://avatars.githubusercontent.com/u/2', html_url: 'https://github.com/testuser2' },
+          {
+            login: 'testuser1',
+            avatar_url: 'https://avatars.githubusercontent.com/u/1',
+            html_url: 'https://github.com/testuser1',
+          },
+          {
+            login: 'testuser2',
+            avatar_url: 'https://avatars.githubusercontent.com/u/2',
+            html_url: 'https://github.com/testuser2',
+          },
         ]),
         headers: { 'Content-Type': 'application/json' },
       });
@@ -384,13 +422,20 @@ test.describe('Check Adoption Dashboard', () => {
     await openCheckAdoptionDashboard(catalogPage);
 
     const modal = catalogPage.locator('#check-adoption-modal');
-    const checkSelector = modal.locator('button').filter({ hasText: /README|Documentation/i }).first();
+    const checkSelector = modal
+      .locator('button')
+      .filter({ hasText: /README|Documentation/i })
+      .first();
 
     if (await checkSelector.isVisible()) {
       await checkSelector.click();
 
       await expect(async () => {
-        const hasOptions = await catalogPage.locator('button, [role="option"]').filter({ hasText: /License|CI/i }).count() > 0;
+        const hasOptions =
+          (await catalogPage
+            .locator('button, [role="option"]')
+            .filter({ hasText: /License|CI/i })
+            .count()) > 0;
         expect(hasOptions).toBe(true);
       }).toPass({ timeout: 3000 });
     }

@@ -71,6 +71,7 @@ export function TeamsControls() {
       <select
         id="teams-sort-select"
         className="sort-select"
+        aria-label="Sort by"
         value={teams.sort}
         onChange={handleSortChange}
       >
