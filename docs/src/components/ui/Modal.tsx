@@ -9,6 +9,18 @@ import { createPortal } from 'react-dom';
 let openModalCount = 0;
 let previousBodyOverflow = '';
 
+function focusDialogContent(dialog: HTMLDialogElement) {
+  const target = dialog.querySelector<HTMLElement>(
+    '[autofocus], h1, h2, input:not([disabled]), select:not([disabled])'
+  ) ?? dialog.querySelector<HTMLElement>('button:not([disabled])');
+  if (target) {
+    if (/^H[12]$/.test(target.tagName)) {
+      target.tabIndex = -1;
+    }
+    target.focus({ preventScroll: true });
+  }
+}
+
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -54,31 +66,39 @@ export function Modal({
     if (!dialog.open) {
       dialog.showModal();
     }
-    const initialFocus = dialog.querySelector<HTMLElement>(
-      '[autofocus], h1, h2, input:not([disabled]), select:not([disabled])'
-    );
-    if (initialFocus) {
-      if (/^H[12]$/.test(initialFocus.tagName)) {
-        initialFocus.tabIndex = -1;
-      }
-      initialFocus.focus({ preventScroll: true });
-    }
+    focusDialogContent(dialog);
     return () => {
       dialog.close();
       if (--openModalCount === 0) {
         document.body.style.overflow = previousBodyOverflow;
       }
       queueMicrotask(() => {
-        // React may remove the node before native return runs. Inert top layers
-        // reject focus behind them, while an opener in the remaining dialog is safe.
         if (opener?.isConnected && !opener.closest('[inert]') && opener.getClientRects().length) {
           opener.focus({ preventScroll: true });
-        } else if (!document.querySelector('dialog:modal')) {
+        }
+        const active = document.activeElement;
+        if (active && active !== document.body && !dialog.contains(active)) {
+          return;
+        }
+        for (const remaining of document.querySelectorAll<HTMLDialogElement>('dialog:modal')) {
+          focusDialogContent(remaining);
+          if (remaining.contains(document.activeElement)) {
+            return;
+          }
+        }
+        if (!document.querySelector('dialog:modal')) {
           document.querySelector<HTMLElement>('nav [aria-current="page"], nav .active')?.focus();
         }
       });
     };
   }, [isOpen]);
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog?.open && document.activeElement === document.body) {
+      focusDialogContent(dialog);
+    }
+  });
 
   if (!isOpen) {
     return null;

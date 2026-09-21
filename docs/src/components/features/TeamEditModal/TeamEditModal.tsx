@@ -346,6 +346,7 @@ export function TeamEditModal({
                         <button
                           type="button"
                           onClick={() => handleRemoveAlias(alias)}
+                          aria-label={`Remove alias ${alias}`}
                           className="text-text-muted hover:text-error"
                         >
                           &times;

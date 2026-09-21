@@ -122,6 +122,10 @@ function getOpenAPIInfo(data: ServiceResults): OpenAPIInfo {
 export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [workflowFeedback, setWorkflowFeedback] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
   const [serviceData, setServiceData] = useState<ServiceResults | null>(null);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [isStale, setIsStale] = useState(false);
@@ -135,6 +139,7 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
     const fetchData = async () => {
       setLoading(true);
       setError(null);
+      setWorkflowFeedback(null);
 
       try {
         // Use fetchWithHybridAuth like the vanilla JS modal
@@ -206,15 +211,18 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
   const handleTriggerWorkflow = useCallback(async () => {
     if (!org || !repo) {return;}
 
+    setWorkflowFeedback(null);
     try {
       const { triggerScorecardWorkflow } = await import('../../../api/github.js');
-      await triggerScorecardWorkflow(org, repo);
-      window.showToast?.('Workflow triggered successfully', 'success');
+      if (!await triggerScorecardWorkflow(org, repo)) {
+        throw new Error('Failed to trigger workflow');
+      }
+      setWorkflowFeedback({ message: 'Workflow triggered successfully', type: 'success' });
     } catch (err) {
-      window.showToast?.(
-        err instanceof Error ? err.message : 'Failed to trigger workflow',
-        'error'
-      );
+      setWorkflowFeedback({
+        message: err instanceof Error ? err.message : 'Failed to trigger workflow',
+        type: 'error',
+      });
     }
   }, [org, repo]);
 
@@ -429,6 +437,15 @@ export function ServiceModal({ isOpen, onClose, org, repo }: ServiceModalProps) 
             </button>
           )}
         </div>
+
+        {workflowFeedback && (
+          <p
+            role={workflowFeedback.type === 'error' ? 'alert' : 'status'}
+            className={workflowFeedback.type === 'error' ? 'text-error' : 'text-success'}
+          >
+            {workflowFeedback.message}
+          </p>
+        )}
 
         {/* Staleness warning */}
         {isStale && (

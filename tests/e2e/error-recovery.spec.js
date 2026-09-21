@@ -41,9 +41,14 @@ test.describe('Network Failure Recovery', () => {
     await waitForCatalogLoad(page);
     const resultsPath = '**/results/feddericovonwernich/test-repo-perfect/results.json*';
     let failing = true;
-    await page.route(resultsPath, route => failing
-      ? route.fulfill({ status: 503, contentType: 'application/json', body: '{}' })
-      : route.fallback());
+    let releaseResults;
+    let resultsReady = Promise.resolve();
+    await page.route(resultsPath, async route => {
+      await resultsReady;
+      return failing
+        ? route.fulfill({ status: 503, contentType: 'application/json', body: '{}' })
+        : route.fallback();
+    });
     await page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).click();
     const modal = page.locator('#service-modal');
     await expect(modal.getByText('Error loading service')).toBeVisible();
@@ -51,9 +56,13 @@ test.describe('Network Failure Recovery', () => {
     const original = await modal.elementHandle();
     for (const action of ['Try Again', 'Refresh Data', 'Try Again']) {
       failing = action === 'Refresh Data';
+      resultsReady = new Promise(resolve => { releaseResults = resolve; });
       const registryResponse = page.waitForResponse(res => res.url().includes('/registry/feddericovonwernich/test-repo-perfect.json'));
       const response = page.waitForResponse(res => res.url().includes('/results/feddericovonwernich/test-repo-perfect/results.json'));
       await modal.getByRole('button', { name: action, exact: true }).click();
+      await expect(modal.getByText('Loading service details...')).toBeVisible();
+      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      releaseResults();
       expect((await registryResponse).status()).toBe(200);
       expect((await response).status()).toBe(failing ? 503 : 200);
       if (failing) {
@@ -64,7 +73,16 @@ test.describe('Network Failure Recovery', () => {
         await expect(modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })).toBeVisible();
       }
       expect(await original.evaluate(node => node.isConnected)).toBe(true);
+      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
     }
+    await modal.getByRole('button', { name: 'Close modal' }).click();
+    resultsReady = new Promise(resolve => { releaseResults = resolve; });
+    await page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).click();
+    await expect(modal.getByText('Loading service details...')).toBeVisible();
+    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    releaseResults();
+    await expect(modal.locator('.check-result').first()).toBeVisible();
+    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
 
 

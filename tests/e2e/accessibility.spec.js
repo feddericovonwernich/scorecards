@@ -1,7 +1,8 @@
 import { test, expect } from './coverage.js';
 import AxeBuilder from '@axe-core/playwright';
-import { mockCatalogRequests, waitForCatalogLoad } from './test-helper.js';
+import { mockCatalogRequests, waitForCatalogLoad, mockWorkflowRuns, mockWorkflowDispatch } from './test-helper.js';
 import { openServiceModal, openTeamModal } from './test-helper.js';
+import { mockPAT } from './fixtures.js';
 
 test.describe('Accessibility', () => {
     test.beforeEach(async ({ page }) => {
@@ -93,6 +94,51 @@ test.describe('Accessibility', () => {
         await page.keyboard.press('Escape');
         await expect(settings).toHaveCount(0);
         await expect(page.getByRole('tab', { name: 'Teams', exact: true })).toBeFocused();
+    });
+
+    test('Settings restores focus when authentication removes the nested opener', async ({ page }) => {
+        await mockWorkflowRuns(page);
+        await openServiceModal(page, 'test-repo-perfect');
+        const service = page.locator('#service-modal');
+        await service.getByRole('button', { name: 'Workflow Runs', exact: true }).click();
+        const configure = service.getByRole('button', { name: 'Configure Token' });
+        await configure.click();
+        const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+        await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill(mockPAT);
+        await settings.getByRole('button', { name: 'Save Token' }).click();
+        await expect(settings.getByRole('heading', { name: 'GitHub API Mode' })).toBeVisible();
+        await expect(configure).toHaveCount(0);
+        expect(await settings.evaluate(node => node.contains(document.activeElement))).toBe(true);
+        await page.keyboard.press('Escape');
+        await expect(settings).toHaveCount(0);
+        expect(await service.evaluate(node => node.contains(document.activeElement))).toBe(true);
+        await page.keyboard.press('Tab');
+        expect(await service.evaluate(node => node.contains(document.activeElement))).toBe(true);
+        await page.keyboard.press('Escape');
+        await expect(service).toHaveCount(0);
+        await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
+    });
+
+    test('service workflow feedback remains visible inside the active dialog', async ({ page }) => {
+        await openServiceModal(page, 'test-repo-stale');
+        const service = page.locator('#service-modal');
+        await service.getByRole('button', { name: 'Run Scorecard', exact: true }).click();
+        await expect(service.getByRole('alert')).toContainText(/token required/i);
+        await service.getByRole('button', { name: 'Workflow Runs', exact: true }).click();
+        await service.getByRole('button', { name: 'Configure Token' }).click();
+        const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+        await mockWorkflowRuns(page);
+        await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill(mockPAT);
+        await settings.getByRole('button', { name: 'Save Token' }).click();
+        await expect(settings.getByRole('heading', { name: 'GitHub API Mode' })).toBeVisible();
+        await page.keyboard.press('Escape');
+        await mockWorkflowDispatch(page, { status: 403 });
+        await service.getByRole('button', { name: 'Run Scorecard', exact: true }).click();
+        await expect(service.getByRole('alert')).toContainText(/failed/i);
+        await mockWorkflowDispatch(page);
+        await service.getByRole('button', { name: 'Run Scorecard', exact: true }).click();
+        await expect(service.getByRole('status')).toContainText(/triggered successfully/i);
+        await expect(service.getByRole('alert')).toHaveCount(0);
     });
 
     test('workflow entry without a token opens Settings without dispatching', async ({ page }) => {

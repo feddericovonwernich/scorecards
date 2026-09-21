@@ -203,6 +203,10 @@
 .team-edit-modal button:not(.modal-close) {
     min-height: 44px;
 }
+
+.team-edit-modal button:not(.modal-close) {
+    min-inline-size: 44px;
+}
 .team-github-link svg {
     flex-shrink: 0;
 }

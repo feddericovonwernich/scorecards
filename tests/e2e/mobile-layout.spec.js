@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures/catalog.fixture.js';
 import { readFile } from 'node:fs/promises';
 import { openServiceModal, openTeamModal, openCheckAdoptionDashboard } from './test-helper.js';
+import { mockPAT } from './fixtures.js';
 
 const sizes = [[320, 844], [360, 844], [390, 844], [430, 844], [768, 1024], [1440, 900], [844, 390]];
 
@@ -123,9 +124,21 @@ test.describe('Emulated touch targets', () => {
     await expect(page.getByRole('dialog', { name: 'PAT Required' })).toBeVisible();
     await page.getByRole('dialog', { name: 'PAT Required' }).getByRole('button', { name: 'Configure Token' }).tap();
     await expect(settings).toBeVisible();
+    await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill(mockPAT);
+    await settings.getByRole('button', { name: 'Save Token' }).tap();
+    await expect(settings.getByRole('heading', { name: 'GitHub API Mode' })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(settings).toHaveCount(0);
     await expect(team).toBeVisible();
+    await team.getByRole('button', { name: 'Edit Team', exact: true }).tap();
+    const editor = page.getByRole('dialog', { name: 'Edit Team', exact: true });
+    await editor.getByPlaceholder('Add alias and press Enter').fill('touch-alias');
+    await editor.getByRole('button', { name: 'Add', exact: true }).tap();
+    const removeAlias = editor.getByRole('button', { name: 'Remove alias touch-alias', exact: true });
+    await target(removeAlias);
+    await removeAlias.tap();
+    await expect(editor.getByText('touch-alias', { exact: true })).toHaveCount(0);
+    await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await page.getByRole('tab', { name: 'Services', exact: true }).tap();
     await page.getByRole('button', { name: 'Check Filter', exact: true }).tap();
