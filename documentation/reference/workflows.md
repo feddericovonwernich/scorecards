@@ -4,11 +4,12 @@ This document provides detailed documentation for all GitHub Actions workflows i
 
 ## Overview
 
-The Scorecards system groups workflows into three categories:
+The Scorecards system groups workflows into four categories:
 
 - **Development & Quality** - Testing and maintenance of the scorecards system itself
 - **Service Onboarding** - Installing scorecards in service repositories
 - **Execution & Maintenance** - Running checks and maintaining the catalog
+- **Optional Remediation** - Disabled-by-default, PR-only correction proposals
 
 ### Optional remediation
 
@@ -398,13 +399,7 @@ Multiple workflows write to catalog branch to prevent conflicts and loops:
 
 ### Token Requirements
 
-The system uses three types of tokens:
-
-1. **GITHUB_TOKEN** (automatic) - Basic operations in service repos
-2. **SCORECARDS_CATALOG_TOKEN** (required) - Writes results to catalog branch (`repo` scope)
-3. **SCORECARDS_WORKFLOW_TOKEN** (optional) - Creates PRs with workflow files (`repo`, `workflow` scopes)
-
-**See [Token Requirements Guide](token-requirements.md) for setup instructions and detailed explanations.**
+See the [Token Requirements Guide](token-requirements.md) for scoring, installation and remediation credentials, permissions and activation safeguards.
 
 ## Quick Reference
 
@@ -417,6 +412,7 @@ The system uses three types of tokens:
 | install.yml                  | Onboarding  | Workflow call       | Reusable install + score |
 | scorecards.yml               | Execution   | Daily/push/manual   | Run checks in service    |
 | trigger-service-workflow.yml | Execution   | Manual              | Remote workflow trigger  |
+| remediate-check.yml          | Remediation | Manual              | Validate and propose PR  |
 | consolidate-registry.yml     | Maintenance | Registry updates    | Consolidate registry     |
 
 ## Related Documentation

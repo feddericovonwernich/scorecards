@@ -133,24 +133,24 @@ const repoPath = process.env.SCORECARD_REPO_PATH || '.';
 const ciPath = path.join(repoPath, '.github', 'workflows');
 
 try {
-    if (fs.existsSync(ciPath)) {
-        const files = fs.readdirSync(ciPath);
-        const yamlFiles = files.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
+  if (fs.existsSync(ciPath)) {
+    const files = fs.readdirSync(ciPath);
+    const yamlFiles = files.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
 
-        if (yamlFiles.length > 0) {
-            console.log(`Found ${yamlFiles.length} CI workflow(s): ${yamlFiles.join(', ')}`);
-            process.exit(0);
-        } else {
-            console.error('No workflow files found in .github/workflows/');
-            process.exit(1);
-        }
+    if (yamlFiles.length > 0) {
+      console.log(`Found ${yamlFiles.length} CI workflow(s): ${yamlFiles.join(', ')}`);
+      process.exit(0);
     } else {
-        console.error('.github/workflows/ directory not found');
-        process.exit(1);
+      console.error('No workflow files found in .github/workflows/');
+      process.exit(1);
     }
-} catch (error) {
-    console.error(`Error: ${error.message}`);
+  } else {
+    console.error('.github/workflows/ directory not found');
     process.exit(1);
+  }
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+  process.exit(1);
 }
 ```
 
@@ -159,11 +159,13 @@ try {
 ### 1. Be Specific in Output
 
 Good:
+
 ```bash
 echo "Found 15 test files covering 12 source files (80% coverage)"
 ```
 
 Bad:
+
 ```bash
 echo "Tests found"
 ```
@@ -209,11 +211,13 @@ Checks run in lexicographical order, so lower numbers run first.
 ## Testing Your Check Locally
 
 1. Set the environment variable:
+
 ```bash
 export SCORECARD_REPO_PATH=/path/to/test/repo
 ```
 
 2. Run your check script:
+
 ```bash
 bash checks/01-my-check/check.sh
 echo "Exit code: $?"

@@ -27,13 +27,14 @@ Provide `SCORECARDS_CATALOG_TOKEN` to the scoring workflow, preferably through a
 
 Remediation is a separate central workflow and is **not** enabled by installing scoring. A platform operator must explicitly allowlist your service/check/actors and verify its activation prerequisites. Any correction arrives as a PR for human review, never as a direct commit to your default branch. See the [remediation flow](../architecture/flows/remediation-flow.md).
 
-### Step 3: Push to Default Branch
+### Step 3: Push to the Configured Branch
 
-Once you've added the workflow and secret, push to your default branch. The scorecard will run automatically!
+Push to a branch configured in the copied workflow. The maintained template runs on `main` and `master`; update those triggers if your default branch differs.
 
 ### Step 4: View Your Results
 
 After the first run:
+
 1. Visit the [Scorecards Catalog](https://feddericovonwernich-org.github.io/scorecards/)
 2. Find your service in the list
 3. See your score, rank, and detailed check results
@@ -52,6 +53,7 @@ Show your quality score directly in your README:
 ```
 
 **Replace the following:**
+
 - `YOUR-ORG/scorecards` - Your organization's central scorecards repository (e.g., `acme-corp/scorecards`)
 - `your-org/your-repo` - Your service's organization and repository name (e.g., `acme-corp/payment-service`)
 
@@ -65,21 +67,22 @@ Create `.scorecard/config.yml`:
 
 ```yaml
 service:
-  name: "My Awesome Service"
-  team: "Platform Team"
-  description: "Handles user authentication and authorization"
+  name: 'My Awesome Service'
+  team: 'Platform Team'
+  description: 'Handles user authentication and authorization'
   links:
-    - name: "Documentation"
-      url: "https://docs.example.com/my-service"
-    - name: "Runbook"
-      url: "https://wiki.example.com/runbooks/my-service"
+    - name: 'Documentation'
+      url: 'https://docs.example.com/my-service'
+    - name: 'Runbook'
+      url: 'https://wiki.example.com/runbooks/my-service'
 
 custom:
-  criticality: "high"
-  environment: "production"
+  criticality: 'high'
+  environment: 'production'
 ```
 
 **Benefits of adding metadata:**
+
 - Custom service names in the catalog (instead of repo names)
 - Team ownership visibility
 - Useful links directly in the catalog
@@ -109,6 +112,7 @@ Check the `SCORECARDS_CATALOG_TOKEN` secret, its selected repositories/permissio
 ### Checks failing unexpectedly
 
 View detailed check results in the catalog:
+
 1. Visit the catalog page
 2. Click on your service card
 3. Review each check's output and error messages

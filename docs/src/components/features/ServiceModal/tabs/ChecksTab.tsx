@@ -54,7 +54,9 @@ function groupChecksByCategory(checks: CheckResult[]): Record<string, CheckResul
     const matchingKey = Object.keys(categories).find(
       (key) => key.toLowerCase() === category.toLowerCase()
     );
-    if (matchingKey) {ordered[category] = categories[matchingKey];}
+    if (matchingKey) {
+      ordered[category] = categories[matchingKey];
+    }
   });
   return ordered;
 }
@@ -80,25 +82,31 @@ function CheckItem({
   const inFlight = useRef(false);
   const mounted = useRef(true);
   const isExcluded = check.status === 'excluded';
-  const canRemediate = check.status === 'fail'
-    && check.remediation?.version === 1
-    && typeof check.remediation.label === 'string'
-    && check.remediation.label.length > 0
-    && evaluation !== undefined
-    && typeof evaluation.service_repository === 'string'
-    && evaluation.service_repository.toLowerCase() === `${org}/${repo}`.toLowerCase()
-    && typeof evaluation.suite_repository === 'string'
-    && evaluation.suite_repository.toLowerCase() === `${getRepoOwner()}/${getRepoName()}`.toLowerCase()
-    && /^[a-f\d]{40}$/i.test(evaluation.service_sha)
-    && /^[a-f\d]{40}$/i.test(evaluation.suite_sha);
+  const canRemediate =
+    check.status === 'fail' &&
+    check.remediation?.version === 1 &&
+    typeof check.remediation.label === 'string' &&
+    check.remediation.label.length > 0 &&
+    evaluation !== undefined &&
+    typeof evaluation.service_repository === 'string' &&
+    evaluation.service_repository.toLowerCase() === `${org}/${repo}`.toLowerCase() &&
+    typeof evaluation.suite_repository === 'string' &&
+    evaluation.suite_repository.toLowerCase() ===
+      `${getRepoOwner()}/${getRepoName()}`.toLowerCase() &&
+    /^[a-f\d]{40}$/i.test(evaluation.service_sha) &&
+    /^[a-f\d]{40}$/i.test(evaluation.suite_sha);
 
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const handleRemediation = async () => {
-    if (inFlight.current) {return;}
+    if (inFlight.current) {
+      return;
+    }
     if (!hasToken()) {
       onSettingsRequired();
       return;
@@ -126,15 +134,27 @@ function CheckItem({
       </div>
       {check.description && <div className="check-description">{check.description}</div>}
       {isExcluded && (
-        <div className="check-excluded-notice"><em>Excluded from scoring</em></div>
+        <div className="check-excluded-notice">
+          <em>Excluded from scoring</em>
+        </div>
       )}
       {check.stdout && check.stdout.trim() && (
-        <div className="check-output"><strong>Output:</strong><br />{check.stdout.trim()}</div>
+        <div className="check-output">
+          <strong>Output:</strong>
+          <br />
+          {check.stdout.trim()}
+        </div>
       )}
       {check.stderr && check.stderr.trim() && check.status === 'fail' && (
-        <div className="check-output check-output-error"><strong>Error:</strong><br />{check.stderr.trim()}</div>
+        <div className="check-output check-output-error">
+          <strong>Error:</strong>
+          <br />
+          {check.stderr.trim()}
+        </div>
       )}
-      <div className="check-meta">Weight: {check.weight} | Duration: {check.duration}s</div>
+      <div className="check-meta">
+        Weight: {check.weight} | Duration: {check.duration}s
+      </div>
       {canRemediate && check.remediation && (
         <ActionButton
           state={button.state}
@@ -211,7 +231,11 @@ export function ChecksTab({
 }: ChecksTabProps) {
   const categorizedChecks = useMemo(() => groupChecksByCategory(checks), [checks]);
   if (checks.length === 0) {
-    return <div className="tab-panel" id="checks-tab"><div className="empty-state">No check results available</div></div>;
+    return (
+      <div className="tab-panel" id="checks-tab">
+        <div className="empty-state">No check results available</div>
+      </div>
+    );
   }
   return (
     <div className="tab-panel" id="checks-tab">

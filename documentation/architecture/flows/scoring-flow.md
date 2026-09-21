@@ -22,9 +22,9 @@ This document describes the end-to-end flow of how a service repository gets sco
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Scorecards Action (action/entrypoint.sh)             │ │
 │  │  ┌──────────────────────────────────────────────────┐ │ │
-│  │  │  2. Clone repo                                   │ │ │
+│  │  │  2. Resolve service workspace                      │ │ │
 │  │  │  3. Build Docker image (multi-runtime)           │ │ │
-│  │  │  4. Run checks (action/scripts/run-checks.sh)    │ │ │
+│  │  │  4. Run checks (action/utils/run-checks.sh)      │ │ │
 │  │  │     ├─ Check 01: README present?                 │ │ │
 │  │  │     ├─ Check 02: Has CI?                         │ │ │
 │  │  │     ├─ Check 03: Has tests?                      │ │ │
@@ -68,23 +68,16 @@ This document describes the end-to-end flow of how a service repository gets sco
 
 The scoring workflow can be triggered in multiple ways:
 
-- **Scheduled**: Daily cron job at midnight UTC (0 0 * * *)
+- **Scheduled**: Daily cron job at midnight UTC (0 0 \* \* \*)
 - **Push Event**: Any push to main or master branch
 - **Pull Request**: PRs to provide preview scores (non-blocking)
 - **Workflow Dispatch**: Manual trigger via GitHub UI or API
 
 **Implementation**: `.github/workflows/scorecards.yml` in service repository
 
-### 2. Clone Repository
+### 2. Resolve Service Workspace
 
-The action clones the service repository to analyze its contents.
-
-**Implementation**: `action/entrypoint.sh`
-
-**Details**:
-- Clones to `$GITHUB_WORKSPACE`
-- Shallow clone for performance
-- Read-only access (security)
+The Action evaluates `service-workspace` when supplied; otherwise it uses `$GITHUB_WORKSPACE`. The maintained [scorecard workflow template](../../examples/scorecard-workflow-template.yml) owns the checkout layout and supplies the separate service checkout to the Action. The entrypoint captures the actual evaluated service revision from that resolved workspace.
 
 ### 3. Build Docker Image
 
@@ -93,6 +86,7 @@ Creates multi-runtime Docker image with all check dependencies.
 **Implementation**: `action/entrypoint.sh`
 
 **Runtimes Included**:
+
 - Node.js 20
 - Python 3 with pip
 - Bash 5+ with common utilities (grep, sed, awk, jq, curl)
@@ -103,9 +97,10 @@ Creates multi-runtime Docker image with all check dependencies.
 
 Executes all quality checks against the repository.
 
-**Implementation**: `action/scripts/run-checks.sh`
+**Implementation**: `action/utils/run-checks.sh`
 
 **Process**:
+
 - Discover all checks in `checks/` directory
 - For each check:
   - Read metadata.json (weight, timeout, category)
@@ -115,6 +110,7 @@ Executes all quality checks against the repository.
 - All checks run sequentially (not parallel)
 
 **Check Types**:
+
 - **Bash scripts**: `check.sh`
 - **Python scripts**: `check.py`
 - **JavaScript**: `check.js`
@@ -126,11 +122,13 @@ Computes weighted score from check results.
 **Implementation**: `action/utils/score-calculator.sh`
 
 **Formula**:
+
 ```
 score = (passed_weight / total_weight) * 100
 ```
 
 **Rank Assignment**:
+
 - **Platinum**: ≥90%
 - **Gold**: ≥75%
 - **Silver**: ≥50%
@@ -143,6 +141,7 @@ Creates badge JSON for shields.io endpoint.
 **Implementation**: `action/utils/badge-generator.sh`
 
 **Output**:
+
 ```json
 {
   "schemaVersion": 1,
@@ -153,6 +152,7 @@ Creates badge JSON for shields.io endpoint.
 ```
 
 **Badge Files Created**:
+
 - `badges/{org}/{repo}.json` - Shields.io endpoint JSON
 - `badges/{org}/{repo}-rank.json` - Rank badge (Platinum/Gold/etc.)
 
@@ -163,11 +163,13 @@ Writes results to catalog branch.
 **Implementation**: `action/entrypoint.sh` (update_catalog function)
 
 **Files Created/Updated**:
+
 - `registry/{org}/{repo}.json` - Service metadata and score
 - `results/{org}/{repo}/results.json` - Detailed check results
 - `badges/{org}/{repo}.json` - Badge endpoint data
 
 **Metadata Stored**:
+
 - Score, rank, timestamp
 - Team name, description (from .scorecard/config.yml)
 - Check results (pass/fail, points awarded)
@@ -182,6 +184,7 @@ Commits are pushed to the catalog branch with retry logic.
 **Implementation**: `action/utils/git-ops.sh`
 
 **Features**:
+
 - Exponential backoff retry (3 attempts)
 - Automatic rebase on concurrent push conflicts
 - Skip push if no meaningful changes (excludes timestamp-only updates)
@@ -191,6 +194,7 @@ Commits are pushed to the catalog branch with retry logic.
 The catalog UI automatically reflects the updated score.
 
 **Data Flow**:
+
 1. Catalog UI fetches `registry/all-services.json` (updated by consolidate-registry workflow)
 2. Displays score, rank, and timestamp
 3. Staleness indicator shown if service's checks_hash doesn't match current-checks-hash.txt

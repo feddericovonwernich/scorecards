@@ -65,14 +65,10 @@ export async function fetchWithHybridAuth(
         clearToken();
         usedAPI = false;
       } else if (response.status === 403 || response.status === 429) {
-        console.warn(
-          `API fetch failed with status ${response.status}, falling back to CDN`
-        );
+        console.warn(`API fetch failed with status ${response.status}, falling back to CDN`);
         usedAPI = false;
       } else if (!response.ok) {
-        console.warn(
-          `API fetch failed with status ${response.status}, falling back to CDN`
-        );
+        console.warn(`API fetch failed with status ${response.status}, falling back to CDN`);
         usedAPI = false;
       }
     } catch (error) {
@@ -179,10 +175,7 @@ export async function loadServices(): Promise<LoadServicesResult> {
       }
     }
   } catch (error) {
-    console.warn(
-      'Failed to load consolidated registry, falling back to tree API:',
-      error
-    );
+    console.warn('Failed to load consolidated registry, falling back to tree API:', error);
   }
 
   // Fallback: Use tree API to discover individual files
@@ -213,9 +206,10 @@ export async function loadServices(): Promise<LoadServicesResult> {
 
     // Fetch all registry files in parallel
     const fetchPromises = registryFiles.map(async (path) => {
-      const { response, usedAPI: fetchUsedAPI } =
-        await fetchWithHybridAuth(path);
-      if (fetchUsedAPI) {usedAPI = true;}
+      const { response, usedAPI: fetchUsedAPI } = await fetchWithHybridAuth(path);
+      if (fetchUsedAPI) {
+        usedAPI = true;
+      }
       if (response.ok) {
         return response.json() as Promise<ServiceData>;
       }
@@ -245,11 +239,7 @@ export async function loadTeams(forceRefresh = false): Promise<LoadTeamsResult> 
   const now = Date.now();
 
   // Return cached value if still valid
-  if (
-    !forceRefresh &&
-    teamsDataCache &&
-    now - teamsDataTimestamp < TEAMS_CACHE_TTL
-  ) {
+  if (!forceRefresh && teamsDataCache && now - teamsDataTimestamp < TEAMS_CACHE_TTL) {
     console.log('Using cached teams data');
     return {
       teams: teamsDataCache,
@@ -260,8 +250,7 @@ export async function loadTeams(forceRefresh = false): Promise<LoadTeamsResult> 
   console.log('Loading teams from registry...');
 
   try {
-    const { response, usedAPI } =
-      await fetchWithHybridAuth('teams/all-teams.json');
+    const { response, usedAPI } = await fetchWithHybridAuth('teams/all-teams.json');
 
     if (!response.ok) {
       console.warn('Failed to load teams registry:', response.status);
@@ -297,9 +286,7 @@ export async function loadTeams(forceRefresh = false): Promise<LoadTeamsResult> 
 /**
  * Load a single team file
  */
-export async function loadTeamById(
-  teamId: string
-): Promise<Record<string, unknown> | null> {
+export async function loadTeamById(teamId: string): Promise<Record<string, unknown> | null> {
   try {
     const { response } = await fetchWithHybridAuth(`teams/${teamId}.json`);
 

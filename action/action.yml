@@ -21,7 +21,6 @@ inputs:
     required: false
     default: 'catalog'
 
-
   service-workspace:
     description: 'Checked-out service directory when the platform uses a separate checkout'
     required: false

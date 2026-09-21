@@ -130,7 +130,7 @@ Protect your branches from accidental changes while allowing automation to funct
 - Enable: **Require a pull request before merging** (1 approval)
 - Enable: **Require status checks to pass** (if you have tests)
 - Enable: **Require conversation resolution before merging**
-- Allow bypass: Add `github-actions[bot]` to allow doc syncs
+- Do not grant automation a bypass that can write directly to `main`; use pull requests and the required human review for system-code changes.
 - **Don't enable** "Require linear history" (breaks automation)
 
 **For `catalog` branch** (scorecard data):
@@ -140,7 +140,7 @@ Protect your branches from accidental changes while allowing automation to funct
 - **Don't require** pull requests (would block service workflows)
 - Allow bypass: Add `github-actions[bot]` for automation
 
-**Note:** Your `SCORECARDS_CATALOG_TOKEN` needs `repo` scope, and `SCORECARDS_WORKFLOW_TOKEN` needs `repo` and `workflow` scopes to work with these protections.
+See the [Token Requirements Guide](../reference/token-requirements.md) for credential permissions; token scopes alone do not enforce branch protections.
 
 ## Automated Service Onboarding
 

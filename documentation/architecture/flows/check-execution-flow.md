@@ -101,26 +101,29 @@ This document describes how individual quality checks are discovered, executed, 
 
 ### 1. Discover Checks
 
-**Implementation**: `action/scripts/run-checks.sh`
+**Implementation**: `action/utils/run-checks.sh`
 
 ```bash
 check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 ```
 
 **Behavior**:
+
 - Scans `checks/` directory for subdirectories
 - Sorts alphabetically (numeric prefix ensures order)
 - Skips files, only processes directories
 
 **Naming Convention**:
+
 - `01-check-name/` - Numeric prefix for ordering
 - `02-another-check/` - Ensures consistent execution order
 
 ### 2. Parse Metadata
 
-**Implementation**: `action/scripts/run-checks.sh`
+**Implementation**: `action/utils/run-checks.sh`
 
 **metadata.json Structure**:
+
 ```json
 {
   "weight": 10,
@@ -131,12 +134,14 @@ check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 ```
 
 **Fields**:
+
 - **weight**: Points awarded for passing (determines importance)
 - **timeout**: Max execution time in seconds (default: 30)
 - **category**: Classification (documentation, testing, ci, etc.)
 - **description**: Human-readable explanation
 
 **Validation**:
+
 - Missing metadata.json: Check skipped with warning
 - Invalid JSON: Check skipped with error
 - Missing required fields: Uses defaults
@@ -148,6 +153,7 @@ check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 **Dockerfile**: `action/Dockerfile`
 
 **Multi-Runtime Support**:
+
 ```dockerfile
 FROM ubuntu:22.04
 RUN apt-get install -y python3 python3-pip
@@ -156,65 +162,33 @@ RUN apt-get install -y nodejs bash grep sed awk jq curl git
 ```
 
 **Why Multi-Runtime**:
+
 - Some checks best written in Bash (grep, file checks)
 - Some in Python (complex parsing, linting)
 - Some in JavaScript (package.json analysis, npm checks)
 
 **Build Flags**:
+
 - `--no-cache`: Ensures fresh build with latest dependencies
 - `-t scorecards-runner:latest`: Tagged for reference
 
 ### 4. Run Check
 
-**Implementation**: `action/scripts/run-checks.sh`
-
-**Executor Selection**:
-```bash
-if [[ -f "$check_dir/check.sh" ]]; then
-  executor="bash"
-  check_script="$check_dir/check.sh"
-elif [[ -f "$check_dir/check.py" ]]; then
-  executor="python3"
-  check_script="$check_dir/check.py"
-elif [[ -f "$check_dir/check.js" ]]; then
-  executor="node"
-  check_script="$check_dir/check.js"
-fi
-```
-
-**Docker Execution**:
-```bash
-docker run --rm \
-  -v "$GITHUB_WORKSPACE:/workspace:ro" \
-  -v "$OUTPUT_DIR:/output" \
-  scorecards-runner:latest \
-  timeout "$timeout" "$executor" "$check_script"
-```
-
-**Volume Mounts**:
-- `/workspace` - Service repository (read-only for security)
-- `/output` - Write location for check output
-
-**Environment Variables**:
-- `SCORECARD_REPO_PATH=/workspace` - Where service repo is mounted
-- All checks use this to access files
-
-**Timeout Handling**:
-- `timeout` command kills check after specified seconds
-- Exit code 124 indicates timeout
-- Prevents hung checks from blocking workflow
+The Action passes its resolved service workspace to `run-checks.sh`; that directory is mounted at `/workspace` read-only and exposed as `SCORECARD_REPO_PATH`. The maintained [Action entrypoint](../../../action/entrypoint.sh) and [check runner](../../../action/utils/run-checks.sh) own the Docker invocation, limits and mounts, so this flow does not duplicate them.
 
 ### 5. Parse Results
 
-**Implementation**: `action/scripts/run-checks.sh`
+**Implementation**: `action/utils/run-checks.sh`
 
 **Exit Code Interpretation**:
+
 - **0**: Check passed → award full weight
 - **1-123**: Check failed → award 0 points
 - **124**: Timeout → award 0 points, log warning
 - **125+**: System error → award 0 points, log error
 
 **Result Structure**:
+
 ```json
 {
   "check_id": "01-readme-present",
@@ -233,6 +207,7 @@ docker run --rm \
 **Implementation**: `action/utils/score-calculator.sh`
 
 **Calculation**:
+
 ```bash
 total_weight=$(jq '[.[] | .weight] | add' results.json)
 passed_weight=$(jq '[.[] | select(.status == "pass") | .weight] | add' results.json)
@@ -240,6 +215,7 @@ score=$(echo "scale=0; ($passed_weight * 100) / $total_weight" | bc)
 ```
 
 **Rank Assignment**:
+
 ```bash
 if [ "$score" -ge 90 ]; then
   rank="Platinum"
@@ -253,6 +229,7 @@ fi
 ```
 
 **Weighted Example**:
+
 ```
 Check 01: 10 points, passed → 10
 Check 02: 5 points, failed → 0
@@ -268,12 +245,14 @@ Score: (25/30) * 100 = 83% (Gold)
 **Current Behavior**: Checks run one at a time within a single Docker container.
 
 **Why Sequential**:
+
 - Simpler implementation
 - Easier debugging (clear log order)
 - Avoids resource contention
 - Most checks complete in <5 seconds
 
 **Performance Impact**:
+
 - ~15 checks × ~3 seconds avg = ~45 seconds
 - Docker build time dominates (~1-2 minutes)
 - Parallelization would save minimal time

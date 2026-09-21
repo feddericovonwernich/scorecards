@@ -4,7 +4,6 @@
  */
 import { useAppStore } from '../stores/appStore.js';
 
-
 // In-memory PAT storage (not persisted to localStorage for security)
 let githubPAT: string | null = null;
 

@@ -8,11 +8,6 @@
     "version": 1,
     "label": "Proponer badge de Scorecards",
     "timeout": 30,
-    "allowed_paths": [
-      "README.md",
-      "README.rst",
-      "README.txt",
-      "README"
-    ]
+    "allowed_paths": ["README.md", "README.rst", "README.txt", "README"]
   }
 }

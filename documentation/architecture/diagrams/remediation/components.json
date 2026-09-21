@@ -4,10 +4,7 @@
   "meta": {
     "title": "Scorecards · remediación opcional",
     "quality_profile": "showcase",
-    "viewBox": [
-      1200,
-      670
-    ]
+    "viewBox": [1200, 670]
   },
   "components": [
     {
@@ -15,109 +12,67 @@
       "type": "backend",
       "label": "Checks y Action",
       "sublabel": "Actual · código de plataforma",
-      "pos": [
-        70,
-        110
-      ],
-      "size": [
-        210,
-        72
-      ]
+      "pos": [70, 110],
+      "size": [210, 72]
     },
     {
       "id": "scoring",
       "type": "cloud",
       "label": "Evaluación del servicio",
       "sublabel": "Actual · GitHub Actions",
-      "pos": [
-        490,
-        110
-      ],
-      "size": [
-        210,
-        72
-      ]
+      "pos": [490, 110],
+      "size": [210, 72]
     },
     {
       "id": "catalog",
       "type": "database",
       "label": "Rama catalog",
       "sublabel": "Actual · resultados, no autoridad",
-      "pos": [
-        910,
-        110
-      ],
-      "size": [
-        210,
-        72
-      ]
+      "pos": [910, 110],
+      "size": [210, 72]
     },
     {
       "id": "ui",
       "type": "frontend",
       "label": "Catálogo y botón",
       "sublabel": "Opt-in · solo identificadores",
-      "pos": [
-        910,
-        450
-      ],
-      "size": [
-        210,
-        72
-      ]
+      "pos": [910, 450],
+      "size": [210, 72]
     },
     {
       "id": "runner",
       "type": "security",
       "label": "Action de remediación",
       "sublabel": "Opt-in · revisión fijada",
-      "pos": [
-        490,
-        450
-      ],
-      "size": [
-        210,
-        72
-      ]
+      "pos": [490, 450],
+      "size": [210, 72]
     },
     {
       "id": "pr",
       "type": "external",
       "label": "Rama y pull request",
       "sublabel": "Opt-in · repositorio destino",
-      "pos": [
-        70,
-        450
-      ],
-      "size": [
-        210,
-        72
-      ]
+      "pos": [70, 450],
+      "size": [210, 72]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
       "label": "Plataforma mantiene definiciones",
-      "wraps": [
-        "checks"
-      ],
+      "wraps": ["checks"],
       "pad": 24
     },
     {
       "kind": "security-group",
       "label": "Ejecución central confiable",
-      "wraps": [
-        "runner"
-      ],
+      "wraps": ["runner"],
       "pad": 24
     },
     {
       "kind": "region",
       "label": "Dueño del servicio revisa; nunca auto-merge",
-      "wraps": [
-        "pr"
-      ],
+      "wraps": ["pr"],
       "pad": 24
     }
   ],

@@ -6,12 +6,12 @@ This guide explains the GitHub tokens required for Scorecards and how to create 
 
 Scorecards uses two GitHub Personal Access Tokens (PATs) for different purposes:
 
-| Token | Purpose | Scopes | Required? |
-|-------|---------|--------|-----------|
-| `SCORECARDS_CATALOG_TOKEN` | Write results to catalog branch | `repo` | **Yes** |
-| `SCORECARDS_WORKFLOW_TOKEN` | Installation PRs and explicitly enabled remediation | Classic: `repo`; `workflow` additionally for installation files | Optional* |
+| Token                       | Purpose                                             | Scopes                                                          | Required?  |
+| --------------------------- | --------------------------------------------------- | --------------------------------------------------------------- | ---------- |
+| `SCORECARDS_CATALOG_TOKEN`  | Write results to catalog branch                     | `repo`                                                          | **Yes**    |
+| `SCORECARDS_WORKFLOW_TOKEN` | Installation PRs and explicitly enabled remediation | Classic: `repo`; `workflow` additionally for installation files | Optional\* |
 
-*Required for automated installation or enabled remediation; remediation is disabled by default.
+\*Required for automated installation or enabled remediation; remediation is disabled by default.
 
 ## Why Two Tokens?
 
@@ -81,10 +81,12 @@ Classic scopes and fine-grained repository permissions are different models. A f
 Each service repository needs access to `SCORECARDS_CATALOG_TOKEN` to write results.
 
 **Using organization secrets** (recommended):
+
 - If the token is an organization secret with "All repositories" access, services automatically have access
 - No per-service configuration needed
 
 **Using repository secrets** (alternative):
+
 - Add `SCORECARDS_CATALOG_TOKEN` to each service's Settings → Secrets and variables → Actions
 - Required if not using organization-wide secrets
 
@@ -101,16 +103,19 @@ See [activation, threat boundaries and rollback](../architecture/flows/remediati
 ## Token Security Best Practices
 
 ### Scope Minimization
+
 - Prefer fine-grained tokens selecting only required repositories and permissions.
 - For classic tokens, catalog writes require repository access; installation additionally requires `workflow`.
 - Grant no new scope merely to enable remediation; verify the existing holder and branch protections first.
 
 ### Expiration
+
 - Set 30-90 day expiration
 - Create calendar reminders to rotate before expiry
 - Monitor workflow runs for authentication errors
 
 ### Access Control
+
 - Use organization secrets for centralized management
 - Limit repository access when possible
 - Regularly audit access in organization settings
@@ -118,12 +123,12 @@ See [activation, threat boundaries and rollback](../architecture/flows/remediati
 ### Token Rotation
 
 When rotating:
+
 1. Create new token with same name and scopes
 2. Update organization secret with new value
 3. Verify workflows work
 4. Revoke old token
 5. No code changes needed (tokens referenced by secret name)
-
 
 ## Additional Resources
 

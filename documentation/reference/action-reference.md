@@ -6,12 +6,12 @@ Technical specification for the Scorecards GitHub Action.
 
 ## Inputs
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `github-token` | Yes | - | Token with write access to the central catalog, normally `${{ secrets.SCORECARDS_CATALOG_TOKEN }}`. A service's `GITHUB_TOKEN` does not automatically have cross-repository access. |
-| `scorecards-repo` | No | Auto-detected | Central scorecards repository where results are stored (format: `owner/repo`). If not provided, detected from action source. |
-| `scorecards-branch` | No | `catalog` | Branch to commit results to in the central repository. |
-| `service-workspace` | No | `GITHUB_WORKSPACE` | Service checkout directory when Scorecards is checked out separately; prevents platform files from being scored as service files. |
+| Parameter           | Required | Default            | Description                                                                                                                                                                                                        |
+| ------------------- | -------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `github-token`      | Yes      | -                  | Token used for GitHub API calls and, when `scorecards-repo` is set, catalog writes. Use `SCORECARDS_CATALOG_TOKEN` for cross-repository catalog access; a service's `GITHUB_TOKEN` does not automatically have it. |
+| `scorecards-repo`   | No       | Empty              | Central scorecards repository where results are stored (format: `owner/repo`). Set it to publish results; when empty, scoring completes without catalog publication.                                               |
+| `scorecards-branch` | No       | `catalog`          | Branch to commit results to in the central repository.                                                                                                                                                             |
+| `service-workspace` | No       | `GITHUB_WORKSPACE` | Service checkout directory when Scorecards is checked out separately; prevents platform files from being scored as service files.                                                                                  |
 
 ### Example
 
@@ -19,13 +19,13 @@ Use the maintained [workflow template](../examples/scorecard-workflow-template.y
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| `score` | Number | Calculated score (0-100) |
-| `rank` | String | Rank: bronze, silver, gold, or platinum |
-| `passed-checks` | Number | Number of checks that passed |
-| `total-checks` | Number | Total number of checks run |
-| `results-file` | String | Path to the results JSON file |
+| Output          | Type   | Description                             |
+| --------------- | ------ | --------------------------------------- |
+| `score`         | Number | Calculated score (0-100)                |
+| `rank`          | String | Rank: bronze, silver, gold, or platinum |
+| `passed-checks` | Number | Number of checks that passed            |
+| `total-checks`  | Number | Total number of checks run              |
+| `results-file`  | String | Path to the results JSON file           |
 
 ### Example
 
@@ -34,7 +34,7 @@ Use the maintained [workflow template](../examples/scorecard-workflow-template.y
   id: scorecard
   uses: feddericovonwernich-org/scorecards/action@main
   with:
-    github-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
+    github-token: ${{ secrets.GITHUB_TOKEN }}
 
 - name: Use Scorecard Results
   run: |
@@ -48,16 +48,19 @@ Use the maintained [workflow template](../examples/scorecard-workflow-template.y
 Scorecards generates badge JSON files compatible with shields.io:
 
 **Score badge:**
+
 ```
 https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/YOUR-ORG/scorecards/catalog/badges/your-org/your-repo/score.json
 ```
 
 **Rank badge:**
+
 ```
 https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/YOUR-ORG/scorecards/catalog/badges/your-org/your-repo/rank.json
 ```
 
 Replace:
+
 - `YOUR-ORG/scorecards` - Your organization's central scorecards repository
 - `your-org/your-repo` - Your service's organization and repository name
 
@@ -70,6 +73,7 @@ score = (sum of passed check weights / sum of all check weights) × 100
 ```
 
 **Example:**
+
 - Check A (weight: 10): Pass ✓
 - Check B (weight: 15): Fail ✗
 - Check C (weight: 5): Pass ✓
@@ -78,12 +82,12 @@ Score = (10 + 5) / (10 + 15 + 5) × 100 = 50
 
 ## Ranks
 
-| Rank | Score Range | Meaning |
-|------|-------------|---------|
-| 🏆 Platinum | 90-100 | Exemplary - exceeds all standards |
-| 🥇 Gold | 75-89 | Excellent - meets all important standards |
-| 🥈 Silver | 50-74 | Good - meets most standards |
-| 🥉 Bronze | 0-49 | Needs improvement |
+| Rank        | Score Range | Meaning                                   |
+| ----------- | ----------- | ----------------------------------------- |
+| 🏆 Platinum | 90-100      | Exemplary - exceeds all standards         |
+| 🥇 Gold     | 75-89       | Excellent - meets all important standards |
+| 🥈 Silver   | 50-74       | Good - meets most standards               |
+| 🥉 Bronze   | 0-49        | Needs improvement                         |
 
 ## See Also
 

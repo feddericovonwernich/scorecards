@@ -107,68 +107,27 @@ This document describes how service repositories are onboarded to the scorecards
 **Trigger Method**: Manual workflow_dispatch via GitHub UI or API
 
 **Required Inputs**:
-- `target_repository`: Full repository path (e.g., `myorg/myservice`)
+
+- `org`: Target owner
+- `repo`: Target repository
 
 **Optional Inputs**:
-- `team_name`: Pre-populate team name in config
-- `description`: Pre-populate service description
+
+- `scorecards-repo`: Central Scorecards repository
+- `scorecards-branch`: Central catalog branch
 
 **Permissions Required**:
-- Read access to target repository
-- Write access to create branch and PR
-- Uses `SCORECARDS_PAT` token with appropriate scopes
+
+- Read access to the target repository
+- `SCORECARDS_WORKFLOW_TOKEN` for the central dispatcher to create the installation branch and PR
 
 ### 2. Checkout Target Repository
 
-**Implementation**: `.github/workflows/install.yml`
-
-```yaml
-- name: Checkout target repository
-  uses: actions/checkout@v4
-  with:
-    repository: ${{ inputs.target_repository }}
-    token: ${{ secrets.SCORECARDS_PAT }}
-    path: target-repo
-```
-
-**Purpose**: Clone target repository to analyze and modify
-
-**Branch**: Checks out default branch (main/master/etc.)
+The central dispatcher checks out `org/repo` into `service-repo` using `SCORECARDS_WORKFLOW_TOKEN`. The reusable workflow instead operates in its caller repository. The maintained workflow files are [`.github/workflows/create-installation-pr.yml`](../../../.github/workflows/create-installation-pr.yml) and [`.github/workflows/install.yml`](../../../.github/workflows/install.yml); they own the exact checkout and token wiring.
 
 ### 3. Generate Workflow File
 
-**Implementation**: `.github/workflows/install.yml`
-
-**Generated File**: `.github/workflows/scorecards.yml`
-
-**Template Content**:
-```yaml
-name: Scorecards
-
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Daily at midnight UTC
-  push:
-    branches: [main, master]
-  workflow_dispatch:
-
-jobs:
-  scorecard:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Scorecards
-        uses: {scorecards_org}/{scorecards_repo}@main
-        with:
-          catalog_repo: {scorecards_org}/{scorecards_repo}
-          catalog_branch: catalog
-```
-
-**Dynamic Values**:
-- Branch names detected from target repo
-- Scorecards repo reference from environment
-- Catalog configuration from settings
+The installer copies the maintained [scorecard workflow template](../../examples/scorecard-workflow-template.yml), substituting the configured Scorecards repository and catalog branch. The template separately checks out the service and the platform, then supplies `service-workspace` to the Action so the captured evaluation provenance names the service revision. It is the authoritative generated-workflow contract; this flow intentionally does not duplicate its YAML.
 
 ### 4. Generate Config Template
 
@@ -177,15 +136,17 @@ jobs:
 **Generated File**: `.scorecard/config.yml`
 
 **Template Content**:
+
 ```yaml
 service:
-  name: "{repository_name}"
-  team: ""
-  description: ""
+  name: '{repository_name}'
+  team: ''
+  description: ''
   links: []
 ```
 
 **Auto-populated Fields**:
+
 - `service.name`: Populated from repository name
 - `service.team`: Empty string (must be manually filled)
 - `service.description`: Empty string (must be manually filled)
@@ -198,6 +159,7 @@ service:
 **Branch Name**: `scorecards-installation`
 
 **Git Operations**:
+
 ```bash
 git checkout -b scorecards-installation
 git add .github/workflows/scorecards.yml
@@ -207,6 +169,7 @@ git push origin scorecards-installation
 ```
 
 **Conflict Handling**:
+
 - Checks if branch already exists
 - If exists, updates existing branch
 - If PR already exists, updates the PR
@@ -216,6 +179,7 @@ git push origin scorecards-installation
 **Implementation**: `.github/workflows/install.yml`
 
 **GitHub API Call**:
+
 ```bash
 gh pr create \
   --repo "$TARGET_REPO" \
@@ -253,6 +217,7 @@ EOF
 ```
 
 **PR Features**:
+
 - Descriptive title and body
 - Links to documentation
 - Instructions for team
@@ -263,6 +228,7 @@ EOF
 **Implementation**: `.github/workflows/install.yml`
 
 **Creates Registry Entry**:
+
 ```json
 {
   "repo": "myorg/myservice",
@@ -285,6 +251,7 @@ EOF
 **Registry Location**: `registry/{org}/{repo}.json` in catalog branch
 
 **Purpose**:
+
 - Track installation progress
 - Display PR status in catalog UI
 - Monitor which services are pending installation
@@ -294,12 +261,14 @@ EOF
 **Manual Step**: Service team reviews the PR
 
 **Review Checklist**:
+
 - [ ] Workflow file looks correct
 - [ ] Config has accurate team name
 - [ ] Config has accurate description
 - [ ] Comfortable with automatic scoring
 
 **Post-Merge**:
+
 - `installed` flag remains false until first run
 - `has_workflow` still false until detected
 
@@ -308,6 +277,7 @@ EOF
 **Trigger**: Workflow runs automatically based on schedule (daily at midnight UTC), on push to main/master, or manual workflow_dispatch
 
 **Actions**:
+
 1. Scorecards workflow runs for first time
 2. Executes all quality checks
 3. Calculates initial score and rank
@@ -320,6 +290,7 @@ EOF
 6. Service appears in catalog UI
 
 **Registry Update**:
+
 ```json
 {
   "repo": "myorg/myservice",
@@ -346,12 +317,13 @@ EOF
 ```bash
 for repo in repo1 repo2 repo3; do
   gh workflow run create-installation-pr.yml \
-    -f target_repository="myorg/$repo"
+    -f org="myorg" -f repo="$repo"
   sleep 5  # Rate limiting
 done
 ```
 
 **Use Cases**:
+
 - Onboarding entire organization
 - Rolling out to team's repositories
 - Batch installation for new initiative
@@ -367,16 +339,19 @@ done
 **Troubleshooting**:
 
 **PR Not Created**:
+
 - Check PAT permissions
 - Verify repository exists and is accessible
 - Check workflow logs for errors
 
 **Workflow Not Running**:
+
 - Verify workflow file in `.github/workflows/`
 - Check if workflow is disabled
 - Verify trigger conditions (push to correct branch)
 
 **Score Not Updating**:
+
 - Check workflow run logs
 - Verify GITHUB_TOKEN has write access to catalog
 - Check for conflicts in catalog branch

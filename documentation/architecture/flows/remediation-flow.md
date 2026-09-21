@@ -16,16 +16,16 @@ El contenido es español; los controles fijos del visor y su `html lang` usan el
 
 ## Autoridades
 
-| Dato o recurso | Autoridad |
-| --- | --- |
-| Código, receta, metadatos y política | Checkout revisado del repositorio central, no archivos del servicio |
+| Dato o recurso                       | Autoridad                                                                     |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| Código, receta, metadatos y política | Checkout revisado del repositorio central, no archivos del servicio           |
 | Identidad y permisos del solicitante | `github.actor` y `github.triggering_actor`; ambos en la allowlist del destino |
-| Revisión del servicio | SHA actual de su rama predeterminada consultada en GitHub |
-| Revisión de la suite | HEAD real del checkout central y SHA actual de su rama predeterminada |
-| Estado visible del check | Última evaluación de scoring publicada en `catalog` |
-| Capacidad anunciada | Metadatos validados proyectados en resultados; no autorización |
-| Escritura de rama y PR | `SCORECARDS_WORKFLOW_TOKEN`, sólo en el proceso host confiable |
-| Corrección del árbol | Contenedor sin red, credenciales ni `.git` |
+| Revisión del servicio                | SHA actual de su rama predeterminada consultada en GitHub                     |
+| Revisión de la suite                 | HEAD real del checkout central y SHA actual de su rama predeterminada         |
+| Estado visible del check             | Última evaluación de scoring publicada en `catalog`                           |
+| Capacidad anunciada                  | Metadatos validados proyectados en resultados; no autorización                |
+| Escritura de rama y PR               | `SCORECARDS_WORKFLOW_TOKEN`, sólo en el proceso host confiable                |
+| Corrección del árbol                 | Contenedor sin red, credenciales ni `.git`                                    |
 
 El navegador, `catalog`, el árbol del servicio y todos los inputs del dispatch son no confiables. Ni `all-checks.json` ni un descriptor visible permiten seleccionar comandos o ampliar permisos. El `GITHUB_TOKEN` central tiene `contents: read`; **no** obtiene permiso sobre otro repositorio por llamar a un reusable workflow. Este diseño ejecuta el workflow central directamente; no finge contexto ni credenciales locales del servicio.
 
@@ -83,7 +83,7 @@ El catálogo enlaza la ejecución exacta; la ejecución ofrece su resumen y arte
 
 ## Ejecución central
 
-1. El workflow sólo arranca desde la rama predeterminada central; checkout por `github.sha`, sin persistir credenciales.
+1. El job `validate` sólo se ejecuta desde la rama predeterminada central; hace checkout por `github.sha`, sin persistir credenciales.
 2. `validate` comprueba formato, política, ambos actores y revisión central utilizando el token de lectura. Normaliza la clave de concurrencia; todavía no necesita el escritor del destino.
 3. El job de remediación usa concurrencia por repositorio normalizado/check y `cancel-in-progress: false`. GitHub puede reemplazar un run pendiente: no se promete FIFO ni exactamente una ejecución.
 4. `prepare` repite la autorización, verifica la identidad de `/user`, consulta la rama/SHA del destino y detecta PRs existentes antes de modificar archivos.
@@ -106,14 +106,14 @@ Más de uno es ambiguo: no se elige arbitrariamente. Un PR abierto se devuelve s
 
 `remediation-result.json` identifica versión, solicitud, repositorio/check, SHAs, digest de runtime, run/attempt/URL, estado y, cuando corresponden, rama candidata y PR. El resumen muestra estado, enlaces/rama disponibles y fase del fallo de publicación. Una rama indicada en `pr_failed` no demuestra que el push llegara a completarse. El artefacto se conserva cuando el proceso llega a producirlo; una cancelación abrupta puede no dejar resultado.
 
-| Estado | Significado |
-| --- | --- |
-| `pr_created`, `existing_pr` | Propuesta disponible; el scoring sigue sin cambios |
-| `no_diff`, `not_applicable`, `already_satisfied`, `not_eligible` | Terminación sin propuesta ni push vacío |
-| `stale_service`, `stale_suite` | Reevaluar contra las revisiones actuales antes de solicitar otra ejecución |
-| `unauthorized`, `ambiguous_existing_pr` | La política o la identificación del PR impide continuar |
-| `check_failed_to_run`, `execution_failed`, `invalid_diff` | No hay una corrección validada para publicar |
-| `pr_failed` | Falló push/creación/reconciliación; revisar fase y posible rama retenida |
+| Estado                                                           | Significado                                                                |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `pr_created`, `existing_pr`                                      | Propuesta disponible; el scoring sigue sin cambios                         |
+| `no_diff`, `not_applicable`, `already_satisfied`, `not_eligible` | Terminación sin propuesta ni push vacío                                    |
+| `stale_service`, `stale_suite`                                   | Reevaluar contra las revisiones actuales antes de solicitar otra ejecución |
+| `unauthorized`, `ambiguous_existing_pr`                          | La política o la identificación del PR impide continuar                    |
+| `check_failed_to_run`, `execution_failed`, `invalid_diff`        | No hay una corrección validada para publicar                               |
+| `pr_failed`                                                      | Falló push/creación/reconciliación; revisar fase y posible rama retenida   |
 
 Abrir o cerrar un PR no actualiza el score. Sólo una nueva evaluación después de una decisión humana publica el resultado correspondiente. No existe una base de trabajos adicional en `catalog`.
 

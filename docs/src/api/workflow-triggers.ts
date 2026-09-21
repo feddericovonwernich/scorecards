@@ -36,33 +36,25 @@ const getRepoInfo = (): { owner: string; name: string } => {
  * Trigger scorecard workflow for a single service
  * Note: Button state is managed by React components using useButtonState hook
  */
-export async function triggerServiceWorkflow(
-  org: string,
-  repo: string
-): Promise<boolean> {
+export async function triggerServiceWorkflow(org: string, repo: string): Promise<boolean> {
   if (!getToken()) {
-    showToastGlobal(
-      'Please configure a GitHub PAT in Settings to trigger workflows',
-      'warning'
-    );
+    showToastGlobal('Please configure a GitHub PAT in Settings to trigger workflows', 'warning');
     window.openSettings?.();
     return false;
   }
 
   try {
     const { owner, name } = getRepoInfo();
-    const receipt = await triggerWorkflowDispatch(
-      owner, name, WORKFLOWS.files.triggerService, { org, repo }
-    );
+    const receipt = await triggerWorkflowDispatch(owner, name, WORKFLOWS.files.triggerService, {
+      org,
+      repo,
+    });
     if (receipt.accepted) {
       showToastGlobal(`Scorecard workflow triggered for ${org}/${repo}`, 'success');
       return true;
     }
     if (receipt.status === 401) {
-      showToastGlobal(
-        'Invalid GitHub token. Please enter a valid token in Settings.',
-        'error'
-      );
+      showToastGlobal('Invalid GitHub token. Please enter a valid token in Settings.', 'error');
       return false;
     }
     showToastGlobal(`Failed to trigger workflow: ${receipt.reason}`, 'error');
@@ -81,28 +73,20 @@ export async function triggerServiceWorkflow(
  * Create installation PR for a service
  * Note: Button state and modal management handled by React components
  */
-export async function installService(
-  org: string,
-  repo: string
-): Promise<boolean> {
+export async function installService(org: string, repo: string): Promise<boolean> {
   if (!getToken()) {
-    showToastGlobal(
-      'GitHub token is required to create installation PRs',
-      'error'
-    );
+    showToastGlobal('GitHub token is required to create installation PRs', 'error');
     return false;
   }
 
   try {
     const { owner, name } = getRepoInfo();
-    const receipt = await triggerWorkflowDispatch(
-      owner, name, WORKFLOWS.files.createInstallPR, { org, repo }
-    );
+    const receipt = await triggerWorkflowDispatch(owner, name, WORKFLOWS.files.createInstallPR, {
+      org,
+      repo,
+    });
     if (receipt.accepted) {
-      showToastGlobal(
-        `Installation PR creation started for ${org}/${repo}`,
-        'success'
-      );
+      showToastGlobal(`Installation PR creation started for ${org}/${repo}`, 'success');
       setTimeout(() => {
         showToastGlobal(
           'Note: PR status will appear in the catalog in 3-5 minutes due to GitHub Pages deployment.',
@@ -134,9 +118,7 @@ export async function installService(
  * Trigger workflows for multiple services (bulk operation)
  * Note: Button state managed by React components using useButtonState hook
  */
-export async function triggerBulkWorkflows(
-  services: ServiceData[]
-): Promise<boolean> {
+export async function triggerBulkWorkflows(services: ServiceData[]): Promise<boolean> {
   if (!getToken()) {
     showToastGlobal('GitHub token is required to trigger workflows', 'error');
     return false;
@@ -144,12 +126,11 @@ export async function triggerBulkWorkflows(
 
   try {
     const { owner, name } = getRepoInfo();
-    const receipt = await triggerWorkflowDispatch(
-      owner,
-      name,
-      WORKFLOWS.files.triggerService,
-      { services: JSON.stringify(services.map((service) => ({ org: service.org, repo: service.repo }))) }
-    );
+    const receipt = await triggerWorkflowDispatch(owner, name, WORKFLOWS.files.triggerService, {
+      services: JSON.stringify(
+        services.map((service) => ({ org: service.org, repo: service.repo }))
+      ),
+    });
     if (receipt.accepted) {
       const count = services.length;
       showToastGlobal(
@@ -159,10 +140,7 @@ export async function triggerBulkWorkflows(
       return true;
     }
     if (receipt.status === 401) {
-      showToastGlobal(
-        'Invalid GitHub token. Please enter a valid token in Settings.',
-        'error'
-      );
+      showToastGlobal('Invalid GitHub token. Please enter a valid token in Settings.', 'error');
       return false;
     }
     showToastGlobal(`Failed to trigger workflows: ${receipt.reason}`, 'error');
@@ -184,9 +162,9 @@ export async function triggerBulkWorkflows(
 export async function handleBulkTrigger(event: Event): Promise<boolean> {
   event.preventDefault();
 
-  const staleServices = storeAccessor.getAllServices().filter(
-    (s) => isServiceStale(s, storeAccessor.getChecksHash()) && s.installed
-  );
+  const staleServices = storeAccessor
+    .getAllServices()
+    .filter((s) => isServiceStale(s, storeAccessor.getChecksHash()) && s.installed);
 
   if (staleServices.length === 0) {
     showToastGlobal('No stale services to trigger', 'info');

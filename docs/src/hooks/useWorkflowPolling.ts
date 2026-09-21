@@ -11,7 +11,6 @@ import { getRepoOwner, getRepoName } from '../api/registry.js';
 import type { WorkflowRun, WorkflowStatus } from '../types/index.js';
 import { clearToken } from '../services/auth.js';
 
-
 export interface WorkflowFilterCounts {
   all: number;
   in_progress: number;
@@ -72,7 +71,15 @@ interface GitHubWorkflowRunResponse {
     id: number;
     name: string;
     status: 'queued' | 'in_progress' | 'completed' | 'waiting';
-    conclusion: 'success' | 'failure' | 'cancelled' | 'skipped' | 'timed_out' | 'action_required' | 'neutral' | null;
+    conclusion:
+      | 'success'
+      | 'failure'
+      | 'cancelled'
+      | 'skipped'
+      | 'timed_out'
+      | 'action_required'
+      | 'neutral'
+      | null;
     html_url: string;
     created_at: string;
     updated_at: string;
@@ -87,7 +94,9 @@ interface GitHubWorkflowRunResponse {
   }>;
 }
 
-export function useWorkflowPolling(options: UseWorkflowPollingOptions = {}): UseWorkflowPollingReturn {
+export function useWorkflowPolling(
+  options: UseWorkflowPollingOptions = {}
+): UseWorkflowPollingReturn {
   const {
     org: propOrg,
     repo: propRepo,
@@ -138,71 +147,72 @@ export function useWorkflowPolling(options: UseWorkflowPollingOptions = {}): Use
   const badgeCount = filterCounts.in_progress + filterCounts.queued;
 
   // Filtered runs based on current filter status
-  const filteredRuns = filterStatus === 'all'
-    ? runs
-    : runs.filter((r) => r.status === filterStatus);
+  const filteredRuns =
+    filterStatus === 'all' ? runs : runs.filter((r) => r.status === filterStatus);
 
   // Fetch workflow runs
-  const fetchRuns = useCallback(async (force = false): Promise<void> => {
-    if (!pat) {
-      setError('No GitHub PAT configured');
-      setRuns([]);
-      return;
-    }
-
-    // Check cache
-    const now = Date.now();
-    if (!force && now - lastFetchRef.current < cacheTTL && runs.length > 0) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `${API_CONFIG.GITHUB_BASE_URL}/repos/${org}/${repo}/actions/runs?per_page=${API_CONFIG.PER_PAGE}&_t=${now}`,
-        {
-          headers: {
-            Authorization: `token ${pat}`,
-            Accept: API_CONFIG.ACCEPT_HEADER,
-          },
-          cache: 'no-cache',
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 401) {clearToken();}
-        throw new Error(`Failed to fetch workflow runs: ${response.status}`);
+  const fetchRuns = useCallback(
+    async (force = false): Promise<void> => {
+      if (!pat) {
+        setError('No GitHub PAT configured');
+        setRuns([]);
+        return;
       }
 
-      const data: GitHubWorkflowRunResponse = await response.json();
+      // Check cache
+      const now = Date.now();
+      if (!force && now - lastFetchRef.current < cacheTTL && runs.length > 0) {
+        return;
+      }
 
-      // Map and filter to recent runs
-      const cutoffTime = new Date(now - recentHours * 60 * 60 * 1000);
-      const mappedRuns: WorkflowRun[] = data.workflow_runs
-        .map((run) => ({
-          ...run,
-          org,
-          repo,
-          service_name: repo,
-        }))
-        .filter((run) => new Date(run.created_at) > cutoffTime)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `${API_CONFIG.GITHUB_BASE_URL}/repos/${org}/${repo}/actions/runs?per_page=${API_CONFIG.PER_PAGE}&_t=${now}`,
+          {
+            headers: {
+              Authorization: `token ${pat}`,
+              Accept: API_CONFIG.ACCEPT_HEADER,
+            },
+            cache: 'no-cache',
+          }
         );
 
-      setRuns(mappedRuns);
-      lastFetchRef.current = now;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message);
-      console.error('Error fetching workflow runs:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [pat, org, repo, cacheTTL, recentHours, runs.length]);
+        if (!response.ok) {
+          if (response.status === 401) {
+            clearToken();
+          }
+          throw new Error(`Failed to fetch workflow runs: ${response.status}`);
+        }
+
+        const data: GitHubWorkflowRunResponse = await response.json();
+
+        // Map and filter to recent runs
+        const cutoffTime = new Date(now - recentHours * 60 * 60 * 1000);
+        const mappedRuns: WorkflowRun[] = data.workflow_runs
+          .map((run) => ({
+            ...run,
+            org,
+            repo,
+            service_name: repo,
+          }))
+          .filter((run) => new Date(run.created_at) > cutoffTime)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        setRuns(mappedRuns);
+        lastFetchRef.current = now;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
+        console.error('Error fetching workflow runs:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pat, org, repo, cacheTTL, recentHours, runs.length]
+  );
 
   // Manual refresh (clears cache)
   const refresh = useCallback(async (): Promise<void> => {
@@ -245,30 +255,33 @@ export function useWorkflowPolling(options: UseWorkflowPollingOptions = {}): Use
   }, []);
 
   // Change polling interval
-  const setPollingInterval = useCallback((interval: number) => {
-    setPollInterval(interval);
+  const setPollingInterval = useCallback(
+    (interval: number) => {
+      setPollInterval(interval);
 
-    // Save to localStorage if storageKey provided
-    if (storageKey) {
-      localStorage.setItem(storageKey, String(interval));
-    }
-
-    // Restart polling with new interval if currently polling
-    if (isPolling) {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
+      // Save to localStorage if storageKey provided
+      if (storageKey) {
+        localStorage.setItem(storageKey, String(interval));
       }
 
-      if (interval === 0) {
-        setIsPolling(false);
-      } else {
-        pollIntervalRef.current = setInterval(() => {
-          fetchRuns();
-        }, interval);
+      // Restart polling with new interval if currently polling
+      if (isPolling) {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+
+        if (interval === 0) {
+          setIsPolling(false);
+        } else {
+          pollIntervalRef.current = setInterval(() => {
+            fetchRuns();
+          }, interval);
+        }
       }
-    }
-  }, [storageKey, isPolling, fetchRuns]);
+    },
+    [storageKey, isPolling, fetchRuns]
+  );
 
   // Auto-start polling if requested and PAT available
   useEffect(() => {

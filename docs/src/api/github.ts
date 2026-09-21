@@ -72,27 +72,34 @@ interface RemediationPolicy {
 }
 
 function isGitHubUrl(value: unknown, path: string, origin = 'https://github.com'): value is string {
-  if (typeof value !== 'string') {return false;}
+  if (typeof value !== 'string') {
+    return false;
+  }
   try {
     const url = new URL(value);
     const segments = url.pathname.split('/');
     const expected = path.split('/');
     const repositoryIndex = origin === 'https://api.github.com' ? 2 : 1;
-    return url.origin === origin
-      && !url.search && !url.hash && !url.username && !url.password
-      && segments.length === expected.length
-      && segments.every((segment, index) =>
+    return (
+      url.origin === origin &&
+      !url.search &&
+      !url.hash &&
+      !url.username &&
+      !url.password &&
+      segments.length === expected.length &&
+      segments.every((segment, index) =>
         index === repositoryIndex || index === repositoryIndex + 1
           ? segment.toLowerCase() === expected[index].toLowerCase()
           : segment === expected[index]
-      );
+      )
+    );
   } catch {
     return false;
   }
 }
 
 async function responseMessage(response: Response): Promise<string | undefined> {
-  const body = await response.json().catch(() => null) as { message?: unknown } | null;
+  const body = (await response.json().catch(() => null)) as { message?: unknown } | null;
   return typeof body?.message === 'string' ? body.message : undefined;
 }
 
@@ -106,30 +113,54 @@ function errorReceipt(response: Response, message?: string): DispatchReceipt {
 
 function receiptFromDispatchBody(data: unknown, org: string, repo: string): DispatchReceipt {
   if (!data || typeof data !== 'object') {
-    return { accepted: false, status: 200, reason: 'GitHub returned an invalid workflow dispatch receipt' };
+    return {
+      accepted: false,
+      status: 200,
+      reason: 'GitHub returned an invalid workflow dispatch receipt',
+    };
   }
   const receipt = data as DispatchResponse;
   const runId = receipt.workflow_run_id;
-  if ((typeof runId !== 'number' && typeof runId !== 'string') || !/^[1-9]\d*$/.test(String(runId))) {
-    return { accepted: false, status: 200, reason: 'GitHub returned an invalid workflow dispatch receipt' };
+  if (
+    (typeof runId !== 'number' && typeof runId !== 'string') ||
+    !/^[1-9]\d*$/.test(String(runId))
+  ) {
+    return {
+      accepted: false,
+      status: 200,
+      reason: 'GitHub returned an invalid workflow dispatch receipt',
+    };
   }
   const id = String(runId);
   const apiPath = `/repos/${org}/${repo}/actions/runs/${id}`;
   const htmlPath = `/${org}/${repo}/actions/runs/${id}`;
-  if (!isGitHubUrl(receipt.run_url, apiPath, 'https://api.github.com') || !isGitHubUrl(receipt.html_url, htmlPath)) {
-    return { accepted: false, status: 200, reason: 'GitHub returned an invalid workflow dispatch receipt' };
+  if (
+    !isGitHubUrl(receipt.run_url, apiPath, 'https://api.github.com') ||
+    !isGitHubUrl(receipt.html_url, htmlPath)
+  ) {
+    return {
+      accepted: false,
+      status: 200,
+      reason: 'GitHub returned an invalid workflow dispatch receipt',
+    };
   }
   return { accepted: true, runId: id, runUrl: receipt.html_url };
 }
 
 async function defaultBranch(org: string, repo: string): Promise<string | null> {
-  const response = await githubApiRequest(`/repos/${encodeURIComponent(org)}/${encodeURIComponent(repo)}`);
+  const response = await githubApiRequest(
+    `/repos/${encodeURIComponent(org)}/${encodeURIComponent(repo)}`
+  );
   if (!response.ok) {
-    if (response.status === 401) {clearToken();}
+    if (response.status === 401) {
+      clearToken();
+    }
     return null;
   }
-  const data = await response.json() as RepositoryResponse;
-  return typeof data.default_branch === 'string' && data.default_branch ? data.default_branch : null;
+  const data = (await response.json()) as RepositoryResponse;
+  return typeof data.default_branch === 'string' && data.default_branch
+    ? data.default_branch
+    : null;
 }
 
 async function getRemediationWorkflow(): Promise<WorkflowMetadata | null> {
@@ -137,18 +168,22 @@ async function getRemediationWorkflow(): Promise<WorkflowMetadata | null> {
     `/repos/${encodeURIComponent(getRepoOwner())}/${encodeURIComponent(getRepoName())}/actions/workflows/${encodeURIComponent(WORKFLOWS.files.remediateCheck)}`
   );
   if (!response.ok) {
-    if (response.status === 401) {clearToken();}
+    if (response.status === 401) {
+      clearToken();
+    }
     return null;
   }
-  const workflow = await response.json() as WorkflowMetadata;
-  return typeof workflow.id === 'number'
-    && workflow.path === `.github/workflows/${WORKFLOWS.files.remediateCheck}`
+  const workflow = (await response.json()) as WorkflowMetadata;
+  return typeof workflow.id === 'number' &&
+    workflow.path === `.github/workflows/${WORKFLOWS.files.remediateCheck}`
     ? workflow
     : null;
 }
 
 async function waitForDiscovery(signal?: AbortSignal): Promise<boolean> {
-  if (signal?.aborted) {return false;}
+  if (signal?.aborted) {
+    return false;
+  }
   return new Promise<boolean>((resolve) => {
     const onAbort = () => {
       clearTimeout(timeout);
@@ -175,7 +210,9 @@ async function correlateRemediationRun(
   const deadline = requestedAt + REMEDIATION_DISCOVERY.timeout;
 
   do {
-    if (options.signal?.aborted) {return { reason: 'Remediation discovery cancelled' };}
+    if (options.signal?.aborted) {
+      return { reason: 'Remediation discovery cancelled' };
+    }
     const matches: WorkflowRun[] = [];
     for (let page = 1; page <= REMEDIATION_DISCOVERY.maxPages; page += 1) {
       const query = new URLSearchParams({
@@ -188,19 +225,26 @@ async function correlateRemediationRun(
         { signal: options.signal }
       );
       if (!response.ok) {
-        if (response.status === 401) {clearToken();}
+        if (response.status === 401) {
+          clearToken();
+        }
         return { reason: 'Dispatch accepted; unable to locate its workflow run' };
       }
-      const data = await response.json() as WorkflowRunsResponse;
-      matches.push(...data.workflow_runs.filter((run) =>
-        Number.isSafeInteger(run.id)
-        && run.id > 0
-        && run.workflow_id === workflow.id
-        && run.event === 'workflow_dispatch'
-        && run.display_title === title
-        && run.created_at >= cutoff
-      ));
-      if (data.workflow_runs.length < REMEDIATION_DISCOVERY.perPage) {break;}
+      const data = (await response.json()) as WorkflowRunsResponse;
+      matches.push(
+        ...data.workflow_runs.filter(
+          (run) =>
+            Number.isSafeInteger(run.id) &&
+            run.id > 0 &&
+            run.workflow_id === workflow.id &&
+            run.event === 'workflow_dispatch' &&
+            run.display_title === title &&
+            run.created_at >= cutoff
+        )
+      );
+      if (data.workflow_runs.length < REMEDIATION_DISCOVERY.perPage) {
+        break;
+      }
     }
     if (matches.length === 1) {
       const [run] = matches;
@@ -214,11 +258,13 @@ async function correlateRemediationRun(
       return { reason: 'Dispatch accepted; more than one matching remediation run was found' };
     }
     options.onProgress?.('Dispatch accepted; waiting for the remediation run to appear.');
-  } while (Date.now() < deadline && await waitForDiscovery(options.signal));
+  } while (Date.now() < deadline && (await waitForDiscovery(options.signal)));
 
-  return { reason: options.signal?.aborted
-    ? 'Remediation discovery cancelled'
-    : 'Dispatch accepted; the remediation run is still being located' };
+  return {
+    reason: options.signal?.aborted
+      ? 'Remediation discovery cancelled'
+      : 'Dispatch accepted; the remediation run is still being located',
+  };
 }
 
 async function verifyRemediationRun(
@@ -227,7 +273,9 @@ async function verifyRemediationRun(
   workflow: WorkflowMetadata,
   signal?: AbortSignal
 ): Promise<DispatchReceipt> {
-  if (!receipt.accepted || !receipt.runId) {return receipt;}
+  if (!receipt.accepted || !receipt.runId) {
+    return receipt;
+  }
   const scorecardOrg = getRepoOwner();
   const scorecardRepo = getRepoName();
   const response = await githubApiRequest(
@@ -235,19 +283,27 @@ async function verifyRemediationRun(
     { signal }
   );
   if (!response.ok) {
-    if (response.status === 401) {clearToken();}
-    return { accepted: true, reason: 'Dispatch accepted; the remediation run is still being located' };
+    if (response.status === 401) {
+      clearToken();
+    }
+    return {
+      accepted: true,
+      reason: 'Dispatch accepted; the remediation run is still being located',
+    };
   }
-  const run = await response.json() as WorkflowRun;
+  const run = (await response.json()) as WorkflowRun;
   const expectedPath = `/${scorecardOrg}/${scorecardRepo}/actions/runs/${receipt.runId}`;
   if (
-    String(run.id) !== receipt.runId
-    || run.workflow_id !== workflow.id
-    || run.event !== 'workflow_dispatch'
-    || run.display_title !== `remediation:${request.request_id}`
-    || !isGitHubUrl(run.html_url, expectedPath)
+    String(run.id) !== receipt.runId ||
+    run.workflow_id !== workflow.id ||
+    run.event !== 'workflow_dispatch' ||
+    run.display_title !== `remediation:${request.request_id}` ||
+    !isGitHubUrl(run.html_url, expectedPath)
   ) {
-    return { accepted: true, reason: 'Dispatch accepted; its workflow run could not be safely attributed' };
+    return {
+      accepted: true,
+      reason: 'Dispatch accepted; its workflow run could not be safely attributed',
+    };
   }
   return { accepted: true, runId: receipt.runId, runUrl: run.html_url };
 }
@@ -299,7 +355,9 @@ export async function fetchWorkflowRuns(
   const endpoint = `/repos/${encodeURIComponent(org)}/${encodeURIComponent(repo)}/actions/runs?per_page=${perPage}&_t=${Date.now()}`;
   const response = await githubApiRequest(endpoint, { cache: 'no-cache' });
   if (!response.ok) {
-    if (response.status === 401) {clearToken();}
+    if (response.status === 401) {
+      clearToken();
+    }
     throw new Error(`Failed to fetch workflow runs: ${response.status}`);
   }
   const data: WorkflowRunsResponse = await response.json();
@@ -338,7 +396,9 @@ export async function triggerWorkflowDispatch(
     if (response.status === 200) {
       return receiptFromDispatchBody(await response.json().catch(() => null), org, repo);
     }
-    if (response.status === 401) {clearToken();}
+    if (response.status === 401) {
+      clearToken();
+    }
     return errorReceipt(response, await responseMessage(response));
   } catch (error) {
     console.error('Error triggering workflow:', error);
@@ -357,9 +417,11 @@ export async function triggerCheckRemediation(
     return { accepted: false, reason: 'GitHub token required to trigger workflows' };
   }
   if (
-    !/^[a-f\d]{40}$/i.test(request.service_sha)
-    || !/^[a-f\d]{40}$/i.test(request.suite_sha)
-    || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.request_id)
+    !/^[a-f\d]{40}$/i.test(request.service_sha) ||
+    !/^[a-f\d]{40}$/i.test(request.suite_sha) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      request.request_id
+    )
   ) {
     return { accepted: false, reason: 'Invalid remediation request' };
   }
@@ -389,13 +451,20 @@ export async function triggerCheckRemediation(
   );
   if (!receipt.accepted) {
     return receipt.status === undefined
-      ? { accepted: true, reason: 'Dispatch outcome is uncertain; no retry was sent. Check Actions before requesting again.' }
+      ? {
+        accepted: true,
+        reason:
+            'Dispatch outcome is uncertain; no retry was sent. Check Actions before requesting again.',
+      }
       : receipt;
   }
   try {
     return receipt.runId
       ? await verifyRemediationRun(request, receipt, workflow, options.signal)
-      : { accepted: true, ...await correlateRemediationRun(request, workflow, requestedAt, options) };
+      : {
+        accepted: true,
+        ...(await correlateRemediationRun(request, workflow, requestedAt, options)),
+      };
   } catch {
     return { accepted: true, reason: 'Dispatch accepted; unable to locate its workflow run' };
   }
@@ -407,7 +476,9 @@ async function remediationPublisher(
   signal?: AbortSignal
 ): Promise<string | null> {
   const workflow = await getRemediationWorkflow();
-  if (!workflow) {return null;}
+  if (!workflow) {
+    return null;
+  }
   const scorecardOrg = getRepoOwner();
   const scorecardRepo = getRepoName();
   const runResponse = await githubApiRequest(
@@ -415,19 +486,21 @@ async function remediationPublisher(
     { signal }
   );
   if (!runResponse.ok) {
-    if (runResponse.status === 401) {clearToken();}
+    if (runResponse.status === 401) {
+      clearToken();
+    }
     return null;
   }
-  const run = await runResponse.json() as WorkflowRun;
+  const run = (await runResponse.json()) as WorkflowRun;
   const expectedPath = `/${scorecardOrg}/${scorecardRepo}/actions/runs/${runId}`;
   if (
-    String(run.id) !== runId
-    || run.workflow_id !== workflow.id
-    || run.event !== 'workflow_dispatch'
-    || run.display_title !== `remediation:${request.request_id}`
-    || !run.head_sha
-    || !/^[a-f\d]{40}$/i.test(run.head_sha)
-    || !isGitHubUrl(run.html_url, expectedPath)
+    String(run.id) !== runId ||
+    run.workflow_id !== workflow.id ||
+    run.event !== 'workflow_dispatch' ||
+    run.display_title !== `remediation:${request.request_id}` ||
+    !run.head_sha ||
+    !/^[a-f\d]{40}$/i.test(run.head_sha) ||
+    !isGitHubUrl(run.html_url, expectedPath)
   ) {
     return null;
   }
@@ -437,14 +510,19 @@ async function remediationPublisher(
     { signal }
   );
   if (!policyResponse.ok) {
-    if (policyResponse.status === 401) {clearToken();}
+    if (policyResponse.status === 401) {
+      clearToken();
+    }
     return null;
   }
-  const content = await policyResponse.json() as PolicyResponse;
-  if (content.encoding !== 'base64' || typeof content.content !== 'string') {return null;}
+  const content = (await policyResponse.json()) as PolicyResponse;
+  if (content.encoding !== 'base64' || typeof content.content !== 'string') {
+    return null;
+  }
   try {
     const policy = JSON.parse(atob(content.content.replace(/\s/g, ''))) as RemediationPolicy;
-    const publisher = policy.targets?.[`${request.org}/${request.repo}`.toLowerCase()]?.publisher_login;
+    const publisher =
+      policy.targets?.[`${request.org}/${request.repo}`.toLowerCase()]?.publisher_login;
     return typeof publisher === 'string' && publisher ? publisher : null;
   } catch {
     return null;
@@ -460,37 +538,53 @@ export async function findRemediationPullRequest(
     defaultBranch(request.org, request.repo),
     remediationPublisher(request, runId, signal),
   ]);
-  if (!branch || !publisher) {return null;}
+  if (!branch || !publisher) {
+    return null;
+  }
   const marker = `<!-- scorecards-remediation:v1 check_id=${request.check_id} -->`;
   const prefix = `scorecards-remediation/${request.check_id}/`;
   const repository = `${request.org}/${request.repo}`.toLowerCase();
   const candidates: PullRequestResponse[] = [];
   for (let page = 1; page <= REMEDIATION_DISCOVERY.maxPages; page += 1) {
     const response = await githubApiRequest(
-      `/repos/${encodeURIComponent(request.org)}/${encodeURIComponent(request.repo)}/pulls?${new URLSearchParams({
-        state: 'open',
-        base: branch,
-        per_page: String(REMEDIATION_DISCOVERY.perPage),
-        page: String(page),
-      })}`,
+      `/repos/${encodeURIComponent(request.org)}/${encodeURIComponent(request.repo)}/pulls?${new URLSearchParams(
+        {
+          state: 'open',
+          base: branch,
+          per_page: String(REMEDIATION_DISCOVERY.perPage),
+          page: String(page),
+        }
+      )}`,
       { signal }
     );
     if (!response.ok) {
-      if (response.status === 401) {clearToken();}
+      if (response.status === 401) {
+        clearToken();
+      }
       return null;
     }
-    const pulls = await response.json() as PullRequestResponse[];
-    candidates.push(...pulls.filter((candidate) =>
-      candidate.body?.includes(marker)
-      && candidate.base?.ref === branch
-      && candidate.head?.ref?.startsWith(prefix)
-      && candidate.head.repo?.full_name?.toLowerCase() === repository
-      && candidate.user?.login?.toLowerCase() === publisher.toLowerCase()
-      && typeof candidate.number === 'number'
-      && isGitHubUrl(candidate.html_url, `/${request.org}/${request.repo}/pull/${candidate.number}`)
-    ));
-    if (pulls.length < REMEDIATION_DISCOVERY.perPage) {break;}
-    if (page === REMEDIATION_DISCOVERY.maxPages) {return null;}
+    const pulls = (await response.json()) as PullRequestResponse[];
+    candidates.push(
+      ...pulls.filter(
+        (candidate) =>
+          candidate.body?.includes(marker) &&
+          candidate.base?.ref === branch &&
+          candidate.head?.ref?.startsWith(prefix) &&
+          candidate.head.repo?.full_name?.toLowerCase() === repository &&
+          candidate.user?.login?.toLowerCase() === publisher.toLowerCase() &&
+          typeof candidate.number === 'number' &&
+          isGitHubUrl(
+            candidate.html_url,
+            `/${request.org}/${request.repo}/pull/${candidate.number}`
+          )
+      )
+    );
+    if (pulls.length < REMEDIATION_DISCOVERY.perPage) {
+      break;
+    }
+    if (page === REMEDIATION_DISCOVERY.maxPages) {
+      return null;
+    }
   }
   return candidates.length === 1 && candidates[0].number && candidates[0].html_url
     ? { number: candidates[0].number, url: candidates[0].html_url }
@@ -499,7 +593,10 @@ export async function findRemediationPullRequest(
 
 export async function triggerScorecardWorkflow(org: string, repo: string): Promise<boolean> {
   const receipt = await triggerWorkflowDispatch(
-    getRepoOwner(), getRepoName(), WORKFLOWS.files.triggerService, { org, repo }
+    getRepoOwner(),
+    getRepoName(),
+    WORKFLOWS.files.triggerService,
+    { org, repo }
   );
   return receipt.accepted;
 }
@@ -516,14 +613,21 @@ export async function triggerBulkScorecardWorkflows(
     getRepoOwner(),
     getRepoName(),
     WORKFLOWS.files.triggerService,
-    { services: JSON.stringify(services.map((service) => ({ org: service.org, repo: service.repo }))) }
+    {
+      services: JSON.stringify(
+        services.map((service) => ({ org: service.org, repo: service.repo }))
+      ),
+    }
   );
   return receipt.accepted;
 }
 
 export async function createInstallationPR(org: string, repo: string): Promise<boolean> {
   const receipt = await triggerWorkflowDispatch(
-    getRepoOwner(), getRepoName(), WORKFLOWS.files.createInstallPR, { org, repo }
+    getRepoOwner(),
+    getRepoName(),
+    WORKFLOWS.files.createInstallPR,
+    { org, repo }
   );
   return receipt.accepted;
 }
@@ -531,7 +635,9 @@ export async function createInstallationPR(org: string, repo: string): Promise<b
 export async function getUserInfo(): Promise<GitHubUser> {
   const response = await githubApiRequest('/user');
   if (!response.ok) {
-    if (response.status === 401) {clearToken();}
+    if (response.status === 401) {
+      clearToken();
+    }
     throw new Error('Failed to fetch user info');
   }
   return response.json();

@@ -86,11 +86,13 @@ Each check has a weight reflecting its importance. Higher-weighted checks (like 
 ## Documentation
 
 ### Setup Guides
+
 - **[Platform Installation](documentation/guides/platform-installation.md)** - Set up Scorecards for your organization
 - **[Service Installation](documentation/guides/service-installation.md)** - Add Scorecards to your service
 - **[Configuration Guide](documentation/guides/configuration.md)** - Customize your setup
 
 ### Reference
+
 - **[Action Reference](documentation/reference/action-reference.md)** - Action inputs, outputs, badges
 - **[Check Development Guide](documentation/guides/check-development-guide.md)** - Create custom checks
 - **[Comparison Guide](documentation/comparison.md)** - Scorecards vs. Backstage vs. Cortex
@@ -106,12 +108,7 @@ For remediation, see the [architecture, explorable diagrams and activation check
 
 ## Token Requirements
 
-| Token | Purpose | Required Scopes |
-|-------|---------|-----------------|
-| `SCORECARDS_CATALOG_TOKEN` | Write results to catalog | `repo` |
-| `SCORECARDS_WORKFLOW_TOKEN` | Installation PRs and explicitly enabled remediation | See the permissions and no-bypass requirements below |
-
-See [Token Requirements Guide](documentation/reference/token-requirements.md) for setup instructions.
+See the [Token Requirements Guide](documentation/reference/token-requirements.md) for catalog publication, installation and remediation permissions, setup instructions and security prerequisites.
 
 ---
 
@@ -120,6 +117,7 @@ See [Token Requirements Guide](documentation/reference/token-requirements.md) fo
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 To add a new check:
+
 1. Create a script in `checks/your-check/check.sh`
 2. Add metadata in `checks/your-check/metadata.json`
 3. Add tests

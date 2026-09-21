@@ -107,7 +107,6 @@ export interface EvaluationSource {
   run_attempt: number;
 }
 
-
 export interface InstallationPR {
   number: number;
   url: string;
@@ -217,7 +216,6 @@ export interface FetchResult {
   response: Response;
   usedAPI: boolean;
 }
-
 
 export type DispatchReceipt =
   | { accepted: true; runId?: string; runUrl?: string; reason?: string }
@@ -550,7 +548,15 @@ export interface RankCounts {
 export type WorkflowRunStatus = 'queued' | 'in_progress' | 'completed' | 'waiting';
 // Filter status (includes 'all' for UI filtering)
 export type WorkflowStatus = 'queued' | 'in_progress' | 'completed' | 'waiting' | 'all';
-export type WorkflowConclusion = 'success' | 'failure' | 'cancelled' | 'skipped' | 'timed_out' | 'action_required' | 'neutral' | null;
+export type WorkflowConclusion =
+  | 'success'
+  | 'failure'
+  | 'cancelled'
+  | 'skipped'
+  | 'timed_out'
+  | 'action_required'
+  | 'neutral'
+  | null;
 
 // ============= OpenAPI Types =============
 
