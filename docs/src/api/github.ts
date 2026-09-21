@@ -450,21 +450,23 @@ export async function triggerCheckRemediation(
     ref
   );
   if (!receipt.accepted) {
-    return receipt.status === undefined
-      ? {
-        accepted: true,
-        reason:
-            'Dispatch outcome is uncertain; no retry was sent. Check Actions before requesting again.',
-      }
-      : receipt;
+    if (receipt.status !== undefined) {
+      return receipt;
+    }
+    return {
+      accepted: true,
+      reason:
+        'Dispatch outcome is uncertain; no retry was sent. Check Actions before requesting again.',
+    };
   }
   try {
-    return receipt.runId
-      ? await verifyRemediationRun(request, receipt, workflow, options.signal)
-      : {
-        accepted: true,
-        ...(await correlateRemediationRun(request, workflow, requestedAt, options)),
-      };
+    if (receipt.runId) {
+      return await verifyRemediationRun(request, receipt, workflow, options.signal);
+    }
+    return {
+      accepted: true,
+      ...(await correlateRemediationRun(request, workflow, requestedAt, options)),
+    };
   } catch {
     return { accepted: true, reason: 'Dispatch accepted; unable to locate its workflow run' };
   }

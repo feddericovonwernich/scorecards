@@ -33,14 +33,13 @@ const CATEGORY_ORDER = [
 ];
 
 function getStatusIcon(status: CheckStatus): string {
-  switch (status) {
-  case 'pass':
+  if (status === 'pass') {
     return '\u2713';
-  case 'excluded':
-    return '\u2298';
-  default:
-    return '\u2717';
   }
+  if (status === 'excluded') {
+    return '\u2298';
+  }
+  return '\u2717';
 }
 
 function groupChecksByCategory(checks: CheckResult[]): Record<string, CheckResult[]> {
