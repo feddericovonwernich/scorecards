@@ -152,6 +152,24 @@ test.describe('Check Filter Modal', () => {
     await expect(modal.locator('.check-option-card').nth(0).locator('.state-any')).toHaveClass(/active/);
     await expect(modal.locator('.check-option-card').nth(1).locator('.state-any')).toHaveClass(/active/);
   });
+  test('moves keyboard focus to search after Clear all removes its button', async ({ page }) => {
+    await openCheckFilterModal(page);
+
+    const modal = page.locator('#check-filter-modal');
+    await modal.locator('.check-option-card').first().locator('.state-pass').click();
+
+    const searchInput = modal.locator('#check-filter-search');
+    const clearButton = modal.getByRole('button', { name: 'Clear all', exact: true });
+    await clearButton.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(searchInput).toBeFocused();
+    await expect(modal.locator('.check-filter-summary')).toBeHidden();
+    await expect(modal.locator('.check-option-card').first().locator('.state-any')).toHaveClass(/active/);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: /Check Filter/i })).toHaveText('Check Filter');
+  });
+
 
   test('supports keyboard category disclosure and state controls', async ({ page }) => {
     await openCheckFilterModal(page);

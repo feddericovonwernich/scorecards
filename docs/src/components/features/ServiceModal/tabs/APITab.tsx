@@ -4,6 +4,8 @@
  */
 
 import { useState, useCallback } from 'react';
+import { copyText } from '../../../../utils/clipboard.js';
+
 
 interface OpenAPIConfig {
   spec_file?: string;
@@ -39,6 +41,8 @@ export function APITab({ openapiInfo, org, repo, defaultBranch }: APITabProps) {
   const [specLoading, setSpecLoading] = useState(false);
   const [specError, setSpecError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
+
 
   const { specInfo, fromConfig, summary } = openapiInfo;
   const specFile = specInfo?.spec_file || 'openapi.yaml';
@@ -68,26 +72,19 @@ export function APITab({ openapiInfo, org, repo, defaultBranch }: APITabProps) {
     }
   }, [rawUrl, specContent, specLoading]);
 
-  // Copy spec to clipboard
-  const handleCopy = useCallback(async () => {
+  const handleCopy = useCallback(async (invoker: HTMLButtonElement) => {
     if (!specContent) {return;}
 
-    try {
-      await navigator.clipboard.writeText(specContent);
+    setCopyError(null);
+    setCopied(false);
+    if (await copyText(specContent, invoker)) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textarea = document.createElement('textarea');
-      textarea.value = specContent;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    } else {
+      setCopyError('Unable to copy. Please copy manually.');
     }
   }, [specContent]);
+
 
   // Open API Explorer
   const handleOpenExplorer = useCallback(() => {
@@ -164,11 +161,13 @@ export function APITab({ openapiInfo, org, repo, defaultBranch }: APITabProps) {
               <>
                 <div className="spec-toolbar">
                   <button
-                    onClick={handleCopy}
+                    onClick={(event) => handleCopy(event.currentTarget)}
+
                     className={`copy-spec-button ${copied ? 'copied' : ''}`}
                   >
                     {copied ? 'Copied!' : 'Copy'}
                   </button>
+                  {copyError && <p role="alert">{copyError}</p>}
                 </div>
                 <pre className="spec-code">
                   <code>{specContent}</code>

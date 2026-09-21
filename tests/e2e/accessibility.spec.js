@@ -153,7 +153,7 @@ test.describe('Accessibility', () => {
         expect(writes).toEqual([]);
     });
 
-    test('backdrop closes only a gesture that starts outside the dialog content', async ({ page }) => {
+    test('backdrop closes only gestures that start and end outside dialog content', async ({ page }) => {
         const opener = page.getByRole('button', { name: 'Settings', exact: true });
         const originalOverflow = await page.evaluate(() => document.body.style.overflow);
         await opener.click();
@@ -164,6 +164,16 @@ test.describe('Accessibility', () => {
         await page.mouse.down();
         await page.mouse.move(1, 1);
         await page.mouse.up();
+        await expect(dialog).toBeVisible();
+        const headingBox = await heading.boundingBox();
+        await page.mouse.move(1, 1);
+        await page.mouse.down();
+        await page.mouse.move(headingBox.x + headingBox.width / 2, headingBox.y + headingBox.height / 2);
+        await page.mouse.up();
+        await expect(dialog).toBeVisible();
+        const token = dialog.getByRole('textbox', { name: 'Personal Access Token' });
+        await token.click();
+        await expect(token).toBeFocused();
         await expect(dialog).toBeVisible();
         await page.mouse.click(1, 1);
         await expect(dialog).toBeHidden();

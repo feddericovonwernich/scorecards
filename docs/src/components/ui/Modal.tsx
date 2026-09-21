@@ -52,6 +52,7 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backdropPointerDown = useRef(false);
+  const backdropPointerUp = useRef(false);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
@@ -112,12 +113,22 @@ export function Modal({
       }}
       onPointerDown={event => {
         backdropPointerDown.current = event.target === event.currentTarget;
+        backdropPointerUp.current = false;
+      }}
+      onPointerUp={event => {
+        backdropPointerUp.current =
+          document.elementFromPoint(event.clientX, event.clientY) === event.currentTarget;
+      }}
+      onPointerCancel={() => {
+        backdropPointerDown.current = false;
+        backdropPointerUp.current = false;
       }}
       onClick={event => {
-        if (closeOnBackdrop && backdropPointerDown.current && event.target === event.currentTarget) {
+        if (closeOnBackdrop && backdropPointerDown.current && backdropPointerUp.current && event.target === event.currentTarget) {
           onClose();
         }
         backdropPointerDown.current = false;
+        backdropPointerUp.current = false;
       }}
     >
       <div className={`modal-content ${contentClassName}`}>

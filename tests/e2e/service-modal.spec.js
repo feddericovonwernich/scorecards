@@ -8,6 +8,72 @@ import {
   setGitHubPAT,
   clickServiceModalTab,
 } from './test-helper.js';
+async function mockOpenApiSpec(page) {
+  await page.route(
+    'https://raw.githubusercontent.com/feddericovonwernich/test-repo-perfect/main/openapi.yaml',
+    route => route.fulfill({
+      status: 200,
+      contentType: 'application/yaml',
+      path: 'tests/fixtures/openapi/valid-spec.yaml',
+    })
+  );
+}
+
+async function installClipboardSeam(page, {
+  clipboardSucceeds,
+  clipboardAvailable = true,
+  fallbackSucceeds,
+  fallbackThrows = false,
+}) {
+  await page.evaluate(({
+    clipboardSucceeds,
+    clipboardAvailable,
+    fallbackSucceeds,
+    fallbackThrows,
+  }) => {
+    window.copyProbe = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: clipboardAvailable ? {
+        writeText(text) {
+          window.copyProbe.push({ method: 'clipboard', text });
+          return clipboardSucceeds
+            ? Promise.resolve()
+            : Promise.reject(new Error('Clipboard unavailable'));
+        },
+      } : undefined,
+    });
+    document.execCommand = command => {
+      const active = document.activeElement;
+      window.copyProbe.push({
+        method: 'fallback',
+        command,
+        value: active instanceof HTMLTextAreaElement ? active.value : null,
+        selection: active instanceof HTMLTextAreaElement
+          ? active.value.slice(active.selectionStart, active.selectionEnd)
+          : null,
+        dialogId: active?.closest('dialog')?.id ?? null,
+      });
+      if (fallbackThrows) {
+        throw new Error('Copy command failed');
+      }
+      return fallbackSucceeds;
+    };
+  }, { clipboardSucceeds, clipboardAvailable, fallbackSucceeds, fallbackThrows });
+}
+
+async function openRawSpec(page) {
+  await mockOpenApiSpec(page);
+  await clickServiceModalTab(page, 'API Specification');
+  await page.getByText(/View Raw Specification/i).click();
+  await expect(page.locator('#api-tab .spec-code')).toContainText('openapi: 3.0.0');
+}
+
+async function copyProbe(page) {
+  return page.evaluate(() => window.copyProbe);
+}
+
+
 
 test.describe('Service Modal - Basic Behavior', () => {
   test('late service results leave refresh available after switching services', async ({ catalogPage }) => {
@@ -137,6 +203,8 @@ test.describe('Service Modal - API Specification Tab', () => {
   // Consolidated test: Task 7 - API Specification Tab Complete View
   // Combines: display API spec info, expandable raw spec, environment config
   test('should display API specification info, expandable raw spec, and environment config', async ({ serviceModalPage }) => {
+    await mockOpenApiSpec(serviceModalPage);
+
     await clickServiceModalTab(serviceModalPage, 'API Specification');
 
     const modal = serviceModalPage.locator('#service-modal');
@@ -158,14 +226,104 @@ test.describe('Service Modal - API Specification Tab', () => {
     const rawSpecToggle = modal.getByText(/View Raw Specification/i);
     await expect(rawSpecToggle).toBeVisible();
     await rawSpecToggle.click();
-    await expect(async () => {
-      const hasCodeBlock = await modal.locator('pre, code').count() > 0;
-      expect(hasCodeBlock).toBe(true);
-    }).toPass({ timeout: 3000 });
+    await expect(modal.locator('#api-tab .spec-code')).toContainText('openapi: 3.0.0');
+
 
     // Environment config
     await expect(modal).toContainText(/Configure environments|\.scorecard\/config\.yml|API Explorer/i);
   });
+
+  test('copies the OpenAPI fixture through the Clipboard API and retains focus', async ({ serviceModalPage }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: true,
+      fallbackSucceeds: true,
+    });
+    await openRawSpec(serviceModalPage);
+
+    const copyButton = serviceModalPage.locator('#api-tab .copy-spec-button');
+    const expectedText = await serviceModalPage.locator('#api-tab .spec-code').textContent();
+    await copyButton.click();
+
+    const [attempt] = await copyProbe(serviceModalPage);
+    expect(attempt).toMatchObject({ method: 'clipboard' });
+    expect(attempt.text).toBe(expectedText);
+    await expect(copyButton).toHaveAccessibleName('Copied!');
+    await expect(copyButton).toBeFocused();
+  });
+
+  for (const clipboardAvailable of [false, true]) {
+  test(`keeps fallback selections inside the service dialog with Clipboard API ${clipboardAvailable ? 'rejected' : 'unavailable'}`, async ({ serviceModalPage }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardAvailable,
+      clipboardSucceeds: false,
+      fallbackSucceeds: true,
+    });
+    await clickServiceModalTab(serviceModalPage, 'Badges');
+
+    const badgeCopy = serviceModalPage.locator('#badges-tab .copy-button').first();
+    const expectedBadge = await serviceModalPage.locator('#badges-tab .badge-code-block').first().textContent();
+    await badgeCopy.click();
+    await expect(badgeCopy).toHaveAccessibleName('Copied!');
+    await expect(badgeCopy).toBeFocused();
+
+    await openRawSpec(serviceModalPage);
+    const apiCopy = serviceModalPage.locator('#api-tab .copy-spec-button');
+    const expectedSpec = await serviceModalPage.locator('#api-tab .spec-code').textContent();
+    await apiCopy.click();
+    await expect(apiCopy).toHaveAccessibleName('Copied!');
+    await expect(apiCopy).toBeFocused();
+
+    const fallbacks = (await copyProbe(serviceModalPage)).filter(
+      attempt => attempt.method === 'fallback'
+    );
+    expect(fallbacks).toHaveLength(2);
+    expect(fallbacks[0]).toMatchObject({
+      command: 'copy',
+      dialogId: 'service-modal',
+      value: expectedBadge,
+      selection: expectedBadge,
+    });
+    expect(fallbacks[1]).toMatchObject({
+      command: 'copy',
+      dialogId: 'service-modal',
+      value: expectedSpec,
+      selection: expectedSpec,
+    });
+  });
+  }
+
+  test('reports failed fallback copies inline without claiming success', async ({ serviceModalPage }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: false,
+      clipboardAvailable: false,
+      fallbackSucceeds: false,
+    });
+    await clickServiceModalTab(serviceModalPage, 'Badges');
+
+    const badgeCopy = serviceModalPage.locator('#badges-tab .copy-button').first();
+    await badgeCopy.click();
+    await expect(serviceModalPage.locator('#service-modal').getByRole('alert')).toContainText(
+      'Unable to copy'
+    );
+    await expect(badgeCopy).toHaveAccessibleName('Copy');
+
+    await expect(badgeCopy).toBeFocused();
+
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: false,
+      fallbackSucceeds: false,
+      fallbackThrows: true,
+    });
+
+    await openRawSpec(serviceModalPage);
+    const apiCopy = serviceModalPage.locator('#api-tab .copy-spec-button');
+    await apiCopy.click();
+    const modal = serviceModalPage.locator('#service-modal');
+    await expect(modal.getByRole('alert')).toContainText('Unable to copy');
+    await expect(modal.getByRole('button', { name: 'Copied!' })).toHaveCount(0);
+    await expect(apiCopy).toBeFocused();
+  });
+
 });
 
 test.describe('Service Modal - Contributors Tab', () => {
@@ -221,21 +379,22 @@ test.describe('Service Modal - Badges Tab', () => {
     expect(await copyButtons.count()).toBeGreaterThanOrEqual(2);
   });
 
-  test('should copy badge markdown to clipboard', async ({ serviceModalPage }) => {
-    await serviceModalPage.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  test('copies badge markdown through the Clipboard API and retains focus', async ({ serviceModalPage }) => {
+    await installClipboardSeam(serviceModalPage, {
+      clipboardSucceeds: true,
+      fallbackSucceeds: true,
+    });
     await clickServiceModalTab(serviceModalPage, 'Badges');
 
-    const modal = serviceModalPage.locator('#service-modal');
-    const copyButton = modal.getByRole('button', { name: 'Copy' }).first();
-    await copyButton.click();
-
-    await expect(modal).toContainText(/Copied/i);
-
-    // Wait for reset
-    await expect(async () => {
-      const resetButton = modal.getByRole('button', { name: 'Copy' }).first();
-      await expect(resetButton).toBeVisible();
-    }).toPass({ timeout: 5000 });
+    for (const index of [0, 1]) {
+      const copyButton = serviceModalPage.locator('#badges-tab .copy-button').nth(index);
+      const expectedText = await serviceModalPage.locator('#badges-tab .badge-code-block').nth(index).textContent();
+      await copyButton.click();
+      await expect(copyButton).toHaveAccessibleName('Copied!');
+      await expect(copyButton).toBeFocused();
+      const attempt = (await copyProbe(serviceModalPage))[index];
+      expect(attempt).toEqual({ method: 'clipboard', text: expectedText });
+    }
   });
 });
 

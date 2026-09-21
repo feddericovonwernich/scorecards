@@ -3,7 +3,7 @@
  * Modal for filtering services by check status
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Modal } from '../../ui/Modal.js';
 import type {
   CheckMetadata,
@@ -292,6 +292,7 @@ export function CheckFilterModal({
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
     new Set()
   );
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load checks metadata
   useEffect(() => {
@@ -355,6 +356,7 @@ export function CheckFilterModal({
 
   // Handle clear all
   const handleClearAll = useCallback(() => {
+    searchInputRef.current?.focus({ preventScroll: true });
     onFiltersChange(new Map());
   }, [onFiltersChange]);
 
@@ -397,6 +399,7 @@ export function CheckFilterModal({
             {/* Search and summary */}
             <div className="check-filter-search-section">
               <input
+                ref={searchInputRef}
                 type="text"
                 id="check-filter-search"
                 placeholder="Search checks by name or description..."

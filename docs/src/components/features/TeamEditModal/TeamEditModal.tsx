@@ -62,6 +62,7 @@ export function TeamEditModal({
   });
   const [aliasInput, setAliasInput] = useState('');
   const aliasInputRef = useRef<HTMLInputElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -149,6 +150,7 @@ export function TeamEditModal({
       return;
     }
 
+    headingRef.current?.focus({ preventScroll: true });
     setSaving(true);
     showToast('Triggering workflow...', 'info');
 
@@ -238,7 +240,7 @@ export function TeamEditModal({
         contentClassName="team-edit-modal max-w-lg"
       >
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-text mb-6">
+          <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-text mb-6">
             {mode === 'create' ? 'Create Team' : 'Edit Team'}
           </h2>
 
