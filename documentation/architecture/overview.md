@@ -38,7 +38,7 @@ This document describes the high-level architecture of the Scorecards system.
 │                   Catalog Branch                             │
 │  registry/, results/, badges/, docs/                        │
 └─────────────────────┬───────────────────────────────────────┘
-                      │ Served via GitHub Pages
+                      │ Results fetched by the UI
                       ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Catalog UI                                │

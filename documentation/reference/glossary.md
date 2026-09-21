@@ -27,10 +27,10 @@ Triggering the Scorecards workflow across multiple services simultaneously using
 ## C
 
 **Catalog**
-The web-based user interface that displays scorecard results across all services. Hosted on GitHub Pages and built from the catalog branch.
+The web-based user interface that displays scorecard results across all services.
 
 **Catalog Branch**
-A dedicated Git branch (typically named `catalog`) that stores all scorecard results, badges, registry data, and the catalog UI. Served via GitHub Pages.
+A dedicated Git branch (typically named `catalog`) that stores all scorecard results, badges, registry data, and the generated catalog UI.
 
 **Catalog Token**
 A GitHub Personal Access Token (stored as `SCORECARDS_CATALOG_TOKEN`) that allows the action to write results to the catalog branch. Requires `repo` scope.
@@ -85,7 +85,7 @@ A check that did not meet its quality criteria (exit code 1). Failed checks cont
 The CI/CD platform where Scorecards checks execute. Workflows are defined in `.github/workflows/`.
 
 **GitHub Pages**
-The static site hosting service that serves the catalog UI from the catalog branch. Requires enabling in repository settings.
+The static site hosting service for the catalog UI. See the [Deployment guide](../../docs/README.md#deployment) for publication and configuration.
 
 **Gold Rank**
 A high quality rank awarded to services scoring 75-89%. Indicates strong quality practices.

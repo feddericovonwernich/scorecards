@@ -4,7 +4,7 @@ This document describes the architecture and features of the Scorecards catalog 
 
 ## Overview
 
-The catalog UI is a React single-page application served via GitHub Pages from the catalog branch. It provides a comprehensive interface for browsing service scorecards, triggering updates, and exploring service quality metrics.
+The catalog UI is a React single-page application served via GitHub Pages. It provides a comprehensive interface for browsing service scorecards, triggering updates, and exploring service quality metrics.
 
 Eligible failed checks can offer an optional remediation action. `ServiceModal` retains evaluation provenance on load and refresh; `ChecksTab` keeps per-check request state and links the correlated central workflow run without optimistically changing the score. Dispatch uses the shared GitHub API client, handles both 200 and 204 receipts and never attributes an unrelated latest run. See the [remediation contract and diagrams](flows/remediation-flow.md) for authorization, correlation and disabled-by-default rollout.
 

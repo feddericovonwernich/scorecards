@@ -15,7 +15,7 @@ export GITHUB_TOKEN=your_github_pat
 curl -fsSL https://raw.githubusercontent.com/feddericovonwernich-org/scorecards/main/scripts/install.sh | bash
 ```
 
-This creates a repository with GitHub Actions, catalog UI on GitHub Pages, and results storage. Services get scored immediately with no additional configuration required.
+This creates a repository with GitHub Actions and results storage. Complete the [catalog deployment procedure](docs/README.md#deployment) to publish the UI, then follow the [service installation guide](documentation/guides/service-installation.md) to onboard services.
 
 ---
 

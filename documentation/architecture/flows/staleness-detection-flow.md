@@ -124,27 +124,14 @@ This document describes how the system detects when service scorecards are outda
 
 **Workflow**: `.github/workflows/update-checks-hash.yml`
 
-**Triggers**:
-```yaml
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'checks/**'
-```
-
-**When Activated**:
-- Any push to main that modifies `checks/` directory
-- Adding new checks
-- Modifying existing checks
-- Changing metadata.json files
-- Deleting checks
+See the [workflow reference](../../reference/workflows.md#update-checks-hashyml) for triggers and dispatch restrictions.
 
 ### 2. Calculate Checks Hash
 
 **Implementation**: `action/utils/update-checks-hash.sh`
 
 **Process**:
+
 ```bash
 # For each check directory (sorted):
 for check_dir in $(find checks/ -mindepth 1 -maxdepth 1 -type d | sort); do
@@ -166,86 +153,42 @@ done | \
 ```
 
 **Includes**:
+
 - All `check.sh`, `check.py`, `check.js` files
 - All `metadata.json` files
 - Check ID (directory name)
 - Directory structure (adding/removing checks changes hash)
 
 **Deterministic**:
+
 - Check directories sorted alphabetically
 - Each check hashed independently then combined
 - Same input always produces same hash
 - Independent of execution environment
 
 **Example Hash**:
+
 ```
 abc123def456789fedcba987654321deadbeef0123456789abcdef0123456789
 ```
 
 ### 3. Export Check Metadata
 
-**Implementation**: `action/utils/update-checks-hash.sh`
-
-**Generated JSON** (`current-checks.json`):
-```json
-{
-  "checks_hash": "abc123def456...",
-  "generated_at": "2024-01-15T10:30:00Z",
-  "total_weight": 100,
-  "checks_count": 15,
-  "checks": [
-    {
-      "id": "01-readme-present",
-      "name": "README Present",
-      "weight": 10,
-      "timeout": 30,
-      "category": "documentation",
-      "description": "Checks for README.md file"
-    },
-    {
-      "id": "02-ci-present",
-      "name": "CI Present",
-      "weight": 5,
-      "timeout": 30,
-      "category": "ci",
-      "description": "Checks for CI configuration"
-    }
-  ]
-}
-```
-
-**Purpose**:
-- UI can display check details
-- Shows what changed between hash versions
-- Helps users understand scoring breakdown
+The [hash publication script](../../../action/utils/update-checks-hash.sh) owns the
+generated `current-checks.json` format used for staleness detection. It publishes
+suite metadata, not individual check definitions.
 
 ### 4. Commit to Catalog Branch
 
-**Implementation**: `.github/workflows/update-checks-hash.yml`
-
-**Files Written**:
-1. `current-checks.json` - Full check metadata including hash in `checks_hash` field
-2. `current-checks-hash.txt` - Optional single line with hash (for backwards compatibility)
-
-**Git Operations**:
-```bash
-git checkout catalog
-cat > current-checks.json <<EOF
-{
-  "checks_hash": "$HASH",
-  "checks": [...],
-  ...
-}
-EOF
-echo "$HASH" > current-checks-hash.txt
-git add current-checks.json current-checks-hash.txt
-git commit -m "Update checks hash to $HASH"
-git push
-```
+The [hash update workflow](../../reference/workflows.md#update-checks-hashyml)
+invokes that script to commit `current-checks.json` and `current-checks-hash.txt`
+together on `catalog`. See [Deployment](../../../docs/README.md#deployment) for
+concurrent-write recovery.
 
 **Note**: The UI primarily fetches `current-checks.json` and extracts the `checks_hash` field from it, rather than reading `current-checks-hash.txt` separately.
 
 **Atomic Update**:
+
 - Both files updated in single commit
 - Ensures hash and metadata always in sync
 
@@ -254,6 +197,7 @@ git push
 **Implementation**: `docs/src/api/registry.js`
 
 **On Page Load**:
+
 ```javascript
 // Fetch current checks metadata (includes hash)
 const hashUrl = `${RAW_BASE_URL}/current-checks.json?t=${Date.now()}`;
@@ -262,15 +206,16 @@ const data = await response.json();
 const currentHash = data.checks_hash;
 
 // Fetch service registry
-const services = await fetch('registry/all-services.json').then(r => r.json());
+const services = await fetch('registry/all-services.json').then((r) => r.json());
 
 // Compare hashes (in staleness.js)
-services.forEach(service => {
+services.forEach((service) => {
   service.is_stale = service.checks_hash !== currentHash;
 });
 ```
 
 **Caching**:
+
 - Current hash fetched on page load with cache-busting timestamp
 - `current-checks.json` provides both hash and check metadata
 - Registry re-fetched on user action
@@ -281,12 +226,14 @@ services.forEach(service => {
 **Condition**: `service.checks_hash === current_checks_hash`
 
 **UI Display**:
+
 - ✅ Green checkmark or no indicator
 - Normal row styling
 - Last run timestamp shown
 - Score considered current
 
 **Meaning**:
+
 - Service scored with latest check suite
 - Results reflect current quality standards
 - No action needed
@@ -296,6 +243,7 @@ services.forEach(service => {
 **Condition**: `service.checks_hash !== current_checks_hash`
 
 **UI Display**:
+
 - ⚠️ Warning icon
 - Highlighted/distinct row background
 - Tooltip: "Scored with older check suite - re-run recommended"
@@ -303,12 +251,14 @@ services.forEach(service => {
 - Added to bulk re-run list
 
 **Causes**:
+
 - Checks modified after service's last run
 - New checks added (service scored without them)
 - Check weights changed (affects score calculation)
 - Checks removed (service has obsolete data)
 
 **Example**:
+
 ```
 Service: myorg/myservice
 Last run: 2024-01-10 (hash: abc123...)
@@ -323,13 +273,14 @@ Status: STALE (5 days old, 3 checks modified)
 **UI Element**: "Update" button on service row
 
 **Action**:
+
 ```javascript
 async function triggerSingleService(repo) {
   await github.api.dispatch({
     workflow: 'trigger-service-workflow.yml',
     inputs: {
-      services: repo
-    }
+      services: repo,
+    },
   });
 }
 ```
@@ -339,24 +290,26 @@ async function triggerSingleService(repo) {
 **UI Element**: "Re-run All Stale" button (appears when stale services exist)
 
 **Action**:
+
 ```javascript
 async function triggerBulkStale() {
   const staleServices = services
-    .filter(s => s.is_stale)
-    .map(s => s.repo)
+    .filter((s) => s.is_stale)
+    .map((s) => s.repo)
     .join(',');
 
   await github.api.dispatch({
     workflow: 'trigger-service-workflow.yml',
     inputs: {
       services: staleServices,
-      bulk: true
-    }
+      bulk: true,
+    },
   });
 }
 ```
 
 **Requirements**:
+
 - GitHub PAT configured in settings
 - `workflow` scope permission
 - Write access to scorecards repository
@@ -364,23 +317,26 @@ async function triggerBulkStale() {
 ### 8. Service Re-scored
 
 **Execution**:
+
 - Service scorecard workflow runs
 - Uses current (latest) check suite
 - Calculates new score with new checks/weights
 
 **Registry Update**:
+
 ```json
 {
   "repo": "myorg/myservice",
   "score": 88,
   "last_run": "2024-01-15T11:00:00Z",
-  "checks_hash": "xyz789...",  // ← Updated to current
+  "checks_hash": "xyz789...", // ← Updated to current
   "previous_score": 85,
   "score_change": +3
 }
 ```
 
 **Result**:
+
 - `checks_hash` now matches `current_checks_hash`
 - Service no longer flagged as stale
 - New score reflects latest quality standards
@@ -391,6 +347,7 @@ async function triggerBulkStale() {
 ### Scenario 1: New Check Added
 
 **Timeline**:
+
 1. Day 1: Service scores 85% with 10 checks (hash: abc123)
 2. Day 5: New check 11 added (hash changes to: xyz789)
 3. Day 5: Service flagged stale (scored without check 11)
@@ -402,6 +359,7 @@ async function triggerBulkStale() {
 ### Scenario 2: Check Weight Changed
 
 **Timeline**:
+
 1. Day 1: Service scores 80% (hash: abc123)
 2. Day 3: Check weights rebalanced (hash: def456)
 3. Day 3: Service flagged stale (calculated with old weights)
@@ -413,6 +371,7 @@ async function triggerBulkStale() {
 ### Scenario 3: Check Logic Fixed
 
 **Timeline**:
+
 1. Day 1: Service scores 90%, passing all checks (hash: abc123)
 2. Day 2: Bug found in check 05 (was passing when should fail)
 3. Day 2: Check 05 logic fixed (hash: def456)

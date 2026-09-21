@@ -81,7 +81,7 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
    - Generates SHA256 hash of all checks (metadata + implementation)
    - Switches to catalog branch
    - Updates `current-checks-hash.txt` and `current-checks.json`
-   - Commits and pushes to catalog with native `GITHUB_TOKEN` and job-scoped `contents: write`; concurrent push rejection fails safely
+   - Commits and pushes to catalog; see [Token Requirements](token-requirements.md#token-overview) for credentials and [Deployment](../../docs/README.md#deployment) for concurrent-write recovery
 
 **How it works:**
 
@@ -392,7 +392,7 @@ Multiple workflows write to catalog branch to prevent conflicts and loops:
 
 - **Concurrency control**: `consolidate-registry.yml` uses concurrency groups
 - **Skip CI commits**: Registry updates use `[skip ci]` in commit messages
-- **Credentials**: UI sync and checks-hash publication use native `GITHUB_TOKEN`; cross-repository result writers still need the catalog credential
+- **Credentials**: See [Token Requirements](token-requirements.md#token-overview) for same-repository publication and cross-repository writers
 - **Bot commits**: All automated commits by github-actions[bot]
 
 ### Fresh Scoring
@@ -405,17 +405,17 @@ See the [Token Requirements Guide](token-requirements.md) for scoring, installat
 
 ## Quick Reference
 
-| Workflow                     | Category    | Trigger             | Purpose                  |
-| ---------------------------- | ----------- | ------------------- | ------------------------ |
-| test.yml                     | Development | Push/PR to main     | Run test suite           |
-| update-checks-hash.yml       | Development | checks/\*\* changes | Update staleness hash    |
-| sync-docs.yml                | Development | docs/\*\* changes   | Deploy UI updates        |
-| create-installation-pr.yml   | Onboarding  | Manual              | Create installation PR   |
-| install.yml                  | Onboarding  | Workflow call       | Reusable install + score |
-| scorecards.yml               | Execution   | Daily/push/manual   | Run checks in service    |
-| trigger-service-workflow.yml | Execution   | Manual              | Remote workflow trigger  |
-| remediate-check.yml          | Remediation | Manual              | Validate and propose PR  |
-| consolidate-registry.yml     | Maintenance | Registry updates    | Consolidate registry     |
+| Workflow                     | Category    | Trigger                            | Purpose                  |
+| ---------------------------- | ----------- | ---------------------------------- | ------------------------ |
+| test.yml                     | Development | Push/PR to main                    | Run test suite           |
+| update-checks-hash.yml       | Development | [Triggers](#update-checks-hashyml) | Update staleness hash    |
+| sync-docs.yml                | Development | [Triggers](#sync-docsyml)          | Deploy UI updates        |
+| create-installation-pr.yml   | Onboarding  | Manual                             | Create installation PR   |
+| install.yml                  | Onboarding  | Workflow call                      | Reusable install + score |
+| scorecards.yml               | Execution   | Daily/push/manual                  | Run checks in service    |
+| trigger-service-workflow.yml | Execution   | Manual                             | Remote workflow trigger  |
+| remediate-check.yml          | Remediation | Manual                             | Validate and propose PR  |
+| consolidate-registry.yml     | Maintenance | Registry updates                   | Consolidate registry     |
 
 ## Related Documentation
 

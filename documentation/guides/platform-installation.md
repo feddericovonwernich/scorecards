@@ -31,8 +31,10 @@ The installation script will:
 5. Create the catalog branch for data storage
 6. Push both branches to your repository
 7. Customize documentation to reference your repository
-8. Configure GitHub Pages to host the catalog
+8. Configure legacy branch-based GitHub Pages
 9. Provide next steps for service integration
+
+The installer does not complete workflow-based publication. Follow the [Deployment guide](../../docs/README.md#deployment) after installation.
 
 ## Prerequisites
 
@@ -75,7 +77,7 @@ git push -u origin catalog
 
 ### Step 3: Enable GitHub Pages
 
-Follow the [Deployment guide](../../docs/README.md#deployment) to publish the compiled catalog UI from the catalog branch.
+Follow the [Deployment guide](../../docs/README.md#deployment) to publish the compiled catalog UI.
 
 ## Customization
 

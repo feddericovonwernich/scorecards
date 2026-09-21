@@ -165,10 +165,9 @@ for an explicit GitHub Pages deployment. Repository and build-dependency changes
 covered by the workflow's path filter trigger publication; manual dispatch must
 select `main`. The public URL and Vite base path do not change.
 
-The same-repository checkouts/pushes use ephemeral `GITHUB_TOKEN`, not a PAT.
-Only the sync and checks-hash writer jobs get `contents: write`; the separate
-Pages job gets `contents: read`, `pages: write` and `id-token: write`, and uses
-`github-pages`. No cross-repository remediation permission is provided.
+See [Token Requirements](../documentation/reference/token-requirements.md#token-overview)
+for publication credentials and job-scoped permissions. The Pages deployment
+uses the `github-pages` environment.
 The Pages artifact comes from this run, never a pull request or another run.
 Fork and non-main dispatches are excluded; superseded source revisions fail
 before synchronization and again before deployment. Whole-workflow concurrency

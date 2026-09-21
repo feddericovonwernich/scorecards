@@ -107,7 +107,7 @@ Check the `SCORECARDS_CATALOG_TOKEN` secret, its selected repositories/permissio
 1. Check that the action ran successfully in the Actions tab
 2. Verify that `scorecards-repo` is set correctly in your workflow
 3. Check that results were committed to the catalog branch in the central repository
-4. Wait a few minutes for GitHub Pages to update
+4. Reload the catalog after registry consolidation completes; result updates do not require a UI deployment (see [Deployment](../../docs/README.md#deployment)).
 
 ### Checks failing unexpectedly
 

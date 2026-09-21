@@ -40,7 +40,7 @@ This document describes the end-to-end flow of how a service repository gets sco
               │
               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Catalog Branch (gh-pages)                       │
+│              Catalog Branch (catalog)                        │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  registry/{org}/{repo}.json                            │ │
 │  │  results/{org}/{repo}/results.json                     │ │
@@ -49,7 +49,7 @@ This document describes the end-to-end flow of how a service repository gets sco
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────┬───────────────────────────────────────────────┘
               │
-              │ 9. Served via GitHub Pages
+              │ 9. Results fetched by the UI
               │
               ▼
 ┌─────────────────────────────────────────────────────────────┐
