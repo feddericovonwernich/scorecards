@@ -134,6 +134,7 @@ body {
 }
 
 :global(#swagger-ui .model-box) {
+    max-width: 100%;
     overflow-wrap: normal;
 }
 
