@@ -17,6 +17,7 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/test.yml`
 
 **Triggers:**
+
 - Push to main branch
 - Pull requests to main branch
 
@@ -53,6 +54,7 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/update-checks-hash.yml`
 
 **Triggers:**
+
 - Push to main branch with changes to `checks/**`
 - Manual workflow dispatch
 
@@ -69,6 +71,7 @@ The Scorecards system uses 8 workflows across three categories:
    - Commits and pushes to catalog branch using SCORECARDS_CATALOG_TOKEN
 
 **How it works:**
+
 - Finds all check directories in `checks/`
 - For each check, hashes `metadata.json` and implementation file (`check.sh`, `check.py`, or `check.js`)
 - Combines all check hashes into single SHA256 hash
@@ -83,20 +86,11 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/sync-docs.yml`
 
 **Triggers:**
+
 - Push to main branch with changes to `docs/**`
 - Manual workflow dispatch
 
-**Purpose:** Syncs catalog UI files from main branch to catalog branch for GitHub Pages deployment.
-
-**Jobs:**
-
-1. **sync-catalog** - Syncs UI files
-   - Checks out main branch
-   - Checks out catalog branch
-   - Uses rsync to sync `docs/` directory (with delete for removed files)
-   - Commits and pushes to catalog branch if changed
-
-**System Role:** Keeps catalog UI synchronized between main and catalog branches. Since catalog branch serves GitHub Pages, this ensures UI updates are automatically deployed.
+**Purpose:** Builds and publishes the catalog UI. See the [Deployment guide](../../docs/README.md#deployment) for the delivery procedure and GitHub Pages configuration.
 
 ---
 
@@ -107,9 +101,11 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/create-installation-pr.yml`
 
 **Triggers:**
+
 - Manual workflow dispatch only
 
 **Inputs:**
+
 - `org` (required) - Organization/user name
 - `repo` (required) - Repository name
 - `scorecards-repo` (optional) - Central scorecards repository (default: 'feddericovonwernich-org/scorecards')
@@ -137,6 +133,7 @@ The Scorecards system uses 8 workflows across three categories:
    - Commits registry update to catalog branch
 
 **Outputs:**
+
 - `pr-number` - PR number created
 - `pr-state` - PR state (OPEN, CLOSED, MERGED)
 - `pr-url` - URL to the PR
@@ -152,13 +149,16 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/install.yml`
 
 **Triggers:**
+
 - Workflow call (reusable workflow)
 
 **Inputs:**
+
 - `scorecards-repo` (optional) - Central scorecards repository
 - `scorecards-branch` (optional) - Branch for results
 
 **Secrets:**
+
 - `github-token` (required) - GitHub token
 - `scorecards-pat` (optional) - PAT for pushing to central repo
 - `installation-pat` (optional) - PAT for creating installation PR
@@ -207,7 +207,8 @@ The Scorecards system uses 8 workflows across three categories:
 **Installed Path:** `.github/workflows/scorecards.yml` (in service repositories)
 
 **Triggers:**
-- Daily schedule (cron: '0 0 * * *' - midnight UTC)
+
+- Daily schedule (cron: '0 0 \* \* \*' - midnight UTC)
 - Push to main/master branches
 - Manual workflow dispatch
 
@@ -222,11 +223,13 @@ The Scorecards system uses 8 workflows across three categories:
    - Uploads results as artifact
 
 **Action Inputs:**
+
 - `github-token` - Token with repo and contents permissions
 - `scorecards-repo` - Central scorecards repository
 - `scorecards-branch` - Branch for results (default: 'catalog')
 
 **Action Outputs:**
+
 - `score` - Calculated score (0-100)
 - `rank` - Rank (bronze, silver, gold, platinum)
 - `passed-checks` - Number of checks passed
@@ -236,6 +239,7 @@ The Scorecards system uses 8 workflows across three categories:
 **System Role:** Client-side workflow that runs in service repositories. Executes the actual quality checks and reports results back to the central catalog. This is the simpler template approach compared to the reusable workflow approach (install.yml).
 
 **What the action does (action/entrypoint.sh):**
+
 1. Parses configuration from `.scorecard/config.yml`
 2. Fetches PR info and default branch
 3. Checks if scorecards workflow is installed
@@ -260,9 +264,11 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/trigger-service-workflow.yml`
 
 **Triggers:**
+
 - Manual workflow dispatch only
 
 **Inputs:**
+
 - `org` (optional) - Organization name for single service
 - `repo` (optional) - Repository name for single service
 - `services` (optional) - JSON array for bulk trigger: `[{"org":"org1","repo":"repo1"},...]`
@@ -287,6 +293,7 @@ The Scorecards system uses 8 workflows across three categories:
    - Reports success/failure count
 
 **System Role:** Allows central control/coordination of scorecard runs across multiple services. Useful for:
+
 - Testing check changes across all services
 - Forcing score updates after check modifications
 - Coordinating synchronized scoring
@@ -299,6 +306,7 @@ The Scorecards system uses 8 workflows across three categories:
 **Path:** `.github/workflows/consolidate-registry.yml`
 
 **Triggers:**
+
 - Push to catalog branch affecting `registry/**/*.json` (excluding `all-services.json`)
 
 **Concurrency:** Only one consolidation runs at a time (cancel in-progress runs)
@@ -348,6 +356,7 @@ jobs:
 ```
 
 **Benefits:**
+
 - Full installation + scoring functionality
 - Automatic installation PR creation
 - Daily caching to avoid duplicate runs
@@ -369,6 +378,7 @@ jobs:
 ```
 
 **Benefits:**
+
 - Lightweight approach
 - Direct action usage
 - Copied during installation and customized
@@ -404,16 +414,16 @@ The system uses three types of tokens:
 
 ## Quick Reference
 
-| Workflow | Category | Trigger | Purpose |
-|----------|----------|---------|---------|
-| test.yml | Development | Push/PR to main | Run test suite |
-| update-checks-hash.yml | Development | checks/** changes | Update staleness hash |
-| sync-docs.yml | Development | docs/** changes | Deploy UI updates |
-| create-installation-pr.yml | Onboarding | Manual | Create installation PR |
-| install.yml | Onboarding | Workflow call | Reusable install + score |
-| scorecards.yml | Execution | Daily/push/manual | Run checks in service |
-| trigger-service-workflow.yml | Execution | Manual | Remote workflow trigger |
-| consolidate-registry.yml | Maintenance | Registry updates | Consolidate registry |
+| Workflow                     | Category    | Trigger             | Purpose                  |
+| ---------------------------- | ----------- | ------------------- | ------------------------ |
+| test.yml                     | Development | Push/PR to main     | Run test suite           |
+| update-checks-hash.yml       | Development | checks/\*\* changes | Update staleness hash    |
+| sync-docs.yml                | Development | docs/\*\* changes   | Deploy UI updates        |
+| create-installation-pr.yml   | Onboarding  | Manual              | Create installation PR   |
+| install.yml                  | Onboarding  | Workflow call       | Reusable install + score |
+| scorecards.yml               | Execution   | Daily/push/manual   | Run checks in service    |
+| trigger-service-workflow.yml | Execution   | Manual              | Remote workflow trigger  |
+| consolidate-registry.yml     | Maintenance | Registry updates    | Consolidate registry     |
 
 ## Related Documentation
 

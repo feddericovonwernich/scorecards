@@ -116,8 +116,7 @@ export function filterAndRenderServices(): void {
     // Search filter - also search team name
     if (storeAccessor.getSearchQuery()) {
       const teamName = getTeamName(service) || '';
-      const searchText =
-        `${service.name} ${service.org} ${service.repo} ${teamName}`.toLowerCase();
+      const searchText = `${service.name} ${service.org} ${service.repo} ${teamName}`.toLowerCase();
       if (!searchText.includes(storeAccessor.getSearchQuery())) {
         return false;
       }
@@ -138,10 +137,7 @@ export function filterAndRenderServices(): void {
     case 'name-desc':
       return b.name.localeCompare(a.name);
     case 'updated-desc':
-      return (
-        new Date(b.last_updated).getTime() -
-          new Date(a.last_updated).getTime()
-      );
+      return new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime();
     default:
       return 0;
     }
@@ -230,7 +226,6 @@ export async function initializeApp(): Promise<void> {
     filterAndRenderServices();
 
     // Stats are now automatically updated by React (ServicesStatsSection component)
-
   } catch (error) {
     console.error('Error loading services:', error);
     // Error state is now handled by React components

@@ -30,11 +30,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter to use
-  reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
-    ...(process.env.CI ? [['github']] : []),
-  ],
+  reporter: [['html', { open: 'never' }], ['list'], ...(process.env.CI ? [['github']] : [])],
 
   // Shared settings for all projects
   use: {
@@ -63,7 +59,8 @@ export default defineConfig({
   // available for existing fixtures; missing files receive real 404 responses.
   webServer: {
     // When COVERAGE is enabled, pass COVERAGE env to build for instrumentation
-    command: `${COVERAGE ? 'COVERAGE=true ' : ''}npm run build && ` +
+    command:
+      `${COVERAGE ? 'COVERAGE=true ' : ''}npm run build && ` +
       'stage=$(mktemp -d) && trap \'rm -rf "$stage"\' EXIT && ' +
       'cp -a docs/dist/. "$stage/" && ln -s . "$stage/scorecards" && ' +
       `python3 -m http.server ${TEST_PORT} --directory "$stage"`,
@@ -73,8 +70,10 @@ export default defineConfig({
   },
 
   // Global setup/teardown for coverage collection
-  ...(COVERAGE ? {
-    globalSetup: './tests/e2e/coverage-setup.js',
-    globalTeardown: './tests/e2e/coverage-teardown.js',
-  } : {}),
+  ...(COVERAGE
+    ? {
+        globalSetup: './tests/e2e/coverage-setup.js',
+        globalTeardown: './tests/e2e/coverage-teardown.js',
+      }
+    : {}),
 });

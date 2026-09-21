@@ -237,10 +237,7 @@ function filterServices(
     const hasNoTeamFilter = selectedTeams.includes('__no_team__');
 
     filtered = filtered.filter((service) => {
-      const teamStr =
-        typeof service.team === 'string'
-          ? service.team
-          : service.team?.primary || '';
+      const teamStr = typeof service.team === 'string' ? service.team : service.team?.primary || '';
       const hasTeam = !!teamStr;
 
       // Check if "no team" filter matches
@@ -261,7 +258,9 @@ function filterServices(
   if (activeFilters.size > 0) {
     filtered = filtered.filter((service) => {
       for (const [filterName, filterState] of activeFilters) {
-        if (filterState === null) {continue;}
+        if (filterState === null) {
+          continue;
+        }
 
         let matches = false;
 
@@ -280,8 +279,12 @@ function filterServices(
           matches = service.rank === filterName;
         }
 
-        if (filterState === 'include' && !matches) {return false;}
-        if (filterState === 'exclude' && matches) {return false;}
+        if (filterState === 'include' && !matches) {
+          return false;
+        }
+        if (filterState === 'exclude' && matches) {
+          return false;
+        }
       }
       return true;
     });
@@ -296,12 +299,8 @@ function filterServices(
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
     filtered = filtered.filter((service) => {
-      const teamStr =
-        typeof service.team === 'string'
-          ? service.team
-          : service.team?.primary || '';
-      const searchText =
-        `${service.name} ${service.org} ${service.repo} ${teamStr}`.toLowerCase();
+      const teamStr = typeof service.team === 'string' ? service.team : service.team?.primary || '';
+      const searchText = `${service.name} ${service.org} ${service.repo} ${teamStr}`.toLowerCase();
       return searchText.includes(query);
     });
   }
@@ -322,15 +321,9 @@ function sortServices(services: ServiceData[], sortBy: string): ServiceData[] {
     case 'name-desc':
       return b.name.localeCompare(a.name);
     case 'updated-desc':
-      return (
-        new Date(b.last_updated).getTime() -
-          new Date(a.last_updated).getTime()
-      );
+      return new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime();
     case 'updated-asc':
-      return (
-        new Date(a.last_updated).getTime() -
-          new Date(b.last_updated).getTime()
-      );
+      return new Date(a.last_updated).getTime() - new Date(b.last_updated).getTime();
     default:
       return 0;
     }
@@ -366,14 +359,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { active, search, sort, teamFilter, checkFilters } = state.filters;
     const { checksHash } = state.ui;
 
-    const filtered = filterServices(
-      all,
-      active,
-      search,
-      teamFilter,
-      checkFilters,
-      checksHash
-    );
+    const filtered = filterServices(all, active, search, teamFilter, checkFilters, checksHash);
     const sorted = sortServices(filtered, sort);
 
     set((s) => ({
@@ -588,10 +574,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 export const selectServices = (state: AppState) => state.services;
 export const selectServicesAll = (state: AppState) => state.services.all;
-export const selectServicesFiltered = (state: AppState) =>
-  state.services.filtered;
-export const selectServicesLoading = (state: AppState) =>
-  state.services.loading;
+export const selectServicesFiltered = (state: AppState) => state.services.filtered;
+export const selectServicesLoading = (state: AppState) => state.services.loading;
 
 export const selectTeams = (state: AppState) => state.teams;
 export const selectTeamsAll = (state: AppState) => state.teams.all;
@@ -617,14 +601,11 @@ export const selectChecksHash = (state: AppState) => state.ui.checksHash;
 export const selectServiceModal = (state: AppState) => state.serviceModal;
 
 export const selectActionsWidget = (state: AppState) => state.actionsWidget;
-export const selectActionsWidgetOpen = (state: AppState) =>
-  state.actionsWidget.open;
-export const selectActionsWidgetRuns = (state: AppState) =>
-  state.actionsWidget.runs;
+export const selectActionsWidgetOpen = (state: AppState) => state.actionsWidget.open;
+export const selectActionsWidgetRuns = (state: AppState) => state.actionsWidget.runs;
 export const selectActionsWidgetBadgeCount = (state: AppState) =>
-  state.actionsWidget.runs.filter(
-    (r) => r.status === 'in_progress' || r.status === 'queued'
-  ).length;
+  state.actionsWidget.runs.filter((r) => r.status === 'in_progress' || r.status === 'queued')
+    .length;
 
 // ============= Computed Selectors =============
 
@@ -656,12 +637,18 @@ export const selectFilterStats = (state: AppState) => {
 export const selectActiveFilterCount = (state: AppState) => {
   let count = 0;
   state.filters.active.forEach((mode) => {
-    if (mode !== null) {count++;}
+    if (mode !== null) {
+      count++;
+    }
   });
   state.filters.checkFilters.forEach((filter) => {
-    if (filter !== null) {count++;}
+    if (filter !== null) {
+      count++;
+    }
   });
-  if (state.filters.teamFilter) {count++;}
+  if (state.filters.teamFilter) {
+    count++;
+  }
   return count;
 };
 

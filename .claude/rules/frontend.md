@@ -7,25 +7,25 @@ globs: docs/src/**/*.{ts,tsx}
 
 ## Technology Stack
 
-| Technology | Purpose |
-|------------|---------|
-| React 19 | UI framework |
-| TypeScript | Type safety |
-| Vite | Build tool & dev server |
-| Zustand | State management |
-| React Router | Client-side routing |
+| Technology   | Purpose                 |
+| ------------ | ----------------------- |
+| React 19     | UI framework            |
+| TypeScript   | Type safety             |
+| Vite         | Build tool & dev server |
+| Zustand      | State management        |
+| React Router | Client-side routing     |
 
 ## Configuration Files
 
 Config files in `docs/src/config/`:
 
-| File | Purpose |
-|------|---------|
-| `constants.ts` | Timing, API params, storage keys |
-| `deployment.ts` | Repo owner, API version, ports |
-| `scoring.ts` | Rank thresholds, colors |
-| `workflows.ts` | Workflow filenames, polling |
-| `icons.ts` | SVG icon definitions |
+| File            | Purpose                          |
+| --------------- | -------------------------------- |
+| `constants.ts`  | Timing, API params, storage keys |
+| `deployment.ts` | Repo owner, API version, ports   |
+| `scoring.ts`    | Rank thresholds, colors          |
+| `workflows.ts`  | Workflow filenames, polling      |
+| `icons.ts`      | SVG icon definitions             |
 
 ### Usage Examples
 
@@ -62,28 +62,16 @@ const color = getCssVar('--color-success');
 ```
 
 Available variables in `docs/css/base/variables.css`:
+
 - `--color-success`, `--color-error` - Status colors
 - `--color-success-btn`, `--color-error-btn` - Button states
 - `--color-text-muted`, `--color-text-secondary` - Text colors
 
 ## State Management
 
-Use Zustand stores for global state:
-
-```typescript
-import { useAppStore } from '../stores/appStore';
-
-function MyComponent() {
-  const { services, filters, setFilters } = useAppStore();
-  // Component logic
-}
-```
-
-**Store access outside React components:**
-```typescript
-import { useAppStore } from '../stores/appStore';
-const state = useAppStore.getState();
-```
+Use the existing Zustand store for global state. See
+[State Management](../../documentation/architecture/catalog-ui.md#state-management)
+for its state contract and filter/modal ownership.
 
 ## Component Patterns
 
@@ -119,13 +107,13 @@ const { theme, toggleTheme } = useTheme();
 
 Check `docs/src/utils/` before creating new utilities:
 
-| Utility | Location | Purpose |
-|---------|----------|---------|
-| `getCssVar(name)` | `utils/css.ts` | Access CSS variables |
-| `formatRelativeTime(date)` | `utils/formatting.ts` | Relative timestamps |
-| `countByRank(services)` | `utils/statistics.ts` | Count by rank |
-| `calculateAverageScore(services)` | `utils/statistics.ts` | Average score |
-| `md5(string)` | `utils/crypto.ts` | MD5 hashing for Gravatar |
+| Utility                           | Location              | Purpose                  |
+| --------------------------------- | --------------------- | ------------------------ |
+| `getCssVar(name)`                 | `utils/css.ts`        | Access CSS variables     |
+| `formatRelativeTime(date)`        | `utils/formatting.ts` | Relative timestamps      |
+| `countByRank(services)`           | `utils/statistics.ts` | Count by rank            |
+| `calculateAverageScore(services)` | `utils/statistics.ts` | Average score            |
+| `md5(string)`                     | `utils/crypto.ts`     | MD5 hashing for Gravatar |
 
 ## Module Structure
 
@@ -149,6 +137,7 @@ src/
 ## Console Logging
 
 ESLint enforces `no-console`. In frontend code:
+
 - Use `console.error()` for errors
 - Use `console.warn()` for warnings
 - Remove debug `console.log()` before committing

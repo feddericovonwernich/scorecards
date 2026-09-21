@@ -121,17 +121,14 @@ def test_license_check():
 
 ### E2E Tests (Playwright)
 
-```typescript
-// tests/e2e/service-modal.spec.ts
-import { test, expect } from '@playwright/test';
+Use the shared catalog fixtures and helpers; see
+[`service-modal.spec.js`](e2e/service-modal.spec.js) for dialog interaction examples.
+Use [canonical catalog routes](../docs/README.md#routing) for normal navigation;
+legacy path redirects are covered separately by `static-delivery.spec.js`.
 
-test('opens service modal when card clicked', async ({ page }) => {
-  await page.goto('/scorecards/services');
-  await page.click('[data-testid="service-card-my-org-my-repo"]');
-  await expect(page.locator('.service-modal')).toBeVisible();
-  await expect(page.locator('.modal-header')).toContainText('my-repo');
-});
-```
+Playwright builds the artifact and starts a static server automatically; see
+[Deployment](../docs/README.md#deployment) for the delivery contract. Python 3 must
+be available for that server.
 
 ## Test Fixtures
 
@@ -140,6 +137,7 @@ Test fixtures are located in `tests/fixtures/`. See individual fixture directori
 ## CI/CD
 
 Tests run automatically on:
+
 - Pull requests
 - Pushes to main branch
 

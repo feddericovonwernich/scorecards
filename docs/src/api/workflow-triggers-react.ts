@@ -12,8 +12,6 @@ import type { ServiceData } from '../types/index.js';
  * @param services Services to trigger workflows for
  * @returns Promise<boolean> true on success
  */
-export async function triggerBulkWorkflows(
-  services: ServiceData[]
-): Promise<boolean> {
+export async function triggerBulkWorkflows(services: ServiceData[]): Promise<boolean> {
   return triggerBulkWorkflowsVanilla(services);
 }

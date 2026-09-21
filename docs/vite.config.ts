@@ -49,14 +49,18 @@ export default defineConfig({
     react(),
     // Istanbul plugin for code coverage during E2E tests
     // Only instrument when COVERAGE env var is set (to avoid overhead in normal builds)
-    ...(process.env.COVERAGE === 'true' ? [istanbul({
-      include: ['src/**/*.ts', 'src/**/*.tsx'],
-      exclude: ['node_modules/**', 'dist/**', 'tests/**', '**/*.d.ts'],
-      extension: ['.ts', '.tsx'],
-      requireEnv: false,
-      forceBuildInstrument: true,
-      cwd: __dirname, // Ensure paths are relative to docs directory
-    })] : []),
+    ...(process.env.COVERAGE === 'true'
+      ? [
+        istanbul({
+          include: ['src/**/*.ts', 'src/**/*.tsx'],
+          exclude: ['node_modules/**', 'dist/**', 'tests/**', '**/*.d.ts'],
+          extension: ['.ts', '.tsx'],
+          requireEnv: false,
+          forceBuildInstrument: true,
+          cwd: __dirname, // Ensure paths are relative to docs directory
+        }),
+      ]
+      : []),
     // Plugin to rewrite .js imports to .ts/.tsx during development
     {
       name: 'resolve-js-to-ts',
@@ -65,7 +69,10 @@ export default defineConfig({
         // Only process relative imports ending in .js
         if (source.endsWith('.js') && (source.startsWith('./') || source.startsWith('../'))) {
           // Skip Vite's internal dependency chunks and node_modules
-          if (importer && (importer.includes('node_modules/.vite') || importer.includes('node_modules'))) {
+          if (
+            importer &&
+            (importer.includes('node_modules/.vite') || importer.includes('node_modules'))
+          ) {
             return null;
           }
 

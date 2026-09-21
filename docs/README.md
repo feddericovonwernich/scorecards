@@ -4,13 +4,13 @@ This directory contains the catalog web UI for viewing scorecard results across 
 
 ## Technology Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19.2.0 | UI framework |
-| TypeScript | 5.9.3 | Type-safe JavaScript |
-| Vite | 5.4.0 | Build tool & dev server |
-| Zustand | 5.0.9 | State management |
-| React Router | 7.10.1 | Client-side routing |
+| Technology   | Version | Purpose                 |
+| ------------ | ------- | ----------------------- |
+| React        | 19.2.0  | UI framework            |
+| TypeScript   | 5.9.3   | Type-safe JavaScript    |
+| Vite         | 5.4.0   | Build tool & dev server |
+| Zustand      | 5.0.9   | State management        |
+| React Router | 7.10.1  | Client-side routing     |
 
 ## Structure
 
@@ -75,51 +75,41 @@ docs/
 The catalog uses a modern React architecture with clear separation of concerns:
 
 **Views** (`src/components/views/`)
+
 - `ServicesView.tsx` - Services grid with filtering and sorting
 - `TeamsView.tsx` - Teams dashboard with aggregated statistics
 
 **Features** (`src/components/features/`)
+
 - Business logic components like modals, cards, widgets
 - Each feature is self-contained with its own state handling
 
 **UI Components** (`src/components/ui/`)
+
 - Reusable presentational components (Badge, Modal, Toast, Tabs)
 - No business logic, purely visual
 
 **Layout** (`src/components/layout/`)
+
 - Header, Footer, Navigation components
 - Consistent page structure
 
 ### State Management
 
-The application uses Zustand for global state:
-
-```typescript
-import { useAppStore } from '../stores/appStore';
-
-// In a component
-const { services, filters, setFilters } = useAppStore();
-```
-
-**Store structure:**
-- `services` - All service data from registry
-- `teams` - Team aggregations
-- `filters` - Active filter state
-- `modals` - Modal open/close state
-- `theme` - Light/dark mode
+See [State Management](../documentation/architecture/catalog-ui.md#state-management)
+for the Zustand state contract and filter/modal ownership.
 
 ### Routing
 
-React Router handles navigation between views:
+`App.tsx` uses React Router's `HashRouter` without a path basename. Canonical URLs
+are `/scorecards/#/services` and `/scorecards/#/teams`; the root route redirects
+to Services. Reloading or using browser Back/Forward needs no server-side SPA fallback.
 
-```typescript
-// Routes defined in App.tsx
-<Routes>
-  <Route path="/" element={<Navigate to="/services" />} />
-  <Route path="/services" element={<ServicesView />} />
-  <Route path="/teams" element={<TeamsView />} />
-</Routes>
-```
+At startup, `main.tsx` normalizes the legacy `#services` and `#teams` fragments,
+preserving the pathname and query. Static `services/` and `teams/` compatibility
+entries redirect old path URLs to the corresponding hash route with
+`location.replace`, preserving query parameters when JavaScript is enabled.
+They also provide a fallback link. Other missing paths remain 404 responses.
 
 ## Development
 
@@ -169,19 +159,27 @@ npm run lint
 
 The catalog is automatically deployed to GitHub Pages from the `catalog` branch.
 
+In repository **Settings → Pages**, select **Deploy from a branch**, the `catalog`
+branch, and `/docs`. That directory must contain the compiled UI published by the
+sync workflow. Wait for the Pages deployment to complete, then open the URL shown
+in Settings → Pages and confirm the catalog is accessible.
+
 The workflow `.github/workflows/sync-docs.yml` handles synchronization:
+
 1. Changes to `docs/` on main branch trigger sync workflow
 2. Vite builds the production bundle
 3. Built files are committed to catalog branch
 4. GitHub Pages serves from catalog branch
 
 Publish `docs/dist/` intact, including Vite's compiled `api-explorer.html`; copying
-the source HTML over it breaks its module and stylesheet URLs. Catalog navigation
-uses `/scorecards/#/services` and `/scorecards/#/teams`. The public `services/` and
-`teams/` entries redirect older path URLs, preserving query parameters.
+the source HTML over it breaks its module and stylesheet URLs. The build also
+includes the [routing compatibility entries](#routing).
 
-Verify `tests/e2e/static-delivery.spec.js` against a file server without SPA
-fallback as well as Vite preview: missing resources must remain 404 responses.
+The [Playwright configuration](../playwright.config.js) builds and serves the artifact
+with Python's static file server, without SPA fallback. The
+`tests/e2e/static-delivery.spec.js` suite checks compiled Explorer assets,
+compatibility entries, and real 404 responses. Vite preview remains useful for
+manual previews, but is not the static-delivery test server.
 
 ## Key Patterns
 

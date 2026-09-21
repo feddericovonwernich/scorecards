@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
 - Preserve the compiled API Explorer during publication; use Pages-compatible hash routes with legacy Services/Teams entry redirects.
 - Keep mobile service/team panels and adoption statistics visible, with scrolling confined to wide tables and code.
 - Place persistent filters beside search, remove duplicated controls, and make sorting and category disclosures keyboard accessible.
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve Settings contrast and enlarged-text reflow, enlarge compact touch targets, and clear stale service errors on retry.
 
 ### Changed
+
 - **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
   - Replaced ES6 modules with React functional components
   - Replaced manual DOM manipulation with React declarative rendering
@@ -25,12 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 263 E2E tests passing post-migration
 
 ### Added
+
 - CHANGELOG.md to track project changes
 - Glossary of domain-specific terms
 
 ## [1.0.0] - 2025-01-20
 
 ### Added
+
 - Initial release of Scorecards quality measurement system
 - GitHub Action for running quality checks
 - 15 built-in quality checks across 5 categories
@@ -48,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration schema and examples
 
 ### Security
+
 - Token security best practices documentation
 - Minimal permission requirements documented
 - Secure token storage via GitHub Secrets
