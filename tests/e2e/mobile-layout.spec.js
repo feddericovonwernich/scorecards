@@ -3,14 +3,25 @@ import { readFile } from 'node:fs/promises';
 import { openServiceModal, openTeamModal, openCheckAdoptionDashboard } from './test-helper.js';
 import { mockPAT } from './fixtures.js';
 
-const sizes = [[320, 844], [360, 844], [390, 844], [430, 844], [768, 1024], [1440, 900], [844, 390]];
+const sizes = [
+  [320, 844],
+  [360, 844],
+  [390, 844],
+  [430, 844],
+  [768, 1024],
+  [1440, 900],
+  [844, 390],
+];
 
 async function contained(modal) {
   await expect(async () => {
-    const geometry = await modal.locator('.modal-content').evaluate(node => ({
-      client: node.clientWidth, scroll: node.scrollWidth,
-      left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right,
-      viewport: innerWidth, document: document.documentElement.scrollWidth,
+    const geometry = await modal.locator('.modal-content').evaluate((node) => ({
+      client: node.clientWidth,
+      scroll: node.scrollWidth,
+      left: node.getBoundingClientRect().left,
+      right: node.getBoundingClientRect().right,
+      viewport: innerWidth,
+      document: document.documentElement.scrollWidth,
     }));
     expect(geometry.scroll).toBeLessThanOrEqual(geometry.client + 1);
     expect(geometry.left).toBeGreaterThanOrEqual(0);
@@ -26,7 +37,7 @@ async function visitTabs(page, modal, names) {
     await expect(button).toHaveAttribute('aria-pressed', 'true');
     await contained(modal);
     await expect(async () => {
-      const gap = await modal.evaluate(node => {
+      const gap = await modal.evaluate((node) => {
         const strip = node.querySelector('.tabs-wrapper').getBoundingClientRect();
         const panel = node.querySelector('.tab-content').getBoundingClientRect();
         return panel.top - strip.bottom;
@@ -37,15 +48,43 @@ async function visitTabs(page, modal, names) {
 }
 
 for (const [width, height] of sizes) {
-  test(`details and adoption remain contained at ${width}x${height}`, async ({ catalogPage: page }, testInfo) => {
+  test(`details and adoption remain contained at ${width}x${height}`, async ({
+    catalogPage: page,
+  }, testInfo) => {
     await page.setViewportSize({ width, height });
-    const fixture = JSON.parse(await readFile(new URL('./fixtures/docs/results/feddericovonwernich/test-repo-perfect/results.json', import.meta.url), 'utf8'));
-    fixture.service.links = [{ name: 'Service documentation', url: 'https://example.invalid/docs', description: 'Long documentation description '.repeat(12) }];
-    await page.route('**/results/feddericovonwernich/test-repo-perfect/results.json*', route => route.fulfill({ json: fixture }));
+    const fixture = JSON.parse(
+      await readFile(
+        new URL(
+          './fixtures/docs/results/feddericovonwernich/test-repo-perfect/results.json',
+          import.meta.url
+        ),
+        'utf8'
+      )
+    );
+    fixture.service.links = [
+      {
+        name: 'Service documentation',
+        url: 'https://example.invalid/docs',
+        description: 'Long documentation description '.repeat(12),
+      },
+    ];
+    await page.route('**/results/feddericovonwernich/test-repo-perfect/results.json*', (route) =>
+      route.fulfill({ json: fixture })
+    );
     await openServiceModal(page, 'test-repo-perfect');
     const service = page.locator('#service-modal');
-    await visitTabs(page, service, ['Check Results', 'API Specification', 'Links', 'Contributors', 'Workflow Runs', 'Badges']);
-    await page.screenshot({ path: testInfo.outputPath('service-badges.png'), animations: 'disabled' });
+    await visitTabs(page, service, [
+      'Check Results',
+      'API Specification',
+      'Links',
+      'Contributors',
+      'Workflow Runs',
+      'Badges',
+    ]);
+    await page.screenshot({
+      path: testInfo.outputPath('service-badges.png'),
+      animations: 'disabled',
+    });
     await page.keyboard.press('Escape');
     await openTeamModal(page, 'platform');
     const team = page.locator('#team-modal');
@@ -62,21 +101,31 @@ for (const [width, height] of sizes) {
     const scroller = adoption.locator('.adoption-table-container');
     await scroller.focus();
     await page.keyboard.press('End');
-    await scroller.evaluate(node => { node.scrollLeft = node.scrollWidth; });
+    await scroller.evaluate((node) => {
+      node.scrollLeft = node.scrollWidth;
+    });
     const last = await adoption.locator('thead th').last().boundingBox();
     const region = await scroller.boundingBox();
     expect(last.x + last.width).toBeLessThanOrEqual(region.x + region.width + 1);
-    await page.screenshot({ path: testInfo.outputPath('adoption-last-column.png'), animations: 'disabled' });
+    await page.screenshot({
+      path: testInfo.outputPath('adoption-last-column.png'),
+      animations: 'disabled',
+    });
     await page.keyboard.press('Escape');
     await expect(adoption).toBeHidden();
   });
 }
 
-test('tab arrow disappearance transfers keyboard focus to the reached tab', async ({ catalogPage: page }) => {
+test('tab arrow disappearance transfers keyboard focus to the reached tab', async ({
+  catalogPage: page,
+}) => {
   await page.setViewportSize({ width: 320, height: 844 });
   await openServiceModal(page, 'test-repo-perfect');
   const modal = page.locator('#service-modal');
-  for (const [direction, name] of [['right', 'Badges'], ['left', 'Check Results']]) {
+  for (const [direction, name] of [
+    ['right', 'Badges'],
+    ['left', 'Check Results'],
+  ]) {
     const arrow = modal.getByRole('button', { name: `Scroll tabs ${direction}`, exact: true });
     await expect(arrow).toBeVisible();
     await expect(async () => {
@@ -94,15 +143,24 @@ test('tab arrow disappearance transfers keyboard focus to the reached tab', asyn
   }
 });
 
-test('Settings reflows at doubled root text and retains usable close target', async ({ catalogPage: page }, testInfo) => {
+test('Settings reflows at doubled root text and retains usable close target', async ({
+  catalogPage: page,
+}, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.evaluate(() => { document.documentElement.style.fontSize = `${parseFloat(getComputedStyle(document.documentElement).fontSize) * 2}px`; });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = `${parseFloat(getComputedStyle(document.documentElement).fontSize) * 2}px`;
+  });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const settings = page.locator('#settings-modal');
-  await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill('isolated-not-a-token-'.repeat(20));
+  await settings
+    .getByRole('textbox', { name: 'Personal Access Token' })
+    .fill('isolated-not-a-token-'.repeat(20));
   await contained(settings);
   await settings.locator('.settings-rate-limit-footer').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: testInfo.outputPath('settings-text200.png'), animations: 'disabled' });
+  await page.screenshot({
+    path: testInfo.outputPath('settings-text200.png'),
+    animations: 'disabled',
+  });
   const close = settings.getByRole('button', { name: 'Close modal' });
   await close.scrollIntoViewIfNeeded();
   const box = await close.boundingBox();
@@ -115,14 +173,26 @@ test('Settings reflows at doubled root text and retains usable close target', as
 test.describe('Emulated touch targets', () => {
   test.use({ hasTouch: true, viewport: { width: 320, height: 844 } });
 
-  test('affected controls expose unobstructed hitboxes and respond to native taps', async ({ catalogPage: page }) => {
+  test('affected controls expose unobstructed hitboxes and respond to native taps', async ({
+    catalogPage: page,
+  }) => {
     async function target(locator) {
       await locator.scrollIntoViewIfNeeded();
       await expect(async () => {
-        const hit = await locator.evaluate(node => {
+        const hit = await locator.evaluate((node) => {
           const rect = node.getBoundingClientRect();
-          const points = [[rect.x + rect.width / 2, rect.y + rect.height / 2], [rect.x + 2, rect.y + rect.height / 2], [rect.right - 2, rect.y + rect.height / 2], [rect.x + rect.width / 2, rect.y + 2], [rect.x + rect.width / 2, rect.bottom - 2]];
-          return { width: rect.width, height: rect.height, clear: points.every(([x, y]) => node.contains(document.elementFromPoint(x, y))) };
+          const points = [
+            [rect.x + rect.width / 2, rect.y + rect.height / 2],
+            [rect.x + 2, rect.y + rect.height / 2],
+            [rect.right - 2, rect.y + rect.height / 2],
+            [rect.x + rect.width / 2, rect.y + 2],
+            [rect.x + rect.width / 2, rect.bottom - 2],
+          ];
+          return {
+            width: rect.width,
+            height: rect.height,
+            clear: points.every(([x, y]) => node.contains(document.elementFromPoint(x, y))),
+          };
         });
         expect(hit.width).toBeGreaterThanOrEqual(44);
         expect(hit.height).toBeGreaterThanOrEqual(44);
@@ -147,7 +217,10 @@ test.describe('Emulated touch targets', () => {
     await target(team.getByRole('button', { name: 'Edit Team', exact: true }));
     await team.getByRole('button', { name: 'Edit Team', exact: true }).tap();
     await expect(page.getByRole('dialog', { name: 'PAT Required' })).toBeVisible();
-    await page.getByRole('dialog', { name: 'PAT Required' }).getByRole('button', { name: 'Configure Token' }).tap();
+    await page
+      .getByRole('dialog', { name: 'PAT Required' })
+      .getByRole('button', { name: 'Configure Token' })
+      .tap();
     await expect(settings).toBeVisible();
     await settings.getByRole('textbox', { name: 'Personal Access Token' }).fill(mockPAT);
     await settings.getByRole('button', { name: 'Save Token' }).tap();
@@ -159,7 +232,10 @@ test.describe('Emulated touch targets', () => {
     const editor = page.getByRole('dialog', { name: 'Edit Team', exact: true });
     await editor.getByPlaceholder('Add alias and press Enter').fill('touch-alias');
     await editor.getByRole('button', { name: 'Add', exact: true }).tap();
-    const removeAlias = editor.getByRole('button', { name: 'Remove alias touch-alias', exact: true });
+    const removeAlias = editor.getByRole('button', {
+      name: 'Remove alias touch-alias',
+      exact: true,
+    });
     await target(removeAlias);
     await removeAlias.tap();
     await expect(editor.getByText('touch-alias', { exact: true })).toHaveCount(0);

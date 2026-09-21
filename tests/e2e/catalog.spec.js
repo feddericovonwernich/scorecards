@@ -32,21 +32,41 @@ test.describe('Catalog Page - Display', () => {
 
     // Dashboard stats
     const statsSection = page.locator('.services-stats');
-    const totalServices = await statsSection.locator('.stat-card').filter({ hasText: 'Total Services' }).locator('.stat-value').textContent();
+    const totalServices = await statsSection
+      .locator('.stat-card')
+      .filter({ hasText: 'Total Services' })
+      .locator('.stat-value')
+      .textContent();
     expect(totalServices.trim()).toBe(expectedStats.totalServices.toString());
 
-    const avgScore = await statsSection.locator('.stat-card').filter({ hasText: 'Average Score' }).locator('.stat-value').textContent();
+    const avgScore = await statsSection
+      .locator('.stat-card')
+      .filter({ hasText: 'Average Score' })
+      .locator('.stat-value')
+      .textContent();
     const avgScoreNum = parseInt(avgScore.trim());
     expect(avgScoreNum).toBeGreaterThan(50);
     expect(avgScoreNum).toBeLessThan(60);
 
-    const goldCount = await statsSection.locator('.stat-card').filter({ hasText: 'Gold' }).locator('.stat-value').textContent();
+    const goldCount = await statsSection
+      .locator('.stat-card')
+      .filter({ hasText: 'Gold' })
+      .locator('.stat-value')
+      .textContent();
     expect(goldCount.trim()).toBe(expectedStats.ranks.gold.toString());
 
-    const silverCount = await statsSection.locator('.stat-card').filter({ hasText: 'Silver' }).locator('.stat-value').textContent();
+    const silverCount = await statsSection
+      .locator('.stat-card')
+      .filter({ hasText: 'Silver' })
+      .locator('.stat-value')
+      .textContent();
     expect(silverCount.trim()).toBe(expectedStats.ranks.silver.toString());
 
-    const bronzeCount = await statsSection.locator('.stat-card').filter({ hasText: 'Bronze' }).locator('.stat-value').textContent();
+    const bronzeCount = await statsSection
+      .locator('.stat-card')
+      .filter({ hasText: 'Bronze' })
+      .locator('.stat-value')
+      .textContent();
     expect(bronzeCount.trim()).toBe(expectedStats.ranks.bronze.toString());
 
     // Service cards count
@@ -54,7 +74,10 @@ test.describe('Catalog Page - Display', () => {
     expect(count).toBe(expectedStats.totalServices);
 
     // Service card details
-    const perfectCard = page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).first();
+    const perfectCard = page
+      .locator('.service-card')
+      .filter({ hasText: 'test-repo-perfect' })
+      .first();
     await expect(perfectCard).toBeVisible();
     await expect(perfectCard).toContainText('76');
     await expect(perfectCard).toContainText('Gold');
@@ -85,7 +108,10 @@ test.describe('Catalog Page - Display', () => {
 
   // Keep this test unchanged - unique PR badge feature
   test('should display installation PR badges when present', async ({ page }) => {
-    const edgeCasesCard = page.locator('.service-card').filter({ hasText: 'test-repo-edge-cases' }).first();
+    const edgeCasesCard = page
+      .locator('.service-card')
+      .filter({ hasText: 'test-repo-edge-cases' })
+      .first();
     const prBadge = edgeCasesCard.locator('a[href*="/pull/"]');
     await expect(prBadge).toBeVisible();
   });
@@ -155,7 +181,9 @@ test.describe('Search Functionality', () => {
 
   // Consolidated test: Task 3 - Search Functionality
   // Combines: case-insensitive search, clear search, no results, placeholder tests
-  test('should search services with case-insensitive filtering, clear, and handle no results', async ({ page }) => {
+  test('should search services with case-insensitive filtering, clear, and handle no results', async ({
+    page,
+  }) => {
     // Placeholder
     const searchInput = page.getByRole('textbox', { name: 'Search services...' });
     await expect(searchInput).toBeVisible();
@@ -288,7 +316,9 @@ test.describe('StatCard 3-State Filtering', () => {
 
   // Consolidated test: Task 4 - StatCard 3-State Filter Behavior
   // Combines: 3-state cycling, active styling, exclude styling, and cleared styling tests
-  test('should cycle through 3-state filter with correct styling and behavior', async ({ page }) => {
+  test('should cycle through 3-state filter with correct styling and behavior', async ({
+    page,
+  }) => {
     const goldStat = page.locator('.services-stats .stat-card').filter({ hasText: 'Gold' });
     const initialCount = await getServiceCount(page);
 
@@ -324,7 +354,9 @@ test.describe('StatCard 3-State Filtering', () => {
 // ============================================================================
 
 test.describe('Static routing compatibility', () => {
-  test('preserves canonical and legacy hash routes across reload and history navigation', async ({ page }) => {
+  test('preserves canonical and legacy hash routes across reload and history navigation', async ({
+    page,
+  }) => {
     await mockCatalogRequests(page);
     await page.goto('/scorecards/#/services');
     await waitForCatalogLoad(page);
@@ -355,7 +387,6 @@ test.describe('Static routing compatibility', () => {
     await waitForCatalogLoad(page);
     await expect(page).toHaveURL(/\/scorecards\/\?filter=gold#\/services$/);
 
-
     await page.goto('/scorecards/#teams');
     await expect(page).toHaveURL(/\/scorecards\/#\/teams$/);
     await expect(page.locator('.teams-grid')).toBeVisible();
@@ -363,7 +394,9 @@ test.describe('Static routing compatibility', () => {
 });
 
 test.describe('Teams catalog initialization', () => {
-  test('derives registered and service-only teams after a delayed direct teams load and reload', async ({ page }) => {
+  test('derives registered and service-only teams after a delayed direct teams load and reload', async ({
+    page,
+  }) => {
     const delayedCatalog = {
       services: [
         {
@@ -401,45 +434,68 @@ test.describe('Teams catalog initialization', () => {
     await mockCatalogRequests(page);
     let releaseCatalog;
     let catalogReady;
-    await page.route('**/raw.githubusercontent.com/**/registry/all-services.json*', async (route) => {
-      await catalogReady;
-      await route.fulfill({ json: delayedCatalog });
-    });
+    await page.route(
+      '**/raw.githubusercontent.com/**/registry/all-services.json*',
+      async (route) => {
+        await catalogReady;
+        await route.fulfill({ json: delayedCatalog });
+      }
+    );
 
-    for (const navigate of [
-      () => page.goto('/scorecards/#/teams'),
-      () => page.reload(),
-    ]) {
-      catalogReady = new Promise(resolve => { releaseCatalog = resolve; });
+    for (const navigate of [() => page.goto('/scorecards/#/teams'), () => page.reload()]) {
+      catalogReady = new Promise((resolve) => {
+        releaseCatalog = resolve;
+      });
       await navigate();
 
       const teamsGrid = page.locator('.teams-grid');
       await expect(teamsGrid.locator('.team-card')).toHaveCount(3);
 
       const platform = teamsGrid.locator('.team-card').filter({ hasText: 'Platform' });
-      await expect(platform.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')).toHaveText('0');
+      await expect(
+        platform.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')
+      ).toHaveText('0');
       releaseCatalog();
       await expect(teamsGrid.locator('.team-card')).toHaveCount(4);
-      await expect(platform.locator('.team-stat').filter({ hasText: 'Avg Score' }).locator('.team-stat-value')).toHaveText('78');
-      await expect(platform.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')).toHaveText('2');
+      await expect(
+        platform.locator('.team-stat').filter({ hasText: 'Avg Score' }).locator('.team-stat-value')
+      ).toHaveText('78');
+      await expect(
+        platform.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')
+      ).toHaveText('2');
 
       const reliability = teamsGrid.locator('.team-card').filter({ hasText: 'Reliability' });
-      await expect(reliability.locator('.team-stat').filter({ hasText: 'Avg Score' }).locator('.team-stat-value')).toHaveText('91');
-      await expect(reliability.locator('.team-stat').filter({ hasText: 'Services' }).locator('.team-stat-value')).toHaveText('1');
+      await expect(
+        reliability
+          .locator('.team-stat')
+          .filter({ hasText: 'Avg Score' })
+          .locator('.team-stat-value')
+      ).toHaveText('91');
+      await expect(
+        reliability
+          .locator('.team-stat')
+          .filter({ hasText: 'Services' })
+          .locator('.team-stat-value')
+      ).toHaveText('1');
     }
   });
 });
 
 test.describe('Mobile catalog controls', () => {
-  test('keeps Services controls in viewport before the first service card at 320px', async ({ page }) => {
+  test('keeps Services controls in viewport before the first service card at 320px', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 320, height: 844 });
     await mockCatalogRequests(page);
     await page.goto('/scorecards/#/services');
     await waitForCatalogLoad(page);
 
-    const controls = page.locator('.controls').filter({
-      has: page.locator('#search-input'),
-    }).first();
+    const controls = page
+      .locator('.controls')
+      .filter({
+        has: page.locator('#search-input'),
+      })
+      .first();
     const requiredControls = [
       controls.locator('#search-input'),
       controls.locator('#sort-select'),

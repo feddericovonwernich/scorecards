@@ -9,7 +9,6 @@ import { TextDecoder, TextEncoder } from 'node:util';
 
 Object.assign(globalThis, { TextDecoder, TextEncoder });
 
-
 // Mock Zustand store
 // This creates a mock that returns null for PAT by default
 // Individual tests can override this using jest.mock or jest.spyOn

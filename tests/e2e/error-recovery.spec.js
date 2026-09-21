@@ -35,7 +35,9 @@ import {
 // ============================================================================
 
 test.describe('Network Failure Recovery', () => {
-  test('service modal retry replaces stale error and preserves later failures', async ({ page }) => {
+  test('service modal retry replaces stale error and preserves later failures', async ({
+    page,
+  }) => {
     await mockCatalogRequests(page);
     await page.goto('/scorecards/');
     await waitForCatalogLoad(page);
@@ -43,7 +45,7 @@ test.describe('Network Failure Recovery', () => {
     let failing = true;
     let releaseResults;
     let resultsReady = Promise.resolve();
-    await page.route(resultsPath, async route => {
+    await page.route(resultsPath, async (route) => {
       await resultsReady;
       return failing
         ? route.fulfill({ status: 503, contentType: 'application/json', body: '{}' })
@@ -56,12 +58,18 @@ test.describe('Network Failure Recovery', () => {
     const original = await modal.elementHandle();
     for (const action of ['Try Again', 'Refresh Data', 'Try Again']) {
       failing = action === 'Refresh Data';
-      resultsReady = new Promise(resolve => { releaseResults = resolve; });
-      const registryResponse = page.waitForResponse(res => res.url().includes('/registry/feddericovonwernich/test-repo-perfect.json'));
-      const response = page.waitForResponse(res => res.url().includes('/results/feddericovonwernich/test-repo-perfect/results.json'));
+      resultsReady = new Promise((resolve) => {
+        releaseResults = resolve;
+      });
+      const registryResponse = page.waitForResponse((res) =>
+        res.url().includes('/registry/feddericovonwernich/test-repo-perfect.json')
+      );
+      const response = page.waitForResponse((res) =>
+        res.url().includes('/results/feddericovonwernich/test-repo-perfect/results.json')
+      );
       await modal.getByRole('button', { name: action, exact: true }).click();
       await expect(modal.getByText('Loading service details...')).toBeVisible();
-      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
       releaseResults();
       expect((await registryResponse).status()).toBe(200);
       expect((await response).status()).toBe(failing ? 503 : 200);
@@ -70,22 +78,28 @@ test.describe('Network Failure Recovery', () => {
       } else {
         await expect(modal.locator('.check-result').first()).toBeVisible();
         await expect(modal.getByText('Error loading service')).toHaveCount(0);
-        await expect(modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })).toBeVisible();
+        await expect(
+          modal.getByRole('heading', { name: 'test-repo-perfect', exact: true })
+        ).toBeVisible();
       }
-      expect(await original.evaluate(node => node.isConnected)).toBe(true);
-      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      expect(await original.evaluate((node) => node.isConnected)).toBe(true);
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
     }
     await modal.getByRole('button', { name: 'Close modal' }).click();
-    resultsReady = new Promise(resolve => { releaseResults = resolve; });
+    resultsReady = new Promise((resolve) => {
+      releaseResults = resolve;
+    });
     await page.locator('.service-card').filter({ hasText: 'test-repo-perfect' }).click();
     await expect(modal.getByText('Loading service details...')).toBeVisible();
-    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
     releaseResults();
     await expect(modal.locator('.check-result').first()).toBeVisible();
-    expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+    expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
   });
 
-  test('workflow retry retains dialog focus through polling, repeated failure and recovery', async ({ page }) => {
+  test('workflow retry retains dialog focus through polling, repeated failure and recovery', async ({
+    page,
+  }) => {
     await mockCatalogRequests(page);
     await page.goto('/scorecards/');
     await waitForCatalogLoad(page);
@@ -99,13 +113,18 @@ test.describe('Network Failure Recovery', () => {
     let failing = true;
     let releaseRuns;
     let runsReady = Promise.resolve();
-    await page.route('**/api.github.com/repos/feddericovonwernich/test-repo-perfect/actions/runs*', async route => {
-      await runsReady;
-      await route.fulfill({
-        status: failing ? 503 : 200,
-        json: failing ? { message: 'Workflow fixture unavailable' } : { workflow_runs: [], total_count: 0 },
-      });
-    });
+    await page.route(
+      '**/api.github.com/repos/feddericovonwernich/test-repo-perfect/actions/runs*',
+      async (route) => {
+        await runsReady;
+        await route.fulfill({
+          status: failing ? 503 : 200,
+          json: failing
+            ? { message: 'Workflow fixture unavailable' }
+            : { workflow_runs: [], total_count: 0 },
+        });
+      }
+    );
     await openServiceModal(page, 'test-repo-perfect');
     const modal = page.locator('#service-modal');
     await page.clock.install();
@@ -114,7 +133,9 @@ test.describe('Network Failure Recovery', () => {
     for (const transition of ['poll', 'manual', 'poll-success']) {
       const failsAgain = transition !== 'poll-success';
       failing = failsAgain;
-      runsReady = new Promise(resolve => { releaseRuns = resolve; });
+      runsReady = new Promise((resolve) => {
+        releaseRuns = resolve;
+      });
       await modal.getByRole('button', { name: 'Try Again', exact: true }).focus();
       if (transition === 'manual') {
         await page.keyboard.press('Enter');
@@ -122,18 +143,20 @@ test.describe('Network Failure Recovery', () => {
         await page.clock.fastForward(30000);
       }
       await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
-      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
       releaseRuns();
       if (failsAgain) {
         await expect(modal.locator('#service-workflows-content .error-state')).toBeVisible();
       } else {
         await expect(modal.getByText('No workflow runs found', { exact: true })).toBeVisible();
       }
-      expect(await modal.evaluate(node => node.contains(document.activeElement))).toBe(true);
+      expect(await modal.evaluate((node) => node.contains(document.activeElement))).toBe(true);
       if (transition === 'poll') {
         const interval = modal.getByRole('combobox', { name: 'Auto-refresh interval' });
         await interval.focus();
-        runsReady = new Promise(resolve => { releaseRuns = resolve; });
+        runsReady = new Promise((resolve) => {
+          releaseRuns = resolve;
+        });
         await page.clock.fastForward(30000);
         await expect(modal.getByText('Loading workflow runs...')).toBeVisible();
         await expect(interval).toBeFocused();
@@ -143,7 +166,6 @@ test.describe('Network Failure Recovery', () => {
       }
     }
   });
-
 
   test('should handle 404 not found errors for missing resources', async ({ page }) => {
     await mockCatalogRequests(page);
@@ -163,7 +185,6 @@ test.describe('Network Failure Recovery', () => {
     const count = await getServiceCount(page);
     expect(count).toBeGreaterThan(0);
   });
-
 });
 
 // ============================================================================
@@ -194,8 +215,8 @@ test.describe('Token Validation Edge Cases', () => {
       await saveButton.click();
       // Should show validation error or toast
       await expect(async () => {
-        const hasError = await page.getByText(/empty|required|enter|invalid/i).count() > 0;
-        const hasToast = await page.locator('.toast').count() > 0;
+        const hasError = (await page.getByText(/empty|required|enter|invalid/i).count()) > 0;
+        const hasToast = (await page.locator('.toast').count()) > 0;
         expect(hasError || hasToast).toBe(true);
       }).toPass({ timeout: 3000 });
     } else {
@@ -221,8 +242,8 @@ test.describe('Token Validation Edge Cases', () => {
       await saveButton.click();
       // Should reject whitespace token
       await expect(async () => {
-        const hasError = await page.getByText(/empty|required|invalid|whitespace/i).count() > 0;
-        const hasToast = await page.locator('.toast').count() > 0;
+        const hasError = (await page.getByText(/empty|required|invalid|whitespace/i).count()) > 0;
+        const hasToast = (await page.locator('.toast').count()) > 0;
         expect(hasError || hasToast).toBe(true);
       }).toPass({ timeout: 3000 });
     } else {
@@ -253,22 +274,29 @@ test.describe('Token Validation Edge Cases', () => {
 
     // Should show authentication error
     await expect(async () => {
-      const hasError = await page.getByText(/invalid|unauthorized|credentials|failed/i).count() > 0;
-      const hasErrorToast = await page.locator('.toast').filter({ hasText: /error|failed|invalid/i }).count() > 0;
+      const hasError =
+        (await page.getByText(/invalid|unauthorized|credentials|failed/i).count()) > 0;
+      const hasErrorToast =
+        (await page
+          .locator('.toast')
+          .filter({ hasText: /error|failed|invalid/i })
+          .count()) > 0;
       expect(hasError || hasErrorToast).toBe(true);
     }).toPass({ timeout: 5000 });
 
     await closeSettingsModal(page);
   });
 
-  test('should handle 403 forbidden response for token without required scopes', async ({ page }) => {
+  test('should handle 403 forbidden response for token without required scopes', async ({
+    page,
+  }) => {
     // Mock 403 response (token valid but lacks permissions)
     await page.route('**/api.github.com/user', async (route) => {
       await route.fulfill({
         status: 403,
         body: JSON.stringify({
           message: 'Resource not accessible by integration',
-          documentation_url: 'https://docs.github.com/rest/reference/repos'
+          documentation_url: 'https://docs.github.com/rest/reference/repos',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
@@ -284,8 +312,8 @@ test.describe('Token Validation Edge Cases', () => {
 
     // Should show permission error
     await expect(async () => {
-      const hasError = await page.getByText(/permission|access|forbidden|scope/i).count() > 0;
-      const hasToast = await page.locator('.toast').count() > 0;
+      const hasError = (await page.getByText(/permission|access|forbidden|scope/i).count()) > 0;
+      const hasToast = (await page.locator('.toast').count()) > 0;
       expect(hasError || hasToast).toBe(true);
     }).toPass({ timeout: 5000 });
 
@@ -308,8 +336,8 @@ test.describe('Token Validation Edge Cases', () => {
 
     // Should show network error
     await expect(async () => {
-      const hasError = await page.getByText(/network|connection|failed|error/i).count() > 0;
-      const hasToast = await page.locator('.toast').count() > 0;
+      const hasError = (await page.getByText(/network|connection|failed|error/i).count()) > 0;
+      const hasToast = (await page.locator('.toast').count()) > 0;
       expect(hasError || hasToast).toBe(true);
     }).toPass({ timeout: 5000 });
 
@@ -469,7 +497,7 @@ test.describe('Concurrent API Calls', () => {
     let dispatchCount = 0;
     await page.route('**/api.github.com/repos/**/actions/workflows/*/dispatches', async (route) => {
       dispatchCount++;
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       await route.fulfill({
         status: 204,
         body: '',
@@ -489,7 +517,10 @@ test.describe('Concurrent API Calls', () => {
     const staleCard = page.locator('.service-card').filter({ hasText: 'STALE' }).first();
 
     if (await staleCard.isVisible()) {
-      const rerunButton = staleCard.locator('button').filter({ hasText: /re-?run|trigger/i }).first();
+      const rerunButton = staleCard
+        .locator('button')
+        .filter({ hasText: /re-?run|trigger/i })
+        .first();
       if (await rerunButton.isVisible()) {
         // Click once and verify response
         await rerunButton.click({ force: true });
@@ -572,8 +603,8 @@ test.describe('Additional Error Edge Cases', () => {
             limit: 5000,
             remaining: 0,
             reset: Math.floor(Date.now() / 1000) + 3600,
-            used: 5000
-          }
+            used: 5000,
+          },
         }),
         headers: { 'Content-Type': 'application/json' },
       });

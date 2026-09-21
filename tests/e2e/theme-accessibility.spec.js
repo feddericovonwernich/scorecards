@@ -116,39 +116,47 @@ test.describe('Theme Switching', () => {
     const themeToggle = page.locator('.floating-btn--theme');
 
     for (const theme of ['light', 'dark']) {
-      if (await html.getAttribute('data-theme') !== theme) {
+      if ((await html.getAttribute('data-theme')) !== theme) {
         await themeToggle.click();
       }
       await expect(html).toHaveAttribute('data-theme', theme);
 
       await openSettingsModal(page);
-      const contrasts = await page.locator(
-        '#settings-modal .settings-header-text p, ' +
-        '#settings-modal .settings-mode-description, ' +
-        '#settings-modal .settings-input-hint'
-      ).evaluateAll((elements) => {
-        const parseColor = (color) => color.match(/[\d.]+/g)?.map(Number) ?? [];
-        const luminance = (color) => color.slice(0, 3).map((channel) => {
-          const normalized = channel / 255;
-          return normalized <= 0.04045
-            ? normalized / 12.92
-            : ((normalized + 0.055) / 1.055) ** 2.4;
-        }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      const contrasts = await page
+        .locator(
+          '#settings-modal .settings-header-text p, ' +
+            '#settings-modal .settings-mode-description, ' +
+            '#settings-modal .settings-input-hint'
+        )
+        .evaluateAll((elements) => {
+          const parseColor = (color) => color.match(/[\d.]+/g)?.map(Number) ?? [];
+          const luminance = (color) =>
+            color
+              .slice(0, 3)
+              .map((channel) => {
+                const normalized = channel / 255;
+                return normalized <= 0.04045
+                  ? normalized / 12.92
+                  : ((normalized + 0.055) / 1.055) ** 2.4;
+              })
+              .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
 
-        return elements.map((element) => {
-          let background = element.parentElement;
-          while (background) {
-            const color = parseColor(getComputedStyle(background).backgroundColor);
-            if (color.length === 3 || color[3] > 0) {
-              const foreground = parseColor(getComputedStyle(element).color);
-              const [lighter, darker] = [luminance(foreground), luminance(color)].sort((a, b) => b - a);
-              return (lighter + 0.05) / (darker + 0.05);
+          return elements.map((element) => {
+            let background = element.parentElement;
+            while (background) {
+              const color = parseColor(getComputedStyle(background).backgroundColor);
+              if (color.length === 3 || color[3] > 0) {
+                const foreground = parseColor(getComputedStyle(element).color);
+                const [lighter, darker] = [luminance(foreground), luminance(color)].sort(
+                  (a, b) => b - a
+                );
+                return (lighter + 0.05) / (darker + 0.05);
+              }
+              background = background.parentElement;
             }
-            background = background.parentElement;
-          }
-          return 0;
+            return 0;
+          });
         });
-      });
 
       for (const contrast of contrasts) {
         expect(contrast).toBeGreaterThanOrEqual(4.5);
@@ -179,7 +187,7 @@ test.describe('Keyboard Navigation', () => {
     for (let i = 0; i < 10; i++) {
       await page.keyboard.press('Tab');
       const focused = page.locator(':focus');
-      const isServiceCard = await focused.evaluate(el => el.classList.contains('service-card'));
+      const isServiceCard = await focused.evaluate((el) => el.classList.contains('service-card'));
       if (isServiceCard) break;
     }
 
@@ -225,7 +233,9 @@ test.describe('Keyboard Navigation', () => {
     await page.waitForTimeout(300);
 
     // Phase 4: Click a different stat card
-    const silverStatCard = page.locator('.services-stats .stat-card').filter({ hasText: /Silver/i });
+    const silverStatCard = page
+      .locator('.services-stats .stat-card')
+      .filter({ hasText: /Silver/i });
     if (await silverStatCard.isVisible()) {
       await silverStatCard.click();
       await page.waitForTimeout(300);
@@ -270,4 +280,3 @@ test.describe('Focus Management', () => {
     await expect(firstCard).toBeVisible();
   });
 });
-
