@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Use ephemeral same-repository credentials for catalog UI/checks-hash publication and explicit pinned Pages artifact deployment; preserve domain files and document the coordinated legacy-source transition and rollback.
 - Preserve remediation source contents, reuse mixed-case destination PRs, retain accepted requests and verified run links when discovery fails, and align installation template consumers.
 - Preserve case-sensitive remediation badge URLs and publish validated README bytes without Git encoding/filter conversions; document fresh scoring and separate service/platform checkouts.
 - Accept canonical GitHub repository casing in remediation links, retain the run-summary fallback for incomplete PR searches, and derive clone/push destinations only from the authorized repository.

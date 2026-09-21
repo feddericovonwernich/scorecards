@@ -6,10 +6,22 @@ on:
       - main
     paths:
       - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/sync-docs.yml'
   workflow_dispatch:
+
+permissions: {}
+
+# Serialize the whole build/push/deploy lifecycle, including manual reruns.
+# Do not cancel a run while it is publishing.
+concurrency:
+  group: catalog-pages
+  cancel-in-progress: false
 
 jobs:
   sync-catalog:
+    if: github.ref == 'refs/heads/main' && !github.event.repository.fork
     runs-on: ubuntu-latest
     name: Sync Catalog UI
     permissions:
@@ -17,17 +29,18 @@ jobs:
 
     steps:
       - name: Checkout main branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           path: main-repo
+          persist-credentials: false
 
       - name: Checkout catalog branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: catalog
           path: catalog-repo
-          token: ${{ secrets.SCORECARDS_CATALOG_TOKEN || secrets.SCORECARDS_WORKFLOW_TOKEN }}
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,11 +57,17 @@ jobs:
         run: npm run build
         working-directory: main-repo
 
+      - name: Reject superseded source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
+
       - name: Sync catalog UI files
         run: |
           # Sync built files from dist/ to catalog branch docs/
           # Vite compiles TypeScript to JavaScript in docs/dist/
-          rsync -av --delete main-repo/docs/dist/ catalog-repo/docs/
+          rsync -av --delete --exclude=CNAME --exclude=.nojekyll main-repo/docs/dist/ catalog-repo/docs/
 
       - name: Commit and push to catalog
         run: |
@@ -107,3 +126,32 @@ jobs:
               exit 1
             fi
           fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: catalog-repo/docs
+
+  deploy:
+    needs: sync-catalog
+    if: github.ref == 'refs/heads/main' && !github.event.repository.fork
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Verify source and coordinated Pages transition
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
+          # Read only: the operator changes the publishing source after integration.
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type)" = workflow
+
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

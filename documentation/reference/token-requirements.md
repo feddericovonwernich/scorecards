@@ -13,6 +13,12 @@ Scorecards uses two GitHub Personal Access Tokens (PATs) for different purposes:
 
 \*Required for automated installation or enabled remediation; remediation is disabled by default.
 
+Central `sync-docs.yml` and `update-checks-hash.yml` use the repository's
+ephemeral `GITHUB_TOKEN` for same-repository catalog writes, not either PAT.
+The separate Pages deployment job uses only `contents: read`, `pages: write`
+and `id-token: write`. See the [deployment transition procedure](../../docs/README.md#deployment).
+This does not repair or expand cross-repository result/remediation credentials.
+
 ## Why Two Tokens?
 
 **SCORECARDS_CATALOG_TOKEN** - Every scorecard execution writes results to the catalog branch. This token needs `repo` scope to write to the catalog.

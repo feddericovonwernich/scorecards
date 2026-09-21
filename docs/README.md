@@ -159,19 +159,93 @@ npm run lint
 
 ## Deployment
 
-The catalog is automatically deployed to GitHub Pages from the `catalog` branch.
+`.github/workflows/sync-docs.yml` builds reviewed `main` with `npm ci` and
+`npm run build`, syncs `docs/dist/` to `catalog:/docs`, and uploads that directory
+for an explicit GitHub Pages deployment. Repository and build-dependency changes
+covered by the workflow's path filter trigger publication; manual dispatch must
+select `main`. The public URL and Vite base path do not change.
 
-In repository **Settings → Pages**, select **Deploy from a branch**, the `catalog`
-branch, and `/docs`. That directory must contain the compiled UI published by the
-sync workflow. Wait for the Pages deployment to complete, then open the URL shown
-in Settings → Pages and confirm the catalog is accessible.
+The same-repository checkouts/pushes use ephemeral `GITHUB_TOKEN`, not a PAT.
+Only the sync and checks-hash writer jobs get `contents: write`; the separate
+Pages job gets `contents: read`, `pages: write` and `id-token: write`, and uses
+`github-pages`. No cross-repository remediation permission is provided.
+The Pages artifact comes from this run, never a pull request or another run.
+Fork and non-main dispatches are excluded; superseded source revisions fail
+before synchronization and again before deployment. Whole-workflow concurrency
+serializes UI publication without cancelling an in-progress push/deployment.
 
-The workflow `.github/workflows/sync-docs.yml` handles synchronization:
+`catalog:/docs` remains the generated UI directory, with `CNAME` and `.nojekyll`
+preserved. Files outside it (results, registry, badges, checks metadata and other
+catalog files) are not replaced. Concurrent catalog pushes are rebased before
+retry; conflicting UI changes fail rather than overwrite data. The checks-hash
+writer uses a normal non-force push: a competing writer can reject it safely;
+dispatch a fresh **Update Checks Hash** run on `main` after that writer finishes.
+Catalog API/raw-content consumers continue to read the `catalog` branch, not
+the Pages artifact.
 
-1. Changes to `docs/` on main branch trigger sync workflow
-2. Vite builds the production bundle
-3. Built files are committed to catalog branch
-4. GitHub Pages serves from catalog branch
+### Coordinated transition from legacy Pages
+
+Do not switch Pages settings before the workflow PR is integrated with green
+checks. Implementation/local checks do not publish the site. No second-person
+approval is required for the authorized pilot; PR-only integration and checks
+still apply.
+
+1. Before integration, record the current Pages `html_url`, `build_type`,
+   `source`, `cname`, HTTPS setting, deployed revision and `catalog` SHA. Retain
+   the known-good `catalog:/docs` tree for rollback, including any domain file.
+   Existing central settings are legacy `catalog:/docs` at
+   `https://feddericovonwernich.github.io/scorecards/`; verify rather than
+   assuming they are unchanged.
+2. Confirm Actions allows the pinned Pages actions and native token writes to
+   `catalog`. Keep `main` PR protections intact. Configure `github-pages` to
+   allow only `main` (no tag deployments); do not broaden branch rules or add
+   a reviewer requirement for the pilot. If organization policy or catalog
+   protection prevents these minimal permissions, report the specific rule;
+   do not substitute a broader PAT or bypass.
+3. Merge through the approved PR/checks process. The merge-triggered workflow
+   may sync/upload but its deployment check intentionally fails while Pages
+   is legacy. Wait for any old legacy Pages runs to finish before cutover.
+   A successful catalog push is **not** deployment evidence:
+   `GITHUB_TOKEN` pushes do not trigger legacy Pages builds.
+4. The authorized operator now selects **Settings → Pages → Build and
+   deployment → Source → GitHub Actions** (`build_type: workflow`). Preserve
+   custom-domain, DNS and HTTPS settings; do not delete/recreate the site.
+   `CNAME` is retained for rollback but workflow Pages domain configuration is
+   controlled by Settings/API, not the artifact. This setting/environment
+   operation is separate from implementing the PR.
+5. Dispatch a **fresh Sync Catalog UI** run on current `main`, not an old
+   run/revision. Even an unchanged `catalog:/docs` uploads and deploys.
+   If `main` advances and a freshness guard rejects the run, dispatch again
+   on current `main`; do not bypass the guard or reuse an old artifact.
+6. Record the run URL, source SHA, catalog commit, artifact ID, successful
+   `deploy-pages` result and `github-pages` environment deployment URL.
+   Check Pages reports workflow mode at the original URL. In a fresh browser
+   context, load that URL and compare `index.html` and its hashed JS/CSS asset
+   URLs/bytes with the run's artifact. Verify Services/Teams routes and API
+   Explorer work and real catalog results still load. Check the remediation
+   control only against an eligible evaluated service; do not dispatch a
+   recipe or infer activation from deployment. An old `status: built`, a
+   successful upload or a successful git push alone proves none of this.
+
+### Safe rollback
+
+Stop new sync dispatches and disable the sync workflow temporarily; wait for
+in-flight sync/deploy runs to finish so they cannot overwrite recovery. Record
+their outcome. An authorized operator can restore only `catalog:/docs` from the
+recorded known-good commit in a new, non-force catalog commit, preserving newer
+results/registry/checks metadata and domain configuration. Never reset the
+entire catalog branch. Switch Pages back to **Deploy from a branch →
+catalog → /docs**, retaining URL/domain/HTTPS settings. If a restored build is
+needed, use an authorized operator push to that source after switching (not a
+`GITHUB_TOKEN` push), or the operator's supported Pages build request.
+Wait for the legacy Pages deployment and verify the served files at the same
+URL against the known-good tree. Leave the workflow disabled until a corrective
+PR passes checks and the coordinated workflow transition is repeated. Do not
+restore expired PAT dependencies or change main directly.
+
+GitHub contracts:
+[custom workflows and required permissions](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages),
+[publishing sources, token-trigger limitation and domains](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
 
 Publish `docs/dist/` intact, including Vite's compiled `api-explorer.html`; copying
 the source HTML over it breaks its module and stylesheet URLs. The build also

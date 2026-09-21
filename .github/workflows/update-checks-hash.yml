@@ -7,21 +7,32 @@ on:
       - main
     paths:
       - 'checks/**'
+      - 'action/utils/update-checks-hash.sh'
+      - '.github/workflows/update-checks-hash.yml'
 
   # Allow manual trigger for testing or force updates
   workflow_dispatch:
 
+permissions: {}
+
+concurrency:
+  group: catalog-checks-hash
+  cancel-in-progress: false
+
 jobs:
   update-hash:
+    if: github.ref == 'refs/heads/main' && !github.event.repository.fork
     name: Update Catalog Checks Hash
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history needed for catalog branch
-          token: ${{ secrets.SCORECARDS_CATALOG_TOKEN || secrets.SCORECARDS_WORKFLOW_TOKEN }}
+          ref: ${{ github.sha }}
 
       - name: Configure git
         run: |
@@ -31,12 +42,16 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
+      - name: Reject superseded source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
+
       - name: Update checks hash on catalog branch
         run: |
           echo "Running checks hash update script..."
           bash action/utils/update-checks-hash.sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.SCORECARDS_CATALOG_TOKEN || secrets.SCORECARDS_WORKFLOW_TOKEN }}
 
       - name: Summary
         run: |

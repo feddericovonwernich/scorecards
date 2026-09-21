@@ -68,8 +68,8 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 **Triggers:**
 
-- Push to main branch with changes to `checks/**`
-- Manual workflow dispatch
+- Push to main with changes to `checks/**`, the hash script or this workflow
+- Manual workflow dispatch on main (non-fork repositories only)
 
 **Purpose:** Updates the current checks hash on the catalog branch for staleness detection.
 
@@ -81,7 +81,7 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
    - Generates SHA256 hash of all checks (metadata + implementation)
    - Switches to catalog branch
    - Updates `current-checks-hash.txt` and `current-checks.json`
-   - Commits and pushes to catalog branch using SCORECARDS_CATALOG_TOKEN
+   - Commits and pushes to catalog with native `GITHUB_TOKEN` and job-scoped `contents: write`; concurrent push rejection fails safely
 
 **How it works:**
 
@@ -100,8 +100,8 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 **Triggers:**
 
-- Push to main branch with changes to `docs/**`
-- Manual workflow dispatch
+- Push to main with changes to `docs/**`, npm manifests or this workflow
+- Manual workflow dispatch on main (non-fork repositories only)
 
 **Purpose:** Builds and publishes the catalog UI. See the [Deployment guide](../../docs/README.md#deployment) for the delivery procedure and GitHub Pages configuration.
 
@@ -392,7 +392,7 @@ Multiple workflows write to catalog branch to prevent conflicts and loops:
 
 - **Concurrency control**: `consolidate-registry.yml` uses concurrency groups
 - **Skip CI commits**: Registry updates use `[skip ci]` in commit messages
-- **Dedicated tokens**: All catalog updates use SCORECARDS_CATALOG_TOKEN
+- **Credentials**: UI sync and checks-hash publication use native `GITHUB_TOKEN`; cross-repository result writers still need the catalog credential
 - **Bot commits**: All automated commits by github-actions[bot]
 
 ### Fresh Scoring
