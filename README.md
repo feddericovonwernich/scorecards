@@ -29,7 +29,7 @@ This creates a repository with GitHub Actions and results storage. Complete the 
 - **Advanced filtering** - Include/exclude by rank, API presence, staleness, or specific checks
 - **Service detail modals** - View check results, API specs, workflows, and contributors
 - **Badge generation** - Embed shields.io-compatible badges in your READMEs
-- **Optional PR-only remediation** - Deterministic corrections for eligible failed checks, disabled until explicit policy and security prerequisites are configured
+- **Optional PR-only remediation** - Deterministic corrections for eligible failed checks; see [activation policy and security prerequisites](documentation/architecture/flows/remediation-flow.md#activación-prerrequisitos-externos-obligatorios)
 
 ![Teams Dashboard](documentation/images/catalog-teams.png)
 

@@ -78,7 +78,7 @@ The GitHub Action that performs scoring:
 - **Score Calculator** - Computes overall score from check results
 - **Badge Generator** - Creates score badge
 - **Registry Updater** - Updates central registry
-- **Remediation Action** (`action/remediate/`) - Separate, opt-in executor that proposes an allowed correction through a PR; disabled by default
+- **Remediation Action** (`action/remediate/`) - Separate executor that proposes an allowed correction through a PR; see [activation policy](flows/remediation-flow.md#activación-prerrequisitos-externos-obligatorios)
 
 ### Checks
 

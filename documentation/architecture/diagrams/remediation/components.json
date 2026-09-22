@@ -110,10 +110,7 @@
     {
       "dot": "rose",
       "title": "Límite de seguridad",
-      "items": [
-        "Política deshabilitada de fábrica.",
-        "Credencial sin bypass y reglas de rama: requisito de activación."
-      ]
+      "items": ["Credencial sin bypass y reglas de rama: requisito de activación."]
     },
     {
       "dot": "emerald",

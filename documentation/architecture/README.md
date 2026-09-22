@@ -13,4 +13,4 @@ Technical documentation for how the Scorecards system works.
 - **[Check Execution Flow](flows/check-execution-flow.md)** - How individual checks run
 - **[Installation Flow](flows/installation-flow.md)** - Service onboarding process
 - **[Staleness Detection Flow](flows/staleness-detection-flow.md)** - Outdated scorecard detection
-- **[Remediation Flow](flows/remediation-flow.md)** - Optional, disabled-by-default corrections through human-reviewed PRs, with explorable diagrams
+- **[Remediation Flow](flows/remediation-flow.md)** - Optional corrections through human-reviewed PRs, activation policy and explorable diagrams

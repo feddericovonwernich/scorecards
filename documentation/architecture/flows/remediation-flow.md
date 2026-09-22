@@ -158,6 +158,11 @@ despacha remediación ni integra el PR resultante automáticamente.
 
 ## Activación: prerrequisitos externos obligatorios
 
+En una instalación nueva o un fork, antes de configurar secretos o habilitar
+workflows, establecer `enabled: false` y retirar los destinos heredados de
+`action/config/remediation.json`. La autorización del piloto no se transfiere
+a otra plataforma.
+
 1. Revisar y desplegar lectores tolerantes, productores con procedencia, código central y workflow. **Todavía mantener `enabled: false`.**
 2. Revisar/publicar por separado el runtime con entradas fijadas y evidencia según [publicación del runtime](#publicación-del-runtime), verificar acceso remoto y configurar `runtime_image` por digest inmutable. Entradas fijadas, artefacto inmutable y reproducibilidad bit a bit son garantías distintas; no se afirma la última.
 3. Identificar el titular de `SCORECARDS_WORKFLOW_TOKEN` sin revelar su valor. El executor exige coincidencia con `publisher_login`; no usa `SCORECARDS_CATALOG_TOKEN` como fallback.
@@ -172,7 +177,7 @@ Un PAT con `contents: write` **no es un token “sólo PR”** ni una restricci�
 La política preparada habilita exclusivamente `feddericovonwernich/test-repo-minimal`,
 check `09-scorecard-badge`, actor y publicador `feddericovonwernich`. No autoriza
 otros repositorios ni checks. `enabled: true` en la rama de propuesta no cambia
-main: **Main debe retener la integración hasta que el productor esté listo,
+main: **No integrar esta política hasta que el productor esté listo,
 los checks estén verdes y exista autoridad explícita para integrar.**
 
 Evidencia disponible:

@@ -63,6 +63,6 @@ jobs:
 #    - The installed scorecards.yml workflow performs regular scoring
 #    - This installation workflow does not replace that workflow
 #
-# Remediation is separate and remains centrally disabled until explicitly
-# configured. Calling this reusable workflow does not grant caller tokens
-# permissions in another repository.
+# Remediation policy and activation: ../architecture/flows/remediation-flow.md
+# Calling this reusable workflow does not grant caller tokens permissions
+# in another repository.

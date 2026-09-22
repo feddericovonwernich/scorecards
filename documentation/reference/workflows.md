@@ -9,7 +9,7 @@ The Scorecards system groups workflows into four categories:
 - **Development & Quality** - Testing and maintenance of the scorecards system itself
 - **Service Onboarding** - Installing scorecards in service repositories
 - **Execution & Maintenance** - Running checks and maintaining the catalog
-- **Optional Remediation** - Disabled-by-default, PR-only correction proposals
+- **Optional Remediation** - PR-only correction proposals; see [activation policy](../architecture/flows/remediation-flow.md#activación-prerrequisitos-externos-obligatorios)
 
 ### Optional remediation
 

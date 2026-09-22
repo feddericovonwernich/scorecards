@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Manual main-only GHCR runtime publication using ephemeral package credentials, real Docker smoke checks and registry digest receipts; publication and activation still require reviewed integration.
-- Optional failed-check remediation through a central workflow, tokenless Docker recipe sandbox and human-reviewed PR only; ships disabled with explicit actor/target policy and runtime/protection activation prerequisites.
+- Optional failed-check remediation through a central workflow, tokenless Docker recipe sandbox and human-reviewed PR only; see the [activation prerequisites](documentation/architecture/flows/remediation-flow.md#activación-prerrequisitos-externos-obligatorios).
 - Conservative, idempotent Scorecards badge recipe for existing READMEs, evaluation provenance, correlated workflow links and maintained remediation architecture diagrams.
 - CHANGELOG.md to track project changes
 - Glossary of domain-specific terms

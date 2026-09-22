@@ -2,7 +2,7 @@
 
 This directory contains the catalog web UI for viewing scorecard results across all repositories.
 
-Eligible failed checks may offer a PR-only remediation button when results include validated capability metadata and evaluation provenance. Execution is centrally authorized and disabled by default; it never changes the visible score optimistically. See the [remediation architecture, API correlation and rollout contract](../documentation/architecture/flows/remediation-flow.md).
+Eligible failed checks may offer a PR-only remediation button when results include validated capability metadata and evaluation provenance. Execution is centrally authorized; it never changes the visible score optimistically. See the [remediation architecture, API correlation and rollout contract](../documentation/architecture/flows/remediation-flow.md).
 
 ## Technology Stack
 
