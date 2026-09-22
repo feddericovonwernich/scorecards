@@ -19,7 +19,7 @@ The Scorecards system groups workflows into four categories:
 
 **Jobs:** A read-only validator checks the trusted active revision and explicit actor/target policy before the writer credential is used. A per-repository/check concurrency group then invokes `action/remediate/` to prepare a tokenless sandbox correction and publish only a fresh branch and PR. Pending runs can replace older pending runs; this is not a durable FIFO queue.
 
-**Security and results:** Ships disabled, checks out `github.sha` without persisted credentials and pins third-party actions. `SCORECARDS_WORKFLOW_TOKEN` is host-only, with no catalog-token fallback. A generated outcome is retained as `remediation-result.json` and a run summary; cancellation may prevent output. Workflow success is not evidence of a PR or a passing score. See the authoritative [flow, diagrams and activation prerequisites](../architecture/flows/remediation-flow.md).
+**Security and results:** Explicit central policy controls activation; see the [bounded pilot and integration hold](../architecture/flows/remediation-flow.md#piloto-acotado-test-repo-minimal). The workflow checks out `github.sha` without persisted credentials and pins third-party actions. `SCORECARDS_WORKFLOW_TOKEN` is host-only, with no catalog-token fallback. A generated outcome is retained as `remediation-result.json` and a run summary; cancellation may prevent output. Workflow success is not evidence of a PR or a passing score. See the authoritative [flow, diagrams and activation prerequisites](../architecture/flows/remediation-flow.md).
 
 For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [runtime publication procedure](../architecture/flows/remediation-flow.md#publicación-del-runtime).
 

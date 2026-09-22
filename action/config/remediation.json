@@ -1,12 +1,19 @@
 {
   "version": 1,
-  "enabled": false,
+  "enabled": true,
   "timeout_max_seconds": 300,
   "diff_max_bytes": 1048576,
   "output_max_bytes": 65536,
   "memory_max_bytes": 536870912,
   "pids_max": 128,
   "cpu_max": "1",
-  "runtime_image": null,
-  "targets": {}
+  "runtime_image": "ghcr.io/feddericovonwernich/scorecards-remediation-runtime@sha256:c10e8e81b6425dc110afd62aab554a898e7f2634efe4d94f44b54673df39f091",
+  "targets": {
+    "feddericovonwernich/test-repo-minimal": {
+      "check_ids": ["09-scorecard-badge"],
+      "actors": ["feddericovonwernich"],
+      "publisher_login": "feddericovonwernich",
+      "protection_evidence": "Captain request32 pilot: main classic protection read 2026-09-22T23:21:34Z; PR required, approvals=0, code-owner/last-push approval=false, enforce_admins=true, force/delete=false. Required status checks=null; owner reviews/merges only after green checks by operating procedure. Recipe never merges."
+    }
+  }
 }

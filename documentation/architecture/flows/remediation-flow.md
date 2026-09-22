@@ -2,7 +2,7 @@
 
 La remediación es una operación opcional, separada del scoring. Un check fallido puede ofrecer una receta determinista revisada en Scorecards. El catálogo solicita su ejecución en el repositorio central; la Action propone el cambio en una **rama nueva y un PR del servicio**. Nunca escribe en la rama predeterminada, hace merge ni transforma un resultado `fail` en `pass` por haber abierto un PR.
 
-**Deshabilitada de fábrica:** `action/config/remediation.json` contiene `enabled: false`, `runtime_image: null` y `targets: {}`. Incorporar este código no activa destinos, publica imágenes ni verifica protecciones externas. Activar requiere completar los prerrequisitos de este documento mediante un cambio revisado.
+**Política explícita:** `action/config/remediation.json` prepara únicamente el [piloto acotado](#piloto-acotado-test-repo-minimal), con digest y allowlists fijados. La propuesta no activa main antes de su integración autorizada; instalar scoring no autoriza otros destinos. No publica imágenes ni verifica protecciones externas por sí misma.
 
 ## Diagramas mantenidos
 
@@ -161,11 +161,53 @@ despacha remediación ni integra el PR resultante automáticamente.
 1. Revisar y desplegar lectores tolerantes, productores con procedencia, código central y workflow. **Todavía mantener `enabled: false`.**
 2. Revisar/publicar por separado el runtime con entradas fijadas y evidencia según [publicación del runtime](#publicación-del-runtime), verificar acceso remoto y configurar `runtime_image` por digest inmutable. Entradas fijadas, artefacto inmutable y reproducibilidad bit a bit son garantías distintas; no se afirma la última.
 3. Identificar el titular de `SCORECARDS_WORKFLOW_TOKEN` sin revelar su valor. El executor exige coincidencia con `publisher_login`; no usa `SCORECARDS_CATALOG_TOKEN` como fallback.
-4. Verificar reglas efectivas de la rama predeterminada en cada destino: revisión humana requerida, sin escritura directa ni bypass para ese titular, sin auto-merge del bot. Registrar la evidencia y fecha en `protection_evidence`. Este campo no sustituye la revisión de reglas ni garantiza que nunca cambien.
+4. Verificar reglas efectivas de la rama predeterminada en cada destino: revisión humana requerida, sin escritura directa ni bypass para ese titular, sin auto-merge del bot. La excepción de aprobaciones formales del [piloto acotado](#piloto-acotado-test-repo-minimal) no se extiende a otros destinos. Registrar la evidencia y fecha en `protection_evidence`. Este campo no sustituye la revisión de reglas ni garantiza que nunca cambien.
 5. Añadir sólo el destino piloto y `09-scorecard-badge` a `targets`, con `actors`, `publisher_login` y `protection_evidence`. Aprobar expresamente la activación y cambiar `enabled` en una revisión protegida.
 6. Ejecutar el piloto autorizado, revisar el diff/PR y comprobar que default permanece intacta. Ampliar destinos/checks sólo tras revisión de cada receta y sus límites.
 
 Un PAT con `contents: write` **no es un token “sólo PR”** ni una restricción por rama. La separación del sandbox y el refspec reducen el riesgo de ejecución, pero la garantía externa contra un escritor comprometido depende de reglas sin bypass y de proteger el código/workflow central y sus secretos. Si no puede verificarse esa condición, no activar.
+
+### Piloto acotado: test-repo-minimal
+
+La política preparada habilita exclusivamente `feddericovonwernich/test-repo-minimal`,
+check `09-scorecard-badge`, actor y publicador `feddericovonwernich`. No autoriza
+otros repositorios ni checks. `enabled: true` en la rama de propuesta no cambia
+main: **Main debe retener la integración hasta que el productor esté listo,
+los checks estén verdes y exista autoridad explícita para integrar.**
+
+Evidencia disponible:
+
+- Runtime fijado en `action/config/remediation.json`, publicado desde
+  `b73a323e91fb537220e91e8b5b3481dd249dd873` en
+  [el run de publicación](https://github.com/feddericovonwernich/scorecards/actions/runs/35658198735).
+  El recibo confirma manifest y pull anónimos, revisión de fuente y smoke de
+  la imagen descargada. No demuestra reproducibilidad bit a bit ni el piloto.
+- [Pages desplegado](https://github.com/feddericovonwernich/scorecards/actions/runs/35666405366):
+  el recibo de operación compara los 19 archivos servidos con el artefacto,
+  sin diferencias. Esto prueba publicación del catálogo, no elegibilidad.
+- Rotación de credenciales registrada el 2026-09-22T23:10:06.161Z: `/user` con
+  los tokens nuevos identifica `feddericovonwernich`; provisión y lecturas
+  verificadas. Los consumidores todavía no han ejercitado escrituras reales.
+  La política no amplía permisos ni convierte el token en una credencial aislada
+  por repositorio.
+- Lectura API de protección clásica de ambas `main` (central y destino),
+  2026-09-22T23:21:34Z: PR obligatorio, `required_approving_review_count=0`,
+  code-owner/last-push approval desactivados, admins sujetos, force/delete
+  desactivados; sin cambios de reglas. `required_status_checks=null`:
+  checks verdes son requisito operativo de integración, no una lista impuesta
+  por GitHub.
+
+Captain request32 autoriza que el owner revise y mergee con su cuenta tras
+checks verdes, sin bot/revisor adicional ni aprobación independiente formal.
+No se afirma una aprobación humana ya realizada. La receta nunca mergea;
+PR-only sigue siendo obligatorio y no se autoriza bypass.
+
+Después de integrar la política central final y el productor actualizado,
+generar una evaluación nueva cuya `suite_sha` sea ese SHA central final;
+una evaluación anterior no es evidencia de preparación. Sólo después, en la
+operación autorizada, verificar **botón real → run atribuible → PR del badge**,
+diff acotado y default intacta. Preparar esta política no ejecuta workflows
+ni demuestra esas escrituras: el piloto sigue sin prueba end-to-end.
 
 ## Rollback
 

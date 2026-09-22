@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Prepare the single-repository badge pilot policy with the published runtime digest and verified publisher identity; document zero-independent-approval protection, integration prerequisites and still-unexercised consumer writes.
 - Pin runtime base/Node digests, signed Ubuntu snapshot and npm lockfile; retain scoring/sandbox compatibility without claiming bit-for-bit rebuilds.
 - **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
   - Replaced ES6 modules with React functional components
