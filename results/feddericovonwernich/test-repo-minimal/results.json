@@ -9,7 +9,7 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-02-12T02:43:28Z"
+      "last_discovered": "2026-09-23T18:52:41Z"
     },
     "links": [],
     "openapi": null
@@ -25,17 +25,17 @@
       "reason": "Test exclusion - verifying check exclusion feature"
     }
   ],
-  "timestamp": "2026-02-12T02:44:22Z",
-  "checks_hash": "01365f82dcdc35208f679ceeac063df7b35a9dbbd4f47dabad09d840500e711d",
+  "timestamp": "2026-09-23T18:54:59Z",
+  "checks_hash": "119f9cf9e608314410ba5cd46b95dc0d670354dbd9d079707b4bd9f09da21cba",
   "checks_count": 13,
   "installed": true,
   "recent_contributors": [
     {
-      "name": "Federico von Wernich",
-      "email": "feddericokz @gmail.com",
+      "name": "feddericovonwernich",
+      "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2025-12-13T15:37:14Z",
-      "last_commit_hash": "c2950a4"
+      "last_commit_date": "2026-09-23T12:12:58Z",
+      "last_commit_hash": "e292096"
     }
   ],
   "checks": [
@@ -72,7 +72,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "GitHub Actions: 2 workflow(s) (ci.yml, scorecards.yml)\n",
+      "stdout": "GitHub Actions: 3 workflow(s) (ci.yml, producer-validation.yml, scorecards.yml)\n",
       "stderr": ""
     },
     {
@@ -84,7 +84,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "Found tests: 1 file(s) in directories: tests\n",
+      "stdout": "Found tests: 2 file(s) in directories: tests\n",
       "stderr": ""
     },
     {
@@ -145,7 +145,11 @@
       "exit_code": 1,
       "duration": 0,
       "stdout": "",
-      "stderr": "No scorecard badges found in README.md\nExpected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)\n"
+      "stderr": "No scorecard badges found in README.md\nExpected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)\n",
+      "remediation": {
+        "version": 1,
+        "label": "Proponer badge de Scorecards"
+      }
     },
     {
       "check_id": "10-scorecard-config-quality",
@@ -183,5 +187,13 @@
       "stdout": "CODEOWNERS syntax validated: .github/CODEOWNERS\n  1 ownership rule\n  1 unique owner\n  - * -> @feddericovonwernich-org/platform\n",
       "stderr": ""
     }
-  ]
+  ],
+  "evaluation": {
+    "service_repository": "feddericovonwernich/test-repo-minimal",
+    "service_sha": "e2920962e14733c56953a8ed7fcde13985e76533",
+    "suite_repository": "feddericovonwernich/scorecards",
+    "suite_sha": "243ced4f3c9397b12109f8c05197162a474915e4",
+    "run_id": "35905477271",
+    "run_attempt": 1
+  }
 }
