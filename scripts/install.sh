@@ -78,6 +78,7 @@ fi
 print_header "Step 1: Checking prerequisites"
 check_command git https://git-scm.com/downloads
 check_command gh https://cli.github.com/
+check_command python3 https://www.python.org/downloads/
 if [ "${BASH_VERSINFO[0]}" -lt 3 ] || { [ "${BASH_VERSINFO[0]}" -eq 3 ] && [ "${BASH_VERSINFO[1]}" -lt 2 ]; }; then
     fail "Bash 3.2 or newer is required"
 fi
@@ -102,8 +103,8 @@ fi
 print_success "Authenticated as $GITHUB_USER"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_ROOT="${SCORECARDS_SOURCE_DIR:-$SCRIPT_DIR/..}"
-[ -d "$SOURCE_ROOT/.git" ] || fail "Installer must run from a pinned Scorecards Git checkout; use the versioned bootstrap command."
+SOURCE_ROOT="$SCRIPT_DIR/.."
+[ -e "$SOURCE_ROOT/.git" ] || fail "Installer must run from a pinned Scorecards Git checkout; use the versioned bootstrap command."
 SOURCE_SHA="$(git -C "$SOURCE_ROOT" rev-parse HEAD^{commit} 2>/dev/null)" || fail "Cannot resolve source checkout HEAD"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "Source checkout did not resolve to a full commit SHA"
 if [ -n "${SCORECARDS_SOURCE_SHA:-}" ] && [ "$SCORECARDS_SOURCE_SHA" != "$SOURCE_SHA" ]; then
@@ -141,7 +142,7 @@ trap cleanup EXIT
 INSTALL_REPO="$WORK_DIR/scorecards"
 git clone --quiet "$SOURCE_ROOT" "$INSTALL_REPO"
 git -C "$INSTALL_REPO" checkout --detach "$SOURCE_SHA" >/dev/null
-git -C "$INSTALL_REPO" switch -C main >/dev/null
+git -C "$INSTALL_REPO" checkout -B main >/dev/null
 git -C "$INSTALL_REPO" config user.name "Scorecards Bot"
 git -C "$INSTALL_REPO" config user.email "scorecards-bot@users.noreply.github.com"
 
@@ -162,7 +163,7 @@ git -C "$INSTALL_REPO" add -A
 git -C "$INSTALL_REPO" commit -m "Install Scorecards from $SOURCE_SHA" >/dev/null
 INSTALLED_MAIN_SHA="$(git -C "$INSTALL_REPO" rev-parse refs/heads/main)"
 
-git -C "$INSTALL_REPO" switch --orphan catalog >/dev/null
+git -C "$INSTALL_REPO" checkout --orphan catalog >/dev/null
 git -C "$INSTALL_REPO" rm -rf . >/dev/null 2>&1 || true
 for path in docs README.md .gitignore scripts .github/workflows/consolidate-registry.yml; do
     git -C "$INSTALL_REPO" checkout main -- "$path" 2>/dev/null || true
@@ -199,7 +200,7 @@ EOF
 git -C "$INSTALL_REPO" add -A
 git -C "$INSTALL_REPO" commit -m "Initialize Scorecards catalog" >/dev/null
 CATALOG_SHA="$(git -C "$INSTALL_REPO" rev-parse refs/heads/catalog)"
-git -C "$INSTALL_REPO" switch main >/dev/null
+git -C "$INSTALL_REPO" checkout main >/dev/null
 print_success "Prepared source $SOURCE_SHA as installed main $INSTALLED_MAIN_SHA"
 
 print_header "Step 3: Publishing both branches atomically"
@@ -251,7 +252,7 @@ while [ "$SECONDS" -le "$deadline" ]; do
         -f head_sha="$INSTALLED_MAIN_SHA" \
         -f "created=>=$DISPATCH_REQUESTED_AT" \
         -F per_page=100 \
-        --jq '.[].workflow_runs[] | [.id,.status,.conclusion,.html_url,.head_sha,.created_at] | @tsv')" || fail "Cannot query the dispatched Pages workflow"
+        --jq '.[].workflow_runs[] | [.id,.status,(.conclusion // "pending"),.html_url,.head_sha,.created_at] | @tsv')" || fail "Cannot query the dispatched Pages workflow"
 
     candidates=()
     while IFS= read -r row; do
@@ -279,6 +280,86 @@ pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.
 IFS=$'\t' read -r build_type pages_status pages_url <<<"$pages"
 [ "$build_type" = workflow ] || fail "Pages is not in workflow build mode"
 [ "$pages_status" != errored ] || fail "Pages reports an errored deployment"
+
+print_info "Verifying deployed HTML and compiled assets at $pages_url"
+if ! python3 - "$pages_url" "$((deadline - SECONDS))" "$INSTALL_POLL_INTERVAL_SECONDS" <<'PY'
+import re
+import signal
+import sys
+import time
+from html.parser import HTMLParser
+from urllib.parse import urljoin, urlsplit
+from urllib.request import Request, urlopen
+
+url, timeout, interval = sys.argv[1], int(sys.argv[2]), float(sys.argv[3])
+last_error = "deployment deadline expired before asset verification"
+
+def expired(*_):
+    raise SystemExit(f"Pages delivery verification timed out: {last_error}")
+
+if timeout <= 0:
+    expired()
+signal.signal(signal.SIGALRM, expired)
+signal.alarm(timeout)
+
+class Assets(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.references = set()
+        self.module_script = False
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "script" and attrs.get("type") == "module" and attrs.get("src"):
+            self.module_script = True
+            self.references.add((attrs["src"], "js"))
+        if tag == "link" and "stylesheet" in attrs.get("rel", "").split() and attrs.get("href"):
+            self.references.add((attrs["href"], "css"))
+        if tag == "link" and "modulepreload" in attrs.get("rel", "").split() and attrs.get("href"):
+            self.references.add((attrs["href"], "js"))
+
+def fetch(address, kind):
+    request = Request(address, headers={"Cache-Control": "no-cache"})
+    with urlopen(request, timeout=timeout) as response:
+        content_type = response.headers.get_content_type()
+        content = response.read()
+        final_url = response.url
+    allowed = {"html": {"text/html"}, "js": {"application/javascript", "text/javascript"}, "css": {"text/css"}}
+    if content_type not in allowed[kind] or not content.strip():
+        raise ValueError(f"{address}: empty or unexpected {content_type} response")
+    if kind != "html" and content.lstrip().startswith(b"<"):
+        raise ValueError(f"{address}: HTML returned instead of compiled {kind}")
+    return content, final_url
+
+while True:
+    try:
+        html, document_url = fetch(url, "html")
+        assets = Assets()
+        assets.feed(html.decode("utf-8"))
+        if not assets.module_script:
+            raise ValueError("deployed HTML has no compiled module script")
+        compiled = {
+            (urljoin(document_url, reference), kind)
+            for reference, kind in assets.references
+            if urlsplit(urljoin(document_url, reference)).netloc == urlsplit(document_url).netloc
+        }
+        if {kind for _, kind in compiled} != {"js", "css"}:
+            raise ValueError("deployed HTML is missing compiled JavaScript or stylesheets")
+        for address, kind in sorted(compiled):
+            path = urlsplit(address).path
+            if not re.search(r"/assets/[^/]+-[A-Za-z0-9_-]{8,}\." + kind + r"$", path):
+                raise ValueError(f"deployed HTML references an unhashed {kind} asset: {address}")
+            fetch(address, kind)
+        print(f"Verified deployed HTML and {len(compiled)} compiled assets")
+        break
+    except (OSError, ValueError) as error:
+        last_error = str(error)
+        print(f"Waiting for Pages delivery: {last_error}", file=sys.stderr)
+        time.sleep(interval)
+PY
+then
+    fail "Deployed HTML or compiled assets could not be verified at $pages_url. Preserve refs and $run_url logs; fix forward on main and dispatch sync-docs.yml again."
+fi
 
 print_header "Installation Complete"
 printf '%s\n' \

@@ -29,6 +29,11 @@ on:
         description: 'Token for creating PRs with workflow files (repo + workflow scopes)'
         required: false
 
+concurrency:
+  group: scorecards-install-${{ github.repository }}
+  cancel-in-progress: false
+
+
 jobs:
   check-status:
     name: Check Installation Status
@@ -60,9 +65,17 @@ jobs:
           echo "installed=false" >> "$GITHUB_OUTPUT"
           pr_data=$(gh pr list \
             --label "scorecards-install" \
-            --state all \
+            --state open \
             --json number,state,title,url \
             --limit 1)
+
+          if [ "$pr_data" = "[]" ]; then
+            pr_data=$(gh pr list \
+              --label "scorecards-install" \
+              --state all \
+              --json number,state,title,url \
+              --limit 1)
+          fi
 
           if [ "$pr_data" = "[]" ]; then
             echo "create-pr=true" >> "$GITHUB_OUTPUT"
@@ -234,7 +247,17 @@ jobs:
 
           if [ "${{ needs.check-status.outputs.installed }}" = "false" ]; then
             echo "> ℹ️  **Note**: Scorecards workflow is not yet installed in this repository." >> $GITHUB_STEP_SUMMARY
-            echo "> An installation PR will be created automatically to add the workflow file." >> $GITHUB_STEP_SUMMARY
+            if [ "${{ needs.check-status.outputs.create-pr }}" = "true" ]; then
+              if [ "${{ needs.create-installation-pr-placeholder.result }}" = "success" ]; then
+                echo "> An [installation PR](${{ needs.create-installation-pr-placeholder.outputs.pr-url }}) was created to add the workflow file." >> $GITHUB_STEP_SUMMARY
+              else
+                echo "> Installation PR creation did not complete successfully; inspect workflow runs and pull requests before retrying." >> $GITHUB_STEP_SUMMARY
+              fi
+            elif [ "${{ needs.check-status.outputs.pr-state }}" = "OPEN" ]; then
+              echo "> Reusing the existing [installation PR](${{ needs.check-status.outputs.pr-url }})." >> $GITHUB_STEP_SUMMARY
+            elif [ -n "${{ needs.check-status.outputs.pr-state }}" ]; then
+              echo "> Previous installation PR is ${{ needs.check-status.outputs.pr-state }}; it was respected because retry-closed was not requested." >> $GITHUB_STEP_SUMMARY
+            fi
             echo "> Your scores are already being tracked in the [central catalog](https://github.com/${{ inputs.scorecards-repo }}/tree/${{ inputs.scorecards-branch }})!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi

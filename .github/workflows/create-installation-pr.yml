@@ -27,6 +27,11 @@ on:
         type: boolean
         default: false
 
+
+concurrency:
+  group: scorecards-install-${{ inputs.org }}/${{ inputs.repo }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -76,9 +81,18 @@ jobs:
           pr_data=$(gh pr list \
             --repo "${{ inputs.org }}/${{ inputs.repo }}" \
             --label "scorecards-install" \
-            --state all \
+            --state open \
             --json number,state,title,headRefName,url \
             --limit 1)
+
+          if [ "$pr_data" = "[]" ]; then
+            pr_data=$(gh pr list \
+              --repo "${{ inputs.org }}/${{ inputs.repo }}" \
+              --label "scorecards-install" \
+              --state all \
+              --json number,state,title,headRefName,url \
+              --limit 1)
+          fi
 
           if [ "$pr_data" = "[]" ]; then
             echo "create-pr=true" >> "$GITHUB_OUTPUT"
@@ -108,7 +122,7 @@ jobs:
           else
             echo "create-pr=false" >> "$GITHUB_OUTPUT"
             echo "status=closed" >> "$GITHUB_OUTPUT"
-            echo "message=Previous installation PR is closed; retry-closed was not requested" >> "$GITHUB_OUTPUT"
+            echo "message=Previous installation PR is ${pr_state,,}; retry-closed was not requested" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create installation branch and files

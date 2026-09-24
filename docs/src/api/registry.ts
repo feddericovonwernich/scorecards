@@ -182,7 +182,11 @@ export async function loadServices(): Promise<LoadServicesResult> {
   if (!loadedFromConsolidated) {
     console.log('Loading services via tree API...');
     const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
-    const response = await fetch(apiUrl);
+    const token = getToken();
+    const response = await fetch(
+      apiUrl,
+      token ? { headers: { Authorization: `token ${token}` } } : undefined
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch repository tree: ${response.status}`);
@@ -196,7 +200,8 @@ export async function loadServices(): Promise<LoadServicesResult> {
         (item) =>
           item.path.startsWith('registry/') &&
           item.path.endsWith('.json') &&
-          item.path !== 'registry/all-services.json'
+          item.path !== 'registry/all-services.json' &&
+          item.path !== 'registry/services.json'
       )
       .map((item) => item.path);
 

@@ -10,6 +10,7 @@ setup() {
     export GH_LOG="$TEST_TEMP_DIR/gh.log"
     export GIT_LOG="$TEST_TEMP_DIR/git.log"
     export REAL_GIT="$(command -v git)"
+    export REAL_JQ="$(command -v jq)"
     export TEST_BIN="$TEST_TEMP_DIR/bin"
     mkdir -p "$SOURCE_REPO/scripts" "$SOURCE_REPO/docs" "$SOURCE_REPO/.github/workflows" "$GH_STATE_DIR" "$TEST_BIN"
 
@@ -32,6 +33,9 @@ setup() {
 #!/bin/bash
 printf '%q ' "$@" >> "$GIT_LOG"
 printf '\n' >> "$GIT_LOG"
+for arg in "$@"; do
+    [ "$arg" != switch ] || exit 99
+done
 exec "$REAL_GIT" "$@"
 STUB
 
@@ -81,9 +85,9 @@ case "$*" in
     *"/pages"*)
         if [ -f "$GH_STATE_DIR/pages" ] || [ "${PAGES_MODE:-missing}" != missing ]; then
             if [ "${PAGES_MODE:-workflow}" = legacy ] && [ ! -f "$GH_STATE_DIR/pages" ]; then
-                printf '%s\n' $'legacy\tbuilt\thttps://acme.github.io/scorecards/'
+                printf 'legacy\tbuilt\t%s\n' "$TEST_PAGES_URL"
             else
-                printf '%s\n' $'workflow\tbuilt\thttps://acme.github.io/scorecards/'
+                printf 'workflow\tbuilt\t%s\n' "$TEST_PAGES_URL"
             fi
             exit 0
         fi
@@ -100,13 +104,18 @@ case "$*" in
         sha="$($REAL_GIT --git-dir="$TARGET_REMOTE" rev-parse refs/heads/main)"
         created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
         if [ "${RUN_MODE:-success}" = ambiguous ]; then
-            printf '101\tcompleted\tsuccess\thttps://example.invalid/runs/101\t%s\t%s\n' "$sha" "$created_at"
-            printf '102\tcompleted\tsuccess\thttps://example.invalid/runs/102\t%s\t%s\n' "$sha" "$created_at"
+            runs='[{"id":101,"status":"completed","conclusion":"success"},{"id":102,"status":"completed","conclusion":"success"}]'
+        elif [ "${RUN_MODE:-success}" = pending ] && [ "$count" -le 2 ]; then
+            if [ "$count" -eq 1 ]; then state=queued; else state=in_progress; fi
+            runs="[{\"id\":101,\"status\":\"$state\",\"conclusion\":null}]"
         elif [ "${RUN_MODE:-success}" = failure ]; then
-            printf '101\tcompleted\tfailure\thttps://example.invalid/runs/101\t%s\t%s\n' "$sha" "$created_at"
+            runs='[{"id":101,"status":"completed","conclusion":"failure"}]'
         else
-            printf '101\tcompleted\tsuccess\thttps://example.invalid/runs/101\t%s\t%s\n' "$sha" "$created_at"
+            runs='[{"id":101,"status":"completed","conclusion":"success"}]'
         fi
+        printf '%s' "$runs" | "$REAL_JQ" --arg sha "$sha" --arg created "$created_at" \
+            '[{workflow_runs: map(. + {html_url: ("https://example.invalid/runs/" + (.id|tostring)), head_sha: $sha, created_at: $created})}]' |
+            "$REAL_JQ" -r "${@: -1}"
         exit 0
         ;;
     "api repos/acme/scorecards"*) printf '%s\n' '{}'; exit 0 ;;
@@ -117,9 +126,33 @@ STUB
     export PATH="$TEST_BIN:$PATH"
     : > "$GH_LOG"
     : > "$GIT_LOG"
+    mkdir -p "$TEST_TEMP_DIR/site/assets"
+    printf '%s\n' '<!doctype html><script type="module" src="./assets/index-abcdefgh.js"></script><link rel="modulepreload" href="./assets/vendor-abcdefgh.js"><link rel="stylesheet" href="./assets/index-abcdefgh.css"><link rel="stylesheet" href="https://fonts.example.invalid/font.css">' > "$TEST_TEMP_DIR/site/index.html"
+    printf '%s\n' 'document.title = "Scorecards";' > "$TEST_TEMP_DIR/site/assets/index-abcdefgh.js"
+    printf '%s\n' 'body { margin: 0; }' > "$TEST_TEMP_DIR/site/assets/index-abcdefgh.css"
+    printf '%s\n' 'export const vendor = true;' > "$TEST_TEMP_DIR/site/assets/vendor-abcdefgh.js"
+    python3 - "$TEST_TEMP_DIR" <<'SERVER' > "$TEST_TEMP_DIR/http.log" 2>&1 &
+import http.server
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+handler = lambda *args, **kwargs: http.server.SimpleHTTPRequestHandler(*args, directory=str(root / "site"), **kwargs)
+server = http.server.HTTPServer(("127.0.0.1", 0), handler)
+(root / "port").write_text(str(server.server_port))
+server.serve_forever()
+SERVER
+    export HTTP_PID=$!
+    for _ in {1..100}; do
+        [ ! -f "$TEST_TEMP_DIR/port" ] || break
+        sleep 0.01
+    done
+    export TEST_PAGES_URL="http://127.0.0.1:$(cat "$TEST_TEMP_DIR/port")/"
 }
 
 teardown() {
+    kill "$HTTP_PID" 2>/dev/null || true
+    wait "$HTTP_PID" 2>/dev/null || true
     rm -rf "$TEST_TEMP_DIR"
 }
 
@@ -148,9 +181,7 @@ run_installer() {
         SCORECARDS_AUTO_CONFIRM=true \
         SCORECARDS_REPO_PRIVATE=false \
         SCORECARDS_ADOPT_EMPTY_REPO="${ADOPT_EMPTY:-false}" \
-        SCORECARDS_SOURCE_DIR="$SOURCE_REPO" \
         SCORECARDS_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
-        SCORECARDS_SOURCE_REPO="$SOURCE_REPO" \
         INSTALL_POLL_INTERVAL_SECONDS=0 \
         INSTALL_DEPLOY_TIMEOUT_SECONDS="${DEPLOY_TIMEOUT:-2}" \
         RUN_MODE="${RUN_MODE:-success}" \
@@ -287,11 +318,62 @@ HOOK
         SCORECARDS_TARGET_REPO=acme/scorecards \
         SCORECARDS_AUTO_CONFIRM=true \
         SCORECARDS_USE_EXISTING=true \
-        SCORECARDS_SOURCE_DIR="$SOURCE_REPO" \
         SCORECARDS_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
         PATH="$PATH" \
         bash "$SOURCE_REPO/scripts/install.sh"
 
     [ "$status" -ne 0 ]
     [[ "$output" == *'SCORECARDS_USE_EXISTING'* ]]
+}
+
+@test "waits through queued and in-progress deployments with null conclusions" {
+    RUN_MODE=pending run run_installer
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "$GH_STATE_DIR/run-calls")" -eq 3 ]
+    [[ "$output" == *'runUrl: https://example.invalid/runs/101'* ]]
+}
+
+@test "uses the executing checkout despite an independent source override" {
+    SCORECARDS_SOURCE_DIR="$TEST_TEMP_DIR/unrelated" run run_installer
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"sourceSha: $EXPECTED_SOURCE_SHA"* ]]
+}
+
+@test "rejects deployed source HTML without compiled hashed assets" {
+    printf '%s\n' '<script type="module" src="./src/main.tsx"></script>' > "$TEST_TEMP_DIR/site/index.html"
+
+    run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" != *'Installation Complete'* ]]
+    [[ "$output" == *'Preserve refs'* ]]
+}
+
+@test "rejects missing compiled assets after successful deployment" {
+    rm "$TEST_TEMP_DIR/site/assets/index-abcdefgh.js"
+
+    run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" != *'Installation Complete'* ]]
+}
+
+@test "rejects HTML fallback responses masquerading as compiled JavaScript" {
+    printf '%s\n' '<!doctype html><title>Not an asset</title>' > "$TEST_TEMP_DIR/site/assets/index-abcdefgh.js"
+
+    run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" != *'Installation Complete'* ]]
+}
+
+@test "rejects a missing referenced module preload chunk" {
+    rm "$TEST_TEMP_DIR/site/assets/vendor-abcdefgh.js"
+
+    run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" != *'Installation Complete'* ]]
 }

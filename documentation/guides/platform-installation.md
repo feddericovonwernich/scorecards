@@ -17,6 +17,14 @@ The central Scorecards repository contains:
 
 Use the full commit SHA shown by a reviewed Scorecards release. `main`, a moving tag, and `curl | bash` are not installation contracts.
 
+### Release, protection and pin contract
+
+Before publication, configure a release-tag protection rule: only designated release maintainers may create matching tags, and no actor may update, delete or bypass that protection. If GitHub Immutable Releases is chosen, enable it before publication; it is a prerequisite to verify, not an assumed setting.
+
+After the source change merges through protected `main` with its required review, a release maintainer creates the protected tag and release from that commit. A reviewer approves the exact release URL, tag and full resolved commit SHA as the installation pin. Before installation, independently confirm that the release/tag resolves to that advertised 40-character commit; then fetch that SHA and detach at `FETCH_HEAD` as shown below. The installer resolves its own checked-out source root and rejects a checkout whose resolved `SOURCE_SHA` differs from the supplied pin; do not set `SCORECARDS_SOURCE_DIR`.
+
+Record the release URL, protected tag, published source SHA, installer output and the deployment run URL. This is provenance evidence, not a claim that a particular release currently exists or that its protection has been checked live.
+
 ```bash
 export GITHUB_TOKEN=your_github_pat
 export SCORECARDS_RELEASE_SHA='<40-character release SHA>'
@@ -35,6 +43,8 @@ rm -rf "$SOURCE_DIR"
 
 The release SHA remains intentionally unset in source documentation until the safe installer commit is integrated, tagged and released. Never substitute an older known-broken SHA.
 
+`SOURCE_SHA` is the upstream reviewed commit fetched by the bootstrap. `INSTALLED_MAIN_SHA` is the different, personalized `main` commit created locally from that source for the target repository; use the latter—not the upstream SHA—to correlate the deployment.
+
 The installer:
 
 1. accepts only `owner/scorecards`;
@@ -44,17 +54,20 @@ The installer:
 5. publishes both branches in one normal atomic push;
 6. configures Pages with `build_type=workflow`;
 7. dispatches a fresh `sync-docs.yml` run for the personalized `INSTALLED_MAIN_SHA`; and
-8. reports success only after that unique run succeeds and Pages remains in workflow mode.
+8. verifies that deployed Pages `index.html` references nonempty hashed compiled module and stylesheet assets with their expected content types before reporting success.
 
 ## Prerequisites
 
 - Bash 3.2 or newer.
-- Git with `git push --atomic` support.
+- Git 2.4 or newer with `git push --atomic` support.
 - GitHub CLI commands `api`, `repo view`, `repo create`, `workflow run` and `run list`.
 - A `GITHUB_TOKEN` matching the installer operations in the [credential matrix](../reference/token-requirements.md#operation-matrix).
 - GitHub Actions and workflow-based Pages available for the target repository visibility.
+- Python 3 for the bounded deployed Pages verification.
 
 `jq` is not an installer prerequisite. GitHub does not provide non-mutating checks for every repository-creation, workflow-write or Pages policy. The installer checks observable identity, membership and existing-repository permissions; repository creation, atomic push, Pages configuration and dispatch remain the authoritative capability checks.
+
+`INSTALL_DEPLOY_TIMEOUT_SECONDS` bounds both the fresh deployment wait and the subsequent deployed HTML/asset verification; it is not a promise that a site has already propagated.
 
 ### Optional PR-only remediation
 
@@ -142,7 +155,9 @@ Two maintained paths share the same PR state contract:
 - service repositories can call `.github/workflows/install.yml`;
 - the central repository can dispatch `.github/workflows/create-installation-pr.yml`.
 
-Both use the label `scorecards-install`. An open installation PR is returned without creating another branch or PR. A closed or merged PR is respected by default. Only an explicit `retry-closed: true` creates a new branch named `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}` and a new PR. Neither path deletes or force-updates an earlier branch.
+Both use the label `scorecards-install`. An open installation PR is returned without creating another branch or PR. A closed or merged PR is respected by default. Each permitted creation uses `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`; `retry-closed: true` gates recreation after a closed or merged PR. Neither path deletes or force-updates an earlier branch.
+
+Concurrency serializes attempts for a target within each executing repository, with a fresh PR lookup after a queued attempt starts. GitHub concurrency groups do not span repositories: the service-called and central-dispatched paths can still overlap. Do not run both paths concurrently for the same service. Cross-entrypoint duplicate prevention requires a separately approved shared coordination mechanism; it is not proven by the local fixtures.
 
 ```yaml
 jobs:
@@ -165,7 +180,7 @@ Set `retry-closed: true` only for a deliberate human retry. A score can be publi
 1. Share the [Service Installation Guide](service-installation.md).
 2. Complete one first-service gate before broad onboarding.
 3. Confirm `github-actions[bot]` can make normal writes to `catalog`; do not broaden a PAT to bypass a branch rule.
-4. Record the release SHA, installed main SHA, Pages run URL and first-service run URLs.
+4. Record the protected release tag and source SHA, `INSTALLED_MAIN_SHA`, Pages run URL and first-service run URLs.
 
 ## Troubleshooting
 

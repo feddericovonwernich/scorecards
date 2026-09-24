@@ -1,5 +1,6 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { loadServices } from './registry';
+import { setToken } from '../services/auth';
 import type { ServiceData } from '../types/index';
 
 const service = (repo: string): ServiceData => ({
@@ -27,6 +28,7 @@ const response = (body: unknown, status = 200): Response =>
 describe('loadServices', () => {
   beforeEach(() => {
     localStorage.clear();
+    setToken(null);
     jest.clearAllMocks();
   });
 
@@ -40,7 +42,33 @@ describe('loadServices', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('discovers individual entries when the consolidated registry is provisionally empty', async () => {
+  it('returns [] for the installer catalog placeholders', async () => {
+    const fetchMock = jest.fn<typeof fetch>();
+    globalThis.fetch = fetchMock;
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('all-services.json')) {
+        return response({ services: [], generated_at: 'now' });
+      }
+      if (url.includes('/git/trees/')) {
+        return response({
+          tree: [
+            { path: 'registry/all-services.json', type: 'blob', sha: '1' },
+            { path: 'registry/services.json', type: 'blob', sha: '2' },
+          ],
+        });
+      }
+      if (url.includes('registry/services.json')) {
+        return response([]);
+      }
+      return response({}, 404);
+    });
+
+    await expect(loadServices()).resolves.toEqual({ services: [], usedAPI: false });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('loads an entry beside the installer catalog placeholder', async () => {
     const individual = service('individual');
     const fetchMock = jest.fn<typeof fetch>();
     globalThis.fetch = fetchMock;
@@ -50,7 +78,16 @@ describe('loadServices', () => {
         return response({ services: [], generated_at: 'now' });
       }
       if (url.includes('/git/trees/')) {
-        return response({ tree: [{ path: 'registry/acme/individual.json', type: 'blob', sha: '1' }] });
+        return response({
+          tree: [
+            { path: 'registry/all-services.json', type: 'blob', sha: '1' },
+            { path: 'registry/services.json', type: 'blob', sha: '2' },
+            { path: 'registry/acme/individual.json', type: 'blob', sha: '3' },
+          ],
+        });
+      }
+      if (url.includes('registry/services.json')) {
+        return response([]);
       }
       return response(individual);
     });
@@ -58,18 +95,25 @@ describe('loadServices', () => {
     await expect(loadServices()).resolves.toEqual({ services: [individual], usedAPI: false });
   });
 
-  it('returns the empty state when neither consolidated nor individual entries exist', async () => {
+  it('authorizes empty tree discovery with a configured PAT', async () => {
+    setToken('private-token');
     const fetchMock = jest.fn<typeof fetch>();
     globalThis.fetch = fetchMock;
-    fetchMock.mockImplementation(async (input) => {
-      if (String(input).includes('all-services.json')) {
+    fetchMock.mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.includes('all-services.json')) {
         return response({ services: [], generated_at: 'now' });
       }
-      return response({ tree: [] });
+      if (url.includes('/git/trees/')) {
+        const authorization = new Headers(init?.headers).get('Authorization');
+        return authorization === 'token private-token'
+          ? response({ tree: [] })
+          : response({}, 404);
+      }
+      return response({}, 404);
     });
 
-    await expect(loadServices()).resolves.toEqual({ services: [], usedAPI: false });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await expect(loadServices()).resolves.toEqual({ services: [], usedAPI: true });
   });
 
   it('keeps valid individual entries when another individual entry returns 404', async () => {
@@ -84,10 +128,15 @@ describe('loadServices', () => {
       if (url.includes('/git/trees/')) {
         return response({
           tree: [
-            { path: 'registry/acme/valid.json', type: 'blob', sha: '1' },
-            { path: 'registry/acme/missing.json', type: 'blob', sha: '2' },
+            { path: 'registry/all-services.json', type: 'blob', sha: '1' },
+            { path: 'registry/services.json', type: 'blob', sha: '2' },
+            { path: 'registry/acme/valid.json', type: 'blob', sha: '3' },
+            { path: 'registry/acme/missing.json', type: 'blob', sha: '4' },
           ],
         });
+      }
+      if (url.includes('registry/services.json')) {
+        return response([]);
       }
       return url.includes('valid.json') ? response(valid) : response({}, 404);
     });

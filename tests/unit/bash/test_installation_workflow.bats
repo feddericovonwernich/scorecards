@@ -107,11 +107,19 @@ printf '%q ' "$@" >> "$GH_LOG"
 printf '\n' >> "$GH_LOG"
 case "$1 $2" in
     "pr list")
-        if [ "${PR_STATE:-NONE}" = NONE ]; then
-            printf '%s\n' '[]'
-        else
-            printf '[{"number":17,"state":"%s","title":"Install Scorecards","headRefName":"scorecards-install-old","url":"https://github.com/acme/service/pull/17"}]\n' "$PR_STATE"
-        fi
+        case "$*" in
+            *"--state open"*)
+                if [ -n "${GH_OPEN_PRS+x}" ]; then printf '%s\n' "$GH_OPEN_PRS"
+                elif [ "${PR_STATE:-NONE}" = OPEN ]; then printf '%s\n' '[{"number":17,"state":"OPEN","title":"Install Scorecards","headRefName":"scorecards-install-old","url":"https://github.com/acme/service/pull/17"}]'
+                else printf '%s\n' '[]'; fi
+                ;;
+            *"--state all"*)
+                if [ -n "${GH_ALL_PRS+x}" ]; then printf '%s\n' "$GH_ALL_PRS"
+                elif [ "${PR_STATE:-NONE}" = NONE ]; then printf '%s\n' '[]'
+                else printf '[{"number":17,"state":"%s","title":"Install Scorecards","headRefName":"scorecards-install-old","url":"https://github.com/acme/service/pull/17"}]\n' "$PR_STATE"; fi
+                ;;
+            *) printf '%s\n' '[]' ;;
+        esac
         ;;
     "label create") ;;
     "pr create") printf '%s\n' 'https://github.com/acme/service/pull/18' ;;
@@ -157,12 +165,41 @@ run_pr_step() {
 assert_catalog_target() {
     node --input-type=module - "$1" <<'NODE'
 import fs from 'node:fs';
+
 import yaml from 'js-yaml';
 const workflow = yaml.load(fs.readFileSync(process.argv[2], 'utf8'));
 const steps = workflow.jobs.scorecard.steps;
 if (steps.find((step) => step.name === 'Checkout Scorecards platform')?.with?.repository !== 'acme/scorecards') throw new Error('wrong checkout target');
 if (steps.find((step) => step.name === 'Run Scorecards Action')?.with?.['scorecards-repo'] !== 'acme/scorecards') throw new Error('wrong action target');
 NODE
+}
+run_results_summary() {
+    local check_create="$1"
+    local check_state="$2"
+    local create_result="$3"
+    local create_url="$4"
+    local script="$FIXTURE_ROOT/results.sh"
+    SUMMARY_OUTPUT="$FIXTURE_ROOT/summary.md"
+    : > "$SUMMARY_OUTPUT"
+    render_step "$(workflow_path reusable)" run-scorecards "Display Results" "$script" false
+    node - "$script" "$check_create" "$check_state" "$create_result" "$create_url" <<'NODE'
+import fs from 'node:fs';
+
+const [path, createPr, prState, createResult, createUrl] = process.argv.slice(2);
+const values = {
+  '${{ needs.check-status.outputs.installed }}': 'false',
+  '${{ needs.check-status.outputs.create-pr }}': createPr,
+  '${{ needs.check-status.outputs.pr-state }}': prState,
+  '${{ needs.check-status.outputs.pr-url }}': 'https://github.com/acme/service/pull/17',
+  '${{ needs.create-installation-pr-placeholder.result }}': createResult,
+  '${{ needs.create-installation-pr-placeholder.outputs.pr-url }}': createUrl,
+};
+fs.writeFileSync(
+  path,
+  fs.readFileSync(path, 'utf8').replace(/\$\{\{[^}]+\}\}/g, (expression) => values[expression] ?? ''),
+);
+NODE
+    run bash -c 'GITHUB_STEP_SUMMARY="$1" bash -eo pipefail "$2"' _ "$SUMMARY_OUTPUT" "$script"
 }
 
 @test "both onboarding workflows render the selected central repository" {
@@ -175,6 +212,42 @@ NODE
         run assert_catalog_target "$SERVICE_REPO/.github/workflows/scorecards.yml"
         [ "$status" -eq 0 ]
     done
+}
+
+@test "each onboarding workflow uses a non-cancelling target concurrency group" {
+    run node --input-type=module - \
+        "$PROJECT_ROOT/.github/workflows/install.yml" \
+        "$PROJECT_ROOT/.github/workflows/create-installation-pr.yml" <<'NODE'
+import fs from 'node:fs';
+import yaml from 'js-yaml';
+
+const [reusablePath, centralPath] = process.argv.slice(2);
+const reusable = yaml.load(fs.readFileSync(reusablePath, 'utf8')).concurrency;
+const central = yaml.load(fs.readFileSync(centralPath, 'utf8')).concurrency;
+if (reusable?.group !== 'scorecards-install-${{ github.repository }}' || reusable['cancel-in-progress'] !== false) throw new Error('bad reusable concurrency');
+if (central?.group !== 'scorecards-install-${{ inputs.org }}/${{ inputs.repo }}' || central['cancel-in-progress'] !== false) throw new Error('bad central concurrency');
+NODE
+    [ "$status" -eq 0 ]
+}
+
+@test "reusable workflow summary reports each installation PR lifecycle outcome" {
+    prepare_variant reusable summary
+
+    run_results_summary false OPEN skipped ''
+    [ "$status" -eq 0 ]
+    grep -q 'Reusing the existing' "$SUMMARY_OUTPUT"
+
+    run_results_summary false MERGED skipped ''
+    [ "$status" -eq 0 ]
+    grep -q 'Previous installation PR is MERGED; it was respected' "$SUMMARY_OUTPUT"
+
+    run_results_summary true '' success 'https://github.com/acme/service/pull/18'
+    [ "$status" -eq 0 ]
+    grep -q 'installation PR.*was created' "$SUMMARY_OUTPUT"
+
+    run_results_summary true '' failure ''
+    [ "$status" -eq 0 ]
+    grep -q 'Installation PR creation did not complete successfully' "$SUMMARY_OUTPUT"
 }
 
 @test "an open installation PR is returned without creating a branch or PR" {
@@ -197,6 +270,21 @@ NODE
         [ "$(output_value "$CHECK_OUTPUT" create-pr)" = false ]
         [ -z "$(git --git-dir="$SERVICE_REMOTE" for-each-ref --format='%(refname)' 'refs/heads/scorecards-install-*')" ]
         ! grep -q 'pr create' "$GH_LOG"
+    done
+}
+
+@test "an open installation PR wins over newer closed or merged PRs" {
+    local open_pr='[{"number":17,"state":"OPEN","title":"Install Scorecards","headRefName":"scorecards-install-open","url":"https://github.com/acme/service/pull/17"}]'
+    local newer_history='[{"number":19,"state":"MERGED","title":"Install Scorecards","headRefName":"scorecards-install-merged","url":"https://github.com/acme/service/pull/19"}]'
+
+    for variant in reusable central; do
+        prepare_variant "$variant" open-wins
+        GH_OPEN_PRS="$open_pr" GH_ALL_PRS="$newer_history" run_check_step "$variant" false
+        [ "$status" -eq 0 ]
+        [ "$(output_value "$CHECK_OUTPUT" create-pr)" = false ]
+        [ "$(output_value "$CHECK_OUTPUT" pr-number)" = 17 ]
+        [ "$(output_value "$CHECK_OUTPUT" pr-state)" = OPEN ]
+        ! grep -q -- '--state all' "$GH_LOG"
     done
 }
 
