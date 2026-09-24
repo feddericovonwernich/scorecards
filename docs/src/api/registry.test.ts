@@ -106,9 +106,7 @@ describe('loadServices', () => {
       }
       if (url.includes('/git/trees/')) {
         const authorization = new Headers(init?.headers).get('Authorization');
-        return authorization === 'token private-token'
-          ? response({ tree: [] })
-          : response({}, 404);
+        return authorization === 'token private-token' ? response({ tree: [] }) : response({}, 404);
       }
       return response({}, 404);
     });
@@ -198,9 +196,11 @@ describe('loadServices', () => {
         return response({ services: [], generated_at: 'now' });
       }
       if (url.includes('/git/trees/')) {
-        return authorization ? response({}, status) : response({
-          tree: [{ path: 'registry/acme/individual.json', type: 'blob', sha: '1' }],
-        });
+        return authorization
+          ? response({}, status)
+          : response({
+              tree: [{ path: 'registry/acme/individual.json', type: 'blob', sha: '1' }],
+            });
       }
       if (url.includes('/contents/registry/acme/individual.json')) {
         return response({}, status);

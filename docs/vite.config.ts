@@ -55,15 +55,15 @@ export default defineConfig({
     // Only instrument when COVERAGE env var is set (to avoid overhead in normal builds)
     ...(process.env.COVERAGE === 'true'
       ? [
-        istanbul({
-          include: ['src/**/*.ts', 'src/**/*.tsx'],
-          exclude: ['node_modules/**', 'dist/**', 'tests/**', '**/*.d.ts'],
-          extension: ['.ts', '.tsx'],
-          requireEnv: false,
-          forceBuildInstrument: true,
-          cwd: __dirname, // Ensure paths are relative to docs directory
-        }),
-      ]
+          istanbul({
+            include: ['src/**/*.ts', 'src/**/*.tsx'],
+            exclude: ['node_modules/**', 'dist/**', 'tests/**', '**/*.d.ts'],
+            extension: ['.ts', '.tsx'],
+            requireEnv: false,
+            forceBuildInstrument: true,
+            cwd: __dirname, // Ensure paths are relative to docs directory
+          }),
+        ]
       : []),
     // Plugin to rewrite .js imports to .ts/.tsx during development
     {

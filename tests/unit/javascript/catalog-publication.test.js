@@ -122,7 +122,10 @@ it('publishes installation PRs without losing concurrent catalog changes', () =>
       join(consolidator, 'registry/acme/alpha.json'),
       JSON.stringify({ org: 'acme', repo: 'alpha', score: 95, evaluation: { version: 2 } })
     );
-    writeFileSync(join(consolidator, 'registry/acme/consolidation.json'), JSON.stringify({ generated: 2 }));
+    writeFileSync(
+      join(consolidator, 'registry/acme/consolidation.json'),
+      JSON.stringify({ generated: 2 })
+    );
     git(consolidator, 'add', '.');
     git(consolidator, 'commit', '-m', 'consolidate');
     git(consolidator, 'push');
@@ -131,7 +134,9 @@ it('publishes installation PRs without losing concurrent catalog changes', () =>
     run(beta, render(publicationStep, 'beta', 12, 'https://example.invalid/beta/12'));
 
     const readRegistry = (repo) =>
-      JSON.parse(git(root, '--git-dir=remote.git', 'show', `catalog:registry/acme/${repo}.json`).toString());
+      JSON.parse(
+        git(root, '--git-dir=remote.git', 'show', `catalog:registry/acme/${repo}.json`).toString()
+      );
     expect(readRegistry('alpha')).toMatchObject({
       score: 95,
       evaluation: { version: 2 },
@@ -141,7 +146,14 @@ it('publishes installation PRs without losing concurrent catalog changes', () =>
       installation_pr: { number: 12, state: 'OPEN', url: 'https://example.invalid/beta/12' },
     });
     expect(
-      JSON.parse(git(root, '--git-dir=remote.git', 'show', 'catalog:registry/acme/consolidation.json').toString())
+      JSON.parse(
+        git(
+          root,
+          '--git-dir=remote.git',
+          'show',
+          'catalog:registry/acme/consolidation.json'
+        ).toString()
+      )
     ).toEqual({ generated: 2 });
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -177,16 +189,24 @@ it('fails publication retries while reporting the installation PR URL', () => {
     git(catalog, 'commit', '-m', 'seed');
     git(catalog, 'push', '-u', 'origin', 'catalog');
     git(catalog, 'checkout', '--detach');
-    execFileSync('bash', ['-c', 'printf "#!/bin/sh\\nexit 1\\n" > hooks/pre-receive && chmod +x hooks/pre-receive'], {
-      cwd: join(root, 'remote.git'),
-    });
+    execFileSync(
+      'bash',
+      ['-c', 'printf "#!/bin/sh\\nexit 1\\n" > hooks/pre-receive && chmod +x hooks/pre-receive'],
+      {
+        cwd: join(root, 'remote.git'),
+      }
+    );
     const result = (() => {
       try {
-        execFileSync('bash', ['-euo', 'pipefail', '-c', `sleep() { :; }\n${render(publicationStep)}`], {
-          cwd: catalog,
-          encoding: 'utf8',
-          stdio: 'pipe',
-        });
+        execFileSync(
+          'bash',
+          ['-euo', 'pipefail', '-c', `sleep() { :; }\n${render(publicationStep)}`],
+          {
+            cwd: catalog,
+            encoding: 'utf8',
+            stdio: 'pipe',
+          }
+        );
       } catch (error) {
         return error;
       }

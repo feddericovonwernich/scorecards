@@ -3,6 +3,7 @@
 load helpers
 
 setup() {
+    bats_require_minimum_version 1.5.0
     export TEST_TEMP_DIR="$(mktemp -d)"
     export SOURCE_REPO="$TEST_TEMP_DIR/source"
     export TARGET_REMOTE="$TEST_TEMP_DIR/target.git"
@@ -288,7 +289,7 @@ run_documented_bootstrap() {
     [ "$status" -ne 0 ]
     [ -f "$GH_STATE_DIR/injected-ref" ]
     [ "$EXPECTED_SOURCE_SHA" = "$($REAL_GIT --git-dir="$TARGET_REMOTE" rev-parse refs/heads/main)" ]
-    ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/catalog >/dev/null 2>&1
+    run ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/catalog
 }
 
 @test "rejects unsupported repository name before mutation" {
@@ -296,7 +297,7 @@ run_documented_bootstrap() {
 
     [ "$status" -ne 0 ]
     [ ! -f "$GH_STATE_DIR/repo-exists" ]
-    ! grep -q 'repo create' "$GH_LOG"
+    run ! grep -q 'repo create' "$GH_LOG"
 }
 
 @test "preserves every existing head and tag" {
@@ -371,8 +372,8 @@ HOOK
     ADOPT_EMPTY=true run run_installer
 
     [ "$status" -ne 0 ]
-    ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/main >/dev/null 2>&1
-    ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/catalog >/dev/null 2>&1
+    run ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/main
+    run ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/catalog
 }
 
 @test "keeps the installer token out of argv remotes and git config" {
@@ -381,7 +382,7 @@ HOOK
     ADOPT_EMPTY=true run run_installer
 
     [ "$status" -eq 0 ]
-    ! grep -R -F 'token-value-that-must-stay-secret' "$GH_LOG" "$GIT_LOG" "$TARGET_REMOTE/config"
+    run ! grep -R -F 'token-value-that-must-stay-secret' "$GH_LOG" "$GIT_LOG" "$TARGET_REMOTE/config"
     grep -F 'https://github.com/acme/scorecards.git' "$GIT_LOG"
 }
 

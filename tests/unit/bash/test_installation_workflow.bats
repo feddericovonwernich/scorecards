@@ -3,6 +3,7 @@
 load helpers
 
 setup() {
+    bats_require_minimum_version 1.5.0
     export TEST_TEMP_DIR="$(mktemp -d)"
     export SYSTEM_PATH="$PATH"
 }
@@ -208,5 +209,5 @@ HOOK
     [ "$status" -eq 0 ]
     run_prepare_step central
     [ "$status" -ne 0 ]
-    ! grep -q 'pr create' "$GH_LOG"
+    run ! grep -q 'pr create' "$GH_LOG"
 }

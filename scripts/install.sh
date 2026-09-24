@@ -106,7 +106,7 @@ print_success "Authenticated as $GITHUB_USER"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_ROOT="$SCRIPT_DIR/.."
 [ -e "$SOURCE_ROOT/.git" ] || fail "Installer must run from a pinned Scorecards Git checkout; use the versioned bootstrap command."
-SOURCE_SHA="$(git -C "$SOURCE_ROOT" rev-parse HEAD^{commit} 2>/dev/null)" || fail "Cannot resolve source checkout HEAD"
+SOURCE_SHA="$(git -C "$SOURCE_ROOT" rev-parse 'HEAD^{commit}' 2>/dev/null)" || fail "Cannot resolve source checkout HEAD"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "Source checkout did not resolve to a full commit SHA"
 if [ -n "${SCORECARDS_SOURCE_SHA:-}" ] && [ "$SCORECARDS_SOURCE_SHA" != "$SOURCE_SHA" ]; then
     fail "Source checkout SHA does not match SCORECARDS_SOURCE_SHA"
