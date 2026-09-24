@@ -147,6 +147,11 @@ run_pr_step() {
     [ "$status" -eq 0 ]
 }
 
+@test "service requests allow catalog retries and job overhead before timing out" {
+    run node "$PROJECT_ROOT/tests/fixtures/installation-owner.mjs" delayed
+    [ "$status" -eq 0 ]
+}
+
 @test "service requests reject failed cancelled timed out and artifactless owners" {
     for mode in failure cancelled timeout missing-artifact; do
         mkdir -p "$TEST_TEMP_DIR/$mode"

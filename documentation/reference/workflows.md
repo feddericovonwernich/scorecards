@@ -175,7 +175,6 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 **Secrets:**
 
-- `github-token` (required) - Caller-scoped service read token
 - `scorecards-catalog-token` (required) - Central catalog Contents read/write for evaluation publication
 - `scorecards-workflow-token` (required) - Central Actions read/write for dispatch/run/result retrieval and target Pull requests read/write for score updates; see [Token Requirements](token-requirements.md#operation-matrix)
 
@@ -189,7 +188,7 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 2. **request-installation-pr** - Requests the central owner's installation result
    - Dispatches `create-installation-pr.yml` in `scorecards-repo` with a unique request identifier
-   - Waits up to five minutes for the matching run, rejecting failed/cancelled runs, missing results and timeout
+   - Polls for up to fifteen minutes, allowing catalog publication retries and job overhead; rejects failed/cancelled runs, missing results and timeout
    - Downloads that run's result artifact only after successful completion
    - Returns the owner's PR number, state and URL, including a reused open PR
    - Does not create, push or delete service branches locally
@@ -362,11 +361,10 @@ For detailed workflow interactions and data flows, see:
 ```yaml
 jobs:
   scorecards:
-    uses: feddericovonwernich-org/scorecards/.github/workflows/install.yml@main
+    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
     with:
-      scorecards-repo: feddericovonwernich-org/scorecards
+      scorecards-repo: feddericovonwernich/scorecards
     secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
       scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 ```

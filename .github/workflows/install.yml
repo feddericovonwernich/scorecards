@@ -19,9 +19,6 @@ on:
         type: boolean
         default: false
     secrets:
-      github-token:
-        description: 'GitHub token for basic operations'
-        required: true
       scorecards-catalog-token:
         description: 'Token for writing results to catalog branch (repo scope)'
         required: true
@@ -66,7 +63,7 @@ jobs:
           SCORECARDS_REPO: ${{ inputs.scorecards-repo }}
           SCORECARDS_BRANCH: ${{ inputs.scorecards-branch }}
           RETRY_CLOSED: ${{ inputs.retry-closed }}
-          POLL_ATTEMPTS: 60
+          POLL_ATTEMPTS: 180
           POLL_INTERVAL_SECONDS: 5
         run: |
           request_id="scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"

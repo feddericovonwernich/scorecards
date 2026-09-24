@@ -10,6 +10,22 @@ const temp = process.env.TEST_TEMP_DIR;
 const mode = process.argv[2];
 const owner = yaml.load(await fs.readFile('.github/workflows/create-installation-pr.yml', 'utf8'));
 const service = yaml.load(await fs.readFile('.github/workflows/install.yml', 'utf8'));
+const caller = yaml.load(await fs.readFile('documentation/examples/service-workflow-example.yml', 'utf8')).jobs.scorecards;
+const contract = service.on.workflow_call;
+const credentials = {
+  'scorecards-catalog-token': 'fixture-catalog-token',
+  'scorecards-workflow-token': 'fixture-token',
+};
+for (const [name, secret] of Object.entries(contract.secrets)) {
+  if (secret.required) assert.ok(Object.hasOwn(credentials, name), `missing required secret ${name}`);
+}
+for (const name of Object.keys(caller.secrets)) assert.ok(Object.hasOwn(contract.secrets, name), `undeclared secret ${name}`);
+for (const [name, value] of Object.entries(caller.with)) {
+  assert.ok(Object.hasOwn(contract.inputs, name), `undeclared input ${name}`);
+  assert.equal(typeof value, contract.inputs[name].type);
+}
+assert.equal(caller.uses.split('/.github/')[0], contract.inputs['scorecards-repo'].default);
+assert.equal(caller.with['scorecards-repo'], contract.inputs['scorecards-repo'].default);
 const inputs = { org: 'acme', repo: 'service', 'scorecards-repo': 'acme/scorecards', 'scorecards-branch': 'catalog', 'retry-closed': 'false' };
 const render = (text, values) => String(text).replace(/\$\{\{\s*(.*?)\s*\}\}/g, (_, key) => {
   assert.ok(Object.hasOwn(values, key), `unresolved expression ${key}`);
@@ -60,6 +76,7 @@ let pr;
 const runs = [];
 const queues = new Map();
 const tasks = [];
+let polls = 0;
 let releaseFirst;
 const bothRequested = new Promise(resolve => { releaseFirst = resolve; });
 const step = async (definition, cwd, env, expressions = values) => {
@@ -141,7 +158,7 @@ const server = http.createServer(async (req, res) => {
       assert.equal(arg(args, '--ref'), 'main');
       for (const [key, value] of Object.entries(inputs)) assert.ok(args.includes(`${key}=${value}`));
       const request = args.find(value => value.startsWith('request-id=')).slice(11);
-      if (mode === 'concurrent') enqueue(request);
+      if (mode === 'concurrent' || mode === 'delayed') enqueue(request);
       else runs.push({ id: nextId++, request, status: mode === 'timeout' ? 'queued' : 'completed', conclusion: mode === 'missing-artifact' ? 'success' : mode });
     } else if (command === 'pr list') {
       output = JSON.stringify(pr ? [pr] : []);
@@ -154,12 +171,14 @@ const server = http.createServer(async (req, res) => {
       output = `${pr.url}\n`;
     } else if (command === 'run list') {
       assert.equal(arg(args, '--repo'), 'acme/scorecards');
+      polls++;
       assert.equal(arg(args, '--workflow'), 'create-installation-pr.yml');
       output = JSON.stringify(runs.map(record => ({ databaseId: record.id, status: record.status, conclusion: record.conclusion, displayTitle: render(owner['run-name'], { 'inputs.request-id || github.run_id': record.request }) })));
     } else if (command === 'run view') {
       const record = runs.find(candidate => candidate.id === Number(args[2]));
       assert.ok(record);
-      output = JSON.stringify({ status: record.status, conclusion: record.conclusion });
+      const waiting = mode === 'delayed' && polls * Number(service.jobs['request-installation-pr'].steps[0].env.POLL_INTERVAL_SECONDS) <= 420;
+      output = JSON.stringify({ status: waiting ? 'in_progress' : record.status, conclusion: waiting ? '' : record.conclusion });
     } else if (command === 'run download') {
       const record = runs.find(candidate => candidate.id === Number(args[2]));
       if (record.artifact) assert.equal(arg(args, '--name'), record.artifactName);
@@ -179,7 +198,10 @@ await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const fixtureEnv = { PATH: `${bin}:${process.env.PATH}`, FIXTURE_URL: `http://127.0.0.1:${server.address().port}` };
 try {
   if (mode === 'concurrent') enqueue('direct');
-  const result = await step(service.jobs['request-installation-pr'].steps[0], temp, { ...fixtureEnv, GITHUB_REPOSITORY: 'acme/service', GITHUB_REPOSITORY_OWNER: 'acme', GITHUB_RUN_ID: '44', GITHUB_RUN_ATTEMPT: '1', POLL_ATTEMPTS: mode === 'timeout' ? '2' : '100', POLL_INTERVAL_SECONDS: '0.05' });
+  const polling = mode === 'delayed' || mode === 'timeout'
+    ? { POLL_INTERVAL_SECONDS: '0' }
+    : { POLL_ATTEMPTS: '100', POLL_INTERVAL_SECONDS: '0.05' };
+  const result = await step(service.jobs['request-installation-pr'].steps[0], temp, { ...fixtureEnv, GITHUB_REPOSITORY: 'acme/service', GITHUB_REPOSITORY_OWNER: 'acme', GITHUB_RUN_ID: '44', GITHUB_RUN_ATTEMPT: '1', ...polling });
   releaseFirst();
   await Promise.all(tasks);
   if (mode === 'concurrent') {
@@ -194,10 +216,16 @@ try {
     for (const env of [{ GITHUB_REPOSITORY: 'other/scorecards', GITHUB_REF: 'refs/heads/main' }, { GITHUB_REPOSITORY: 'acme/scorecards', GITHUB_REF: 'refs/tags/main' }]) {
       assert.notEqual((await step(guard, temp, { ...fixtureEnv, ...env })).code, 0);
     }
+  } else if (mode === 'delayed') {
+    assert.equal(result.code, 0, result.output);
+    assert.equal(creates, 1);
+    assert.equal(result.outputs['pr-url'], pr.url);
+    assert.ok(polls > 84);
   } else {
     assert.notEqual(result.code, 0, `accepted ${mode}: ${result.output}`);
     assert.deepEqual(result.outputs, {});
     assert.equal(creates, 0);
+    if (mode === 'timeout') assert.equal(polls, Number(service.jobs['request-installation-pr'].steps[0].env.POLL_ATTEMPTS));
   }
 } finally {
   server.closeAllConnections();

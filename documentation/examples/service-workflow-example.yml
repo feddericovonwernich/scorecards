@@ -27,17 +27,14 @@ jobs:
   scorecards:
     name: Run Scorecards
     # Call the reusable installation workflow from the scorecards repository
-    uses: feddericovonwernich-org/scorecards/.github/workflows/install.yml@main
+    uses: feddericovonwernich/scorecards/.github/workflows/install.yml@main
     with:
       # Optional: Override the default scorecards repository
-      scorecards-repo: 'feddericovonwernich-org/scorecards'
+      scorecards-repo: 'feddericovonwernich/scorecards'
 
       # Optional: Override the default branch for results (default: 'catalog')
       scorecards-branch: 'catalog'
     secrets:
-      # Caller-scoped token for reading the service repository.
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-
       # Required: access to the central catalog, also before installation.
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 

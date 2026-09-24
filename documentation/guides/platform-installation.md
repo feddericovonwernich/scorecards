@@ -195,7 +195,6 @@ jobs:
       scorecards-branch: catalog
       retry-closed: false
     secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
       scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 ```
