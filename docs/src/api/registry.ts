@@ -162,13 +162,15 @@ export async function loadServices(): Promise<LoadServicesResult> {
     const { response, usedAPI: fetchUsedAPI } = await fetchWithHybridAuth(
       'registry/all-services.json'
     );
-    usedAPI = fetchUsedAPI;
 
     if (response.ok) {
       const registryData: RegistryResponse = await response.json();
       if (registryData.services && Array.isArray(registryData.services)) {
         services = registryData.services;
         loadedFromConsolidated = services.length > 0;
+        if (loadedFromConsolidated) {
+          usedAPI = fetchUsedAPI;
+        }
         console.log(
           `Loaded ${services.length} services from consolidated registry (generated at ${registryData.generated_at})`
         );
@@ -183,7 +185,6 @@ export async function loadServices(): Promise<LoadServicesResult> {
     console.log('Loading services via tree API...');
     const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
     const token = getToken();
-    let treeUsedAPI = Boolean(token);
     let response = await fetch(
       apiUrl,
       token ? { headers: { Authorization: `token ${token}` } } : undefined
@@ -194,16 +195,12 @@ export async function loadServices(): Promise<LoadServicesResult> {
         clearToken();
       }
       response = await fetch(apiUrl);
-      treeUsedAPI = false;
     }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch repository tree: ${response.status}`);
     }
 
-    if (treeUsedAPI) {
-      usedAPI = true;
-    }
 
     const treeData: GitHubTreeResponse = await response.json();
 
@@ -222,17 +219,20 @@ export async function loadServices(): Promise<LoadServicesResult> {
     // Fetch all registry files in parallel
     const fetchPromises = registryFiles.map(async (path) => {
       const { response, usedAPI: fetchUsedAPI } = await fetchWithHybridAuth(path);
-      if (fetchUsedAPI) {
-        usedAPI = true;
-      }
       if (response.ok) {
-        return response.json() as Promise<ServiceData>;
+        return { service: await response.json() as ServiceData, usedAPI: fetchUsedAPI };
       }
       return null;
     });
 
     const results = await Promise.all(fetchPromises);
-    services = results.filter((service): service is ServiceData => service !== null);
+    const loadedServices = results.filter(
+      (result): result is { service: ServiceData; usedAPI: boolean } => result !== null
+    );
+    services = loadedServices.map(({ service }) => service);
+    usedAPI =
+      loadedServices.length > 0 && loadedServices.every(({ usedAPI: fetchUsedAPI }) => fetchUsedAPI);
+
     console.log(`Loaded ${services.length} services via tree API`);
   }
 

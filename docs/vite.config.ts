@@ -7,8 +7,7 @@ export default defineConfig({
   // Root is the docs directory
   root: '.',
 
-  // Base path for GitHub Pages (repo is served at /scorecards/)
-  base: '/scorecards/',
+  base: './',
 
   // Build output goes to dist/
   build: {

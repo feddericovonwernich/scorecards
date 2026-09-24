@@ -186,17 +186,22 @@ the Pages artifact.
 
 The installer configures a new site directly with `build_type=workflow`, sets
 `main` as the default branch when needed, and dispatches `sync-docs.yml` after
-the atomic branch publication. It correlates the run with the personalized
-`INSTALLED_MAIN_SHA`, not the upstream `SOURCE_SHA`, and refuses zero or
-multiple fresh candidates rather than selecting an arbitrary recent run.
+the atomic branch publication. Before it begins, one operator must exclude
+every other installation writer for the whole run; unattended installation
+sets `SCORECARDS_SINGLE_WRITER=true`, while the interactive confirmation
+acknowledges the same responsibility. This is an operational exclusion
+contract, not a race-proofing guarantee. It correlates the run with the
+personalized `INSTALLED_MAIN_SHA`, not the upstream `SOURCE_SHA`, and refuses
+zero or multiple fresh candidates rather than selecting an arbitrary recent
+run.
 
 An authorized operator can inspect the same boundary without changing it:
 
 ```bash
-gh run list --repo "$FULL_REPO" --workflow sync-docs.yml \
+gh run list --repo "$SCORECARDS_TARGET_REPO" --workflow sync-docs.yml \
   --branch main --event workflow_dispatch --limit 10 \
   --json databaseId,status,conclusion,url,headSha,createdAt
-gh api "repos/$FULL_REPO/pages" --jq '{build_type,status,html_url}'
+gh api "repos/$SCORECARDS_TARGET_REPO/pages" --jq '{build_type,status,html_url}'
 ```
 
 Installation is complete only after the unique fresh run for
@@ -205,6 +210,8 @@ without an errored state. In a fresh browser context, verify `index.html`
 references hashed compiled JS/CSS assets, those assets load, and Services,
 Teams and API Explorer render. Source HTML containing `src/main.tsx`, a
 successful upload or a historical `status: built` is not deployment proof.
+
+For access-restricted Enterprise Pages, use the [browser-session verification path](../documentation/guides/platform-installation.md#restricted-pages-verification). An anonymous login response is not delivery proof, and the repository PAT is not a Pages credential. Preserve the site's visibility and refresh the site-specific session if it expires.
 
 If refs exist but Pages setup or deployment fails, keep both branches and the
 run/artifact logs. Correct forward through a reviewed source change, then

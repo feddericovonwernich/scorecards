@@ -14,19 +14,23 @@ Install from the full SHA published by a reviewed Scorecards release:
 export GITHUB_TOKEN=your_github_pat
 export SCORECARDS_RELEASE_SHA='<40-character release SHA>'
 export SCORECARDS_TARGET_REPO='your-org/scorecards'
+export SCORECARDS_SINGLE_WRITER=true
 
 : "${SCORECARDS_RELEASE_SHA:?copy the full SHA from the release}"
 [[ "$SCORECARDS_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
-SOURCE_DIR="$(mktemp -d)"
-git -C "$SOURCE_DIR" init
-git -C "$SOURCE_DIR" fetch --depth=1 \
-  https://github.com/feddericovonwernich/scorecards.git "$SCORECARDS_RELEASE_SHA"
-git -C "$SOURCE_DIR" checkout --detach FETCH_HEAD
-SCORECARDS_SOURCE_SHA="$SCORECARDS_RELEASE_SHA" bash "$SOURCE_DIR/scripts/install.sh"
-rm -rf "$SOURCE_DIR"
+(
+  set -euo pipefail
+  SOURCE_DIR="$(mktemp -d)"
+  trap 'status=$?; rm -rf "$SOURCE_DIR"; exit "$status"' EXIT
+  git -C "$SOURCE_DIR" init
+  git -C "$SOURCE_DIR" fetch \
+    https://github.com/feddericovonwernich/scorecards.git "$SCORECARDS_RELEASE_SHA"
+  git -C "$SOURCE_DIR" checkout --detach FETCH_HEAD
+  SCORECARDS_SOURCE_SHA="$SCORECARDS_RELEASE_SHA" bash "$SOURCE_DIR/scripts/install.sh"
+)
 ```
 
-The installer supports only a new `scorecards` repository. It rejects every populated repository and requires `SCORECARDS_ADOPT_EMPTY_REPO=true` for an existing repository with no heads or tags. Success means `main` and `catalog` were published atomically and a fresh workflow-based Pages deployment of the personalized `main` commit completed. Then follow the [first-service gate](documentation/guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
+The installer supports only a new `scorecards` repository. Before it starts, one operator must exclude every other installation writer for the whole run; `SCORECARDS_SINGLE_WRITER=true` is that acknowledgement for unattended use, not a race-proofing guarantee. It rejects every populated repository and requires `SCORECARDS_ADOPT_EMPTY_REPO=true` for an existing repository with no heads or tags. Success means `main` and `catalog` were published atomically and a fresh workflow-based Pages deployment of the personalized `main` commit completed. Then follow the [first-service gate](documentation/guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
 
 ---
 

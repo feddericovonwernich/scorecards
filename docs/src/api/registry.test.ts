@@ -113,7 +113,73 @@ describe('loadServices', () => {
       return response({}, 404);
     });
 
-    await expect(loadServices()).resolves.toEqual({ services: [], usedAPI: true });
+    await expect(loadServices()).resolves.toEqual({ services: [], usedAPI: false });
+  });
+
+  it('does not mark CDN data fresh after discarding an authenticated empty registry', async () => {
+    const individual = service('individual');
+    setToken('private-token');
+    const fetchMock = jest.fn<typeof fetch>();
+    globalThis.fetch = fetchMock;
+    fetchMock.mockImplementation(async (input, init) => {
+      const url = String(input);
+      const authorization = new Headers(init?.headers).get('Authorization');
+
+      if (url.includes('/contents/registry/all-services.json')) {
+        return response({ services: [], generated_at: 'now' });
+      }
+      if (url.includes('/git/trees/')) {
+        return authorization === 'token private-token'
+          ? response({}, 403)
+          : response({
+              tree: [{ path: 'registry/acme/individual.json', type: 'blob', sha: '1' }],
+            });
+      }
+      if (url.includes('/contents/registry/acme/individual.json')) {
+        return response({}, 403);
+      }
+      return response(individual);
+    });
+
+    await expect(loadServices()).resolves.toEqual({ services: [individual], usedAPI: false });
+  });
+
+  it('does not mark mixed authenticated and CDN entries fresh', async () => {
+    const authenticated = service('authenticated');
+    const cached = service('cached');
+    setToken('private-token');
+    const fetchMock = jest.fn<typeof fetch>();
+    globalThis.fetch = fetchMock;
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+
+      if (url.includes('/contents/registry/all-services.json')) {
+        return response({}, 404);
+      }
+      if (url.includes('raw.githubusercontent.com') && url.includes('all-services.json')) {
+        return response({ services: [], generated_at: 'now' });
+      }
+      if (url.includes('/git/trees/')) {
+        return response({
+          tree: [
+            { path: 'registry/acme/authenticated.json', type: 'blob', sha: '1' },
+            { path: 'registry/acme/cached.json', type: 'blob', sha: '2' },
+          ],
+        });
+      }
+      if (url.includes('/contents/registry/acme/authenticated.json')) {
+        return response(authenticated);
+      }
+      if (url.includes('/contents/registry/acme/cached.json')) {
+        return response({}, 403);
+      }
+      return response(cached);
+    });
+
+    await expect(loadServices()).resolves.toEqual({
+      services: [authenticated, cached],
+      usedAPI: false,
+    });
   });
 
   it.each([403, 429])('uses public registry files after PAT failure %s', async (status) => {

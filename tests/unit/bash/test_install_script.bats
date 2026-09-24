@@ -15,6 +15,7 @@ setup() {
     mkdir -p "$SOURCE_REPO/scripts" "$SOURCE_REPO/docs" "$SOURCE_REPO/.github/workflows" "$GH_STATE_DIR" "$TEST_BIN"
 
     cp "$PROJECT_ROOT/scripts/install.sh" "$SOURCE_REPO/scripts/install.sh"
+    cp "$PROJECT_ROOT/scripts/verify-pages.py" "$SOURCE_REPO/scripts/verify-pages.py"
     cp "$PROJECT_ROOT/.github/workflows/sync-docs.yml" "$SOURCE_REPO/.github/workflows/sync-docs.yml"
     cp "$PROJECT_ROOT/.github/workflows/consolidate-registry.yml" "$SOURCE_REPO/.github/workflows/consolidate-registry.yml"
     printf '%s\n' '# Scorecards' 'https://github.com/feddericovonwernich/scorecards' > "$SOURCE_REPO/README.md"
@@ -26,6 +27,9 @@ setup() {
     "$REAL_GIT" -C "$SOURCE_REPO" config user.email tester@example.invalid
     "$REAL_GIT" -C "$SOURCE_REPO" add .
     "$REAL_GIT" -C "$SOURCE_REPO" commit -m source >/dev/null
+    printf '%s\n' pinned > "$SOURCE_REPO/pinned"
+    "$REAL_GIT" -C "$SOURCE_REPO" add pinned
+    "$REAL_GIT" -C "$SOURCE_REPO" commit -m pinned >/dev/null
     export EXPECTED_SOURCE_SHA
     EXPECTED_SOURCE_SHA="$($REAL_GIT -C "$SOURCE_REPO" rev-parse HEAD)"
 
@@ -33,9 +37,27 @@ setup() {
 #!/bin/bash
 printf '%q ' "$@" >> "$GIT_LOG"
 printf '\n' >> "$GIT_LOG"
+repository=
+is_ls_remote=false
+is_fetch=false
+previous=
 for arg in "$@"; do
+    [ "$previous" != -C ] || repository="$arg"
+    [ "$arg" != ls-remote ] || is_ls_remote=true
+    [ "$arg" != fetch ] || is_fetch=true
     [ "$arg" != switch ] || exit 99
+    previous="$arg"
 done
+if [ "$is_fetch" = true ]; then
+    printf '%s' "$repository" > "$GH_STATE_DIR/bootstrap-source-dir"
+fi
+if [ "${FAIL_DOCUMENTED_FETCH:-false}" = true ] && [ "$is_fetch" = true ]; then
+    exit 42
+fi
+if [ "${INJECT_REF_ON_LS_REMOTE:-false}" = true ] && [ "$is_ls_remote" = true ] && [ ! -e "$GH_STATE_DIR/injected-ref" ]; then
+    "$REAL_GIT" -C "$SOURCE_REPO" push "$TARGET_REMOTE" "$EXPECTED_SOURCE_SHA:refs/heads/main" >/dev/null
+    touch "$GH_STATE_DIR/injected-ref"
+fi
 exec "$REAL_GIT" "$@"
 STUB
 
@@ -63,6 +85,8 @@ case "$*" in
         fi
         exit 1
         ;;
+    *"--jq .public"*) printf '%s\n' "${PAGES_PUBLIC:-true}"; exit 0 ;;
+    *"--jq .html_url"*) printf '%s\n' "$TEST_PAGES_URL"; exit 0 ;;
     "repo create "*)
         mkdir -p "$TARGET_REMOTE"
         "$REAL_GIT" init --bare "$TARGET_REMOTE" >/dev/null
@@ -127,7 +151,7 @@ STUB
     : > "$GH_LOG"
     : > "$GIT_LOG"
     mkdir -p "$TEST_TEMP_DIR/site/assets"
-    printf '%s\n' '<!doctype html><script type="module" src="./assets/index-abcdefgh.js"></script><link rel="modulepreload" href="./assets/vendor-abcdefgh.js"><link rel="stylesheet" href="./assets/index-abcdefgh.css"><link rel="stylesheet" href="https://fonts.example.invalid/font.css">' > "$TEST_TEMP_DIR/site/index.html"
+    printf '%s\n' '<!doctype html><div id="root"></div><script type="module" src="./assets/index-abcdefgh.js"></script><link rel="modulepreload" href="./assets/vendor-abcdefgh.js"><link rel="stylesheet" href="./assets/index-abcdefgh.css"><link rel="stylesheet" href="https://fonts.example.invalid/font.css">' > "$TEST_TEMP_DIR/site/index.html"
     printf '%s\n' 'document.title = "Scorecards";' > "$TEST_TEMP_DIR/site/assets/index-abcdefgh.js"
     printf '%s\n' 'body { margin: 0; }' > "$TEST_TEMP_DIR/site/assets/index-abcdefgh.css"
     printf '%s\n' 'export const vendor = true;' > "$TEST_TEMP_DIR/site/assets/vendor-abcdefgh.js"
@@ -179,6 +203,7 @@ run_installer() {
         GITHUB_TOKEN='token-value-that-must-stay-secret' \
         SCORECARDS_TARGET_REPO="${TARGET_REPO:-acme/scorecards}" \
         SCORECARDS_AUTO_CONFIRM=true \
+        SCORECARDS_SINGLE_WRITER="${SINGLE_WRITER:-true}" \
         SCORECARDS_REPO_PRIVATE=false \
         SCORECARDS_ADOPT_EMPTY_REPO="${ADOPT_EMPTY:-false}" \
         SCORECARDS_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
@@ -190,6 +215,78 @@ run_installer() {
         GIT_CONFIG_KEY_0="url.file://$TARGET_REMOTE.insteadOf" \
         GIT_CONFIG_VALUE_0='https://github.com/acme/scorecards.git' \
         bash "$SOURCE_REPO/scripts/install.sh"
+}
+
+run_documented_bootstrap() {
+    local bootstrap
+    bootstrap="$(awk '
+        /^## Quick Start$/ { quick_start=1; next }
+        quick_start && /^```bash$/ { capture=1; next }
+        capture && /^```$/ { exit }
+        capture && /^export / { next }
+        capture { print }
+    ' "$PROJECT_ROOT/README.md")"
+    env \
+        GITHUB_TOKEN='token-value-that-must-stay-secret' \
+        SCORECARDS_RELEASE_SHA="$EXPECTED_SOURCE_SHA" \
+        SCORECARDS_TARGET_REPO="${DOCUMENTED_TARGET_REPO:-acme/scorecards}" \
+        SCORECARDS_SINGLE_WRITER=true \
+        SCORECARDS_AUTO_CONFIRM=true \
+        INSTALL_POLL_INTERVAL_SECONDS=0 \
+        INSTALL_DEPLOY_TIMEOUT_SECONDS=2 \
+        RUN_MODE=success \
+        PAGES_MODE=missing \
+        GIT_CONFIG_COUNT=2 \
+        GIT_CONFIG_KEY_0="url.file://$SOURCE_REPO.insteadOf" \
+        GIT_CONFIG_VALUE_0='https://github.com/feddericovonwernich/scorecards.git' \
+        GIT_CONFIG_KEY_1="url.file://$TARGET_REMOTE.insteadOf" \
+        GIT_CONFIG_VALUE_1='https://github.com/acme/scorecards.git' \
+        bash -c "$bootstrap"
+}
+
+@test "documented bootstrap fetches full non-root ancestry and publishes to a default bare remote" {
+    run run_documented_bootstrap
+
+    [ "$status" -eq 0 ]
+    "$REAL_GIT" --git-dir="$TARGET_REMOTE" cat-file -e "$EXPECTED_SOURCE_SHA^"
+    [ -z "$($REAL_GIT --git-dir="$TARGET_REMOTE" config --get receive.shallowUpdate || true)" ]
+}
+
+@test "documented bootstrap removes its checkout while preserving a fetch failure" {
+    FAIL_DOCUMENTED_FETCH=true run run_documented_bootstrap
+
+    [ "$status" -eq 42 ]
+    [ ! -d "$(cat "$GH_STATE_DIR/bootstrap-source-dir")" ]
+}
+
+@test "documented bootstrap removes its checkout while preserving an installer failure" {
+    DOCUMENTED_TARGET_REPO=acme/quality run run_documented_bootstrap
+
+    [ "$status" -ne 0 ]
+    [ ! -d "$(cat "$GH_STATE_DIR/bootstrap-source-dir")" ]
+}
+
+@test "requires single-writer acknowledgement before creating a repository" {
+    run env \
+        GITHUB_TOKEN=token-value-that-must-stay-secret \
+        SCORECARDS_TARGET_REPO=acme/scorecards \
+        SCORECARDS_AUTO_CONFIRM=true \
+        SCORECARDS_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
+        PATH="$PATH" \
+        bash "$SOURCE_REPO/scripts/install.sh"
+
+    [ "$status" -ne 0 ]
+    [ ! -f "$GH_STATE_DIR/repo-exists" ]
+    [[ "$output" == *'SCORECARDS_SINGLE_WRITER'* ]]
+}
+
+@test "refuses refs that appear while preparing installation commits" {
+    INJECT_REF_ON_LS_REMOTE=true run run_installer
+
+    [ "$status" -ne 0 ]
+    [ -f "$GH_STATE_DIR/injected-ref" ]
+    [ "$EXPECTED_SOURCE_SHA" = "$($REAL_GIT --git-dir="$TARGET_REMOTE" rev-parse refs/heads/main)" ]
+    ! "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/catalog >/dev/null 2>&1
 }
 
 @test "rejects unsupported repository name before mutation" {
@@ -376,4 +473,21 @@ HOOK
 
     [ "$status" -ne 0 ]
     [[ "$output" != *'Installation Complete'* ]]
+}
+
+@test "rejects known restricted Pages without browser-session mode before publication" {
+    create_empty_target
+
+    ADOPT_EMPTY=true PAGES_PUBLIC=false run run_installer
+
+    [ "$status" -ne 0 ]
+    [ -z "$($REAL_GIT --git-dir="$TARGET_REMOTE" for-each-ref)" ]
+    [ ! -f "$GH_STATE_DIR/dispatched" ]
+}
+
+@test "rejects unattended browser-session mode without session input before creation" {
+    SCORECARDS_PAGES_AUTH=browser-session run run_installer
+
+    [ "$status" -ne 0 ]
+    [ ! -f "$GH_STATE_DIR/repo-exists" ]
 }

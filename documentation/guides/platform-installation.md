@@ -29,16 +29,20 @@ Record the release URL, protected tag, published source SHA, installer output an
 export GITHUB_TOKEN=your_github_pat
 export SCORECARDS_RELEASE_SHA='<40-character release SHA>'
 export SCORECARDS_TARGET_REPO='your-org/scorecards'
+export SCORECARDS_SINGLE_WRITER=true
 
 : "${SCORECARDS_RELEASE_SHA:?copy the full SHA from the release}"
 [[ "$SCORECARDS_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
-SOURCE_DIR="$(mktemp -d)"
-git -C "$SOURCE_DIR" init
-git -C "$SOURCE_DIR" fetch --depth=1 \
-  https://github.com/feddericovonwernich/scorecards.git "$SCORECARDS_RELEASE_SHA"
-git -C "$SOURCE_DIR" checkout --detach FETCH_HEAD
-SCORECARDS_SOURCE_SHA="$SCORECARDS_RELEASE_SHA" bash "$SOURCE_DIR/scripts/install.sh"
-rm -rf "$SOURCE_DIR"
+(
+  set -euo pipefail
+  SOURCE_DIR="$(mktemp -d)"
+  trap 'status=$?; rm -rf "$SOURCE_DIR"; exit "$status"' EXIT
+  git -C "$SOURCE_DIR" init
+  git -C "$SOURCE_DIR" fetch \
+    https://github.com/feddericovonwernich/scorecards.git "$SCORECARDS_RELEASE_SHA"
+  git -C "$SOURCE_DIR" checkout --detach FETCH_HEAD
+  SCORECARDS_SOURCE_SHA="$SCORECARDS_RELEASE_SHA" bash "$SOURCE_DIR/scripts/install.sh"
+)
 ```
 
 The release SHA remains intentionally unset in source documentation until the safe installer commit is integrated, tagged and released. Never substitute an older known-broken SHA.
@@ -58,8 +62,9 @@ The installer:
 
 ## Prerequisites
 
+- One operator must exclude every other installation writer for the complete run. Set `SCORECARDS_SINGLE_WRITER=true` for unattended installation; the interactive confirmation acknowledges the same full-installation responsibility. This operational exclusion is not a race-proofing guarantee.
 - Bash 3.2 or newer.
-- Git 2.4 or newer with `git push --atomic` support.
+- Git 2.15 or newer with `git push --atomic` support.
 - GitHub CLI commands `api`, `repo view`, `repo create`, `workflow run` and `run list`.
 - A `GITHUB_TOKEN` matching the installer operations in the [credential matrix](../reference/token-requirements.md#operation-matrix).
 - GitHub Actions and workflow-based Pages available for the target repository visibility.
@@ -68,6 +73,26 @@ The installer:
 `jq` is not an installer prerequisite. GitHub does not provide non-mutating checks for every repository-creation, workflow-write or Pages policy. The installer checks observable identity, membership and existing-repository permissions; repository creation, atomic push, Pages configuration and dispatch remain the authoritative capability checks.
 
 `INSTALL_DEPLOY_TIMEOUT_SECONDS` bounds both the fresh deployment wait and the subsequent deployed HTML/asset verification; it is not a promise that a site has already propagated.
+
+### Restricted Pages verification
+
+GitHub Enterprise Cloud [private Pages access control](https://docs.github.com/en/enterprise-cloud@latest/pages/getting-started-with-github-pages/changing-the-visibility-of-your-github-pages-site) authorizes signed-in users with read access to the publishing repository. Private sites use a unique HTTPS origin, isolated from `github.com` to protect cookies. This is browser authentication, not the repository REST API: do not send `GITHUB_TOKEN` or a PAT to Pages. GitHub's [cookie inventory](https://docs.github.com/en/site-policy/privacy-policies/github-cookies) also warns that cookie names can change; the verifier treats site session cookies as opaque rather than depending on an internal cookie name.
+
+Before starting an installation that requires restricted Pages, set `SCORECARDS_PAGES_AUTH=browser-session`. Keep the existing access restrictions. The installer never changes visibility to make verification pass.
+
+- **Interactive first installation:** leave `SCORECARDS_PAGES_COOKIE_FILE` unset. Preflight requires a controlling terminal. After deployment, sign in through the exact Pages URL printed by the installer, including your organization's SSO if required. In browser developer tools, inspect a successful document request to that Pages origin and paste only its `Cookie` request-header value into the hidden prompt. Never paste a GitHub login cookie, an entire request, or a token. Input remains in verifier memory; it is not written to receipts, configuration, argv, or logs. Complete this within the remaining deployment deadline.
+- **Unattended verification:** supply `SCORECARDS_PAGES_COOKIE_FILE` pointing to a Netscape-format cookie export from an already authenticated session for that exact Pages host. The file must be owned by the operator with no group/other permissions (`0600`), outside the checkout; protect it as a credential and remove it after use. Only unexpired secure cookies for the exact host and matching request path are sent. Parent-domain cookies and cookies for `github.com` are not forwarded. Set `SCORECARDS_AUTO_CONFIRM=true` only when this session is available; a new site's origin/session may not exist until after publication, so use interactive installation for that case.
+
+Preflight checks the authentication mode, terminal or private cookie-file availability, expiration, and host compatibility when an existing Pages URL is known. It cannot prove authorization for a site that has not been published yet. Delivery verification rejects redirects instead of following login/SSO links with credentials, rejects authentication failures and login HTML, and fetches compiled assets only from the verified document origin. Expired or insufficient sessions fail closed; sign in again through the browser.
+
+If delivery authentication fails after publication, preserve both refs. From the pinned source checkout, retry only delivery proof with a renewed session and the exact Pages URL:
+
+```bash
+export SCORECARDS_PAGES_AUTH=browser-session
+python3 scripts/verify-pages.py verify "$PAGES_URL" "$INSTALL_DEPLOY_TIMEOUT_SECONDS" "$INSTALL_POLL_INTERVAL_SECONDS"
+```
+
+Set `PAGES_URL` from the repository's Pages API/settings and choose the timeout/interval as for installation. This command does not publish refs, dispatch workflows, or change visibility. Local HTTPS fixtures cover public/restricted HTML and compiled assets, invalid sessions, and credential isolation. Live Enterprise proof still requires an authorized operator login and an actual restricted Pages target; local fixtures are not cloud end-to-end evidence.
 
 ### Optional PR-only remediation
 

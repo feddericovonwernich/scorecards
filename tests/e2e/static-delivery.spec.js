@@ -1,5 +1,5 @@
 import { test, expect } from './coverage.js';
-import { mockCatalogRequests } from './test-helper.js';
+import { mockCatalogRequests, waitForCatalogLoad, switchToTeamsView } from './test-helper.js';
 
 const explorerService = {
   service: {
@@ -54,6 +54,21 @@ async function mockExplorerRequests(page, service = explorerService) {
 }
 
 test.describe('Static catalog delivery', () => {
+  for (const prefix of ['/', '/scorecards/']) {
+    test(`renders the compiled catalog at Pages prefix ${prefix}`, async ({ page }, testInfo) => {
+      await mockCatalogRequests(page);
+      await page.route('**/assets/**', (route) =>
+        new URL(route.request().url()).pathname.startsWith(`${prefix}assets/`)
+          ? route.continue()
+          : route.abort()
+      );
+      await page.goto(prefix);
+      await waitForCatalogLoad(page);
+      await switchToTeamsView(page);
+      await page.screenshot({ path: testInfo.outputPath('pages-prefix.png'), fullPage: true });
+    });
+  }
+
   test('redirects legacy directory URLs while retaining query parameters', async ({ page }) => {
     const [servicesEntry, teamsEntry] = await Promise.all([
       page.request.get('/scorecards/services/'),

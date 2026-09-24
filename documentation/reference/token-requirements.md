@@ -15,6 +15,8 @@ Scorecards has three user-managed credential roles and one repository-scoped eph
 
 The central repository does not receive `SCORECARDS_CATALOG_TOKEN` merely to consolidate its own registry. `.github/workflows/consolidate-registry.yml` requests `contents: write` and uses the job-scoped token. If a `catalog` ruleset blocks that bot, the run fails; resolve the minimum rule explicitly instead of falling back to a broader PAT.
 
+Restricted Enterprise Pages delivery uses the operator's authenticated **Pages browser session**, not any repository PAT or job token. Keep that site-specific session separate from Git/API credentials and follow [restricted Pages verification](../guides/platform-installation.md#restricted-pages-verification) for hidden interactive input or a private cookie export. Never copy GitHub login cookies to Pages, expose session values in shell arguments/logs, or change visibility as an authentication workaround.
+
 ## Operation matrix
 
 | Credential | Operation | Fine-grained permission | Classic scope | Observable preflight |

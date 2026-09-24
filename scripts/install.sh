@@ -58,6 +58,7 @@ fi
 validate_boolean_env SCORECARDS_AUTO_CONFIRM "${SCORECARDS_AUTO_CONFIRM:-}"
 validate_boolean_env SCORECARDS_REPO_PRIVATE "${SCORECARDS_REPO_PRIVATE:-}"
 validate_boolean_env SCORECARDS_ADOPT_EMPTY_REPO "${SCORECARDS_ADOPT_EMPTY_REPO:-}"
+validate_boolean_env SCORECARDS_SINGLE_WRITER "${SCORECARDS_SINGLE_WRITER:-}"
 
 if [ -n "${SCORECARDS_TARGET_REPO:-}" ]; then
     REPO_INPUT="$SCORECARDS_TARGET_REPO"
@@ -110,6 +111,15 @@ SOURCE_SHA="$(git -C "$SOURCE_ROOT" rev-parse HEAD^{commit} 2>/dev/null)" || fai
 if [ -n "${SCORECARDS_SOURCE_SHA:-}" ] && [ "$SCORECARDS_SOURCE_SHA" != "$SOURCE_SHA" ]; then
     fail "Source checkout SHA does not match SCORECARDS_SOURCE_SHA"
 fi
+[ "$(git -C "$SOURCE_ROOT" rev-parse --is-shallow-repository)" = false ] || fail "Source checkout is shallow; fetch the pinned SHA with full ancestry before installation"
+
+print_warning "You must ensure no other writers can modify the target repository for the entire installation. Atomic push does not guarantee emptiness against concurrent writers."
+if [ "${SCORECARDS_SINGLE_WRITER:-false}" != true ]; then
+    [ "${SCORECARDS_AUTO_CONFIRM:-false}" != true ] || fail "Unattended installation requires SCORECARDS_SINGLE_WRITER=true"
+    read -r -p "Have you ensured exclusive writing for the entire installation? (y/N) " reply </dev/tty
+    [[ "$reply" =~ ^[Yy]$ ]] || fail "Single-writer prerequisite was not acknowledged"
+fi
+python3 "$SCRIPT_DIR/verify-pages.py" preflight || fail "Pages verification input is unavailable; see the restricted Pages installation guide"
 
 TARGET_URL="https://github.com/$FULL_REPO.git"
 REPO_EXISTS=false
@@ -128,6 +138,12 @@ if gh_with_token repo view "$FULL_REPO" --json name >/dev/null 2>&1; then
         fail "Token needs admin or maintain access to configure Pages"
     fi
     gh_with_token api "repos/$FULL_REPO/actions/permissions" --jq .enabled >/dev/null || fail "Cannot read Actions settings for $FULL_REPO"
+    pages_public="$(gh_with_token api "repos/$FULL_REPO/pages" --jq .public 2>/dev/null || true)"
+    if [ "$pages_public" = false ]; then
+        [ "${SCORECARDS_PAGES_AUTH:-public}" = browser-session ] || fail "Restricted Pages requires SCORECARDS_PAGES_AUTH=browser-session before publication"
+        existing_pages_url="$(gh_with_token api "repos/$FULL_REPO/pages" --jq .html_url)" || fail "Cannot read restricted Pages URL"
+        python3 "$SCRIPT_DIR/verify-pages.py" preflight "$existing_pages_url" || fail "Restricted Pages session is not ready for this site"
+    fi
 fi
 
 if [ "${SCORECARDS_AUTO_CONFIRM:-false}" != true ]; then
@@ -213,10 +229,12 @@ fi
 
 git -C "$INSTALL_REPO" remote remove origin 2>/dev/null || true
 git -C "$INSTALL_REPO" remote add origin "$TARGET_URL"
+refs="$(git_with_gh -C "$INSTALL_REPO" ls-remote origin 'refs/heads/*' 'refs/tags/*')" || fail "Cannot recheck target refs immediately before publication"
+[ -z "$refs" ] || fail "Target became populated during preparation; no refs were published by this installer. Restore the single-writer prerequisite; do not delete or overwrite refs."
 if ! git_with_gh -C "$INSTALL_REPO" push --atomic origin \
     refs/heads/main:refs/heads/main \
     refs/heads/catalog:refs/heads/catalog; then
-    fail "Atomic publication failed. No branch should be present; if the repository is empty, retry with SCORECARDS_ADOPT_EMPTY_REPO=true."
+    fail "Atomic publication failed. Inspect refs without modifying them; retry only if empty with SCORECARDS_ADOPT_EMPTY_REPO=true."
 fi
 [ "$(remote_ref_sha "$INSTALL_REPO" refs/heads/main)" = "$INSTALLED_MAIN_SHA" ] || fail "Published main SHA does not match the prepared installation"
 [ "$(remote_ref_sha "$INSTALL_REPO" refs/heads/catalog)" = "$CATALOG_SHA" ] || fail "Published catalog SHA does not match the prepared installation"
@@ -282,82 +300,7 @@ IFS=$'\t' read -r build_type pages_status pages_url <<<"$pages"
 [ "$pages_status" != errored ] || fail "Pages reports an errored deployment"
 
 print_info "Verifying deployed HTML and compiled assets at $pages_url"
-if ! python3 - "$pages_url" "$((deadline - SECONDS))" "$INSTALL_POLL_INTERVAL_SECONDS" <<'PY'
-import re
-import signal
-import sys
-import time
-from html.parser import HTMLParser
-from urllib.parse import urljoin, urlsplit
-from urllib.request import Request, urlopen
-
-url, timeout, interval = sys.argv[1], int(sys.argv[2]), float(sys.argv[3])
-last_error = "deployment deadline expired before asset verification"
-
-def expired(*_):
-    raise SystemExit(f"Pages delivery verification timed out: {last_error}")
-
-if timeout <= 0:
-    expired()
-signal.signal(signal.SIGALRM, expired)
-signal.alarm(timeout)
-
-class Assets(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.references = set()
-        self.module_script = False
-
-    def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
-        if tag == "script" and attrs.get("type") == "module" and attrs.get("src"):
-            self.module_script = True
-            self.references.add((attrs["src"], "js"))
-        if tag == "link" and "stylesheet" in attrs.get("rel", "").split() and attrs.get("href"):
-            self.references.add((attrs["href"], "css"))
-        if tag == "link" and "modulepreload" in attrs.get("rel", "").split() and attrs.get("href"):
-            self.references.add((attrs["href"], "js"))
-
-def fetch(address, kind):
-    request = Request(address, headers={"Cache-Control": "no-cache"})
-    with urlopen(request, timeout=timeout) as response:
-        content_type = response.headers.get_content_type()
-        content = response.read()
-        final_url = response.url
-    allowed = {"html": {"text/html"}, "js": {"application/javascript", "text/javascript"}, "css": {"text/css"}}
-    if content_type not in allowed[kind] or not content.strip():
-        raise ValueError(f"{address}: empty or unexpected {content_type} response")
-    if kind != "html" and content.lstrip().startswith(b"<"):
-        raise ValueError(f"{address}: HTML returned instead of compiled {kind}")
-    return content, final_url
-
-while True:
-    try:
-        html, document_url = fetch(url, "html")
-        assets = Assets()
-        assets.feed(html.decode("utf-8"))
-        if not assets.module_script:
-            raise ValueError("deployed HTML has no compiled module script")
-        compiled = {
-            (urljoin(document_url, reference), kind)
-            for reference, kind in assets.references
-            if urlsplit(urljoin(document_url, reference)).netloc == urlsplit(document_url).netloc
-        }
-        if {kind for _, kind in compiled} != {"js", "css"}:
-            raise ValueError("deployed HTML is missing compiled JavaScript or stylesheets")
-        for address, kind in sorted(compiled):
-            path = urlsplit(address).path
-            if not re.search(r"/assets/[^/]+-[A-Za-z0-9_-]{8,}\." + kind + r"$", path):
-                raise ValueError(f"deployed HTML references an unhashed {kind} asset: {address}")
-            fetch(address, kind)
-        print(f"Verified deployed HTML and {len(compiled)} compiled assets")
-        break
-    except (OSError, ValueError) as error:
-        last_error = str(error)
-        print(f"Waiting for Pages delivery: {last_error}", file=sys.stderr)
-        time.sleep(interval)
-PY
-then
+if ! python3 "$SCRIPT_DIR/verify-pages.py" verify "$pages_url" "$((deadline - SECONDS))" "$INSTALL_POLL_INTERVAL_SECONDS"; then
     fail "Deployed HTML or compiled assets could not be verified at $pages_url. Preserve refs and $run_url logs; fix forward on main and dispatch sync-docs.yml again."
 fi
 

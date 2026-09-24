@@ -33,7 +33,9 @@ Push to a branch configured in the copied workflow. The maintained template runs
 
 ### Step 4: Verify the first service end to end
 
-Treat the first service as an operational gate:
+Treat the first service as an operational gate. The central installation must
+already be complete under its single-writer exclusion contract; do not overlap
+this gate with an installation run.
 
 1. Confirm the service workflow can access `SCORECARDS_CATALOG_TOKEN` without printing it.
 2. Run the maintained workflow on the service's default branch; record its run URL, service SHA and successful conclusion.
@@ -43,10 +45,10 @@ Treat the first service as an operational gate:
 6. Open the deployed Pages URL in a fresh browser context and find the service in the Services view.
 
 ```bash
-gh run list --repo "$FULL_REPO" --workflow consolidate-registry.yml \
+gh run list --repo "$SCORECARDS_TARGET_REPO" --workflow consolidate-registry.yml \
   --branch catalog --event push --limit 5 \
   --json databaseId,status,conclusion,url,headSha
-gh api "repos/$FULL_REPO/contents/registry/all-services.json?ref=catalog" \
+gh api "repos/$SCORECARDS_TARGET_REPO/contents/registry/all-services.json?ref=catalog" \
   --jq .content | base64 --decode
 ```
 
