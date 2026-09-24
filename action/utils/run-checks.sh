@@ -49,9 +49,9 @@ fi
 echo
 
 # Find all check directories (sorted)
-check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+mapfile -d '' check_dirs < <(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
 
-if [ -z "$check_dirs" ]; then
+if [ "${#check_dirs[@]}" -eq 0 ]; then
     echo -e "${YELLOW}Warning: No checks found in $CHECKS_DIR${NC}"
     printf '[]\n' > "$OUTPUT_FILE"
     exit 0
@@ -59,7 +59,7 @@ fi
 
 # Validate every candidate before executing any check or creating partial output.
 declare -A CHECK_METADATA
-while IFS= read -r check_dir; do
+for check_dir in "${check_dirs[@]}"; do
     candidate=0
     for entry in metadata.json check.sh check.py check.js; do
         if [ -e "$check_dir/$entry" ] || [ -L "$check_dir/$entry" ]; then
@@ -74,14 +74,14 @@ while IFS= read -r check_dir; do
     else
         exit $?
     fi
-done <<< "$check_dirs"
+done
 
 results='[]'
 total_checks=0
 passed_checks=0
 
 # Iterate through each validated check
-while IFS= read -r check_dir; do
+for check_dir in "${check_dirs[@]}"; do
     check_name=$(basename "$check_dir")
     [ -n "${CHECK_METADATA[$check_name]:-}" ] || continue
     metadata="${CHECK_METADATA[$check_name]}"
@@ -224,7 +224,7 @@ while IFS= read -r check_dir; do
     # Append to results array
     results=$(echo "$results" | jq --argjson result "$result" '. + [$result]')
 
-done <<< "$check_dirs"
+done
 
 echo
 echo "Results: $passed_checks / $total_checks passed"
