@@ -51,10 +51,9 @@ if [ "$HASH_ONLY" -eq 0 ]; then
     echo "Generating hash from checks directory: $CHECKS_DIR"
 fi
 
-# Find all checks in sorted order
-CHECK_DIRS=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
-# Fail closed on every check candidate, while preserving the existing hash input.
-for check_dir in $CHECK_DIRS; do
+# Find all checks in sorted order.
+mapfile -d '' CHECK_DIRS < <(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+for check_dir in "${CHECK_DIRS[@]}"; do
     candidate=0
     for entry in metadata.json check.sh check.py check.js; do
         if [ -e "$check_dir/$entry" ] || [ -L "$check_dir/$entry" ]; then
@@ -75,8 +74,8 @@ done
 CHECK_HASHES=""
 CHECKS_COUNT=0
 
-for check_dir in $CHECK_DIRS; do
-    check_id=$(basename "$check_dir")
+for check_dir in "${CHECK_DIRS[@]}"; do
+    check_id="${check_dir##*/}"
 
     # Hash metadata.json
     metadata_hash=""

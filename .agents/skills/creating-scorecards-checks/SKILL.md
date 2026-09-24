@@ -42,16 +42,30 @@ all pass.
 
 ## Complete example
 
-For `13-changelog`, replace `<id>` above with `13-changelog`; use Node for both
-fixtures, then select it in the documented runner:
+Exercise the canonical ESM check with both fixtures, then select it in the
+documented production runner:
 
 ```bash
-SCORECARD_REPO_PATH=tests/fixtures/changelog/pass node checks/13-changelog/check.js
-set +e
-SCORECARD_REPO_PATH=tests/fixtures/changelog/fail node checks/13-changelog/check.js
-rc=$?
-set -e
-test "$rc" -ne 0
+(
+set -eu
+action/utils/validate-check.sh checks/03-ci-config
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$tmp/pass/.github/workflows" "$tmp/fail"
+printf '%s\n' 'name: ci' > "$tmp/pass/.github/workflows/ci.yml"
+
+pass_rc=0
+pass_output=$(SCORECARD_REPO_PATH="$tmp/pass" node checks/03-ci-config/check.js 2>&1) || pass_rc=$?
+printf 'positive exit=%s\n%s\n' "$pass_rc" "$pass_output"
+test "$pass_rc" -eq 0
+case "$pass_output" in *"GitHub Actions:"*) ;; *) exit 1 ;; esac
+
+fail_rc=0
+fail_output=$(SCORECARD_REPO_PATH="$tmp/fail" node checks/03-ci-config/check.js 2>&1) || fail_rc=$?
+printf 'negative exit=%s\n%s\n' "$fail_rc" "$fail_output"
+test "$fail_rc" -eq 1
+case "$fail_output" in *"No CI configuration found"*) ;; *) exit 1 ;; esac
+)
 ```
 
 The implementation uses `import`, not `require`; the focused test belongs under

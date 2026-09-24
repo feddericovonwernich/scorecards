@@ -201,6 +201,8 @@ does not provide a separate container wrapper for them.
 ### Validate and exercise the canonical ESM check
 
 ```bash
+(
+set -eu
 action/utils/validate-check.sh checks/03-ci-config
 
 tmp="$(mktemp -d)"
@@ -208,12 +210,18 @@ trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/pass/.github/workflows" "$tmp/fail"
 printf '%s\n' 'name: ci' > "$tmp/pass/.github/workflows/ci.yml"
 
-SCORECARD_REPO_PATH="$tmp/pass" node checks/03-ci-config/check.js
-set +e
-SCORECARD_REPO_PATH="$tmp/fail" node checks/03-ci-config/check.js
-rc=$?
-set -e
-test "$rc" -eq 1
+pass_rc=0
+pass_output=$(SCORECARD_REPO_PATH="$tmp/pass" node checks/03-ci-config/check.js 2>&1) || pass_rc=$?
+printf 'positive exit=%s\n%s\n' "$pass_rc" "$pass_output"
+test "$pass_rc" -eq 0
+case "$pass_output" in *"GitHub Actions:"*) ;; *) exit 1 ;; esac
+
+fail_rc=0
+fail_output=$(SCORECARD_REPO_PATH="$tmp/fail" node checks/03-ci-config/check.js 2>&1) || fail_rc=$?
+printf 'negative exit=%s\n%s\n' "$fail_rc" "$fail_output"
+test "$fail_rc" -eq 1
+case "$fail_output" in *"No CI configuration found"*) ;; *) exit 1 ;; esac
+)
 ```
 
 Every new check needs a positive and negative fixture. A normal scoring failure
@@ -284,13 +292,21 @@ python3 tests/remediation-authoring-smoke.py \
   --not-applicable tests/fixtures/remediation/09-scorecard-badge/not-applicable
 ```
 
-The harness resolves the local image to its immutable Docker digest, creates a
-temporary bare service remote, stubs only GitHub API reads, and invokes the
-production `validate` and `prepare` commands. It requires fail → repair → pass,
-a byte- and mode-identical second application, `not_applicable`, allowed paths,
-and the production network/user/mount sandbox. It never calls `publish`, pushes
-a branch, opens a pull request, dispatches a workflow, or changes the real
-eligibility policy.
+The harness pins the local image to its immutable image ID, including on Docker's
+classic image store without `RepoDigests`. Its offline Docker adapter maps only
+that pinned identity; production registry-digest validation remains unchanged,
+and no image publication is required. It creates a temporary bare service remote,
+stubs GitHub API reads, and invokes production `validate` and `prepare`.
+
+The harness observes the containers launched by production `prepare` to require
+pre-check `1`, repair `0`, post-check `0`, a byte- and mode-identical second
+application, recipe exit `3` for `not_applicable`, allowed paths, and the actual
+network/user/mount sandbox. It checks both the default branch name and unchanged
+commit ID. It never calls `publish`, pushes a remediation branch, opens a pull
+request, dispatches a workflow, or changes the real eligibility policy.
+For idempotence, the observer retains the actual successful recipe container,
+snapshots the repaired workspace, and restarts that same container with its
+unchanged production sandbox before comparing bytes and modes and removing it.
 
 Review activation, provenance, policy, and PR-only guarantees separately in the
 [remediation flow](../architecture/flows/remediation-flow.md). Authoring and

@@ -213,9 +213,9 @@ jobs:
           validator="$source_dir/action/utils/validate-check.sh"
 
           # Validate and project every candidate before writing a partial catalog.
-          check_dirs=$(find "$source_dir/checks" -mindepth 1 -maxdepth 1 -type d | sort)
+          mapfile -d '' check_dirs < <(find "$source_dir/checks" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
           checks_json="[]"
-          for check_dir in $check_dirs; do
+          for check_dir in "${check_dirs[@]}"; do
             candidate=0
             for entry in metadata.json check.sh check.py check.js; do
               if [ -e "$check_dir/$entry" ] || [ -L "$check_dir/$entry" ]; then
@@ -225,7 +225,7 @@ jobs:
             done
             [ "$candidate" -eq 1 ] || continue
 
-            check_id=$(basename "$check_dir")
+            check_id="${check_dir##*/}"
             if metadata=$("$validator" "$check_dir"); then
               :
             else

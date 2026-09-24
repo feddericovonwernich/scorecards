@@ -19,7 +19,19 @@ setup() {
   "category": "Documentation"
 }
 JSON
+
+    export HASH_SUITE="$TEST_TEMP_DIR/hash-suite"
+    mkdir -p "$HASH_SUITE/action/utils" "$HASH_SUITE/action/lib" "$HASH_SUITE/action/config" \
+        "$HASH_SUITE/checks/01-valid" "$HASH_SUITE/checks/lib"
+    cp "$PROJECT_ROOT/action/utils/validate-check.sh" "$PROJECT_ROOT/action/utils/update-checks-hash.sh" \
+        "$HASH_SUITE/action/utils/"
+    cp "$PROJECT_ROOT/action/lib/remediation.sh" "$HASH_SUITE/action/lib/"
+    cp "$PROJECT_ROOT/action/config/check-metadata.json" "$PROJECT_ROOT/action/config/remediation.json" \
+        "$HASH_SUITE/action/config/"
+    cp "$VALID_CHECK/check.sh" "$VALID_CHECK/metadata.json" "$HASH_SUITE/checks/01-valid/"
+    export SUITE_HASHER="$HASH_SUITE/action/utils/update-checks-hash.sh"
 }
+
 
 teardown() {
     rm -rf "$TEST_TEMP_DIR"
@@ -30,6 +42,12 @@ teardown() {
 
     [ "$status" -eq 0 ]
     [ "$(jq -cS . <<< "$output")" = '{"category":"Documentation","description":"Validates the canonical metadata contract.","name":"Valid check","timeout":30,"weight":10}' ]
+}
+
+@test "validator accepts a valid directory with trailing separators" {
+    run "$VALIDATOR" "$VALID_CHECK///"
+
+    [ "$status" -eq 0 ]
 }
 
 @test "validator returns usage for a missing directory argument" {
@@ -49,6 +67,22 @@ teardown() {
 JSON
     run "$VALIDATOR" "$VALID_CHECK"
     [ "$status" -eq 65 ]
+}
+
+@test "validator rejects a metadata object stream without projection" {
+    cat > "$VALID_CHECK/metadata.json" <<'JSON'
+{}
+{"name":"Valid check","description":"Validates the canonical metadata contract.","weight":10,"timeout":30,"category":"Documentation"}
+JSON
+
+    local stdout="$TEST_TEMP_DIR/stream.stdout"
+    local stderr="$TEST_TEMP_DIR/stream.stderr"
+    if "$VALIDATOR" "$VALID_CHECK" > "$stdout" 2> "$stderr"; then
+        false
+    else
+        [ "$?" -eq 65 ]
+    fi
+    [ ! -s "$stdout" ]
 }
 
 @test "validator rejects invalid metadata types ranges categories and keys" {
@@ -106,11 +140,16 @@ JSON
     [ "$count" -eq 12 ]
 }
 
-@test "support directories remain outside validation candidates" {
-    [ ! -e "$PROJECT_ROOT/checks/lib/metadata.json" ]
-    [ ! -e "$PROJECT_ROOT/checks/lib/check.sh" ]
-    [ ! -e "$PROJECT_ROOT/checks/lib/check.py" ]
-    [ ! -e "$PROJECT_ROOT/checks/lib/check.js" ]
+@test "hasher keeps support directories in valid hash layouts" {
+    local metadata_hash implementation_hash expected_hash
+    metadata_hash="$(sha256sum "$HASH_SUITE/checks/01-valid/metadata.json" | awk '{print $1}')"
+    implementation_hash="$(sha256sum "$HASH_SUITE/checks/01-valid/check.sh" | awk '{print $1}')"
+    expected_hash="$(printf '01-valid:%s:%s\nlib::\n' "$metadata_hash" "$implementation_hash" | sha256sum | awk '{print $1}')"
+
+    run "$SUITE_HASHER" --hash-only
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "$expected_hash" ]
 }
 
 @test "hash bytes and directory count remain compatible" {
@@ -119,4 +158,17 @@ JSON
     [ "$status" -eq 0 ]
     [ "$output" = "119f9cf9e608314410ba5cd46b95dc0d670354dbd9d079707b4bd9f09da21cba" ]
     [ "$(find "$PROJECT_ROOT/checks" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 13 ]
+}
+
+@test "hasher rejects whitespace and newline candidate directories" {
+    local invalid_name invalid_check
+    for invalid_name in "99 invalid" $'99-\ninvalid' $'99-invalid\n'; do
+        invalid_check="$HASH_SUITE/checks/$invalid_name"
+        cp -a "$HASH_SUITE/checks/01-valid" "$invalid_check"
+
+        run "$SUITE_HASHER" --hash-only
+
+        rm -rf "$invalid_check"
+        [ "$status" -eq 65 ]
+    done
 }

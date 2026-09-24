@@ -22,7 +22,11 @@ invalid() {
 [ "$#" -eq 1 ] || usage
 check_dir="$1"
 [ -d "$check_dir" ] && [ ! -L "$check_dir" ] || invalid "$check_dir: check directory must be a regular directory"
-check_id="$(basename "$check_dir")"
+check_id_path="$check_dir"
+while [[ "$check_id_path" == */ ]]; do
+    check_id_path="${check_id_path%/}"
+done
+check_id="${check_id_path##*/}"
 [[ "$check_id" =~ ^[a-z0-9][a-z0-9-]{0,79}$ ]] || invalid "$check_dir: invalid check ID '$check_id'"
 
 script_count=0
@@ -52,7 +56,7 @@ jq -e '
   and all(.categories[]; type == "string" and length > 0 and (test("[[:cntrl:]]") | not))
 ' "$CONFIG_FILE" >/dev/null 2>&1 || invalid "$CONFIG_FILE: configuration schema is invalid"
 
-jq -e . "$metadata_file" >/dev/null 2>&1 || invalid "$metadata_file: invalid JSON"
+jq -se 'length == 1 and (.[0] | type == "object")' "$metadata_file" >/dev/null 2>&1 || invalid "$metadata_file: metadata schema is invalid"
 jq -e --slurpfile config "$CONFIG_FILE" '
   . as $metadata
   | type == "object"

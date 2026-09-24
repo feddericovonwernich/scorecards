@@ -35,9 +35,12 @@ are not remediation eligibility.
 4. Build the production image, then run the offline harness. It must prove
    pre-check `1` → repair `0` → post-check `0`, a byte- and mode-identical second
    application, exit `3` for the not-applicable fixture, and no disallowed paths.
-5. Review the harness's immutable digest, non-root user, no-network execution,
-   read-only mounts, absence of secrets and `.git`, and only `/workspace`
-   writable.
+5. Review the harness's immutable image ID (also supported without
+   `RepoDigests`), unchanged default-branch commit ID, and observations of the
+   actual production containers: non-root, no network, read-only trusted mounts,
+   no secrets or `.git`, and only `/workspace` writable apart from isolated scratch.
+   Idempotence replays the retained production recipe container on its repaired
+   workspace, then compares bytes and modes; it does not use a second executor.
 6. Stop after `validate` and `prepare`. Do not publish, dispatch, push, merge,
    enable a target, use secrets, or alter eligibility policy.
 
