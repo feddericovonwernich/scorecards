@@ -31,13 +31,26 @@ Remediation is a separate central workflow and is **not** enabled by installing 
 
 Push to a branch configured in the copied workflow. The maintained template runs on `main` and `master`; update those triggers if your default branch differs.
 
-### Step 4: View Your Results
+### Step 4: Verify the first service end to end
 
-After the first run:
+Treat the first service as an operational gate:
 
-1. Visit the [Scorecards Catalog](https://feddericovonwernich-org.github.io/scorecards/)
-2. Find your service in the list
-3. See your score, rank, and detailed check results
+1. Confirm the service workflow can access `SCORECARDS_CATALOG_TOKEN` without printing it.
+2. Run the maintained workflow on the service's default branch; record its run URL, service SHA and successful conclusion.
+3. Confirm `registry/{org}/{repo}.json` and `results/{org}/{repo}/results.json` exist on the central `catalog` branch.
+4. Find the `Consolidate Registry` run triggered by that catalog push and require a successful conclusion. It uses the central job-scoped token, not the catalog PAT.
+5. Read `registry/all-services.json` and require the service entry and expected count.
+6. Open the deployed Pages URL in a fresh browser context and find the service in the Services view.
+
+```bash
+gh run list --repo "$FULL_REPO" --workflow consolidate-registry.yml \
+  --branch catalog --event push --limit 5 \
+  --json databaseId,status,conclusion,url,headSha
+gh api "repos/$FULL_REPO/contents/registry/all-services.json?ref=catalog" \
+  --jq .content | base64 --decode
+```
+
+Reloading the UI does not replace the registry and workflow checks. Before any service exists, the UI legitimately shows its empty state; while consolidation is delayed, it falls back to individual registry entries.
 
 ### Step 5: Add Badges to Your README (Optional)
 
@@ -102,12 +115,17 @@ Ensure your token has write access to the central scorecards repository:
 
 Check the `SCORECARDS_CATALOG_TOKEN` secret, its selected repositories/permissions and organization approval using the [token requirements](../reference/token-requirements.md). The maintained workflow uses it both for central checkout and catalog publication; do not substitute a service-scoped `GITHUB_TOKEN` for cross-repository access.
 
-### Service doesn't appear in catalog
+### Service does not appear in the catalog
 
-1. Check that the action ran successfully in the Actions tab
-2. Verify that `scorecards-repo` is set correctly in your workflow
-3. Check that results were committed to the catalog branch in the central repository
-4. Reload the catalog after registry consolidation completes; result updates do not require a UI deployment (see [Deployment](../../docs/README.md#deployment)).
+Repeat the [first-service gate](#step-4-verify-the-first-service-end-to-end) in order:
+
+1. Verify the service evaluation run and recorded service SHA.
+2. Verify the individual registry and result files on `catalog`.
+3. Verify the matching consolidation run completed successfully.
+4. Verify `all-services.json` contains the entry.
+5. Use a fresh browser context to distinguish deployed UI state from cached content.
+
+A successful scoring run alone does not prove consolidation or visibility. If consolidation cannot push because of a `catalog` rule, resolve that rule explicitly; do not grant a broader PAT as an automatic fallback.
 
 ### Checks failing unexpectedly
 

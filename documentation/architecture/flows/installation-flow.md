@@ -115,6 +115,7 @@ This document describes how service repositories are onboarded to the scorecards
 
 - `scorecards-repo`: Central Scorecards repository
 - `scorecards-branch`: Central catalog branch
+- `retry-closed`: `false` by default; only an explicit `true` retries after a closed or merged installation PR
 
 **Permissions Required**:
 
@@ -152,76 +153,24 @@ service:
 - `service.description`: Empty string (must be manually filled)
 - `service.links`: Empty array (can be populated with documentation links)
 
-### 5. Create Branch & Push
+### 5. Resolve PR state, create branch and push
 
-**Implementation**: `.github/workflows/install.yml`
+Both maintained onboarding workflows use the same states:
 
-**Branch Name**: `scorecards-installation`
+- workflow already present: `installed`;
+- newest labeled PR open: return its number and URL, without creating a branch;
+- newest labeled PR closed or merged: stop by default;
+- no prior PR, or closed/merged plus `retry-closed: true`: create a new attempt.
 
-**Git Operations**:
+Each new attempt uses `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`. It commits the generated workflow and config, then performs a normal push. A push failure stops before PR creation. Old fixed-name or prior-attempt branches remain untouched; the workflows never delete or force-update them.
 
-```bash
-git checkout -b scorecards-installation
-git add .github/workflows/scorecards.yml
-git add .scorecard/config.yml
-git commit -m "Add scorecards quality tracking"
-git push origin scorecards-installation
-```
+### 6. Create or return the pull request
 
-**Conflict Handling**:
+For a new attempt, `gh pr create --head` receives exactly the branch emitted by the preparation step. The workflow returns `pr-number`, `pr-state` and the full `pr-url`.
 
-- Checks if branch already exists
-- If exists, updates existing branch
-- If PR already exists, updates the PR
+For an open PR, those outputs identify the existing PR. For a closed or merged PR with `retry-closed: false`, no success output claims a new PR. Closing is therefore durable until a caller or dispatcher explicitly requests another uniquely named attempt.
 
-### 6. Create Pull Request
-
-**Implementation**: `.github/workflows/install.yml`
-
-**GitHub API Call**:
-
-```bash
-gh pr create \
-  --repo "$TARGET_REPO" \
-  --base "$DEFAULT_BRANCH" \
-  --head scorecards-installation \
-  --title "Add scorecards quality tracking" \
-  --body "$(cat <<'EOF'
-# Scorecards Quality Tracking
-
-This PR adds automated quality scoring to this repository.
-
-## What's Being Added
-
-- `.github/workflows/scorecards.yml` - Workflow that runs quality checks
-- `.scorecard/config.yml` - Configuration for team and service metadata
-
-## How It Works
-
-Every push to the main branch will:
-1. Run quality checks (documentation, tests, CI, etc.)
-2. Calculate a weighted score
-3. Update the central catalog
-
-## Next Steps
-
-1. Review the config file and update team/description
-2. Merge this PR to activate scorecards
-3. View your score at [catalog URL]
-
-## Documentation
-
-See [link to docs] for more information.
-EOF
-)"
-```
-
-**PR Features**:
-
-- Descriptive title and body
-- Links to documentation
-- Instructions for team
-- Auto-assignable to team members
+The reusable path runs in the service repository. The central dispatch path supplies `org`, `repo` and `SCORECARDS_WORKFLOW_TOKEN`; only caller and credential wiring differ, not branch/PR semantics.
 
 ### 7. Track PR in Registry
 
@@ -278,16 +227,13 @@ EOF
 
 **Actions**:
 
-1. Scorecards workflow runs for first time
-2. Executes all quality checks
-3. Calculates initial score and rank
-4. Updates registry:
-   - `installed: true`
-   - `has_workflow: true`
-   - Adds score, rank, timestamp
-   - Adds check results
-5. Generates badge
-6. Service appears in catalog UI
+1. The service workflow runs on its default branch and records the service SHA.
+2. Checks execute and the score, result files and individual `registry/{org}/{repo}.json` entry are published to `catalog`.
+3. The catalog push triggers `Consolidate Registry`, which must complete successfully using the central job-scoped token.
+4. `registry/all-services.json` must contain the service.
+5. A fresh browser context must find the service in the deployed Services view.
+
+An evaluation or individual registry entry can exist before consolidation. Neither alone proves UI visibility.
 
 **Registry Update**:
 

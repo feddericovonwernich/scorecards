@@ -182,6 +182,35 @@ dispatch a fresh **Update Checks Hash** run on `main` after that writer finishes
 Catalog API/raw-content consumers continue to read the `catalog` branch, not
 the Pages artifact.
 
+### New repository deployment
+
+The installer configures a new site directly with `build_type=workflow`, sets
+`main` as the default branch when needed, and dispatches `sync-docs.yml` after
+the atomic branch publication. It correlates the run with the personalized
+`INSTALLED_MAIN_SHA`, not the upstream `SOURCE_SHA`, and refuses zero or
+multiple fresh candidates rather than selecting an arbitrary recent run.
+
+An authorized operator can inspect the same boundary without changing it:
+
+```bash
+gh run list --repo "$FULL_REPO" --workflow sync-docs.yml \
+  --branch main --event workflow_dispatch --limit 10 \
+  --json databaseId,status,conclusion,url,headSha,createdAt
+gh api "repos/$FULL_REPO/pages" --jq '{build_type,status,html_url}'
+```
+
+Installation is complete only after the unique fresh run for
+`INSTALLED_MAIN_SHA` concludes successfully and Pages reports workflow mode
+without an errored state. In a fresh browser context, verify `index.html`
+references hashed compiled JS/CSS assets, those assets load, and Services,
+Teams and API Explorer render. Source HTML containing `src/main.tsx`, a
+successful upload or a historical `status: built` is not deployment proof.
+
+If refs exist but Pages setup or deployment fails, keep both branches and the
+run/artifact logs. Correct forward through a reviewed source change, then
+dispatch a fresh run for the installed `main`; do not rerun installation,
+reset branches, delete results or fall back to legacy branch publication.
+
 ### Coordinated transition from legacy Pages
 
 Do not switch Pages settings before the workflow PR is integrated with green

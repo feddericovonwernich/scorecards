@@ -13,71 +13,62 @@ The central Scorecards repository contains:
 - Check definitions and scoring system
 - Results storage in the `catalog` branch
 
-## One-Line Installation
+## Version-pinned installation
 
-The quickest way to get started:
+Use the full commit SHA shown by a reviewed Scorecards release. `main`, a moving tag, and `curl | bash` are not installation contracts.
 
 ```bash
 export GITHUB_TOKEN=your_github_pat
-curl -fsSL https://raw.githubusercontent.com/feddericovonwernich-org/scorecards/main/scripts/install.sh | bash
+export SCORECARDS_RELEASE_SHA='<40-character release SHA>'
+export SCORECARDS_TARGET_REPO='your-org/scorecards'
+
+: "${SCORECARDS_RELEASE_SHA:?copy the full SHA from the release}"
+[[ "$SCORECARDS_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+SOURCE_DIR="$(mktemp -d)"
+git -C "$SOURCE_DIR" init
+git -C "$SOURCE_DIR" fetch --depth=1 \
+  https://github.com/feddericovonwernich/scorecards.git "$SCORECARDS_RELEASE_SHA"
+git -C "$SOURCE_DIR" checkout --detach FETCH_HEAD
+SCORECARDS_SOURCE_SHA="$SCORECARDS_RELEASE_SHA" bash "$SOURCE_DIR/scripts/install.sh"
+rm -rf "$SOURCE_DIR"
 ```
 
-The installation script will:
+The release SHA remains intentionally unset in source documentation until the safe installer commit is integrated, tagged and released. Never substitute an older known-broken SHA.
 
-1. Validate prerequisites (git, gh CLI, jq)
-2. Prompt for your target repository (org/repo)
-3. Create the repository if it doesn't exist
-4. Set up the main branch with all system code
-5. Create the catalog branch for data storage
-6. Push both branches to your repository
-7. Customize documentation to reference your repository
-8. Configure legacy branch-based GitHub Pages
-9. Provide next steps for service integration
+The installer:
 
-The installer does not complete workflow-based publication. Follow the [Deployment guide](../../docs/README.md#deployment) after installation.
+1. accepts only `owner/scorecards`;
+2. rejects any existing head or tag without changing it;
+3. requires `SCORECARDS_ADOPT_EMPTY_REPO=true` to recover an existing repository with zero refs;
+4. prepares personalized `main` and `catalog` commits locally;
+5. publishes both branches in one normal atomic push;
+6. configures Pages with `build_type=workflow`;
+7. dispatches a fresh `sync-docs.yml` run for the personalized `INSTALLED_MAIN_SHA`; and
+8. reports success only after that unique run succeeds and Pages remains in workflow mode.
 
 ## Prerequisites
 
-Before running the installation script, ensure you have:
+- Bash 3.2 or newer.
+- Git with `git push --atomic` support.
+- GitHub CLI commands `api`, `repo view`, `repo create`, `workflow run` and `run list`.
+- A `GITHUB_TOKEN` matching the installer operations in the [credential matrix](../reference/token-requirements.md#operation-matrix).
+- GitHub Actions and workflow-based Pages available for the target repository visibility.
 
-- **git**: Version control
-- **gh**: [GitHub CLI](https://cli.github.com/)
-- **jq**: JSON processor
-- **GitHub Personal Access Tokens**:
-  - `SCORECARDS_CATALOG_TOKEN` with `repo` scope (required)
-  - `SCORECARDS_WORKFLOW_TOKEN` with `repo` and `workflow` scopes (optional, for automated installation)
-
-See [Token Requirements Guide](../reference/token-requirements.md) for token creation instructions.
+`jq` is not an installer prerequisite. GitHub does not provide non-mutating checks for every repository-creation, workflow-write or Pages policy. The installer checks observable identity, membership and existing-repository permissions; repository creation, atomic push, Pages configuration and dispatch remain the authoritative capability checks.
 
 ### Optional PR-only remediation
 
 Remediation needs no additional service workflow and must not be enabled as an installation side effect. The central policy prepares only the [explicitly authorized badge pilot](../architecture/flows/remediation-flow.md#piloto-acotado-test-repo-minimal); it does not authorize new installations. Configure the reviewed runtime digest and explicit target/check/actor allowlists only after verifying the existing workflow-token holder and effective default-branch rules without bypass. See the [activation checklist and rollback](../architecture/flows/remediation-flow.md#activación-prerrequisitos-externos-obligatorios); inability to verify those controls means keeping remediation disabled.
 
-## Manual Installation
+## Installation checkpoints and recovery
 
-If you prefer to set up manually:
+The installer has three remote checkpoints:
 
-### Step 1: Clone or Fork
+1. **No repository, or an existing empty repository:** retry normally if no repository was created. If a failed attempt created an empty repository, inspect that it still has zero heads and tags, then retry with `SCORECARDS_ADOPT_EMPTY_REPO=true`.
+2. **Both `main` and `catalog` published:** never rerun the installer. The two refs were created together; continue only with Pages recovery.
+3. **Pages configured or dispatched:** preserve refs, workflow logs, artifact and deployment records. Fix forward through a reviewed Scorecards release, or dispatch a fresh `sync-docs.yml` run for the installed `main` commit.
 
-Clone or fork this repository to your organization.
-
-### Step 2: Create the Catalog Branch
-
-Create an orphan `catalog` branch for storing results:
-
-```bash
-git checkout --orphan catalog
-git rm -rf .
-git checkout main -- docs/
-mkdir -p results badges registry
-echo '[]' > registry/services.json
-git add . && git commit -m "Initialize catalog branch"
-git push -u origin catalog
-```
-
-### Step 3: Enable GitHub Pages
-
-Follow the [Deployment guide](../../docs/README.md#deployment) to publish the compiled catalog UI.
+A populated repository is not an installation target or an upgrade target. Preserve its refs, settings, results and registry. Do not force push, reset, delete refs or recreate `catalog`. Existing legacy Pages installations use the [coordinated transition and rollback](../../docs/README.md#coordinated-transition-from-legacy-pages), not this new-install path.
 
 ## Customization
 
@@ -146,98 +137,56 @@ See the [Token Requirements Guide](../reference/token-requirements.md) for crede
 
 ## Automated Service Onboarding
 
-If you have a unified CI system or want to proactively onboard services, you can use the **install reusable workflow** to automatically add scorecards to service repositories.
+Two maintained paths share the same PR state contract:
 
-### How It Works
+- service repositories can call `.github/workflows/install.yml`;
+- the central repository can dispatch `.github/workflows/create-installation-pr.yml`.
 
-The install workflow runs in service repositories and:
-
-1. Calculates the service's current scorecard score
-2. Creates an automated PR with scorecards configuration files
-3. Shows results in the PR description (even before merging)
-4. Respects the service team's decision if they close the PR
-
-This "try before you buy" approach lets service teams see their scores before committing to installation.
-
-### Example: Add to Unified CI Template
-
-Add scorecards to your organization's unified CI template:
-
-> **Important:** Replace `your-org/scorecards` with your organization's scorecards repository, not the template repository.
+Both use the label `scorecards-install`. An open installation PR is returned without creating another branch or PR. A closed or merged PR is respected by default. Only an explicit `retry-closed: true` creates a new branch named `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}` and a new PR. Neither path deletes or force-updates an earlier branch.
 
 ```yaml
-# .github/workflows/ci.yml (your existing unified CI template)
-name: CI
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
 jobs:
-  # Your existing CI jobs
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
-        run: npm test
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint code
-        run: npm run lint
-
-  # Add scorecards automated onboarding
   scorecards:
-    uses: your-org/scorecards/.github/workflows/install.yml@main # Replace with YOUR org's scorecards repo
+    uses: your-org/scorecards/.github/workflows/install.yml@main
+    with:
+      scorecards-repo: your-org/scorecards
+      scorecards-branch: catalog
+      retry-closed: false
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
       scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 ```
 
-**What to customize:**
-
-- `uses`: Replace `your-org/scorecards` with your organization's scorecards repository (e.g., `acme-corp/scorecards`)
-
-### Benefits
-
-- Service teams see their scores immediately without installation
-- Automated PR creation reduces onboarding friction
-- Non-intrusive: respects team decisions, won't create duplicate PRs
-- Scores are still calculated daily even if PR is closed
-- Platform teams can track adoption and quality across all services
+Set `retry-closed: true` only for a deliberate human retry. A score can be published before the installation PR merges or after it closes; that proves neither registry consolidation nor UI visibility. Complete the [first-service gate](service-installation.md#step-4-verify-the-first-service-end-to-end) separately.
 
 ## Next Steps
 
-After setting up the central system:
-
-1. **Share with service teams**: Point them to the [Service Installation Guide](service-installation.md)
-2. **Monitor the catalog**: Visit your GitHub Pages URL to see services as they onboard
-3. **Customize checks**: Add organization-specific quality checks
-4. **Set standards**: Adjust check weights based on your priorities
+1. Share the [Service Installation Guide](service-installation.md).
+2. Complete one first-service gate before broad onboarding.
+3. Confirm `github-actions[bot]` can make normal writes to `catalog`; do not broaden a PAT to bypass a branch rule.
+4. Record the release SHA, installed main SHA, Pages run URL and first-service run URLs.
 
 ## Troubleshooting
 
-### Installation Script Fails
+### Installer rejects the target
 
-- Verify prerequisites are installed: `git --version`, `gh --version`, `jq --version`
-- Check GitHub token has `repo` and `workflow` scopes
-- Ensure you have permission to create repositories in your organization
+- `owner/scorecards` is the only supported name.
+- Any head or tag means the repository is populated and must be preserved.
+- For a zero-ref repository created by a failed attempt, verify it is empty and set `SCORECARDS_ADOPT_EMPTY_REPO=true`.
+- `SCORECARDS_USE_EXISTING` is retired; it never enables an upgrade.
 
-### GitHub Pages Not Deploying
+### Atomic push fails
 
-See the [Deployment guide](../../docs/README.md#deployment) for publication prerequisites and GitHub Pages configuration.
+Both refs remain absent when the server honors atomic push. Inspect repository rules and token permissions, keep the repository, verify it still has zero refs, and retry with the empty-repository opt-in. Do not push either branch separately.
 
-### Services Not Appearing in Catalog
+### Pages does not deploy
 
-- Verify service workflows are running successfully
-- Check the `catalog` branch for results in `results/org/repo/`
-- Ensure services are using a valid `SCORECARDS_CATALOG_TOKEN` token
+Keep `main` and `catalog`. Record the failed run URL and Pages state. Confirm Pages uses GitHub Actions, then fix forward and dispatch a fresh `sync-docs.yml` run for `INSTALLED_MAIN_SHA`; never rerun the installer or switch a new installation to legacy branch publication.
 
+### Service does not appear
+
+Follow every assertion in the [first-service gate](service-installation.md#step-4-verify-the-first-service-end-to-end). An individual registry entry, consolidation run, consolidated entry and fresh-browser UI result are distinct checks.
 ## Additional Resources
 
 - [Service Installation Guide](service-installation.md) - For service teams

@@ -2,29 +2,37 @@
 
 This guide explains the GitHub tokens required for Scorecards and how to create them.
 
-## Token Overview
+## Token overview
 
-Scorecards uses two GitHub Personal Access Tokens (PATs) for different purposes:
+Scorecards has three user-managed credential roles and one repository-scoped ephemeral role:
 
-| Token                       | Purpose                                             | Scopes                                                          | Required?  |
-| --------------------------- | --------------------------------------------------- | --------------------------------------------------------------- | ---------- |
-| `SCORECARDS_CATALOG_TOKEN`  | Write results to catalog branch                     | `repo`                                                          | **Yes**    |
-| `SCORECARDS_WORKFLOW_TOKEN` | Installation PRs and explicitly enabled remediation | Classic: `repo`; `workflow` additionally for installation files | Optional\* |
+| Credential | Purpose | Required where |
+| --- | --- | --- |
+| Installer `GITHUB_TOKEN` | Create `owner/scorecards`, publish workflows, configure Pages and dispatch/read Actions | Operator environment only |
+| `SCORECARDS_CATALOG_TOKEN` | Service-to-central checkout and normal result writes to `catalog` | Each participating service workflow |
+| `SCORECARDS_WORKFLOW_TOKEN` | Create installation branches and PRs containing workflow files; separately authorized remediation | Automated onboarding host |
+| Job `github.token` | Same-repository consolidation, docs sync and checks-hash writes | Issued per central workflow run |
 
-\*Required for automated installation or enabled remediation; see [Remediation Authorization](#remediation-authorization).
+The central repository does not receive `SCORECARDS_CATALOG_TOKEN` merely to consolidate its own registry. `.github/workflows/consolidate-registry.yml` requests `contents: write` and uses the job-scoped token. If a `catalog` ruleset blocks that bot, the run fails; resolve the minimum rule explicitly instead of falling back to a broader PAT.
 
-Central `sync-docs.yml` and `update-checks-hash.yml` use the repository's
-ephemeral `GITHUB_TOKEN` with job-scoped `contents: write` for same-repository
-catalog writes, not either PAT.
-The separate Pages deployment job uses only `contents: read`, `pages: write`
-and `id-token: write`. See the [deployment transition procedure](../../docs/README.md#deployment).
-This does not repair or expand cross-repository result/remediation credentials.
+## Operation matrix
 
-## Why Two Tokens?
+| Credential | Operation | Fine-grained permission | Classic scope | Observable preflight |
+| --- | --- | --- | --- | --- |
+| Installer `GITHUB_TOKEN` | Identity and metadata | Metadata read | identity implied | `GET /user` |
+| Same | Create `{owner}/scorecards` | Owner/org repository creation policy | `public_repo` or `repo` by visibility | membership/policy only; creation is the capability test |
+| Same | Atomic code and workflow publication | Contents read/write and Workflows read/write | `repo` + `workflow` | visible repository permissions; atomic push is the capability test |
+| Same | Configure workflow Pages | Pages administration/manage | repository admin/maintain | visible role; Pages API is the capability test |
+| Same | Dispatch and inspect Actions | Actions read/write | repository/workflow access | CLI/endpoints, then the fresh dispatch |
+| `SCORECARDS_CATALOG_TOKEN` | Service writes to central `catalog` | Contents read/write on central only | `repo` | service checkout and first publication |
+| `SCORECARDS_WORKFLOW_TOKEN` | Installation workflow and PR | Contents and Pull requests read/write on target; Workflows read/write | `repo` + `workflow` | target checkout, push and PR creation |
+| Central `github.token` | Consolidate same-repository registry | Job `contents: write` | not applicable | normal bot push |
 
-**SCORECARDS_CATALOG_TOKEN** - Every scorecard execution writes results to the catalog branch. This token needs `repo` scope to write to the catalog.
+GitHub exposes no read-only endpoint that proves every organization creation policy, fine-grained workflow write or Pages mutation in advance. A preflight result must not be described as proof of those later operations.
 
-**SCORECARDS_WORKFLOW_TOKEN** - Installation writes `.github/workflows/` and therefore requires the classic `workflow` scope in addition to repository access. The optional remediation executor reuses this configured secret without enlarging its scope or falling back to the catalog token. The badge recipe cannot modify workflows.
+## Why two persistent tokens?
+
+`SCORECARDS_CATALOG_TOKEN` crosses from a service into the central repository only to publish results. `SCORECARDS_WORKFLOW_TOKEN` writes workflow files and creates installation PRs, so it has a separate, stronger boundary. Same-repository automation uses the ephemeral job token instead of either PAT.
 
 ## Creating SCORECARDS_CATALOG_TOKEN
 
@@ -85,17 +93,17 @@ Classic scopes and fine-grained repository permissions are different models. A f
 
 ## Service Repository Setup
 
-Each service repository needs access to `SCORECARDS_CATALOG_TOKEN` to write results.
+Each service repository's workflow must receive `SCORECARDS_CATALOG_TOKEN` without printing it. The PAT itself selects the central `{org}/scorecards` repository; organization-secret visibility separately selects which service repositories may consume it.
 
 **Using organization secrets** (recommended):
 
-- If the token is an organization secret with "All repositories" access, services automatically have access
-- No per-service configuration needed
+- Select only participating service repositories, or all repositories when that broader distribution is intentional.
+- The central repository does not need this secret for registry consolidation.
 
 **Using repository secrets** (alternative):
 
-- Add `SCORECARDS_CATALOG_TOKEN` to each service's Settings → Secrets and variables → Actions
-- Required if not using organization-wide secrets
+- Add `SCORECARDS_CATALOG_TOKEN` to each participating service's Settings → Secrets and variables → Actions.
+- Keep the token's repository access limited to the central Scorecards repository.
 
 ## Remediation Authorization
 

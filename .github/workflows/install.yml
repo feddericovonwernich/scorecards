@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'catalog'
+      retry-closed:
+        description: 'Create a new installation PR after a previous PR was closed'
+        required: false
+        type: boolean
+        default: false
     secrets:
       github-token:
         description: 'GitHub token for basic operations'
@@ -30,55 +35,63 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       installed: ${{ steps.check.outputs.installed }}
-      pr-exists: ${{ steps.check-pr.outputs.exists }}
-      pr-number: ${{ steps.check-pr.outputs.number }}
-      pr-state: ${{ steps.check-pr.outputs.state }}
+      create-pr: ${{ steps.check.outputs.create-pr }}
+      pr-number: ${{ steps.check.outputs.pr-number }}
+      pr-state: ${{ steps.check.outputs.pr-state }}
+      pr-url: ${{ steps.check.outputs.pr-url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check if scorecards is installed
+      - name: Check installation status
         id: check
-        run: |
-          if [ -f ".github/workflows/scorecards.yml" ]; then
-            echo "installed=true" >> $GITHUB_OUTPUT
-            echo "✅ Scorecards workflow is installed"
-          else
-            echo "installed=false" >> $GITHUB_OUTPUT
-            echo "❌ Scorecards workflow not found"
-          fi
-
-      - name: Check for existing installation PR
-        id: check-pr
         env:
           GH_TOKEN: ${{ secrets.github-token }}
         run: |
-          # Search for OPEN PRs with the scorecards-install label
-          # MERGED/CLOSED PRs don't block new installation attempts
-          # By default, gh pr list sorts by creation date descending (newest first)
-          pr_data=$(gh pr list --label "scorecards-install" --state open --json number,state,title --limit 1)
+          if [ -f ".github/workflows/scorecards.yml" ]; then
+            echo "installed=true" >> "$GITHUB_OUTPUT"
+            echo "create-pr=false" >> "$GITHUB_OUTPUT"
+            echo "pr-number=" >> "$GITHUB_OUTPUT"
+            echo "pr-state=" >> "$GITHUB_OUTPUT"
+            echo "pr-url=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          pr_data=$(gh pr list \
+            --label "scorecards-install" \
+            --state all \
+            --json number,state,title,url \
+            --limit 1)
 
           if [ "$pr_data" = "[]" ]; then
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "number=" >> $GITHUB_OUTPUT
-            echo "state=" >> $GITHUB_OUTPUT
-            echo "ℹ️  No existing installation PR found"
-          else
-            pr_number=$(echo "$pr_data" | jq -r '.[0].number')
-            pr_state=$(echo "$pr_data" | jq -r '.[0].state')
-            pr_title=$(echo "$pr_data" | jq -r '.[0].title')
+            echo "create-pr=true" >> "$GITHUB_OUTPUT"
+            echo "pr-number=" >> "$GITHUB_OUTPUT"
+            echo "pr-state=" >> "$GITHUB_OUTPUT"
+            echo "pr-url=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "number=$pr_number" >> $GITHUB_OUTPUT
-            echo "state=$pr_state" >> $GITHUB_OUTPUT
-            echo "ℹ️  Found PR #$pr_number ($pr_state): $pr_title"
+          pr_number=$(echo "$pr_data" | jq -r '.[0].number')
+          pr_state=$(echo "$pr_data" | jq -r '.[0].state')
+          pr_url=$(echo "$pr_data" | jq -r '.[0].url')
+          echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "pr-state=$pr_state" >> "$GITHUB_OUTPUT"
+          echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
+
+          if [ "$pr_state" = OPEN ]; then
+            echo "create-pr=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.retry-closed }}" = true ]; then
+            echo "create-pr=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "create-pr=false" >> "$GITHUB_OUTPUT"
           fi
 
   create-installation-pr-placeholder:
-    name: Create Installation PR (Placeholder)
+    name: Create Installation PR
     runs-on: ubuntu-latest
     needs: check-status
-    if: needs.check-status.outputs.installed == 'false' && needs.check-status.outputs.pr-exists == 'false'
+    if: needs.check-status.outputs.installed == 'false' && needs.check-status.outputs.create-pr == 'true'
     outputs:
       pr-number: ${{ steps.create-pr.outputs.pr-number }}
       pr-state: ${{ steps.create-pr.outputs.pr-state }}
@@ -96,32 +109,20 @@ jobs:
           path: .scorecards-tmp
           ref: main
 
-      - name: Create branch for installation
+      - name: Create installation branch and files
+        id: prepare
         run: |
+          INSTALL_BRANCH="scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b scorecards-install
+          git switch -c "$INSTALL_BRANCH"
 
-      - name: Copy workflow template
-        run: |
-          mkdir -p .github/workflows
-
-          # Copy template and customize it
+          mkdir -p .github/workflows .scorecard
           sed -e "s|feddericovonwernich/scorecards|${{ inputs.scorecards-repo }}|g" \
               -e "s|scorecards-branch: 'catalog'|scorecards-branch: '${{ inputs.scorecards-branch }}'|g" \
               .scorecards-tmp/documentation/examples/scorecard-workflow-template.yml > .github/workflows/scorecards.yml
 
-          echo "✅ Created .github/workflows/scorecards.yml"
-
-      - name: Create config template
-        run: |
-          mkdir -p .scorecard
-
-          # Extract repo name and org
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          ORG_NAME="${GITHUB_REPOSITORY%/*}"
-
-          # Create config with basic info
           cat > .scorecard/config.yml << EOF
           service:
             name: "$REPO_NAME"
@@ -130,99 +131,42 @@ jobs:
             links: []
           EOF
 
-          echo "✅ Created .scorecard/config.yml"
-
-      - name: Commit changes
-        run: |
           git add .github/workflows/scorecards.yml .scorecard/config.yml
-          git commit -m "chore: Add Scorecards quality monitoring
-
-          - Add scorecards workflow (runs daily)
-          - Add scorecards config template
-
-          Scorecard results will be updated after calculation."
-
-      - name: Push branch
-        run: |
-          git push origin scorecards-install
+          git commit -m "chore: Add Scorecards quality monitoring"
+          git push -u origin "$INSTALL_BRANCH"
+          echo "install-branch=$INSTALL_BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Create Pull Request
         id: create-pr
         env:
           GH_TOKEN_RAW: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
+          INSTALL_BRANCH: ${{ steps.prepare.outputs.install-branch }}
         run: |
-          # Sanitize token by removing any trailing whitespace/newlines
-          export GH_TOKEN=$(echo -n "$GH_TOKEN_RAW" | tr -d '\n\r\t ')
-
-          # Create PR body (results will be added later)
+          export GH_TOKEN
+          GH_TOKEN=$(printf '%s' "$GH_TOKEN_RAW" | tr -d '\n\r\t ')
           cat > pr-body.md << 'EOF'
-          ## 🎯 Scorecards Quality Monitoring
+          ## Scorecards quality monitoring
 
-          This PR adds automated quality monitoring using Scorecards.
-
-          ### What's Included
-
-          - **Workflow file**: `.github/workflows/scorecards.yml` - Runs daily to calculate quality scores
-          - **Config file**: `.scorecard/config.yml` - Service metadata and configuration
-
-          ### Current Score
-
-          ⏳ Calculating scores... Results will be updated shortly.
-
-          ### What Happens After Merge
-
-          Once merged, scorecards will:
-          - ✅ Run daily via cron schedule (configurable)
-          - ✅ Post results to the central catalog
-          - ✅ Generate quality badges for your README
-          - ✅ Track score trends over time
-
-          ### Customize Your Config
-
-          Edit `.scorecard/config.yml` to add:
-          - Team name
-          - Service description
-          - Links to documentation
-          - OpenAPI spec location (if applicable)
-
-          ### Learn More
-
-          - [Scorecards Documentation](https://github.com/${{ inputs.scorecards-repo }})
-          - [View Catalog](https://github.com/${{ inputs.scorecards-repo }}/tree/${{ inputs.scorecards-branch }})
-
-          ---
-
-          🤖 This PR was automatically created by the Scorecards installation workflow.
-          If you close this PR without merging, we'll respect your decision and won't create another one.
-          However, scorecards will continue to run daily and results will be available in the Actions tab.
+          This PR adds the maintained Scorecards workflow and service configuration.
+          Closing it is respected; a later retry requires `retry-closed: true`.
           EOF
-
-          # Create the label if it doesn't exist
           gh label create "scorecards-install" --description "Automated scorecards installation PR" --color "0366d6" 2>/dev/null || true
-
-          # Create the PR
           pr_url=$(gh pr create \
             --title "chore: Add Scorecards quality monitoring" \
             --body-file pr-body.md \
             --label "scorecards-install" \
-            --head scorecards-install \
+            --head "$INSTALL_BRANCH" \
             --base "${GITHUB_REF#refs/heads/}")
-
-          # Extract PR number from URL
-          pr_number=$(echo "$pr_url" | grep -oP '/pull/\K\d+')
-
-          echo "pr-number=$pr_number" >> $GITHUB_OUTPUT
-          echo "pr-state=OPEN" >> $GITHUB_OUTPUT
-          echo "pr-url=$pr_url" >> $GITHUB_OUTPUT
-
-          echo "✅ Created installation PR #$pr_number"
+          pr_number="${pr_url##*/}"
+          echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "pr-state=OPEN" >> "$GITHUB_OUTPUT"
+          echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
 
       - name: Cleanup
         if: always()
         run: |
           rm -rf .scorecards-tmp
           rm -f pr-body.md
-
   run-scorecards:
     name: Calculate Scorecards
     runs-on: ubuntu-latest
@@ -241,7 +185,7 @@ jobs:
       # Pass PR info from either existing PR or newly created PR
       PR_NUMBER: ${{ needs.create-installation-pr-placeholder.outputs.pr-number || needs.check-status.outputs.pr-number }}
       PR_STATE: ${{ needs.create-installation-pr-placeholder.outputs.pr-state || needs.check-status.outputs.pr-state }}
-      PR_URL: ${{ needs.create-installation-pr-placeholder.outputs.pr-url || format('https://github.com/{0}/pull/{1}', github.repository, needs.check-status.outputs.pr-number) }}
+      PR_URL: ${{ needs.create-installation-pr-placeholder.outputs.pr-url || needs.check-status.outputs.pr-url }}
     steps:
       - name: Checkout service repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

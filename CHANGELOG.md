@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Use ephemeral same-repository credentials for catalog UI/checks-hash publication and explicit pinned Pages artifact deployment; preserve domain files and document the coordinated legacy-source transition and rollback.
+- Make installation new-repository-only for `scorecards`, publish `main` and `catalog` atomically without force, keep credentials out of Git URLs/arguments, and verify a fresh workflow-based Pages deployment before success.
+- Treat an empty consolidated registry as provisional when individual service entries exist, while preserving the real empty state.
+- Reuse open onboarding PRs, respect closed PRs by default, and create uniquely named branches only for explicit retries without deleting earlier branches.
 - Preserve remediation source contents, reuse mixed-case destination PRs, retain accepted requests and verified run links when discovery fails, and align installation template consumers.
 - Preserve case-sensitive remediation badge URLs and publish validated README bytes without Git encoding/filter conversions; document fresh scoring and separate service/platform checkouts.
 - Accept canonical GitHub repository casing in remediation links, retain the run-summary fallback for incomplete PR searches, and derive clone/push destinations only from the authorized repository.
@@ -24,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Prepare the single-repository badge pilot policy with the published runtime digest and verified publisher identity; document zero-independent-approval protection, integration prerequisites and still-unexercised consumer writes.
+- **BREAKING**: Retire `SCORECARDS_USE_EXISTING`, arbitrary central repository names, moving-source `curl | bash` installation, and legacy Pages setup for new installations. Existing installations require a documented manual migration rather than rerunning the installer.
 - Pin runtime base/Node digests, signed Ubuntu snapshot and npm lockfile; retain scoring/sandbox compatibility without claiming bit-for-bit rebuilds.
 - **BREAKING**: Migrated catalog UI from vanilla JavaScript to React 19 + TypeScript
   - Replaced ES6 modules with React functional components

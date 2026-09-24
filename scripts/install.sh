@@ -1,681 +1,292 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Scorecards Installation Script
-# This script sets up a new scorecards instance in your GitHub organization or account
-#
-# Usage (remote):
-#   export GITHUB_TOKEN=your_personal_access_token
-#   curl -fsSL https://raw.githubusercontent.com/feddericovonwernich/scorecards/main/scripts/install.sh | bash
-#
-# Usage (local):
-#   export GITHUB_TOKEN=your_personal_access_token
-#   bash scripts/install.sh
-#
-# Environment variables:
-#   GITHUB_TOKEN              - Required: GitHub PAT with repo and workflow permissions
-#   SCORECARDS_SOURCE_REPO    - Optional: Override the template repository URL
-#                               (defaults to https://github.com/feddericovonwernich/scorecards.git)
-#
-# Non-Interactive Mode Variables (for CI/automation):
-#   SCORECARDS_TARGET_REPO    - Target repository in 'org/repo' format
-#   SCORECARDS_AUTO_CONFIRM   - Skip all confirmation prompts (true/false)
-#   SCORECARDS_REPO_PRIVATE   - Create as private repository (true/false)
-#   SCORECARDS_USE_EXISTING   - Use existing repository if found (true/false)
-#
-# Usage Examples:
-#   Interactive (default):
-#     export GITHUB_TOKEN=ghp_xxx
-#     bash scripts/install.sh
-#
-#   Non-Interactive (CI/automation):
-#     export GITHUB_TOKEN=ghp_xxx
-#     export SCORECARDS_TARGET_REPO=my-org/scorecards
-#     export SCORECARDS_AUTO_CONFIRM=true
-#     export SCORECARDS_REPO_PRIVATE=false
-#     bash scripts/install.sh
-#
-#   One-liner remote install:
-#     export GITHUB_TOKEN=ghp_xxx SCORECARDS_TARGET_REPO=my-org/scorecards \
-#            SCORECARDS_AUTO_CONFIRM=true SCORECARDS_REPO_PRIVATE=false
-#     curl -fsSL https://raw.githubusercontent.com/.../install.sh | bash
+# Installs a new Scorecards repository from this exact Git checkout.
+# Supported target: owner/scorecards. Existing repositories must have no refs and
+# require SCORECARDS_ADOPT_EMPTY_REPO=true. Existing installations are never updated.
 
-# Colors for output (use $'...' for actual escape characters)
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
 YELLOW=$'\033[1;33m'
 BLUE=$'\033[0;34m'
-NC=$'\033[0m' # No Color
+NC=$'\033[0m'
+SOURCE_REPOSITORY="https://github.com/feddericovonwernich/scorecards"
+INSTALL_POLL_INTERVAL_SECONDS="${INSTALL_POLL_INTERVAL_SECONDS:-5}"
+INSTALL_DEPLOY_TIMEOUT_SECONDS="${INSTALL_DEPLOY_TIMEOUT_SECONDS:-900}"
 
-# Template repository
-TEMPLATE_REPO="https://github.com/ossf/scorecards"
+print_header() { printf '\n%b%s%b\n\n' "$BLUE" "$1" "$NC"; }
+print_success() { printf '%b✓ %s%b\n' "$GREEN" "$1" "$NC"; }
+print_error() { printf '%b✗ %s%b\n' "$RED" "$1" "$NC" >&2; }
+print_warning() { printf '%b⚠ %s%b\n' "$YELLOW" "$1" "$NC"; }
+print_info() { printf '%bℹ %s%b\n' "$BLUE" "$1" "$NC"; }
+fail() { print_error "$1"; exit 1; }
 
-print_header() {
-    echo -e "\n${BLUE}========================================${NC}"
-    echo -e "${BLUE}$1${NC}"
-    echo -e "${BLUE}========================================${NC}\n"
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-# Validation helper for boolean environment variables
 validate_boolean_env() {
-    local var_name="$1"
-    local var_value="${2:-}"
-
-    if [ -n "$var_value" ] && [ "$var_value" != "true" ] && [ "$var_value" != "false" ]; then
-        print_error "Invalid value for $var_name: '$var_value'"
-        echo "Expected: 'true' or 'false' (as strings)"
-        echo "Got: '$var_value'"
-        exit 1
+    local name="$1"
+    local value="${2:-}"
+    if [ -n "$value" ] && [ "$value" != true ] && [ "$value" != false ]; then
+        fail "$name must be 'true' or 'false', got '$value'"
     fi
 }
-
-# Validate environment variables in non-interactive mode
-if [ "${SCORECARDS_AUTO_CONFIRM:-}" = "true" ]; then
-    print_info "Non-interactive mode enabled (SCORECARDS_AUTO_CONFIRM=true)"
-
-    # Validate required vars for non-interactive mode
-    if [ -z "${SCORECARDS_TARGET_REPO:-}" ]; then
-        print_error "SCORECARDS_TARGET_REPO is required when SCORECARDS_AUTO_CONFIRM=true"
-        echo "Please set: export SCORECARDS_TARGET_REPO=org/repo"
-        exit 1
-    fi
-
-    # Validate repository format
-    if [[ ! "$SCORECARDS_TARGET_REPO" =~ ^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$ ]]; then
-        print_error "Invalid SCORECARDS_TARGET_REPO format: '$SCORECARDS_TARGET_REPO'"
-        echo "Expected format: 'org/repo' or 'username/repo'"
-        exit 1
-    fi
-
-    # Validate boolean vars
-    validate_boolean_env "SCORECARDS_AUTO_CONFIRM" "${SCORECARDS_AUTO_CONFIRM:-}"
-    validate_boolean_env "SCORECARDS_REPO_PRIVATE" "${SCORECARDS_REPO_PRIVATE:-}"
-    validate_boolean_env "SCORECARDS_USE_EXISTING" "${SCORECARDS_USE_EXISTING:-}"
-fi
-
-# Step 1: Check prerequisites
-print_header "Step 1: Checking Prerequisites"
 
 check_command() {
-    if ! command -v "$1" &> /dev/null; then
-        print_error "$1 is not installed"
-        echo "Please install $1 and try again."
-        echo "Installation instructions: $2"
-        exit 1
-    fi
-    print_success "$1 is installed"
+    command -v "$1" >/dev/null 2>&1 || fail "$1 is required. Install it from $2"
 }
 
-check_command "git" "https://git-scm.com/downloads"
-check_command "gh" "https://cli.github.com/"
-check_command "jq" "https://stedolan.github.io/jq/download/"
+gh_with_token() {
+    GH_TOKEN="$GITHUB_TOKEN" gh "$@"
+}
 
-# Check for GitHub token
-if [ -z "$GITHUB_TOKEN" ]; then
-    print_error "GITHUB_TOKEN environment variable is not set"
-    echo ""
-    echo "Please set your GitHub Personal Access Token:"
-    echo "  export GITHUB_TOKEN=your_token_here"
-    echo ""
-    echo "The token needs the following permissions:"
-    echo "  - repo (full control of private repositories)"
-    echo "  - workflow (update GitHub Actions workflows)"
-    echo ""
-    echo "Create a token at: https://github.com/settings/tokens/new"
-    exit 1
+git_with_gh() {
+    GH_TOKEN="$GITHUB_TOKEN" git \
+        -c credential.helper= \
+        -c credential.helper='!gh auth git-credential' \
+        "$@"
+}
+
+remote_ref_sha() {
+    local repository="$1"
+    local ref="$2"
+    local line
+    line="$(git_with_gh -C "$repository" ls-remote origin "$ref")"
+    printf '%s\n' "${line%%[[:space:]]*}"
+}
+
+if [ -n "${SCORECARDS_USE_EXISTING+x}" ]; then
+    fail "SCORECARDS_USE_EXISTING is no longer supported. Preserve the repository and follow the manual upgrade guide; do not force push or reset it."
 fi
-print_success "GITHUB_TOKEN is set"
-
-# Validate token
-print_info "Validating GitHub token..."
-if ! gh auth status &> /dev/null; then
-    print_error "GitHub token is invalid or expired"
-    echo "Please check your GITHUB_TOKEN and try again."
-    exit 1
-fi
-print_success "GitHub token is valid"
-
-# Get authenticated user
-GITHUB_USER=$(gh api user -q .login)
-print_success "Authenticated as: $GITHUB_USER"
-
-# Step 2: Interactive setup
-print_header "Step 2: Repository Setup"
+validate_boolean_env SCORECARDS_AUTO_CONFIRM "${SCORECARDS_AUTO_CONFIRM:-}"
+validate_boolean_env SCORECARDS_REPO_PRIVATE "${SCORECARDS_REPO_PRIVATE:-}"
+validate_boolean_env SCORECARDS_ADOPT_EMPTY_REPO "${SCORECARDS_ADOPT_EMPTY_REPO:-}"
 
 if [ -n "${SCORECARDS_TARGET_REPO:-}" ]; then
-    # Use environment variable
     REPO_INPUT="$SCORECARDS_TARGET_REPO"
-    print_info "Using target repository from environment: $REPO_INPUT"
 else
-    # Interactive prompt
-    echo "Enter the repository name for your scorecards instance."
-    echo "Format: 'org/repo' or just 'repo' (for personal account)"
-    echo ""
-    read -p "Repository: " REPO_INPUT < /dev/tty
+    read -r -p "Target repository (owner/scorecards): " REPO_INPUT </dev/tty
 fi
 
-# Parse org/repo
-if [[ "$REPO_INPUT" == *"/"* ]]; then
-    REPO_OWNER=$(echo "$REPO_INPUT" | cut -d'/' -f1)
-    REPO_NAME=$(echo "$REPO_INPUT" | cut -d'/' -f2)
-else
-    REPO_OWNER="$GITHUB_USER"
-    REPO_NAME="$REPO_INPUT"
+if [[ ! "$REPO_INPUT" =~ ^[A-Za-z0-9_-]+/[A-Za-z0-9_-]+$ ]]; then
+    fail "SCORECARDS_TARGET_REPO must use the owner/repository form"
 fi
-
+REPO_OWNER="${REPO_INPUT%%/*}"
+REPO_NAME="${REPO_INPUT##*/}"
 FULL_REPO="$REPO_OWNER/$REPO_NAME"
-print_info "Target repository: $FULL_REPO"
-
-# Confirm with user
-if [ "${SCORECARDS_AUTO_CONFIRM:-}" = "true" ]; then
-    print_info "Auto-confirm enabled, proceeding with: $FULL_REPO"
-else
-    echo ""
-    read -p "Is this correct? (y/n) " -n 1 -r < /dev/tty
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_error "Installation cancelled"
-        exit 1
-    fi
+if [ "$REPO_NAME" != scorecards ]; then
+    fail "Only a repository named 'scorecards' is supported; '$FULL_REPO' was not changed."
 fi
 
-# Step 3: Check if repository exists
-print_header "Step 3: Repository Validation"
+print_header "Step 1: Checking prerequisites"
+check_command git https://git-scm.com/downloads
+check_command gh https://cli.github.com/
+if [ "${BASH_VERSINFO[0]}" -lt 3 ] || { [ "${BASH_VERSINFO[0]}" -eq 3 ] && [ "${BASH_VERSINFO[1]}" -lt 2 ]; }; then
+    fail "Bash 3.2 or newer is required"
+fi
+GIT_PUSH_HELP="$(git push -h 2>&1 || true)"
+grep -q -- 'atomic' <<<"$GIT_PUSH_HELP" || fail "Git must support git push --atomic (Git 2.4+)"
+for capability in "api --help" "repo view --help" "repo create --help" "workflow run --help" "run list --help"; do
+    # Deliberate word splitting: each capability is a gh command plus --help.
+    # shellcheck disable=SC2086
+    gh $capability >/dev/null 2>&1 || {
+        gh --version >&2 || true
+        fail "GitHub CLI lacks required capability: gh $capability"
+    }
+done
+[ -n "${GITHUB_TOKEN:-}" ] || fail "GITHUB_TOKEN is required"
+GITHUB_USER="$(gh_with_token api user --jq .login)" || fail "GITHUB_TOKEN is invalid or expired"
+[ -n "$GITHUB_USER" ] || fail "GitHub did not return an authenticated user"
+OWNER_TYPE="$(gh_with_token api "users/$REPO_OWNER" --jq .type)" || fail "Cannot read target owner '$REPO_OWNER'"
+if [ "$OWNER_TYPE" = Organization ]; then
+    MEMBERSHIP="$(gh_with_token api "orgs/$REPO_OWNER/memberships/$GITHUB_USER" --jq .state 2>/dev/null || true)"
+    [ "$MEMBERSHIP" = active ] || fail "Authenticated user has no visible active membership in $REPO_OWNER"
+fi
+print_success "Authenticated as $GITHUB_USER"
 
-print_info "Checking if repository exists..."
-if gh repo view "$FULL_REPO" &> /dev/null; then
-    print_warning "Repository $FULL_REPO already exists"
-
-    # Determine whether to use existing repository
-    if [ -n "${SCORECARDS_USE_EXISTING:-}" ]; then
-        # Explicit environment variable takes precedence
-        if [ "${SCORECARDS_USE_EXISTING}" = "true" ]; then
-            print_info "Using existing repository (SCORECARDS_USE_EXISTING=true)"
-            REPO_EXISTS=true
-        else
-            print_error "Cannot proceed: Repository exists but SCORECARDS_USE_EXISTING=false"
-            echo "Either:"
-            echo "  - Set SCORECARDS_USE_EXISTING=true to use the existing repository"
-            echo "  - Use a different repository name"
-            echo "  - Manually delete the existing repository"
-            exit 1
-        fi
-    elif [ "${SCORECARDS_AUTO_CONFIRM:-}" = "true" ]; then
-        # Auto-confirm defaults to using existing repository
-        print_info "Auto-confirm enabled, using existing repository"
-        REPO_EXISTS=true
-    else
-        # Interactive prompt
-        echo ""
-        read -p "Do you want to use this existing repository? (y/n) " -n 1 -r < /dev/tty
-        echo ""
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_error "Installation cancelled"
-            exit 1
-        fi
-        REPO_EXISTS=true
-    fi
-else
-    print_info "Repository does not exist. Creating it..."
-
-    # Determine visibility
-    if [ -n "${SCORECARDS_REPO_PRIVATE:-}" ]; then
-        # Use environment variable
-        if [ "${SCORECARDS_REPO_PRIVATE}" = "true" ]; then
-            VISIBILITY="--private"
-            print_info "Creating private repository (SCORECARDS_REPO_PRIVATE=true)"
-        else
-            VISIBILITY="--public"
-            print_info "Creating public repository (SCORECARDS_REPO_PRIVATE=false)"
-        fi
-    elif [ "${SCORECARDS_AUTO_CONFIRM:-}" = "true" ]; then
-        # Auto-confirm defaults to public
-        VISIBILITY="--public"
-        print_info "Auto-confirm enabled, creating public repository"
-    else
-        # Interactive prompt
-        echo ""
-        read -p "Should this be a private repository? (y/n) " -n 1 -r < /dev/tty
-        echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            VISIBILITY="--private"
-        else
-            VISIBILITY="--public"
-        fi
-    fi
-
-    # Create repository
-    if [ "$REPO_OWNER" = "$GITHUB_USER" ]; then
-        gh repo create "$REPO_NAME" $VISIBILITY
-    else
-        gh repo create "$FULL_REPO" $VISIBILITY
-    fi
-    print_success "Repository created: $FULL_REPO"
-    REPO_EXISTS=false
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_ROOT="${SCORECARDS_SOURCE_DIR:-$SCRIPT_DIR/..}"
+[ -d "$SOURCE_ROOT/.git" ] || fail "Installer must run from a pinned Scorecards Git checkout; use the versioned bootstrap command."
+SOURCE_SHA="$(git -C "$SOURCE_ROOT" rev-parse HEAD^{commit} 2>/dev/null)" || fail "Cannot resolve source checkout HEAD"
+[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "Source checkout did not resolve to a full commit SHA"
+if [ -n "${SCORECARDS_SOURCE_SHA:-}" ] && [ "$SCORECARDS_SOURCE_SHA" != "$SOURCE_SHA" ]; then
+    fail "Source checkout SHA does not match SCORECARDS_SOURCE_SHA"
 fi
 
-# Step 4: Clone and setup
-print_header "Step 4: Setting Up Scorecards"
+TARGET_URL="https://github.com/$FULL_REPO.git"
+REPO_EXISTS=false
+if gh_with_token repo view "$FULL_REPO" --json name >/dev/null 2>&1; then
+    REPO_EXISTS=true
+    refs="$(git_with_gh ls-remote "$TARGET_URL" 'refs/heads/*' 'refs/tags/*')" || fail "Cannot inspect refs in existing repository"
+    if [ -n "$refs" ]; then
+        fail "The installer only creates new installations and never modifies repositories with refs. Preserve '$FULL_REPO' and use the manual upgrade guide; do not force push or reset."
+    fi
+    [ "${SCORECARDS_ADOPT_EMPTY_REPO:-false}" = true ] || fail "Existing empty repository requires SCORECARDS_ADOPT_EMPTY_REPO=true"
 
-TEMP_DIR=$(mktemp -d)
-print_info "Working directory: $TEMP_DIR"
+    permissions="$(gh_with_token api "repos/$FULL_REPO" --jq '.permissions | [.push,.admin,.maintain] | @tsv')" || fail "Cannot read repository permissions"
+    IFS=$'\t' read -r can_push can_admin can_maintain <<<"$permissions"
+    [ "$can_push" = true ] || fail "Token cannot push to $FULL_REPO"
+    if [ "$can_admin" != true ] && [ "$can_maintain" != true ]; then
+        fail "Token needs admin or maintain access to configure Pages"
+    fi
+    gh_with_token api "repos/$FULL_REPO/actions/permissions" --jq .enabled >/dev/null || fail "Cannot read Actions settings for $FULL_REPO"
+fi
 
-cleanup() {
-    print_info "Cleaning up temporary directory..."
-    rm -rf "$TEMP_DIR"
-}
+if [ "${SCORECARDS_AUTO_CONFIRM:-false}" != true ]; then
+    read -r -p "Install Scorecards to $FULL_REPO? (y/N) " reply </dev/tty
+    [[ "$reply" =~ ^[Yy]$ ]] || fail "Installation cancelled"
+fi
+
+print_header "Step 2: Preparing immutable installation commits"
+WORK_DIR="$(mktemp -d)"
+cleanup() { rm -rf "$WORK_DIR"; }
 trap cleanup EXIT
+INSTALL_REPO="$WORK_DIR/scorecards"
+git clone --quiet "$SOURCE_ROOT" "$INSTALL_REPO"
+git -C "$INSTALL_REPO" checkout --detach "$SOURCE_SHA" >/dev/null
+git -C "$INSTALL_REPO" switch -C main >/dev/null
+git -C "$INSTALL_REPO" config user.name "Scorecards Bot"
+git -C "$INSTALL_REPO" config user.email "scorecards-bot@users.noreply.github.com"
 
-cd "$TEMP_DIR"
+while IFS= read -r -d '' file; do
+    sed "s|feddericovonwernich/scorecards|$FULL_REPO|g; s|feddericovonwernich\\.github\\.io/scorecards|$REPO_OWNER.github.io/scorecards|g" "$file" > "$file.tmp"
+    mv "$file.tmp" "$file"
+done < <(find "$INSTALL_REPO" -type f \( -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.html' -o -name '*.js' \) ! -path '*/.git/*' ! -path '*/scripts/install.sh' -print0)
 
-# Determine source repository
-if [ -n "$SCORECARDS_SOURCE_REPO" ]; then
-    SOURCE_REPO="$SCORECARDS_SOURCE_REPO"
-    print_info "Using specified source repository: $SOURCE_REPO"
-
-    # Convert relative path to absolute path (before we cd to TEMP_DIR, we're still in workspace)
-    if [[ "$SOURCE_REPO" != /* ]] && [[ "$SOURCE_REPO" != http* ]] && [[ "$SOURCE_REPO" != git@* ]]; then
-        # Relative path - convert to absolute
-        SOURCE_REPO="$(cd "$OLDPWD" && cd "$(dirname "$SOURCE_REPO")" && pwd)/$(basename "$SOURCE_REPO")"
-        print_info "Converted to absolute path: $SOURCE_REPO"
-    fi
-else
-    # Try to detect if we're running from a local clone
-    SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
-    if [ -d "$SCRIPT_DIR/../.git" ]; then
-        SOURCE_REPO="$SCRIPT_DIR/.."
-        print_info "Using local repository as source"
-    else
-        # Default to the official scorecards template repository
-        SOURCE_REPO="https://github.com/feddericovonwernich/scorecards.git"
-        print_info "Using official scorecards template: $SOURCE_REPO"
-    fi
-fi
-
-# Validate source repository exists before attempting to use it
-if [[ "$SOURCE_REPO" != http* ]] && [[ "$SOURCE_REPO" != git@* ]]; then
-    if [ ! -d "$SOURCE_REPO" ]; then
-        print_error "Source repository not found: $SOURCE_REPO"
-        echo "Please verify the path exists and is accessible."
-        exit 1
-    fi
-    if [ ! -d "$SOURCE_REPO/.git" ]; then
-        print_error "Source repository is not a git repository: $SOURCE_REPO"
-        echo "Please ensure $SOURCE_REPO contains a valid .git directory."
-        exit 1
-    fi
-fi
-
-# Clone the template
-print_info "Cloning scorecards template..."
-if [[ "$SOURCE_REPO" == http* ]] || [[ "$SOURCE_REPO" == git@* ]]; then
-    git clone --quiet "$SOURCE_REPO" scorecards
-    cd scorecards
-else
-    # Local repository
-    cp -r "$SOURCE_REPO" scorecards
-    cd scorecards
-    # Ensure we're on main branch
-    git checkout main 2>/dev/null || git checkout -b main
-fi
-print_success "Template cloned"
-
-# Configure git
-git config user.name "Scorecards Bot"
-git config user.email "scorecards-bot@users.noreply.github.com"
-
-# Step 5: Create catalog branch
-print_header "Step 5: Creating Catalog Branch"
-
-print_info "Creating catalog branch..."
-
-# Create orphan catalog branch
-git checkout --orphan catalog
-
-# Remove all files from staging
-git rm -rf . > /dev/null 2>&1
-
-# Copy catalog UI from main
-git checkout main -- docs/ 2>/dev/null || {
-    print_error "Failed to checkout catalog UI from main branch"
-    exit 1
+cat > "$INSTALL_REPO/.scorecards-install.json" <<EOF
+{
+  "schema": 1,
+  "source_repository": "$SOURCE_REPOSITORY",
+  "source_sha": "$SOURCE_SHA"
 }
+EOF
 
-# Copy other necessary files
-git checkout main -- README.md .gitignore 2>/dev/null || true
-git checkout main -- .claude/ 2>/dev/null || true
-git checkout main -- scripts/ 2>/dev/null || true
+git -C "$INSTALL_REPO" add -A
+git -C "$INSTALL_REPO" commit -m "Install Scorecards from $SOURCE_SHA" >/dev/null
+INSTALLED_MAIN_SHA="$(git -C "$INSTALL_REPO" rev-parse refs/heads/main)"
 
-# Copy consolidate-registry workflow (must run from catalog branch)
-git checkout main -- .github/workflows/consolidate-registry.yml 2>/dev/null || true
-
-# Create data directories
-mkdir -p results badges registry
-
-# Initialize registry
-echo '[]' > registry/services.json
-
-# Initialize all-services.json with empty structure
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-cat > registry/all-services.json <<EOF
+git -C "$INSTALL_REPO" switch --orphan catalog >/dev/null
+git -C "$INSTALL_REPO" rm -rf . >/dev/null 2>&1 || true
+for path in docs README.md .gitignore scripts .github/workflows/consolidate-registry.yml; do
+    git -C "$INSTALL_REPO" checkout main -- "$path" 2>/dev/null || true
+done
+mkdir -p "$INSTALL_REPO/results" "$INSTALL_REPO/badges" "$INSTALL_REPO/registry"
+printf '%s\n' '[]' > "$INSTALL_REPO/registry/services.json"
+cat > "$INSTALL_REPO/registry/all-services.json" <<'EOF'
 {
   "services": [],
-  "generated_at": "$TIMESTAMP",
+  "generated_at": null,
   "count": 0
 }
 EOF
-
-# Create README files for each directory
-cat > results/README.md << 'EOF'
+cat > "$INSTALL_REPO/results/README.md" <<'EOF'
 # Service Results
 
-This directory contains scorecard results for each service.
-
-## Structure
-
-```
-results/
-└── <org>/
-    └── <repo>/
-        └── results.json
-```
-
-Each `results.json` file contains:
-- Service metadata (name, organization, repository URL)
-- Timestamp of last check
-- Individual check results (pass/fail, details)
-- Overall score and rank
-
-These files are automatically generated and updated by the scorecard action running in service repositories.
+Generated service results. Do not edit by hand.
 EOF
-
-cat > badges/README.md << 'EOF'
+cat > "$INSTALL_REPO/badges/README.md" <<'EOF'
 # Badges
 
-This directory contains badge JSON files for shields.io integration.
-
-## Structure
-
-```
-badges/
-└── <org>/
-    └── <repo>/
-        ├── score.json
-        └── rank.json
-```
-
-Each badge JSON file follows the shields.io endpoint schema:
-- `score.json`: Displays the numerical score (0-100)
-- `rank.json`: Displays the rank (bronze, silver, gold, platinum)
-
-Services can embed these badges in their README files using:
-```markdown
-![Scorecard](https://img.shields.io/endpoint?url=https://YOUR_ORG.github.io/scorecards/badges/ORG/REPO/score.json)
-![Rank](https://img.shields.io/endpoint?url=https://YOUR_ORG.github.io/scorecards/badges/ORG/REPO/rank.json)
-```
+Generated badge data. Do not edit by hand.
 EOF
-
-cat > registry/README.md << 'EOF'
+cat > "$INSTALL_REPO/registry/README.md" <<'EOF'
 # Service Registry
 
-This directory contains the master registry of all services using the scorecard system.
-
-## services.json
-
-The `services.json` file maintains a list of all registered services with their metadata:
-
-```json
-[
-  {
-    "name": "service-name",
-    "org": "organization",
-    "repo": "repository-name",
-    "url": "https://github.com/org/repo",
-    "score": 85,
-    "rank": "gold",
-    "lastUpdated": "2025-11-13T10:30:00Z"
-  }
-]
-```
-
-This file is automatically updated by the scorecard action when services run their checks.
+Generated service registry entries. Do not edit by hand.
 EOF
+cat > "$INSTALL_REPO/README.md" <<'EOF'
+# Scorecards catalog branch
 
-# Update README to explain catalog branch purpose
-cat > README.md << 'EOF'
-# Scorecards - Catalog Branch
-
-This is the **catalog branch** of the scorecards system. It stores catalog data and UI files.
-
-## Purpose
-
-- **Data Storage**: Stores scorecard results, badges, and service registry
-- **Publication**: Follow the [deployment procedure on main](../../blob/main/docs/README.md#deployment)
-- **No System Code**: Does not contain action code or check definitions (those are on the main branch)
-
-## Structure
-
-- `/docs/` - Catalog web interface (synced from main branch)
-- `/results/` - Service scorecard results
-- `/badges/` - Badge JSON files for shields.io
-- `/registry/` - Service registry and metadata
-
-## Automated Updates
-
-This branch is automatically updated by:
-1. Service repositories running the scorecard action
-2. The docs sync workflow (keeps documentation current)
-
-**Do not manually edit files in this branch** - they are maintained by automation.
-
-## Main Branch
-
-For system code, check definitions, and development, see the `main` branch.
+Generated catalog data and compiled UI assets. System source remains on `main`.
 EOF
+git -C "$INSTALL_REPO" add -A
+git -C "$INSTALL_REPO" commit -m "Initialize Scorecards catalog" >/dev/null
+CATALOG_SHA="$(git -C "$INSTALL_REPO" rev-parse refs/heads/catalog)"
+git -C "$INSTALL_REPO" switch main >/dev/null
+print_success "Prepared source $SOURCE_SHA as installed main $INSTALLED_MAIN_SHA"
 
-# Commit catalog structure
-git add .
-git commit -m "Initialize catalog branch
-
-- Set up data directories (results, badges, registry)
-- Initialize empty service registry
-- Copy documentation from main branch
-- Add README files explaining directory purposes
-
-This catalog branch stores data and UI files
-for the distributed scorecards system."
-
-print_success "Catalog branch created"
-
-# Step 6: Push to target repository
-print_header "Step 6: Pushing to GitHub"
-
-# Add target repository as remote with embedded token
-REPO_URL="https://$GITHUB_TOKEN@github.com/$FULL_REPO.git"
-git remote remove origin 2>/dev/null || true
-git remote add origin "$REPO_URL"
-
-print_info "Pushing main branch..."
-git checkout main
-git branch -M main
-if ! git push -u origin main --force; then
-    print_error "Failed to push main branch"
-    exit 1
+print_header "Step 3: Publishing both branches atomically"
+if [ "$REPO_EXISTS" = false ]; then
+    visibility=--public
+    [ "${SCORECARDS_REPO_PRIVATE:-false}" != true ] || visibility=--private
+    print_warning "Repository creation is the first remote write; GitHub cannot fully preflight owner policy, workflow, or Pages permissions."
+    gh_with_token repo create "$FULL_REPO" "$visibility" || fail "Repository creation failed; no refs were published"
 fi
-print_success "Main branch pushed"
 
-print_info "Pushing catalog branch..."
-if ! git push -u origin catalog --force; then
-    print_error "Failed to push catalog branch"
-    exit 1
+git -C "$INSTALL_REPO" remote remove origin 2>/dev/null || true
+git -C "$INSTALL_REPO" remote add origin "$TARGET_URL"
+if ! git_with_gh -C "$INSTALL_REPO" push --atomic origin \
+    refs/heads/main:refs/heads/main \
+    refs/heads/catalog:refs/heads/catalog; then
+    fail "Atomic publication failed. No branch should be present; if the repository is empty, retry with SCORECARDS_ADOPT_EMPTY_REPO=true."
 fi
-print_success "Catalog branch pushed"
+[ "$(remote_ref_sha "$INSTALL_REPO" refs/heads/main)" = "$INSTALLED_MAIN_SHA" ] || fail "Published main SHA does not match the prepared installation"
+[ "$(remote_ref_sha "$INSTALL_REPO" refs/heads/catalog)" = "$CATALOG_SHA" ] || fail "Published catalog SHA does not match the prepared installation"
+print_success "Published main and catalog in one atomic push"
 
-# Step 7: Customize documentation for target repository
-print_header "Step 7: Customizing Documentation"
+print_header "Step 4: Deploying GitHub Pages"
+default_branch="$(gh_with_token api "repos/$FULL_REPO" --jq .default_branch 2>/dev/null || true)"
+if [ "$default_branch" != main ]; then
+    printf '%s\n' '{"default_branch":"main"}' | gh_with_token api --method PATCH "repos/$FULL_REPO" --input - >/dev/null || fail "Branches are published, but setting default branch to main failed"
+fi
 
-print_info "Customizing documentation to reference $FULL_REPO..."
-
-# Create a new temp directory for customization
-CUSTOMIZE_DIR=$(mktemp -d)
-cd "$CUSTOMIZE_DIR"
-
-# Clone the target repository
-print_info "Cloning target repository..."
-git clone --quiet "https://$GITHUB_TOKEN@github.com/$FULL_REPO.git" repo
-cd repo
-
-# Configure git
-git config user.name "Scorecards Bot"
-git config user.email "scorecards-bot@users.noreply.github.com"
-
-# Function to replace repository references in files
-customize_docs() {
-    local branch=$1
-    print_info "Customizing $branch branch..."
-
-    git checkout "$branch" > /dev/null 2>&1
-
-    # Find all files except install.sh and replace repository references
-    find . -type f \( -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.html" -o -name "*.js" \) \
-        ! -path "*/scripts/install.sh" \
-        ! -path "*/.git/*" \
-        -print0 | while IFS= read -r -d '' file; do
-        # Use a temporary file for cross-platform sed compatibility
-        # Replace repository references
-        sed "s|feddericovonwernich/scorecards|$FULL_REPO|g" "$file" > "$file.tmp" && mv "$file.tmp" "$file"
-        # Replace GitHub Pages URLs
-        sed "s|feddericovonwernich\\.github\\.io/scorecards|$REPO_OWNER.github.io/$REPO_NAME|g" "$file" > "$file.tmp" && mv "$file.tmp" "$file"
-    done
-
-    # Check if there are any changes
-    if ! git diff --quiet; then
-        git add .
-        git commit -m "Customize documentation for $FULL_REPO
-
-- Update repository references from feddericovonwernich/scorecards to $FULL_REPO
-- Update GitHub Pages URLs to $REPO_OWNER.github.io/$REPO_NAME
-- Keep installation script pointing to source repository"
-        git push origin "$branch"
-        print_success "Customized $branch branch"
-    else
-        print_info "No changes needed for $branch branch"
-    fi
-}
-
-# Customize both branches
-customize_docs "main"
-customize_docs "catalog"
-
-# Clean up customization directory
-cd "$TEMP_DIR"
-rm -rf "$CUSTOMIZE_DIR"
-
-print_success "Documentation customized for $FULL_REPO"
-
-# Step 8: Configure GitHub Pages
-print_header "Step 8: Configuring GitHub Pages"
-
-print_info "Enabling GitHub Pages on catalog branch..."
-
-# Enable Pages using GitHub API
-PAGES_CONFIGURED=false
-if gh api -X POST "/repos/$FULL_REPO/pages" \
-    --input - <<< '{"source":{"branch":"catalog","path":"/docs"}}' \
-    2>/dev/null; then
-    PAGES_CONFIGURED=true
+pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv' 2>/dev/null || true)"
+if [ -z "$pages" ]; then
+    printf '%s\n' '{"build_type":"workflow"}' | gh_with_token api --method POST "repos/$FULL_REPO/pages" --input - >/dev/null || fail "Branches are published, but creating workflow-based Pages failed"
 else
-    print_warning "Pages might already be configured, attempting to update..."
-    if gh api -X PUT "/repos/$FULL_REPO/pages" \
-        --input - <<< '{"source":{"branch":"catalog","path":"/docs"}}' \
-        2>/dev/null; then
-        PAGES_CONFIGURED=true
-    else
-        print_warning "Could not configure Pages via API (might need manual setup)"
+    IFS=$'\t' read -r build_type _ _ <<<"$pages"
+    if [ "$build_type" != workflow ]; then
+        printf '%s\n' '{"build_type":"workflow"}' | gh_with_token api --method PUT "repos/$FULL_REPO/pages" --input - >/dev/null || fail "Branches are published, but changing Pages to workflow mode failed"
     fi
 fi
 
-if [ "$PAGES_CONFIGURED" = true ]; then
-    print_success "GitHub Pages configured"
-fi
+DISPATCH_REQUESTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+gh_with_token workflow run sync-docs.yml --repo "$FULL_REPO" --ref main || fail "Pages is configured, but dispatching sync-docs.yml failed"
 
-# Get Pages URL
-PAGES_URL="https://$REPO_OWNER.github.io/$REPO_NAME"
-print_info "Pages URL: $PAGES_URL"
-print_warning "Complete publication using https://github.com/$FULL_REPO/blob/main/docs/README.md#deployment"
+deadline=$((SECONDS + INSTALL_DEPLOY_TIMEOUT_SECONDS))
+run_url=
+run_conclusion=
+while [ "$SECONDS" -le "$deadline" ]; do
+    run_rows="$(gh_with_token api --method GET --paginate --slurp \
+        "repos/$FULL_REPO/actions/workflows/sync-docs.yml/runs" \
+        -f event=workflow_dispatch \
+        -f branch=main \
+        -f head_sha="$INSTALLED_MAIN_SHA" \
+        -f "created=>=$DISPATCH_REQUESTED_AT" \
+        -F per_page=100 \
+        --jq '.[].workflow_runs[] | [.id,.status,.conclusion,.html_url,.head_sha,.created_at] | @tsv')" || fail "Cannot query the dispatched Pages workflow"
 
-# Step 9: Success message
-print_header "Installation Complete!"
+    candidates=()
+    while IFS= read -r row; do
+        [ -n "$row" ] && candidates[${#candidates[@]}]="$row"
+    done <<<"$run_rows"
 
-cat << EOF
+    if [ "${#candidates[@]}" -gt 1 ]; then
+        fail "Ambiguous fresh sync-docs.yml runs for installed main $INSTALLED_MAIN_SHA; refusing to guess"
+    fi
+    if [ "${#candidates[@]}" -eq 1 ]; then
+        IFS=$'\t' read -r run_id run_status run_conclusion run_url run_head_sha run_created_at <<<"${candidates[0]}"
+        if [ "$run_head_sha" != "$INSTALLED_MAIN_SHA" ] || [[ "$run_created_at" < "$DISPATCH_REQUESTED_AT" ]]; then
+            fail "Workflow query returned a stale or unrelated deployment"
+        fi
+        if [ "$run_status" = completed ]; then
+            [ "$run_conclusion" = success ] || fail "Pages workflow $run_url concluded $run_conclusion. Preserve refs and logs; fix forward and dispatch main again."
+            break
+        fi
+    fi
+    sleep "$INSTALL_POLL_INTERVAL_SECONDS"
+done
+[ "$run_conclusion" = success ] || fail "Timed out waiting for the fresh Pages deployment. Preserve refs and retry only the Pages dispatch."
 
-${GREEN}✓${NC} Scorecards system successfully installed to ${BLUE}$FULL_REPO${NC}
+pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv')" || fail "Deployment succeeded, but final Pages state is unreadable"
+IFS=$'\t' read -r build_type pages_status pages_url <<<"$pages"
+[ "$build_type" = workflow ] || fail "Pages is not in workflow build mode"
+[ "$pages_status" != errored ] || fail "Pages reports an errored deployment"
 
-${YELLOW}Next Steps:${NC}
-
-${BLUE}1. Follow the deployment procedure above, then view your catalog:${NC}
-   $PAGES_URL
-
-${BLUE}2. Add scorecards to your services:${NC}
-   Create a workflow file in each service repository (.github/workflows/scorecards.yml):
-
-   ${YELLOW}name: Scorecards
-   on:
-     schedule:
-       - cron: '0 0 * * *'  # Daily
-     workflow_dispatch:
-
-   jobs:
-     scorecards:
-       runs-on: ubuntu-latest
-       steps:
-         - name: Checkout service repository
-           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-           with:
-             path: service
-
-         - name: Checkout Scorecards platform
-           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-           with:
-             repository: '$FULL_REPO'
-             token: \${{ secrets.SCORECARDS_CATALOG_TOKEN }}
-             path: .scorecards-platform
-             persist-credentials: false
-
-         - name: Run Scorecards
-           uses: ./.scorecards-platform/action
-           with:
-             github-token: \${{ secrets.SCORECARDS_CATALOG_TOKEN }}
-             scorecards-repo: '$FULL_REPO'
-             scorecards-branch: 'catalog'
-             service-workspace: \${{ github.workspace }}/service${NC}
-
-${BLUE}3. Create a Personal Access Token for services:${NC}
-   - Go to: https://github.com/settings/tokens/new
-   - Name: "Scorecards Catalog Token"
-   - Permissions: repo (full control)
-   - Add as SCORECARDS_CATALOG_TOKEN secret in each service repository
-
-${BLUE}4. Add badges to service READMEs:${NC}
-   ${YELLOW}![Scorecard]($PAGES_URL/badges/ORG/REPO/score.json)
-   ![Rank]($PAGES_URL/badges/ORG/REPO/rank.json)${NC}
-
-${GREEN}For more information, see the documentation in your new repository.${NC}
-
-EOF
+print_header "Installation Complete"
+printf '%s\n' \
+    "sourceSha: $SOURCE_SHA" \
+    "installedMainSha: $INSTALLED_MAIN_SHA" \
+    "catalogSha: $CATALOG_SHA" \
+    "runUrl: $run_url" \
+    "conclusion: $run_conclusion" \
+    "buildType: $build_type" \
+    "pagesUrl: $pages_url"
+printf '\nNext: follow documentation/guides/service-installation.md and verify the first service in the consolidated registry and a fresh browser.\n'

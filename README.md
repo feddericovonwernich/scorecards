@@ -8,14 +8,25 @@ Measure service quality against configurable standards and make results visible 
 
 ## Quick Start
 
-**One-liner install for your organization:**
+Install from the full SHA published by a reviewed Scorecards release:
 
 ```bash
 export GITHUB_TOKEN=your_github_pat
-curl -fsSL https://raw.githubusercontent.com/feddericovonwernich-org/scorecards/main/scripts/install.sh | bash
+export SCORECARDS_RELEASE_SHA='<40-character release SHA>'
+export SCORECARDS_TARGET_REPO='your-org/scorecards'
+
+: "${SCORECARDS_RELEASE_SHA:?copy the full SHA from the release}"
+[[ "$SCORECARDS_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+SOURCE_DIR="$(mktemp -d)"
+git -C "$SOURCE_DIR" init
+git -C "$SOURCE_DIR" fetch --depth=1 \
+  https://github.com/feddericovonwernich/scorecards.git "$SCORECARDS_RELEASE_SHA"
+git -C "$SOURCE_DIR" checkout --detach FETCH_HEAD
+SCORECARDS_SOURCE_SHA="$SCORECARDS_RELEASE_SHA" bash "$SOURCE_DIR/scripts/install.sh"
+rm -rf "$SOURCE_DIR"
 ```
 
-This creates a repository with GitHub Actions and results storage. Complete the [catalog deployment procedure](docs/README.md#deployment) to publish the UI, then follow the [service installation guide](documentation/guides/service-installation.md) to onboard services.
+The installer supports only a new `scorecards` repository. It rejects every populated repository and requires `SCORECARDS_ADOPT_EMPTY_REPO=true` for an existing repository with no heads or tags. Success means `main` and `catalog` were published atomically and a fresh workflow-based Pages deployment of the personalized `main` commit completed. Then follow the [first-service gate](documentation/guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
 
 ---
 

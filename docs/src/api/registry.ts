@@ -168,7 +168,7 @@ export async function loadServices(): Promise<LoadServicesResult> {
       const registryData: RegistryResponse = await response.json();
       if (registryData.services && Array.isArray(registryData.services)) {
         services = registryData.services;
-        loadedFromConsolidated = true;
+        loadedFromConsolidated = services.length > 0;
         console.log(
           `Loaded ${services.length} services from consolidated registry (generated at ${registryData.generated_at})`
         );
@@ -200,9 +200,6 @@ export async function loadServices(): Promise<LoadServicesResult> {
       )
       .map((item) => item.path);
 
-    if (registryFiles.length === 0) {
-      throw new Error('No services registered yet');
-    }
 
     // Fetch all registry files in parallel
     const fetchPromises = registryFiles.map(async (path) => {
