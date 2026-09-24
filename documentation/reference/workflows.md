@@ -115,16 +115,18 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 **Triggers:**
 
-- Manual workflow dispatch only
+- Workflow dispatch in the central repository, directly or requested by `install.yml`
 
 **Inputs:**
 
 - `org` (required) - Organization/user name
 - `repo` (required) - Repository name
-- `scorecards-repo` (optional) - Central scorecards repository (default: 'feddericovonwernich-org/scorecards')
+- `scorecards-repo` (optional) - Central scorecards repository (default: 'feddericovonwernich/scorecards'); must match the executing repository
 - `scorecards-branch` (optional) - Branch for results (default: 'catalog')
+- `retry-closed` (optional, default: `false`) - Explicitly permit a fresh attempt after a closed or merged PR
+- `request-id` (optional) - Correlation identifier supplied by the reusable caller
 
-**Purpose:** Creates a pull request in a target service repository to install scorecards.
+**Purpose:** Sole owner of installation PR creation. Both entrypoints use this workflow's target-keyed native concurrency boundary in the central repository. The owner rejects execution outside that repository or its default branch.
 
 **Jobs:**
 
@@ -132,15 +134,15 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
    - Checks out target service repository
    - Checks out scorecards repository for templates
    - Checks installation status (already installed or existing PR)
-   - Creates new branch `scorecards-install`
+   - Creates a new branch `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}` only when no prior PR exists or explicit retry permits it
    - Copies and customizes workflow template (`.github/workflows/scorecards.yml`)
    - Creates config template (`.scorecard/config.yml`)
    - Commits changes
    - Creates PR with label "scorecards-install"
-   - Handles edge cases (already installed, PR exists)
+   - Reuses an open PR and respects closed/merged PRs by default; never deletes or force-updates earlier branches
 
 2. **update-registry** - Updates catalog registry
-   - Runs only if PR was successfully created
+   - Runs after a new PR is successfully created
    - Fetches default branch of target repository
    - Updates or creates registry file with PR information
    - Commits registry update to catalog branch
@@ -150,10 +152,10 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 - `pr-number` - PR number created
 - `pr-state` - PR state (OPEN, CLOSED, MERGED)
 - `pr-url` - URL to the PR
-- `status` - Operation status (success, already-installed, pr-exists)
+- `status` - Operation status (`success`, `already-installed`, `pr-exists`, `closed`)
 - `message` - Status message
 
-**System Role:** Manual installation workflow for onboarding new services. Creates a PR that adds the scorecards workflow and config files.
+**Result transport:** The correlated `installation-pr-result-${request-id}` artifact contains `installation-pr-result.json` with `status`, `message`, `pr_number`, `pr_state` and `pr_url`. Reusable callers consume it only after the exact owner run completes successfully; acceptance of a dispatch is not completion.
 
 ---
 
@@ -169,29 +171,28 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 - `scorecards-repo` (optional) - Central scorecards repository
 - `scorecards-branch` (optional) - Branch for results
+- `retry-closed` (optional, default: `false`) - Explicit retry after a closed or merged PR
 
 **Secrets:**
 
-- `github-token` (required) - GitHub token
-- `scorecards-pat` (optional) - PAT for pushing to central repo
-- `installation-pat` (optional) - PAT for creating installation PR
+- `github-token` (required) - Caller-scoped service read token
+- `scorecards-catalog-token` (required) - Central catalog Contents read/write for evaluation publication
+- `scorecards-workflow-token` (required) - Central Actions read/write for dispatch/run/result retrieval and target Pull requests read/write for score updates; see [Token Requirements](token-requirements.md#operation-matrix)
 
-**Purpose:** Reusable workflow called by service repositories. Handles installation check, PR creation, scorecard calculation, and PR updates.
+**Purpose:** Reusable service entrypoint. Delegates PR creation to the central owner, calculates scorecards and updates the resolved PR with results.
 
 **Jobs:**
 
 1. **check-status** - Checks if scorecards is installed
    - Checks for `.github/workflows/scorecards.yml`
-   - Looks for existing installation PRs with "scorecards-install" label
-   - Outputs: `installed`, `pr-exists`, `pr-number`, `pr-state`
+   - Outputs whether the maintained service workflow is installed
 
-2. **create-installation-pr** - Creates installation PR if needed
-   - Runs only if not installed and no existing PR
-   - Creates `scorecards-install` branch
-   - Copies workflow template and customizes it
-   - Creates config template
-   - Creates PR with detailed description
-   - Outputs: `pr-number`, `pr-state`, `pr-url`
+2. **request-installation-pr** - Requests the central owner's installation result
+   - Dispatches `create-installation-pr.yml` in `scorecards-repo` with a unique request identifier
+   - Waits up to five minutes for the matching run, rejecting failed/cancelled runs, missing results and timeout
+   - Downloads that run's result artifact only after successful completion
+   - Returns the owner's PR number, state and URL, including a reused open PR
+   - Does not create, push or delete service branches locally
 
 3. **run-scorecards** - Calculates scorecards
    - Runs always if not installed (PR created or not)
@@ -202,7 +203,7 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
    - Outputs: `score`, `rank`, `passed-checks`, `total-checks`, `results-file`
 
 4. **update-installation-pr** - Updates PR with results
-   - Runs only if PR was created and scorecards ran successfully
+   - Runs only when this request created an open PR and scorecards ran successfully
    - Updates PR description with actual score and rank
    - Makes the installation PR more informative
 
@@ -362,6 +363,8 @@ For detailed workflow interactions and data flows, see:
 jobs:
   scorecards:
     uses: feddericovonwernich-org/scorecards/.github/workflows/install.yml@main
+    with:
+      scorecards-repo: feddericovonwernich-org/scorecards
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}

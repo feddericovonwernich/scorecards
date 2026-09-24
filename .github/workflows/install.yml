@@ -26,13 +26,8 @@ on:
         description: 'Token for writing results to catalog branch (repo scope)'
         required: true
       scorecards-workflow-token:
-        description: 'Token for creating PRs with workflow files (repo + workflow scopes)'
-        required: false
-
-concurrency:
-  group: scorecards-install-${{ github.repository }}
-  cancel-in-progress: false
-
+        description: 'Token for dispatching and reading central installation workflow runs'
+        required: true
 
 jobs:
   check-status:
@@ -41,149 +36,79 @@ jobs:
     outputs:
       installed: ${{ steps.check.outputs.installed }}
       create-pr: ${{ steps.check.outputs.create-pr }}
-      pr-number: ${{ steps.check.outputs.pr-number }}
-      pr-state: ${{ steps.check.outputs.pr-state }}
-      pr-url: ${{ steps.check.outputs.pr-url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Check installation status
         id: check
-        env:
-          GH_TOKEN: ${{ secrets.github-token }}
         run: |
           if [ -f ".github/workflows/scorecards.yml" ]; then
             echo "installed=true" >> "$GITHUB_OUTPUT"
             echo "create-pr=false" >> "$GITHUB_OUTPUT"
-            echo "pr-number=" >> "$GITHUB_OUTPUT"
-            echo "pr-state=" >> "$GITHUB_OUTPUT"
-            echo "pr-url=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          pr_data=$(gh pr list \
-            --label "scorecards-install" \
-            --state open \
-            --json number,state,title,url \
-            --limit 1)
-
-          if [ "$pr_data" = "[]" ]; then
-            pr_data=$(gh pr list \
-              --label "scorecards-install" \
-              --state all \
-              --json number,state,title,url \
-              --limit 1)
-          fi
-
-          if [ "$pr_data" = "[]" ]; then
-            echo "create-pr=true" >> "$GITHUB_OUTPUT"
-            echo "pr-number=" >> "$GITHUB_OUTPUT"
-            echo "pr-state=" >> "$GITHUB_OUTPUT"
-            echo "pr-url=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          pr_number=$(echo "$pr_data" | jq -r '.[0].number')
-          pr_state=$(echo "$pr_data" | jq -r '.[0].state')
-          pr_url=$(echo "$pr_data" | jq -r '.[0].url')
-          echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
-          echo "pr-state=$pr_state" >> "$GITHUB_OUTPUT"
-          echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
-
-          if [ "$pr_state" = OPEN ]; then
-            echo "create-pr=false" >> "$GITHUB_OUTPUT"
-          elif [ "${{ inputs.retry-closed }}" = true ]; then
-            echo "create-pr=true" >> "$GITHUB_OUTPUT"
           else
-            echo "create-pr=false" >> "$GITHUB_OUTPUT"
+            echo "installed=false" >> "$GITHUB_OUTPUT"
+            echo "create-pr=true" >> "$GITHUB_OUTPUT"
           fi
 
-  create-installation-pr-placeholder:
+  request-installation-pr:
     name: Create Installation PR
     runs-on: ubuntu-latest
     needs: check-status
-    if: needs.check-status.outputs.installed == 'false' && needs.check-status.outputs.create-pr == 'true'
+    if: needs.check-status.outputs.installed == 'false'
     outputs:
-      pr-number: ${{ steps.create-pr.outputs.pr-number }}
-      pr-state: ${{ steps.create-pr.outputs.pr-state }}
-      pr-url: ${{ steps.create-pr.outputs.pr-url }}
+      pr-number: ${{ steps.result.outputs.pr-number }}
+      pr-state: ${{ steps.result.outputs.pr-state }}
+      pr-url: ${{ steps.result.outputs.pr-url }}
+      status: ${{ steps.result.outputs.status }}
+      message: ${{ steps.result.outputs.message }}
     steps:
-      - name: Checkout service repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
-
-      - name: Checkout scorecards repository for templates
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ inputs.scorecards-repo }}
-          path: .scorecards-tmp
-          ref: main
-
-      - name: Create installation branch and files
-        id: prepare
-        run: |
-          INSTALL_BRANCH="scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git switch -c "$INSTALL_BRANCH"
-
-          mkdir -p .github/workflows .scorecard
-          sed -e "s|feddericovonwernich/scorecards|${{ inputs.scorecards-repo }}|g" \
-              -e "s|scorecards-branch: 'catalog'|scorecards-branch: '${{ inputs.scorecards-branch }}'|g" \
-              .scorecards-tmp/documentation/examples/scorecard-workflow-template.yml > .github/workflows/scorecards.yml
-
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          cat > .scorecard/config.yml << EOF
-          service:
-            name: "$REPO_NAME"
-            team: ""
-            description: ""
-            links: []
-          EOF
-
-          git add .github/workflows/scorecards.yml .scorecard/config.yml
-          git commit -m "chore: Add Scorecards quality monitoring"
-          git push -u origin "$INSTALL_BRANCH"
-          echo "install-branch=$INSTALL_BRANCH" >> "$GITHUB_OUTPUT"
-
-      - name: Create Pull Request
-        id: create-pr
+      - name: Dispatch and await central owner
+        id: result
         env:
-          GH_TOKEN_RAW: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
-          INSTALL_BRANCH: ${{ steps.prepare.outputs.install-branch }}
+          GH_TOKEN: ${{ secrets.scorecards-workflow-token }}
+          SCORECARDS_REPO: ${{ inputs.scorecards-repo }}
+          SCORECARDS_BRANCH: ${{ inputs.scorecards-branch }}
+          RETRY_CLOSED: ${{ inputs.retry-closed }}
+          POLL_ATTEMPTS: 60
+          POLL_INTERVAL_SECONDS: 5
         run: |
-          export GH_TOKEN
-          GH_TOKEN=$(printf '%s' "$GH_TOKEN_RAW" | tr -d '\n\r\t ')
-          cat > pr-body.md << 'EOF'
-          ## Scorecards quality monitoring
-
-          This PR adds the maintained Scorecards workflow and service configuration.
-          Closing it is respected; a later retry requires `retry-closed: true`.
-          EOF
-          gh label create "scorecards-install" --description "Automated scorecards installation PR" --color "0366d6" 2>/dev/null || true
-          pr_url=$(gh pr create \
-            --title "chore: Add Scorecards quality monitoring" \
-            --body-file pr-body.md \
-            --label "scorecards-install" \
-            --head "$INSTALL_BRANCH" \
-            --base "${GITHUB_REF#refs/heads/}")
-          pr_number="${pr_url##*/}"
-          echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
-          echo "pr-state=OPEN" >> "$GITHUB_OUTPUT"
-          echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
-
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -rf .scorecards-tmp
-          rm -f pr-body.md
+          request_id="scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          branch=$(gh api "repos/$SCORECARDS_REPO" --jq .default_branch)
+          gh workflow run create-installation-pr.yml --repo "$SCORECARDS_REPO" --ref "$branch" \
+            -f org="${GITHUB_REPOSITORY_OWNER}" \
+            -f repo="${GITHUB_REPOSITORY#*/}" \
+            -f scorecards-repo="$SCORECARDS_REPO" \
+            -f scorecards-branch="$SCORECARDS_BRANCH" \
+            -f retry-closed="$RETRY_CLOSED" \
+            -f request-id="$request_id"
+          for _ in $(seq 1 "$POLL_ATTEMPTS"); do
+            runs=$(gh run list --repo "$SCORECARDS_REPO" --workflow create-installation-pr.yml \
+              --event workflow_dispatch --json databaseId,status,conclusion,displayTitle --limit 100)
+            matches=$(jq --arg title "scorecards-install:$request_id" '[.[] | select(.displayTitle == $title)]' <<<"$runs")
+            [ "$(jq length <<<"$matches")" -le 1 ] || {
+              echo "Multiple central installation runs matched request $request_id" >&2
+              exit 1
+            }
+            run_id=$(jq -r 'if length == 1 then .[0].databaseId else empty end' <<<"$matches")
+            [ -n "$run_id" ] || { sleep "$POLL_INTERVAL_SECONDS"; continue; }
+            run=$(gh run view "$run_id" --repo "$SCORECARDS_REPO" --json status,conclusion)
+            [ "$(jq -r .status <<<"$run")" = completed ] || { sleep "$POLL_INTERVAL_SECONDS"; continue; }
+            [ "$(jq -r .conclusion <<<"$run")" = success ] || {
+              echo "Central installation workflow ended $(jq -r .conclusion <<<"$run")" >&2
+              exit 1
+            }
+            gh run download "$run_id" --repo "$SCORECARDS_REPO" \
+              --name "installation-pr-result-$request_id" --dir result
+            jq -r '"pr-number=" + .pr_number, "pr-state=" + .pr_state, "pr-url=" + .pr_url, "status=" + .status, "message=" + .message' \
+              result/installation-pr-result.json >> "$GITHUB_OUTPUT"
+            exit 0
+          done
+          echo "Timed out waiting for central installation workflow" >&2
+          exit 1
   run-scorecards:
     name: Calculate Scorecards
     runs-on: ubuntu-latest
-    needs: [check-status, create-installation-pr-placeholder]
+    needs: [check-status, request-installation-pr]
     if: |
       always() &&
       needs.check-status.outputs.installed == 'false' &&
@@ -195,10 +120,9 @@ jobs:
       total-checks: ${{ steps.final-outputs.outputs.total-checks }}
       results-file: ${{ steps.final-outputs.outputs.results-file }}
     env:
-      # Pass PR info from either existing PR or newly created PR
-      PR_NUMBER: ${{ needs.create-installation-pr-placeholder.outputs.pr-number || needs.check-status.outputs.pr-number }}
-      PR_STATE: ${{ needs.create-installation-pr-placeholder.outputs.pr-state || needs.check-status.outputs.pr-state }}
-      PR_URL: ${{ needs.create-installation-pr-placeholder.outputs.pr-url || needs.check-status.outputs.pr-url }}
+      PR_NUMBER: ${{ needs.request-installation-pr.outputs.pr-number }}
+      PR_STATE: ${{ needs.request-installation-pr.outputs.pr-state }}
+      PR_URL: ${{ needs.request-installation-pr.outputs.pr-url }}
     steps:
       - name: Checkout service repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -247,16 +171,16 @@ jobs:
 
           if [ "${{ needs.check-status.outputs.installed }}" = "false" ]; then
             echo "> ℹ️  **Note**: Scorecards workflow is not yet installed in this repository." >> $GITHUB_STEP_SUMMARY
-            if [ "${{ needs.check-status.outputs.create-pr }}" = "true" ]; then
-              if [ "${{ needs.create-installation-pr-placeholder.result }}" = "success" ]; then
-                echo "> An [installation PR](${{ needs.create-installation-pr-placeholder.outputs.pr-url }}) was created to add the workflow file." >> $GITHUB_STEP_SUMMARY
-              else
-                echo "> Installation PR creation did not complete successfully; inspect workflow runs and pull requests before retrying." >> $GITHUB_STEP_SUMMARY
+            if [ "${{ needs.request-installation-pr.result }}" = "success" ]; then
+              if [ "${{ needs.request-installation-pr.outputs.status }}" = "success" ]; then
+                echo "> An [installation PR](${{ needs.request-installation-pr.outputs.pr-url }}) was created to add the workflow file." >> $GITHUB_STEP_SUMMARY
+              elif [ "${{ needs.request-installation-pr.outputs.pr-state }}" = "OPEN" ]; then
+                echo "> Reusing the existing [installation PR](${{ needs.request-installation-pr.outputs.pr-url }})." >> $GITHUB_STEP_SUMMARY
+              elif [ -n "${{ needs.request-installation-pr.outputs.pr-state }}" ]; then
+                echo "> Previous installation PR is ${{ needs.request-installation-pr.outputs.pr-state }}; it was respected because retry-closed was not requested." >> $GITHUB_STEP_SUMMARY
               fi
-            elif [ "${{ needs.check-status.outputs.pr-state }}" = "OPEN" ]; then
-              echo "> Reusing the existing [installation PR](${{ needs.check-status.outputs.pr-url }})." >> $GITHUB_STEP_SUMMARY
-            elif [ -n "${{ needs.check-status.outputs.pr-state }}" ]; then
-              echo "> Previous installation PR is ${{ needs.check-status.outputs.pr-state }}; it was respected because retry-closed was not requested." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "> Installation PR creation did not complete successfully; inspect workflow runs and pull requests before retrying." >> $GITHUB_STEP_SUMMARY
             fi
             echo "> Your scores are already being tracked in the [central catalog](https://github.com/${{ inputs.scorecards-repo }}/tree/${{ inputs.scorecards-branch }})!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -283,10 +207,12 @@ jobs:
   update-installation-pr:
     name: Update Installation PR with Results
     runs-on: ubuntu-latest
-    needs: [check-status, create-installation-pr-placeholder, run-scorecards]
+    needs: [check-status, request-installation-pr, run-scorecards]
     if: |
       needs.check-status.outputs.installed == 'false' &&
-      needs.create-installation-pr-placeholder.result == 'success' &&
+      needs.request-installation-pr.result == 'success' &&
+      needs.request-installation-pr.outputs.status == 'success' &&
+      needs.request-installation-pr.outputs.pr-state == 'OPEN' &&
       needs.run-scorecards.result == 'success'
     steps:
       - name: Checkout service repository
@@ -294,10 +220,10 @@ jobs:
 
       - name: Update Pull Request with Results
         env:
-          GH_TOKEN: ${{ secrets.scorecards-workflow-token || secrets.github-token }}
+          GH_TOKEN: ${{ secrets.scorecards-workflow-token }}
         run: |
           # Determine PR number from either existing or newly created PR
-          PR_NUMBER="${{ needs.create-installation-pr-placeholder.outputs.pr-number || needs.check-status.outputs.pr-number }}"
+          PR_NUMBER="${{ needs.request-installation-pr.outputs.pr-number }}"
 
           # Create updated PR body with results
           cat > pr-body.md << 'EOF'

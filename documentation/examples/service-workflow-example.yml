@@ -41,7 +41,6 @@ jobs:
       # Required: access to the central catalog, also before installation.
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 
-      # Optional: creation of installation PRs that contain workflow files.
       scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 # What happens when this runs:
 #

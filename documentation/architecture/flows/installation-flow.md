@@ -104,7 +104,7 @@ This document describes how service repositories are onboarded to the scorecards
 
 **Workflow**: `.github/workflows/create-installation-pr.yml`
 
-**Trigger Method**: Manual workflow_dispatch via GitHub UI or API
+**Trigger Method**: Workflow dispatch in the central repository, either directly via GitHub UI/API or through the service's reusable `install.yml` caller.
 
 **Required Inputs**:
 
@@ -121,10 +121,11 @@ This document describes how service repositories are onboarded to the scorecards
 
 - Read access to the target repository
 - `SCORECARDS_WORKFLOW_TOKEN` for the central dispatcher to create the installation branch and PR
+- Central Actions read/write for the reusable caller to dispatch the owner and retrieve its completed result; see [Token Requirements](../../reference/token-requirements.md#operation-matrix).
 
 ### 2. Checkout Target Repository
 
-The central dispatcher checks out `org/repo` into `service-repo` using `SCORECARDS_WORKFLOW_TOKEN`. The reusable workflow instead operates in its caller repository. The maintained workflow files are [`.github/workflows/create-installation-pr.yml`](../../../.github/workflows/create-installation-pr.yml) and [`.github/workflows/install.yml`](../../../.github/workflows/install.yml); they own the exact checkout and token wiring.
+The central owner checks out `org/repo` into `service-repo` using `SCORECARDS_WORKFLOW_TOKEN`. The reusable workflow runs evaluation in its caller repository but delegates every PR creation to that same central owner. The maintained workflow files are [`.github/workflows/create-installation-pr.yml`](../../../.github/workflows/create-installation-pr.yml) and [`.github/workflows/install.yml`](../../../.github/workflows/install.yml).
 
 ### 3. Generate Workflow File
 
@@ -132,7 +133,7 @@ The installer copies the maintained [scorecard workflow template](../../examples
 
 ### 4. Generate Config Template
 
-**Implementation**: `.github/workflows/install.yml`
+**Implementation**: `.github/workflows/create-installation-pr.yml`
 
 **Generated File**: `.scorecard/config.yml`
 
@@ -155,7 +156,7 @@ service:
 
 ### 5. Resolve PR state, create branch and push
 
-Both maintained onboarding workflows use the same states:
+The central owner resolves these states inside its target-keyed native concurrency boundary:
 
 - workflow already present: `installed`;
 - newest labeled PR open: return its number and URL, without creating a branch;
@@ -170,11 +171,11 @@ For a new attempt, `gh pr create --head` receives exactly the branch emitted by 
 
 For an open PR, those outputs identify the existing PR. For a closed or merged PR with `retry-closed: false`, no success output claims a new PR. Closing is therefore durable until a caller or dispatcher explicitly requests another uniquely named attempt.
 
-The reusable path runs in the service repository. The central dispatch path supplies `org`, `repo` and `SCORECARDS_WORKFLOW_TOKEN`; only caller and credential wiring differ, not branch/PR semantics.
+The reusable path dispatches the central owner and waits for the correlated run to complete successfully before consuming its result. Dispatch acceptance alone is not installation success. Both entrypoints run PR creation in the same central repository; queued attempts recheck PR state and reuse an open PR. Failure, cancellation, missing results or an expired wait is surfaced to the caller. GitHub can replace pending requests; no FIFO guarantee is claimed.
 
 ### 7. Track PR in Registry
 
-**Implementation**: `.github/workflows/install.yml`
+**Implementation**: `.github/workflows/create-installation-pr.yml`; the reusable caller separately evaluates and publishes service results.
 
 **Creates Registry Entry**:
 

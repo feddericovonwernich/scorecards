@@ -150,14 +150,16 @@ See the [Token Requirements Guide](../reference/token-requirements.md) for crede
 
 ## Automated Service Onboarding
 
-Two maintained paths share the same PR state contract:
+Two entrypoints share one PR owner:
 
-- service repositories can call `.github/workflows/install.yml`;
-- the central repository can dispatch `.github/workflows/create-installation-pr.yml`.
+- service repositories call `.github/workflows/install.yml`, which dispatches the central owner and waits for its result;
+- operators dispatch `.github/workflows/create-installation-pr.yml` directly in the same central repository.
 
 Both use the label `scorecards-install`. An open installation PR is returned without creating another branch or PR. A closed or merged PR is respected by default. Each permitted creation uses `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`; `retry-closed: true` gates recreation after a closed or merged PR. Neither path deletes or force-updates an earlier branch.
 
-Concurrency serializes attempts for a target within each executing repository, with a fresh PR lookup after a queued attempt starts. GitHub concurrency groups do not span repositories: the service-called and central-dispatched paths can still overlap. Do not run both paths concurrently for the same service. Cross-entrypoint duplicate prevention requires a separately approved shared coordination mechanism; it is not proven by the local fixtures.
+All PR creation executes in the central `create-installation-pr.yml` workflow under one target-keyed native concurrency group, with a fresh installation/PR lookup after a queued attempt starts. Concurrent requests from both entrypoints therefore reuse the same open PR. The owner must run in the configured central repository. GitHub may cancel superseded pending requests; this is not a durable FIFO queue. The reusable caller treats dispatch acceptance only as acceptance: owner failure, cancellation, missing results or a bounded wait expiring fails the request instead of claiming installation completed. Inspect the linked central run and existing PR before retrying; never delete or force-update an earlier branch.
+
+Local regression coverage in `tests/unit/bash/test_installation_workflow.bats` executes the rendered workflow steps with Git/gh fixtures. Simultaneous direct and service requests share a scheduler modeled from the parsed native concurrency configuration and resolve to one PR; failure, cancellation, timeout and missing artifacts fail the caller. This is local behavioral evidence, not proof of GitHub-hosted scheduling or cloud end-to-end installation.
 
 ```yaml
 jobs:

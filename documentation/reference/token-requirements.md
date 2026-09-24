@@ -10,7 +10,7 @@ Scorecards has three user-managed credential roles and one repository-scoped eph
 | --- | --- | --- |
 | Installer `GITHUB_TOKEN` | Create `owner/scorecards`, publish workflows, configure Pages and dispatch/read Actions | Operator environment only |
 | `SCORECARDS_CATALOG_TOKEN` | Service-to-central checkout and normal result writes to `catalog` | Each participating service workflow |
-| `SCORECARDS_WORKFLOW_TOKEN` | Read/write the central catalog registry and create installation branches and PRs containing workflow files in target services; separately authorized remediation | Automated onboarding host |
+| `SCORECARDS_WORKFLOW_TOKEN` | Dispatch/read central onboarding runs; read/write the central catalog registry and create installation branches and PRs containing workflow files in target services; separately authorized remediation | Central onboarding host and reusable onboarding callers |
 | Job `github.token` | Same-repository consolidation, docs sync and checks-hash writes | Issued per central workflow run |
 
 The central repository does not receive `SCORECARDS_CATALOG_TOKEN` merely to consolidate its own registry. `.github/workflows/consolidate-registry.yml` requests `contents: write` and uses the job-scoped token. If a `catalog` ruleset blocks that bot, the run fails; resolve the minimum rule explicitly instead of falling back to a broader PAT.
@@ -27,13 +27,14 @@ The central repository does not receive `SCORECARDS_CATALOG_TOKEN` merely to con
 | `SCORECARDS_CATALOG_TOKEN` | Service writes to central `catalog` | Contents read/write on central only | `repo` | service checkout and first publication |
 | `SCORECARDS_WORKFLOW_TOKEN` | Central onboarding registry update | Contents read/write on central Scorecards `catalog` | `repo` | catalog checkout and normal registry push |
 | Same | Installation workflow and PR | Target-service Contents and Pull requests read/write; Workflows read/write when the PR adds a workflow | `repo` + `workflow` | target checkout, branch push and PR creation |
+| Same, passed as `scorecards-workflow-token` | Reusable onboarding dispatch and result retrieval | Actions read/write on central Scorecards; target Pull requests read/write for score updates | `repo` + `workflow` | central dispatch, correlated run completion and result download |
 | Central `github.token` | Consolidate same-repository registry | Job `contents: write` | not applicable | normal bot push |
 
 GitHub exposes no read-only endpoint that proves every organization creation policy, fine-grained workflow write or Pages mutation in advance. A preflight result must not be described as proof of those later operations.
 
 ## Why two persistent tokens?
 
-`SCORECARDS_CATALOG_TOKEN` crosses from a service into the central repository only to publish results. `SCORECARDS_WORKFLOW_TOKEN` has two onboarding boundaries: it needs Contents read/write on the central Scorecards `catalog` branch to record PR state, and target-service Contents/Pull requests write plus Workflows write when it adds `.github/workflows/scorecards.yml`. Restrict each permission to the repositories actually used; same-repository automation uses the ephemeral job token instead of either PAT.
+`SCORECARDS_CATALOG_TOKEN` crosses from a service into the central repository only to publish results. `SCORECARDS_WORKFLOW_TOKEN` authorizes the central owner to write its catalog registry and target-service Contents/Pull requests plus Workflows when installing `.github/workflows/scorecards.yml`. The reusable caller also needs central Actions read/write to dispatch that owner and read its completed result; its repository-scoped `GITHUB_TOKEN` cannot replace this cross-repository credential. Restrict repository selection and secret distribution to the participating repositories. Same-repository consolidation uses the ephemeral job token, not either PAT.
 
 ## Creating SCORECARDS_CATALOG_TOKEN
 
@@ -65,9 +66,9 @@ This token allows Scorecards to write results to the catalog branch.
 
 ## Creating SCORECARDS_WORKFLOW_TOKEN
 
-This token allows installation PRs and, only after explicit activation, remediation branches and PRs.
+This token allows installation PRs, central onboarding dispatch/result retrieval and, only after explicit activation, remediation branches and PRs.
 
-Classic scopes and fine-grained repository permissions are different models. A fine-grained token must select the central Scorecards repository with Contents read/write for onboarding registry updates, plus each target service with Contents/Pull requests read/write and Workflows read/write when installing workflow files. Verify organization approval and current endpoint support; do not grant Workflows write solely for the badge pilot. The existing classic-token setup is shown below.
+Classic scopes and fine-grained repository permissions are different models. A fine-grained token must select the central Scorecards repository with Contents read/write for onboarding registry updates and Actions read/write for reusable onboarding dispatch and results, plus each target service with Contents/Pull requests read/write and Workflows read/write when installing workflow files. Verify organization approval and current endpoint support; do not grant Workflows write solely for the badge pilot. The existing classic-token setup is shown below.
 
 ### Step 1: Generate Classic Token
 

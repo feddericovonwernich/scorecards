@@ -183,13 +183,26 @@ export async function loadServices(): Promise<LoadServicesResult> {
     console.log('Loading services via tree API...');
     const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
     const token = getToken();
-    const response = await fetch(
+    let treeUsedAPI = Boolean(token);
+    let response = await fetch(
       apiUrl,
       token ? { headers: { Authorization: `token ${token}` } } : undefined
     );
 
+    if (token && (response.status === 401 || response.status === 403 || response.status === 429)) {
+      if (response.status === 401) {
+        clearToken();
+      }
+      response = await fetch(apiUrl);
+      treeUsedAPI = false;
+    }
+
     if (!response.ok) {
       throw new Error(`Failed to fetch repository tree: ${response.status}`);
+    }
+
+    if (treeUsedAPI) {
+      usedAPI = true;
     }
 
     const treeData: GitHubTreeResponse = await response.json();
