@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from typing import Any, Mapping, Optional, Sequence, Union
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / 'action/utils/run-remediation.sh'
@@ -16,7 +17,10 @@ REMEDIATION_LIB = ROOT / 'action/lib/remediation.sh'
 POLICY = json.loads((ROOT / 'action/config/remediation.json').read_text())
 
 
-def run(command, *, env=None, expected=0, timeout=2 * POLICY['timeout_max_seconds']):
+def run(
+    command: Sequence[Union[str, Path]], *, env: Optional[Mapping[str, str]] = None,
+    expected: int = 0, timeout: float = 2 * POLICY['timeout_max_seconds'],
+) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         [str(part) for part in command],
         cwd=ROOT,
@@ -34,14 +38,14 @@ def run(command, *, env=None, expected=0, timeout=2 * POLICY['timeout_max_second
     return result
 
 
-def immutable_image(image):
+def immutable_image(image: str) -> tuple[str, str]:
     details = json.loads(run(['docker', 'image', 'inspect', image]).stdout)[0]
     image_id = details.get('Id', '')
     assert image_id.startswith('sha256:') and len(image_id) == 71
     return f'offline.local/remediation@{image_id}', image_id
 
 
-def write_docker_observer(path):
+def write_docker_observer(path: Path) -> None:
     path.write_text('''#!/bin/bash
 set -euo pipefail
 args=()
@@ -83,7 +87,7 @@ exit "$rc"
     path.chmod(0o755)
 
 
-def docker_observations(path):
+def docker_observations(path: Path) -> list[dict[str, Any]]:
     observations = []
     for directory in sorted(
         (entry for entry in path.iterdir() if entry.is_dir() and entry.name != 'owned'),
@@ -97,7 +101,10 @@ def docker_observations(path):
     return observations
 
 
-def assert_prepare_sandbox(observations, work, expected_exits, execution_image):
+def assert_prepare_sandbox(
+    observations: list[dict[str, Any]], work: Path, expected_exits: list[int],
+    execution_image: str,
+) -> None:
     assert [observation['exit'] for observation in observations] == expected_exits
     assert not (work / 'tree/.git').exists()
     workspace_readonly = 0
@@ -146,7 +153,7 @@ def assert_prepare_sandbox(observations, work, expected_exits, execution_image):
     assert workspace_writable == 1
 
 
-def write_gh_stub(path):
+def write_gh_stub(path: Path) -> None:
     path.write_text('''#!/bin/bash
 set -euo pipefail
 printf '%s\\n' "$*" >> "$GH_CALLS"
@@ -164,7 +171,7 @@ esac
     path.chmod(0o755)
 
 
-def create_remote(case_dir, fixture):
+def create_remote(case_dir: Path, fixture: Path) -> tuple[Path, str]:
     remote = case_dir / 'service.git'
     seed = case_dir / 'seed'
     run(['git', 'init', '--bare', remote])
@@ -182,7 +189,9 @@ def create_remote(case_dir, fixture):
     return remote, sha
 
 
-def write_inputs(case_dir, image, check_id, service_sha):
+def write_inputs(
+    case_dir: Path, image: str, check_id: str, service_sha: str,
+) -> tuple[dict[str, Any], Path, Path, str]:
     suite_sha = run(['git', 'rev-parse', 'HEAD']).stdout.strip()
     policy = POLICY | {
         'enabled': True,
@@ -211,7 +220,10 @@ def write_inputs(case_dir, image, check_id, service_sha):
     return policy, policy_file, request_file, suite_sha
 
 
-def environment(case_dir, remote, service_sha, suite_sha, policy_image, execution_image):
+def environment(
+    case_dir: Path, remote: Path, service_sha: str, suite_sha: str,
+    policy_image: str, execution_image: str,
+) -> tuple[dict[str, str], Path, Path]:
     bin_dir = case_dir / 'bin'
     bin_dir.mkdir()
     write_gh_stub(bin_dir / 'gh')
@@ -249,10 +261,10 @@ def environment(case_dir, remote, service_sha, suite_sha, policy_image, executio
     return env, gh_calls, docker_observation_dir
 
 
-def validate_descriptor(check_id, policy_file):
+def validate_descriptor(check_id: str, policy_file: Path) -> dict[str, Any]:
     check_dir = ROOT / 'checks' / check_id
     projection = json.loads(run([VALIDATOR, check_dir]).stdout)
-    descriptor = json.loads(run([
+    descriptor: dict[str, Any] = json.loads(run([
         'bash', '-c', 'source "$1"; load_remediation_descriptor "$2" "$3"',
         '_', REMEDIATION_LIB, check_dir, policy_file,
     ]).stdout)
@@ -260,7 +272,7 @@ def validate_descriptor(check_id, policy_file):
     return descriptor
 
 
-def assert_only_default_ref(remote, service_sha):
+def assert_only_default_ref(remote: Path, service_sha: str) -> None:
     refs = run([
         'git', '--git-dir', remote, 'for-each-ref',
         'refs/heads', '--format=%(refname)',
@@ -271,16 +283,16 @@ def assert_only_default_ref(remote, service_sha):
     ]).stdout.strip() == service_sha
 
 
-def cleanup_observed(docker_observation_dir, env):
+def cleanup_observed(docker_observation_dir: Path, env: dict[str, str]) -> None:
     cleanup_env = env | {'DOCKER_OBSERVER_CLEANUP': '1'}
     for cid_file in (docker_observation_dir / 'owned').iterdir():
         run(['docker', 'rm', '-f', cid_file.name], env=cleanup_env)
 
 
 def prepare(
-    request_file, policy_file, work, env, docker_observation_dir, expected_exits,
-    execution_image,
-):
+    request_file: Path, policy_file: Path, work: Path, env: dict[str, str],
+    docker_observation_dir: Path, expected_exits: list[int], execution_image: str,
+) -> list[dict[str, Any]]:
     before = len(docker_observations(docker_observation_dir))
     try:
         run(
@@ -296,8 +308,9 @@ def prepare(
 
 
 def run_prepare_case(
-    base, name, fixture, policy_image, execution_image, check_id, expected_status,
-):
+    base: Path, name: str, fixture: Path, policy_image: str, execution_image: str,
+    check_id: str, expected_status: str,
+) -> dict[str, Any]:
     case_dir = base / name
     case_dir.mkdir()
     remote, service_sha = create_remote(case_dir, fixture)
@@ -359,7 +372,7 @@ def run_prepare_case(
         cleanup_observed(docker_observation_dir, env)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', required=True)
     parser.add_argument('--check', required=True)

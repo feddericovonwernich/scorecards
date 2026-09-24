@@ -11,11 +11,13 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     'authoring', ROOT / 'tests/remediation-authoring-smoke.py',
 )
+if spec is None or spec.loader is None:
+    raise ImportError('Cannot load remediation authoring harness')
 authoring = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(authoring)
 
 
-def main():
+def main() -> None:
     policy = json.loads((ROOT / 'action/config/remediation.json').read_text())
     with tempfile.TemporaryDirectory(prefix='.authoring-resources-', dir=ROOT) as directory:
         base = Path(directory)
@@ -53,7 +55,7 @@ def main():
             'git', '-C', suite, '-c', 'user.name=resource-test',
             '-c', 'user.email=resource-test@example.invalid', 'commit', '-m', 'fixture',
         ])
-        authoring.ROOT = suite
+        setattr(authoring, 'ROOT', suite)
         image, image_id = authoring.immutable_image('scorecards-runtime:local')
         for name, expected in [('failing', 'prepared'), ('not-applicable', 'not_applicable')]:
             fixture = base / f'{name}-fixture'
