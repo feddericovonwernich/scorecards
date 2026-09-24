@@ -9,14 +9,14 @@
         "platform"
       ],
       "source": "codeowners",
-      "last_discovered": "2026-09-23T18:52:41Z"
+      "last_discovered": "2026-09-24T13:11:35Z"
     },
     "links": [],
     "openapi": null
   },
-  "score": 72,
-  "rank": "silver",
-  "passed_checks": 7,
+  "score": 76,
+  "rank": "gold",
+  "passed_checks": 8,
   "total_checks": 11,
   "excluded_count": 1,
   "excluded_checks": [
@@ -25,7 +25,7 @@
       "reason": "Test exclusion - verifying check exclusion feature"
     }
   ],
-  "timestamp": "2026-09-23T18:54:59Z",
+  "timestamp": "2026-09-24T13:13:23Z",
   "checks_hash": "119f9cf9e608314410ba5cd46b95dc0d670354dbd9d079707b4bd9f09da21cba",
   "checks_count": 13,
   "installed": true,
@@ -34,8 +34,8 @@
       "name": "feddericovonwernich",
       "email": "feddericovonwernich@gmail.com",
       "commit_count": 1,
-      "last_commit_date": "2026-09-23T12:12:58Z",
-      "last_commit_hash": "e292096"
+      "last_commit_date": "2026-09-24T10:11:25Z",
+      "last_commit_hash": "22ea0b8"
     }
   ],
   "checks": [
@@ -48,7 +48,7 @@
       "status": "pass",
       "exit_code": 0,
       "duration": 0,
-      "stdout": "README found: README.md (253 characters)\n",
+      "stdout": "README found: README.md (487 characters)\n",
       "stderr": ""
     },
     {
@@ -141,11 +141,11 @@
       "description": "Checks that the README displays scorecard badges. Badges promote transparency and help users quickly assess repository quality.",
       "category": "Scorecards Setup",
       "weight": 5,
-      "status": "fail",
-      "exit_code": 1,
+      "status": "pass",
+      "exit_code": 0,
       "duration": 0,
-      "stdout": "",
-      "stderr": "No scorecard badges found in README.md\nExpected: ![Score](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/.../catalog/badges/.../score.json)\n",
+      "stdout": "Found scorecard badge(s) in README.md: 1 score badge(s)\n",
+      "stderr": "",
       "remediation": {
         "version": 1,
         "label": "Proponer badge de Scorecards"
@@ -159,7 +159,7 @@
       "weight": 7,
       "status": "fail",
       "exit_code": 1,
-      "duration": 0,
+      "duration": 1,
       "stdout": "",
       "stderr": "Scorecard config exists but lacks meaningful content:\n\n  • team field is empty or missing\n  • description field is empty or missing\n\nBoth team and description fields must be filled to help catalog users\nunderstand what your service does and who maintains it.\n\nExample config.yml:\n  service:\n    name: \"User Authentication API\"\n    team: \"Platform Security Team\"\n    description: \"Handles user authentication, authorization, and session management\"\n    links:\n      - name: \"Documentation\"\n        url: \"https://wiki.example.com/auth-api\"\n"
     },
@@ -190,10 +190,10 @@
   ],
   "evaluation": {
     "service_repository": "feddericovonwernich/test-repo-minimal",
-    "service_sha": "e2920962e14733c56953a8ed7fcde13985e76533",
+    "service_sha": "22ea0b8018366bea1c920154fd501425e5fabf9e",
     "suite_repository": "feddericovonwernich/scorecards",
     "suite_sha": "243ced4f3c9397b12109f8c05197162a474915e4",
-    "run_id": "35905477271",
+    "run_id": "36003967096",
     "run_attempt": 1
   }
 }
