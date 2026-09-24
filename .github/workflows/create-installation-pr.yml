@@ -284,77 +284,102 @@ jobs:
           echo "default_branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
           echo "Default branch: $DEFAULT_BRANCH"
 
-      - name: Update registry with PR information
+      - name: Update and push registry with PR information
         run: |
           REGISTRY_FILE="registry/${{ inputs.org }}/${{ inputs.repo }}.json"
+          BRANCH="${{ inputs.scorecards-branch }}"
 
-          echo "Updating registry: $REGISTRY_FILE"
-
-          # Create directory if it doesn't exist
-          mkdir -p "registry/${{ inputs.org }}"
-
-          # Check if registry file exists
-          if [ -f "$REGISTRY_FILE" ]; then
-            echo "Registry file exists, updating PR information..."
-
-            # Update the installation_pr field using jq
-            jq --arg pr_number "${{ needs.create-pr.outputs.pr-number }}" \
-               --arg pr_state "${{ needs.create-pr.outputs.pr-state }}" \
-               --arg pr_url "${{ needs.create-pr.outputs.pr-url }}" \
-               '.installation_pr = {
-                  "number": ($pr_number | tonumber),
-                  "state": $pr_state,
-                  "url": $pr_url
-                }' "$REGISTRY_FILE" > "$REGISTRY_FILE.tmp"
-
-            mv "$REGISTRY_FILE.tmp" "$REGISTRY_FILE"
-          else
-            echo "Registry file doesn't exist yet, creating full registry entry..."
-
-            # Create a complete registry entry to prevent "new format" message on first run
-            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-            cat > "$REGISTRY_FILE" << EOF
-          {
-            "org": "${{ inputs.org }}",
-            "repo": "${{ inputs.repo }}",
-            "name": "${{ inputs.repo }}",
-            "team": "",
-            "score": 0,
-            "rank": "bronze",
-            "last_updated": "$TIMESTAMP",
-            "has_api": false,
-            "checks_hash": "",
-            "checks_count": 0,
-            "installed": false,
-            "default_branch": "${{ steps.fetch-branch.outputs.default_branch }}",
-            "installation_pr": {
-              "number": ${{ needs.create-pr.outputs.pr-number }},
-              "state": "${{ needs.create-pr.outputs.pr-state }}",
-              "url": "${{ needs.create-pr.outputs.pr-url }}"
-            }
+          update_registry() {
+            mkdir -p "registry/${{ inputs.org }}"
+            if [ -f "$REGISTRY_FILE" ]; then
+              jq --arg pr_number "${{ needs.create-pr.outputs.pr-number }}" \
+                 --arg pr_state "${{ needs.create-pr.outputs.pr-state }}" \
+                 --arg pr_url "${{ needs.create-pr.outputs.pr-url }}" \
+                 '.installation_pr = {
+                    "number": ($pr_number | tonumber),
+                    "state": $pr_state,
+                    "url": $pr_url
+                  }' "$REGISTRY_FILE" > "$REGISTRY_FILE.tmp"
+              mv "$REGISTRY_FILE.tmp" "$REGISTRY_FILE"
+            else
+              jq -n \
+                --arg org "${{ inputs.org }}" \
+                --arg repo "${{ inputs.repo }}" \
+                --arg default_branch "${{ steps.fetch-branch.outputs.default_branch }}" \
+                --arg pr_state "${{ needs.create-pr.outputs.pr-state }}" \
+                --arg pr_url "${{ needs.create-pr.outputs.pr-url }}" \
+                --argjson pr_number "${{ needs.create-pr.outputs.pr-number }}" \
+                --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+                '{
+                  org: $org,
+                  repo: $repo,
+                  name: $repo,
+                  team: "",
+                  score: 0,
+                  rank: "bronze",
+                  last_updated: $timestamp,
+                  has_api: false,
+                  checks_hash: "",
+                  checks_count: 0,
+                  installed: false,
+                  default_branch: $default_branch,
+                  installation_pr: {
+                    number: $pr_number,
+                    state: $pr_state,
+                    url: $pr_url
+                  }
+                }' > "$REGISTRY_FILE"
+            fi
           }
-          EOF
-          fi
 
-          echo "✅ Registry updated"
+          update_registry
           cat "$REGISTRY_FILE"
-
-      - name: Commit and push registry update
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add "registry/${{ inputs.org }}/${{ inputs.repo }}.json"
+          git add "$REGISTRY_FILE"
 
           if git diff --staged --quiet; then
             echo "No changes to registry, skipping commit"
-          else
-            git commit -m "Update registry: Add installation PR for ${{ inputs.org }}/${{ inputs.repo }}
+            exit 0
+          fi
+
+          git commit -m "Update registry: Add installation PR for ${{ inputs.org }}/${{ inputs.repo }}
 
           Installation PR #${{ needs.create-pr.outputs.pr-number }} created
 
           Co-Authored-By: GitHub Actions <github-actions[bot]@users.noreply.github.com>"
 
-            git push origin ${{ inputs.scorecards-branch }}
-            echo "✅ Registry update pushed to catalog branch"
-          fi
+          max_retries=10
+          retry_count=0
+          while [ "$retry_count" -lt "$max_retries" ]; do
+            if git push origin "HEAD:$BRANCH"; then
+              echo "✅ Registry update pushed to catalog branch"
+              exit 0
+            fi
+
+            retry_count=$((retry_count + 1))
+            if [ "$retry_count" -eq "$max_retries" ]; then
+              echo "Failed to push registry update after $max_retries attempts. Installation PR: ${{ needs.create-pr.outputs.pr-url }}" >&2
+              exit 1
+            fi
+
+            git fetch origin "$BRANCH"
+            if git merge --no-edit "origin/$BRANCH"; then
+              update_registry
+              git add "$REGISTRY_FILE"
+              git commit --amend --no-edit
+            else
+              if git cat-file -e "origin/$BRANCH:$REGISTRY_FILE"; then
+                git checkout --theirs -- "$REGISTRY_FILE"
+              else
+                rm -f "$REGISTRY_FILE"
+              fi
+              update_registry
+              git add "$REGISTRY_FILE"
+              git commit --no-edit
+            fi
+
+            base_backoff=$((5 + retry_count * 5))
+            jitter=$((RANDOM % 6))
+            sleep $((base_backoff + jitter))
+          done

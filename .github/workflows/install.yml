@@ -35,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       installed: ${{ steps.check.outputs.installed }}
-      create-pr: ${{ steps.check.outputs.create-pr }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,10 +43,8 @@ jobs:
         run: |
           if [ -f ".github/workflows/scorecards.yml" ]; then
             echo "installed=true" >> "$GITHUB_OUTPUT"
-            echo "create-pr=false" >> "$GITHUB_OUTPUT"
           else
             echo "installed=false" >> "$GITHUB_OUTPUT"
-            echo "create-pr=true" >> "$GITHUB_OUTPUT"
           fi
 
   request-installation-pr:

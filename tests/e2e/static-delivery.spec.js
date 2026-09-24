@@ -69,6 +69,50 @@ test.describe('Static catalog delivery', () => {
     });
   }
 
+  test('uses the configured owner on opaque private Pages hostnames', async ({ page }) => {
+    const owner = process.env.SCORECARD_REPO_OWNER || 'feddericovonwernich';
+    const opaqueOrigin = 'https://random-name.pages.github.io';
+    const localOrigin = `http://localhost:${process.env.TEST_PORT || 4173}`;
+    const requestedCatalogFiles = new Set();
+    await page.route(`${opaqueOrigin}/**`, async (route) => {
+      const url = new URL(route.request().url());
+      const response = await route.fetch({ url: `${localOrigin}${url.pathname}${url.search}` });
+      await route.fulfill({ response });
+    });
+    await page.route('https://api.github.com/**', (route) =>
+      route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
+    );
+    await page.route('https://raw.githubusercontent.com/**', async (route) => {
+      const url = new URL(route.request().url());
+      requestedCatalogFiles.add(url.pathname);
+      if (url.pathname === `/${owner}/scorecards/catalog/registry/all-services.json`) {
+        await route.fulfill({
+          contentType: 'application/json',
+          path: 'tests/e2e/fixtures/docs/registry/all-services.json',
+        });
+      } else if (url.pathname === `/${owner}/scorecards/catalog/current-checks.json`) {
+        await route.fulfill({
+          contentType: 'application/json',
+          path: 'tests/e2e/fixtures/docs/current-checks.json',
+        });
+      } else {
+        await route.abort();
+      }
+    });
+
+    await page.goto(`${opaqueOrigin}/`);
+    await waitForCatalogLoad(page);
+
+    expect(new URL(page.url()).hostname).toBe('random-name.pages.github.io');
+
+    expect(requestedCatalogFiles).toEqual(
+      new Set([
+        `/${owner}/scorecards/catalog/registry/all-services.json`,
+        `/${owner}/scorecards/catalog/current-checks.json`,
+      ])
+    );
+  });
+
   test('redirects legacy directory URLs while retaining query parameters', async ({ page }) => {
     const [servicesEntry, teamsEntry] = await Promise.all([
       page.request.get('/scorecards/services/'),

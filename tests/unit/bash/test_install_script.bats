@@ -103,7 +103,7 @@ case "$*" in
         ;;
     *"--jq .permissions"*|*"--jq .permissions."*) printf '%s\n' $'true\ttrue\ttrue'; exit 0 ;;
     *"--jq .default_branch"*) printf '%s\n' 'main'; exit 0 ;;
-    *"actions/permissions"*) printf '%s\n' 'enabled'; exit 0 ;;
+    *"actions/permissions"*) printf '%s\n' "${ACTIONS_ENABLED:-true}"; exit 0 ;;
     *"--method POST"*"/pages"*|*"-X POST"*"/pages"*) touch "$GH_STATE_DIR/pages"; exit 0 ;;
     *"--method PUT"*"/pages"*|*"-X PUT"*"/pages"*) touch "$GH_STATE_DIR/pages"; exit 0 ;;
     *"/pages"*)
@@ -322,6 +322,18 @@ run_documented_bootstrap() {
 
     [ "$status" -ne 0 ]
     [ -z "$($REAL_GIT --git-dir="$TARGET_REMOTE" for-each-ref)" ]
+}
+
+@test "rejects disabled Actions before publishing an adopted repository" {
+    create_empty_target
+
+    ACTIONS_ENABLED=false ADOPT_EMPTY=true run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"Actions is disabled"* ]]
+    [ -z "$($REAL_GIT --git-dir="$TARGET_REMOTE" for-each-ref)" ]
+    [ ! -f "$GH_STATE_DIR/pages" ]
+    [ ! -f "$GH_STATE_DIR/dispatched" ]
 }
 
 @test "publishes main and catalog together when adopting an empty repository" {

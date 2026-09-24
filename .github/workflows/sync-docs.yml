@@ -56,6 +56,8 @@ jobs:
       - name: Build catalog UI
         run: npm run build
         working-directory: main-repo
+        env:
+          SCORECARD_REPO_OWNER: ${{ github.repository_owner }}
 
       - name: Reject superseded source
         env:

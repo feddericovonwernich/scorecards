@@ -58,6 +58,10 @@ export default defineConfig({
   // A temporary /scorecards alias mirrors the publication prefix. Root URLs remain
   // available for existing fixtures; missing files receive real 404 responses.
   webServer: {
+    env: {
+      ...process.env,
+      SCORECARD_REPO_OWNER: process.env.SCORECARD_REPO_OWNER || 'feddericovonwernich',
+    },
     // When COVERAGE is enabled, pass COVERAGE env to build for instrumentation
     command:
       `${COVERAGE ? 'COVERAGE=true ' : ''}npm run build && ` +

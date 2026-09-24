@@ -3,11 +3,16 @@ import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import istanbul from 'vite-plugin-istanbul';
 
+const repoOwner = JSON.stringify(process.env.SCORECARD_REPO_OWNER ?? '');
 export default defineConfig({
   // Root is the docs directory
   root: '.',
 
   base: './',
+
+  define: {
+    __SCORECARD_REPO_OWNER__: repoOwner,
+  },
 
   // Build output goes to dist/
   build: {

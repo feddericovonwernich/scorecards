@@ -64,3 +64,137 @@ it('publishes compiled UI without deleting domain configuration or concurrent ca
     rmSync(root, { recursive: true, force: true });
   }
 }, 30000);
+
+it('publishes installation PRs without losing concurrent catalog changes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'installation-publication-'));
+  const git = (cwd, ...args) => execFileSync('git', args, { cwd, stdio: 'pipe' });
+  const workflow = yaml.load(readFileSync('.github/workflows/create-installation-pr.yml', 'utf8'));
+  const publicationStep = workflow.jobs['update-registry'].steps.find(
+    (entry) => entry.name === 'Update and push registry with PR information'
+  ).run;
+  const render = (step, repo, number, url) =>
+    step
+      .replaceAll('${{ inputs.org }}', 'acme')
+      .replaceAll('${{ inputs.repo }}', repo)
+      .replaceAll('${{ inputs.scorecards-branch }}', 'catalog')
+      .replaceAll('${{ needs.create-pr.outputs.pr-number }}', String(number))
+      .replaceAll('${{ needs.create-pr.outputs.pr-state }}', 'OPEN')
+      .replaceAll('${{ needs.create-pr.outputs.pr-url }}', url)
+      .replaceAll('${{ steps.fetch-branch.outputs.default_branch }}', 'main');
+  const run = (cwd, script) =>
+    execFileSync('bash', ['-euo', 'pipefail', '-c', `sleep() { :; }\n${script}`], {
+      cwd,
+      stdio: 'pipe',
+    });
+  const configure = (cwd) => {
+    git(cwd, 'config', 'user.name', 'test');
+    git(cwd, 'config', 'user.email', 'test@example.invalid');
+  };
+  try {
+    git(root, 'init', '--bare', 'remote.git');
+    git(root, 'clone', 'remote.git', 'seed');
+    const seed = join(root, 'seed');
+    git(seed, 'checkout', '-b', 'catalog');
+    configure(seed);
+    mkdirSync(join(seed, 'registry/acme'), { recursive: true });
+    writeFileSync(
+      join(seed, 'registry/acme/alpha.json'),
+      JSON.stringify({ org: 'acme', repo: 'alpha', score: 10, evaluation: { version: 1 } })
+    );
+    writeFileSync(join(seed, 'registry/acme/consolidation.json'), JSON.stringify({ generated: 1 }));
+    git(seed, 'add', '.');
+    git(seed, 'commit', '-m', 'seed');
+    git(seed, 'push', '-u', 'origin', 'catalog');
+
+    git(root, 'clone', '--branch', 'catalog', 'remote.git', 'alpha');
+    git(root, 'clone', '--branch', 'catalog', 'remote.git', 'beta');
+    const alpha = join(root, 'alpha');
+    const beta = join(root, 'beta');
+    configure(alpha);
+    configure(beta);
+    git(alpha, 'checkout', '--detach');
+    git(beta, 'checkout', '--detach');
+
+    git(root, 'clone', '--branch', 'catalog', 'remote.git', 'consolidator');
+    const consolidator = join(root, 'consolidator');
+    configure(consolidator);
+    writeFileSync(
+      join(consolidator, 'registry/acme/alpha.json'),
+      JSON.stringify({ org: 'acme', repo: 'alpha', score: 95, evaluation: { version: 2 } })
+    );
+    writeFileSync(join(consolidator, 'registry/acme/consolidation.json'), JSON.stringify({ generated: 2 }));
+    git(consolidator, 'add', '.');
+    git(consolidator, 'commit', '-m', 'consolidate');
+    git(consolidator, 'push');
+
+    run(alpha, render(publicationStep, 'alpha', 11, 'https://example.invalid/alpha/11'));
+    run(beta, render(publicationStep, 'beta', 12, 'https://example.invalid/beta/12'));
+
+    const readRegistry = (repo) =>
+      JSON.parse(git(root, '--git-dir=remote.git', 'show', `catalog:registry/acme/${repo}.json`).toString());
+    expect(readRegistry('alpha')).toMatchObject({
+      score: 95,
+      evaluation: { version: 2 },
+      installation_pr: { number: 11, state: 'OPEN', url: 'https://example.invalid/alpha/11' },
+    });
+    expect(readRegistry('beta')).toMatchObject({
+      installation_pr: { number: 12, state: 'OPEN', url: 'https://example.invalid/beta/12' },
+    });
+    expect(
+      JSON.parse(git(root, '--git-dir=remote.git', 'show', 'catalog:registry/acme/consolidation.json').toString())
+    ).toEqual({ generated: 2 });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 30000);
+
+it('fails publication retries while reporting the installation PR URL', () => {
+  const root = mkdtempSync(join(tmpdir(), 'installation-publication-failure-'));
+  const git = (cwd, ...args) => execFileSync('git', args, { cwd, stdio: 'pipe' });
+  const workflow = yaml.load(readFileSync('.github/workflows/create-installation-pr.yml', 'utf8'));
+  const publicationStep = workflow.jobs['update-registry'].steps.find(
+    (entry) => entry.name === 'Update and push registry with PR information'
+  ).run;
+  const url = 'https://example.invalid/service/42';
+  const render = (step) =>
+    step
+      .replaceAll('${{ inputs.org }}', 'acme')
+      .replaceAll('${{ inputs.repo }}', 'service')
+      .replaceAll('${{ inputs.scorecards-branch }}', 'catalog')
+      .replaceAll('${{ needs.create-pr.outputs.pr-number }}', '42')
+      .replaceAll('${{ needs.create-pr.outputs.pr-state }}', 'OPEN')
+      .replaceAll('${{ needs.create-pr.outputs.pr-url }}', url)
+      .replaceAll('${{ steps.fetch-branch.outputs.default_branch }}', 'main');
+  try {
+    git(root, 'init', '--bare', 'remote.git');
+    git(root, 'clone', 'remote.git', 'catalog');
+    const catalog = join(root, 'catalog');
+    git(catalog, 'checkout', '-b', 'catalog');
+    git(catalog, 'config', 'user.name', 'test');
+    git(catalog, 'config', 'user.email', 'test@example.invalid');
+    writeFileSync(join(catalog, '.keep'), '');
+    git(catalog, 'add', '.');
+    git(catalog, 'commit', '-m', 'seed');
+    git(catalog, 'push', '-u', 'origin', 'catalog');
+    git(catalog, 'checkout', '--detach');
+    execFileSync('bash', ['-c', 'printf "#!/bin/sh\\nexit 1\\n" > hooks/pre-receive && chmod +x hooks/pre-receive'], {
+      cwd: join(root, 'remote.git'),
+    });
+    const result = (() => {
+      try {
+        execFileSync('bash', ['-euo', 'pipefail', '-c', `sleep() { :; }\n${render(publicationStep)}`], {
+          cwd: catalog,
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
+      } catch (error) {
+        return error;
+      }
+      throw new Error('publication unexpectedly succeeded');
+    })();
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(url);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 30000);

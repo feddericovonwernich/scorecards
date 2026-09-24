@@ -6,11 +6,19 @@
 import type { DeploymentConfig } from '../types/index';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
+declare const __SCORECARD_REPO_OWNER__: string | undefined;
 
 /**
  * Detect repository owner from hostname or environment
  */
 export function detectRepoOwner(): string {
+  if (
+    typeof __SCORECARD_REPO_OWNER__ !== 'undefined' &&
+    __SCORECARD_REPO_OWNER__
+  ) {
+    return __SCORECARD_REPO_OWNER__;
+  }
+
   // Check environment variable first
   if (typeof process !== 'undefined' && process.env?.SCORECARD_REPO_OWNER) {
     return process.env.SCORECARD_REPO_OWNER;

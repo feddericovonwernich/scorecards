@@ -137,7 +137,8 @@ if gh_with_token repo view "$FULL_REPO" --json name >/dev/null 2>&1; then
     if [ "$can_admin" != true ] && [ "$can_maintain" != true ]; then
         fail "Token needs admin or maintain access to configure Pages"
     fi
-    gh_with_token api "repos/$FULL_REPO/actions/permissions" --jq .enabled >/dev/null || fail "Cannot read Actions settings for $FULL_REPO"
+    actions_enabled="$(gh_with_token api "repos/$FULL_REPO/actions/permissions" --jq .enabled)" || fail "Cannot read Actions settings for $FULL_REPO"
+    [ "$actions_enabled" = true ] || fail "Actions is disabled for $FULL_REPO; enable it before installation"
     pages_public="$(gh_with_token api "repos/$FULL_REPO/pages" --jq .public 2>/dev/null || true)"
     if [ "$pages_public" = false ]; then
         [ "${SCORECARDS_PAGES_AUTH:-public}" = browser-session ] || fail "Restricted Pages requires SCORECARDS_PAGES_AUTH=browser-session before publication"
