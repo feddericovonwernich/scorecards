@@ -211,9 +211,11 @@ run_installer() {
         INSTALL_DEPLOY_TIMEOUT_SECONDS="${DEPLOY_TIMEOUT:-2}" \
         RUN_MODE="${RUN_MODE:-success}" \
         PAGES_MODE="${PAGES_MODE:-missing}" \
-        GIT_CONFIG_COUNT=1 \
+        GIT_CONFIG_COUNT=2 \
         GIT_CONFIG_KEY_0="url.file://$TARGET_REMOTE.insteadOf" \
         GIT_CONFIG_VALUE_0='https://github.com/acme/scorecards.git' \
+        GIT_CONFIG_KEY_1=push.followTags \
+        GIT_CONFIG_VALUE_1="${FOLLOW_TAGS:-false}" \
         bash "$SOURCE_REPO/scripts/install.sh"
 }
 
@@ -344,6 +346,15 @@ run_documented_bootstrap() {
     [ "$status" -eq 0 ]
     "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/main >/dev/null
     "$REAL_GIT" --git-dir="$TARGET_REMOTE" rev-parse --verify refs/heads/catalog >/dev/null
+}
+
+@test "publishes only main and catalog with annotated source tags and followTags enabled" {
+    "$REAL_GIT" -C "$SOURCE_REPO" tag -a v1 -m release "$EXPECTED_SOURCE_SHA"
+
+    FOLLOW_TAGS=true run run_installer
+
+    [ "$status" -eq 0 ]
+    [ "$("$REAL_GIT" --git-dir="$TARGET_REMOTE" for-each-ref --format='%(refname)')" = $'refs/heads/catalog\nrefs/heads/main' ]
 }
 
 @test "atomic rejection leaves both target branches absent" {

@@ -232,7 +232,7 @@ git -C "$INSTALL_REPO" remote remove origin 2>/dev/null || true
 git -C "$INSTALL_REPO" remote add origin "$TARGET_URL"
 refs="$(git_with_gh -C "$INSTALL_REPO" ls-remote origin 'refs/heads/*' 'refs/tags/*')" || fail "Cannot recheck target refs immediately before publication"
 [ -z "$refs" ] || fail "Target became populated during preparation; no refs were published by this installer. Restore the single-writer prerequisite; do not delete or overwrite refs."
-if ! git_with_gh -C "$INSTALL_REPO" push --atomic origin \
+if ! git_with_gh -C "$INSTALL_REPO" push --atomic --no-follow-tags origin \
     refs/heads/main:refs/heads/main \
     refs/heads/catalog:refs/heads/catalog; then
     fail "Atomic publication failed. Inspect refs without modifying them; retry only if empty with SCORECARDS_ADOPT_EMPTY_REPO=true."
