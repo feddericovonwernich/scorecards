@@ -108,6 +108,10 @@ case "$*" in
     *"--method POST"*"/pages"*|*"-X POST"*"/pages"*) touch "$GH_STATE_DIR/pages"; exit 0 ;;
     *"--method PUT"*"/pages"*|*"-X PUT"*"/pages"*) touch "$GH_STATE_DIR/pages"; exit 0 ;;
     *"/pages"*)
+        if [ "${PAGES_MODE:-missing}" = missing-with-error-body ] && [ ! -f "$GH_STATE_DIR/pages" ]; then
+            printf '%s\n' '{"message":"Not Found","status":"404"}'
+            exit 1
+        fi
         if [ -f "$GH_STATE_DIR/pages" ] || [ "${PAGES_MODE:-missing}" != missing ]; then
             if [ "${PAGES_MODE:-workflow}" = legacy ] && [ ! -f "$GH_STATE_DIR/pages" ]; then
                 printf 'legacy\tbuilt\t%s\n' "$TEST_PAGES_URL"
@@ -411,6 +415,14 @@ HOOK
     [ -f "$GH_STATE_DIR/dispatched" ]
     [[ "$output" == *'runUrl: https://example.invalid/runs/101'* ]]
     [[ "$output" == *'buildType: workflow'* ]]
+}
+
+@test "creates Pages when a missing-site query emits an error body" {
+    PAGES_MODE=missing-with-error-body run run_installer
+
+    [ "$status" -eq 0 ]
+    grep -q -- '--method POST repos/acme/scorecards/pages' "$GH_LOG"
+    ! grep -q -- '--method PUT repos/acme/scorecards/pages' "$GH_LOG"
 }
 
 @test "rejects ambiguous fresh deployment candidates" {

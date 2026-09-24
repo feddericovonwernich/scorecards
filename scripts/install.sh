@@ -247,7 +247,10 @@ if [ "$default_branch" != main ]; then
     printf '%s\n' '{"default_branch":"main"}' | gh_with_token api --method PATCH "repos/$FULL_REPO" --input - >/dev/null || fail "Branches are published, but setting default branch to main failed"
 fi
 
-pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv' 2>/dev/null || true)"
+pages=
+if ! pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv' 2>/dev/null)"; then
+    pages=
+fi
 if [ -z "$pages" ]; then
     printf '%s\n' '{"build_type":"workflow"}' | gh_with_token api --method POST "repos/$FULL_REPO/pages" --input - >/dev/null || fail "Branches are published, but creating workflow-based Pages failed"
 else
