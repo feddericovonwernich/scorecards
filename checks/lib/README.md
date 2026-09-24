@@ -11,7 +11,8 @@ Common file path patterns for finding various files in repositories.
 **Usage:**
 
 ```javascript
-const commonPaths = require('../lib/common-paths.js');
+import fs from 'fs';
+import commonPaths from '../lib/common-paths.js';
 
 // Find OpenAPI spec
 for (const path of commonPaths.openapi) {

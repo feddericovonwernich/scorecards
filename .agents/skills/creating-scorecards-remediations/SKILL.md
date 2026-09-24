@@ -9,7 +9,7 @@ description: Use when adding or changing a Scorecards remediation descriptor, re
 
 A remediation is a constrained extension of a completed check, not a release or
 publication workflow. Use the production validator, prepare path, sandbox, and
-o-publication authoring harness.
+no-publication authoring harness.
 
 **Required sub-skill:** complete `creating-scorecards-checks` first. The failing
 fixture must make the check exit exactly `1`; arbitrary non-zero scoring failures

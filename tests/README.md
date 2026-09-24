@@ -48,6 +48,27 @@ bats tests/unit/bash/test_common.bats
 pytest tests/unit/python/test_license_check.py
 ```
 
+Before running a focused authoring test, check the required local tools:
+
+```bash
+command -v node npm python3 jq docker bats shellcheck
+```
+
+CI installs Bats and shellcheck; there is no separate local container wrapper.
+The complete direct and production-runner check walkthrough lives in the
+[Check Development Guide](../documentation/guides/check-development-guide.md#testing-your-check-locally).
+
+For a remediation recipe, build `scorecards-runtime:local` as documented there,
+then run the production `validate`/`prepare` path offline:
+
+```bash
+python3 tests/remediation-authoring-smoke.py \
+  --image scorecards-runtime:local \
+  --check 09-scorecard-badge \
+  --failing tests/fixtures/remediation/09-scorecard-badge/failing \
+  --not-applicable tests/fixtures/remediation/09-scorecard-badge/not-applicable
+```
+
 ## Writing Tests
 
 ### React Components (Jest + React Testing Library)

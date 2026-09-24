@@ -61,6 +61,8 @@ WORKDIR /scorecard
 
 # Copy utility scripts
 COPY utils/ /scorecard/utils/
+# Preserve the validator's repository-relative access to config and libraries.
+COPY utils/validate-check.sh /action/utils/validate-check.sh
 
 # Copy library files for checks
 COPY lib/ /action/lib/
@@ -74,7 +76,7 @@ RUN chmod -R a-w /action/config
 RUN mkdir -p /checks && ln -s /action/node_modules /checks/node_modules
 
 # Make all scripts executable
-RUN chmod +x /scorecard/utils/*.sh
+RUN chmod +x /scorecard/utils/*.sh /action/utils/validate-check.sh
 
 # Set the entrypoint to the check runner
 ENTRYPOINT ["/scorecard/utils/run-checks.sh"]

@@ -27,6 +27,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ACTION_DIR="$(dirname "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname "$ACTION_DIR")"
 CHECKS_DIR="$REPO_ROOT/checks"
+CHECK_VALIDATOR="$SCRIPT_DIR/validate-check.sh"
 
 if [ "$HASH_ONLY" -eq 0 ]; then
     echo -e "${BLUE}Updating checks hash on catalog branch...${NC}"
@@ -52,6 +53,23 @@ fi
 
 # Find all checks in sorted order
 CHECK_DIRS=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+# Fail closed on every check candidate, while preserving the existing hash input.
+for check_dir in $CHECK_DIRS; do
+    candidate=0
+    for entry in metadata.json check.sh check.py check.js; do
+        if [ -e "$check_dir/$entry" ] || [ -L "$check_dir/$entry" ]; then
+            candidate=1
+            break
+        fi
+    done
+    [ "$candidate" -eq 1 ] || continue
+
+    if "$CHECK_VALIDATOR" "$check_dir" >/dev/null; then
+        :
+    else
+        exit $?
+    fi
+done
 
 # Generate hash for each check (metadata + implementation)
 CHECK_HASHES=""

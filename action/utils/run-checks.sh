@@ -4,9 +4,8 @@ set -euo pipefail
 
 # Source common utilities for colors and logging
 source /action/lib/common.sh
-source /action/lib/remediation.sh
 
-REMEDIATION_POLICY_FILE="/action/config/remediation.json"
+CHECK_VALIDATOR="/action/utils/validate-check.sh"
 
 # Usage: run-checks.sh <checks_dir> <repo_path> <output_file>
 HOST_CHECKS_DIR="${1:-/host-checks}"
@@ -49,44 +48,50 @@ if [ -n "$EXCLUDED_CHECKS" ]; then
 fi
 echo
 
-# Initialize results array
-results='[]'
-
 # Find all check directories (sorted)
 check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
 if [ -z "$check_dirs" ]; then
     echo -e "${YELLOW}Warning: No checks found in $CHECKS_DIR${NC}"
-    echo "$results" > "$OUTPUT_FILE"
+    printf '[]\n' > "$OUTPUT_FILE"
     exit 0
 fi
 
+# Validate every candidate before executing any check or creating partial output.
+declare -A CHECK_METADATA
+while IFS= read -r check_dir; do
+    candidate=0
+    for entry in metadata.json check.sh check.py check.js; do
+        if [ -e "$check_dir/$entry" ] || [ -L "$check_dir/$entry" ]; then
+            candidate=1
+            break
+        fi
+    done
+    [ "$candidate" -eq 1 ] || continue
+
+    if projection="$("$CHECK_VALIDATOR" "$check_dir")"; then
+        CHECK_METADATA["$(basename "$check_dir")"]="$projection"
+    else
+        exit $?
+    fi
+done <<< "$check_dirs"
+
+results='[]'
 total_checks=0
 passed_checks=0
 
-# Iterate through each check
+# Iterate through each validated check
 while IFS= read -r check_dir; do
     check_name=$(basename "$check_dir")
+    [ -n "${CHECK_METADATA[$check_name]:-}" ] || continue
+    metadata="${CHECK_METADATA[$check_name]}"
 
-    # Read metadata first (needed for excluded checks too)
-    metadata_file="$check_dir/metadata.json"
-    if [ ! -f "$metadata_file" ]; then
-        echo -e "${YELLOW}Warning: No metadata.json found for $check_name, skipping${NC}"
-        continue
-    fi
-
-    # Parse metadata
-    name=$(jq -r '.name // "Unknown"' "$metadata_file")
-    description=$(jq -r '.description // ""' "$metadata_file")
-    weight=$(jq -r '.weight // 10' "$metadata_file")
-    timeout=$(jq -r '.timeout // 30' "$metadata_file")
-    category=$(jq -r '.category // "general"' "$metadata_file")
-
-    remediation='null'
-    if ! remediation=$(load_remediation_descriptor "$check_dir" "$REMEDIATION_POLICY_FILE"); then
-        echo -e "${YELLOW}Warning: Invalid remediation descriptor for $check_name; omitting capability${NC}" >&2
-        remediation='null'
-    fi
+    name=$(jq -r '.name' <<< "$metadata")
+    description=$(jq -r '.description' <<< "$metadata")
+    weight=$(jq -r '.weight' <<< "$metadata")
+    timeout=$(jq -r '.timeout' <<< "$metadata")
+    category=$(jq -r '.category' <<< "$metadata")
+    remediation=$(jq -c '.remediation // null' <<< "$metadata")
 
     # Check if this check is excluded
     if [ -n "${EXCLUDED_MAP[$check_name]:-}" ]; then

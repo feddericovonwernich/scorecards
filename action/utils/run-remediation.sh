@@ -322,45 +322,6 @@ SH
 
     git -C "$clone_dir" remote set-url origin "$remote_url"
 }
-tree_is_regular() {
-    local tree_dir="$1"
-
-    [ -z "$(find "$tree_dir" -type l -print -quit)" ] &&
-        [ -z "$(find "$tree_dir" ! -type d ! -type f -print -quit)" ]
-}
-
-validate_sandbox_tree() {
-    local baseline_dir="$1"
-    local tree_dir="$2"
-    local allowed_paths="$3"
-    local diff_max_bytes="$4"
-    local changed_json='[]'
-    local baseline_files tree_files path mode baseline_mode diff_file diff_size total_diff_size=0
-
-    tree_is_regular "$tree_dir" || return 1
-    baseline_files="$(cd "$baseline_dir" && find . -type f -printf '%P\n' | LC_ALL=C sort)"
-    tree_files="$(cd "$tree_dir" && find . -type f -printf '%P\n' | LC_ALL=C sort)"
-    [ "$baseline_files" = "$tree_files" ] || return 1
-    while IFS= read -r path; do
-        [ -n "$path" ] || continue
-        baseline_mode="$(stat -c '%a' "$baseline_dir/$path")"
-        mode="$(stat -c '%a' "$tree_dir/$path")"
-        [ "$baseline_mode" = "$mode" ] || return 1
-        if ! cmp -s "$baseline_dir/$path" "$tree_dir/$path"; then
-            jq -e --arg path "$path" 'index($path) != null' <<< "$allowed_paths" >/dev/null || return 1
-            [[ "$path" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] || return 1
-            [ ! -s "$tree_dir/$path" ] || LC_ALL=C grep -Iq . "$tree_dir/$path" || return 1
-            diff_file="$(mktemp)"
-            diff -u -- "$baseline_dir/$path" "$tree_dir/$path" > "$diff_file" || true
-            diff_size="$(stat -c '%s' "$diff_file")"
-            rm -f "$diff_file"
-            total_diff_size=$((total_diff_size + diff_size))
-            [ "$total_diff_size" -le "$diff_max_bytes" ] || return 1
-            changed_json="$(jq -c --arg path "$path" '. + [$path]' <<< "$changed_json")"
-        fi
-    done <<< "$tree_files"
-    printf '%s\n' "$changed_json"
-}
 
 prepare() {
     local request_file="$1"

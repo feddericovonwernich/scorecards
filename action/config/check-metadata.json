@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "weight_min": 1,
+  "weight_max": 20,
+  "timeout_min_seconds": 1,
+  "timeout_max_seconds": 300,
+  "categories": [
+    "Scorecards Setup",
+    "Documentation",
+    "Testing & CI",
+    "Configuration & Compliance"
+  ]
+}

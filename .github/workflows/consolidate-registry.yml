@@ -203,56 +203,39 @@ jobs:
 
           source_dir=$(mktemp -d)
           trap 'rm -rf "$source_dir"' EXIT
-          git archive "$checks_ref" action/lib/remediation.sh action/config/remediation.json checks |
+          git archive "$checks_ref" \
+            action/lib/remediation.sh \
+            action/config/check-metadata.json \
+            action/config/remediation.json \
+            action/utils/validate-check.sh \
+            checks |
             tar -x -C "$source_dir"
-          source "$source_dir/action/lib/remediation.sh"
-          remediation_policy="$source_dir/action/config/remediation.json"
+          validator="$source_dir/action/utils/validate-check.sh"
 
-          # Get list of check directories
-          check_dirs=$(git ls-tree --name-only "$checks_ref" checks/ | sort)
-
-          # Build checks array
+          # Validate and project every candidate before writing a partial catalog.
+          check_dirs=$(find "$source_dir/checks" -mindepth 1 -maxdepth 1 -type d | sort)
           checks_json="[]"
-          categories_set=""
-
           for check_dir in $check_dirs; do
+            candidate=0
+            for entry in metadata.json check.sh check.py check.js; do
+              if [ -e "$check_dir/$entry" ] || [ -L "$check_dir/$entry" ]; then
+                candidate=1
+                break
+              fi
+            done
+            [ "$candidate" -eq 1 ] || continue
+
             check_id=$(basename "$check_dir")
-
-            # Skip if not a directory with metadata
-            if ! git show "$checks_ref:$check_dir/metadata.json" > /dev/null 2>&1; then
-              continue
+            if metadata=$("$validator" "$check_dir"); then
+              :
+            else
+              exit $?
             fi
-
-            # Read metadata
-            metadata=$(git show "$checks_ref:$check_dir/metadata.json")
-
-            remediation='null'
-            if ! remediation=$(load_remediation_descriptor "$source_dir/$check_dir" "$remediation_policy"); then
-              echo "Invalid remediation descriptor for $check_id; omitting capability" >&2
-              remediation='null'
-            fi
-
-            # Extract fields and add check_id
-            check_json=$(echo "$metadata" | jq --arg id "$check_id" --argjson remediation "$remediation" '{
-              id: $id,
-              name: .name,
-              description: .description,
-              category: .category,
-              weight: .weight
-            } + (if $remediation == null then {} else {remediation: $remediation} end)')
-
-            # Add to checks array
+            check_json=$(echo "$metadata" | jq --arg id "$check_id" '{id: $id} + .')
             checks_json=$(echo "$checks_json" | jq --argjson check "$check_json" '. + [$check]')
-
-            # Track category
-            category=$(echo "$metadata" | jq -r '.category')
-            if [ -n "$category" ] && [[ ! "$categories_set" =~ "$category" ]]; then
-              categories_set="$categories_set|$category"
-            fi
           done
 
-          # Build categories array (ordered)
-          categories_json='["Scorecards Setup", "Documentation", "Testing & CI", "Configuration & Compliance"]'
+          categories_json=$(jq -c '.categories' "$source_dir/action/config/check-metadata.json")
 
           # Sort checks by id
           checks_json=$(echo "$checks_json" | jq 'sort_by(.id)')

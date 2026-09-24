@@ -13,33 +13,34 @@ checks/
     └── metadata.json     # Check metadata
 ```
 
-## Metadata Schema
+## Canonical check contract
 
-Each check must have a `metadata.json` file with the following structure:
+`action/config/check-metadata.json` owns the supported values and limits.
+`action/utils/validate-check.sh` is the executable contract for the directory
+layout, ID, metadata, and optional remediation descriptor. Do not copy those
+rules into a second schema.
 
-```json
-{
-  "name": "Human-readable check name",
-  "description": "Detailed description of what this check validates",
-  "weight": 10,
-  "timeout": 30,
-  "category": "documentation|security|testing|ci|quality"
-}
+Create `metadata.json` plus exactly one regular `check.sh`, `check.py`, or
+`check.js`, then validate the directory:
+
+```bash
+action/utils/validate-check.sh checks/01-my-check
 ```
 
-### Fields
-
-- **name** (required, string): Display name for the check
-- **description** (required, string): Clear description of what the check does and why it's important
-- **weight** (required, number): Relative importance (1-100). Higher weight = more impact on score
-- **timeout** (optional, number, default: 30): Max execution time in seconds
-- **category** (optional, string): Grouping category for the catalog UI
+Exit `0` prints the normalized metadata projection. Exit `64` means the command
+was called incorrectly. Exit `65` identifies invalid data or layout on stderr.
+The runner validates every candidate before executing the first check, so one
+invalid directory fails the suite without partial results. A support directory
+without metadata or a check script, such as `checks/lib`, is not a candidate.
 
 ### Optional remediation recipe
 
-A check may declare `remediation` metadata and exactly one `remediate.sh`, `remediate.py` or `remediate.js` beside its check script. This is executable trusted code, not a free-form command accepted from the catalog. Review its explicit allowed paths, idempotence, timeout and behavior against an untrusted service tree. It must not run service hooks or dependencies.
-
-The initial recipe only adds a Scorecards badge to a safe existing README; it does not invent one. See the canonical [metadata, sandbox and exit-code contract](../architecture/flows/remediation-flow.md#contrato-del-check). Declaring a recipe does not enable a destination: the central policy remains authoritative and disabled until activation prerequisites are met.
+A check may declare remediation metadata and exactly one executable
+`remediate.sh`, `remediate.py`, or `remediate.js`. The validator delegates this
+contract to `action/lib/remediation.sh`; the canonical security, sandbox, and
+exit-code rules remain in the
+[remediation flow](../architecture/flows/remediation-flow.md#contrato-del-check).
+Declaring a recipe does not enable a destination or authorize publication.
 
 ## Check Script Interface
 
@@ -124,35 +125,12 @@ else:
 
 #### JavaScript (.js)
 
-```javascript
-#!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
-
-const repoPath = process.env.SCORECARD_REPO_PATH || '.';
-const ciPath = path.join(repoPath, '.github', 'workflows');
-
-try {
-  if (fs.existsSync(ciPath)) {
-    const files = fs.readdirSync(ciPath);
-    const yamlFiles = files.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
-
-    if (yamlFiles.length > 0) {
-      console.log(`Found ${yamlFiles.length} CI workflow(s): ${yamlFiles.join(', ')}`);
-      process.exit(0);
-    } else {
-      console.error('No workflow files found in .github/workflows/');
-      process.exit(1);
-    }
-  } else {
-    console.error('.github/workflows/ directory not found');
-    process.exit(1);
-  }
-} catch (error) {
-  console.error(`Error: ${error.message}`);
-  process.exit(1);
-}
-```
+JavaScript checks are ES modules both in this checkout (`package.json` declares
+`"type": "module"`) and in the runtime. Use
+[`checks/03-ci-config/check.js`](../../checks/03-ci-config/check.js) as the
+canonical example; it imports Node built-ins with `import` and is the same file
+exercised by the walkthrough below. Do not create `.cjs`: the runner does not
+discover it.
 
 ## Best Practices
 
@@ -189,12 +167,11 @@ fi
 
 Checks should not modify the repository - they are read-only.
 
-### 5. Use Meaningful Weights
+### 5. Keep metadata intentional
 
-- Critical checks (security, licensing): 15-20
-- Important checks (documentation, tests): 10-15
-- Nice-to-have checks (code style, badges): 5-10
-- Informational checks: 1-5
+Choose values supported by `action/config/check-metadata.json`, explain the
+check's observable purpose, and run the canonical validator. Do not maintain a
+second weight or category table in contributor documentation.
 
 ## Check Naming Convention
 
@@ -210,20 +187,114 @@ Checks run in lexicographical order, so lower numbers run first.
 
 ## Testing Your Check Locally
 
-1. Set the environment variable:
+### Prerequisites
+
+Check the tools used by the focused commands before starting:
 
 ```bash
-export SCORECARD_REPO_PATH=/path/to/test/repo
+command -v node npm python3 jq docker bats shellcheck
 ```
 
-2. Run your check script:
+CI installs Bats and shellcheck in `.github/workflows/test.yml`; this repository
+does not provide a separate container wrapper for them.
+
+### Validate and exercise the canonical ESM check
 
 ```bash
-bash checks/01-my-check/check.sh
-echo "Exit code: $?"
+action/utils/validate-check.sh checks/03-ci-config
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$tmp/pass/.github/workflows" "$tmp/fail"
+printf '%s\n' 'name: ci' > "$tmp/pass/.github/workflows/ci.yml"
+
+SCORECARD_REPO_PATH="$tmp/pass" node checks/03-ci-config/check.js
+set +e
+SCORECARD_REPO_PATH="$tmp/fail" node checks/03-ci-config/check.js
+rc=$?
+set -e
+test "$rc" -eq 1
 ```
 
-3. Verify output and exit code are correct
+Every new check needs a positive and negative fixture. A normal scoring failure
+may use any non-zero exit code; use exactly `1` when that failure is intended to
+be eligible for remediation.
+
+### Exercise the production runner
+
+```bash
+docker build --pull --platform linux/amd64 \
+  -t scorecards-runtime:local -f action/Dockerfile action
+
+fixture="$(mktemp -d)"
+selected="$(mktemp -d)"
+output="$(mktemp -d)"
+trap 'rm -rf "$fixture" "$selected" "$output"' EXIT
+mkdir -p "$fixture/.github/workflows"
+printf '%s\n' 'name: ci' > "$fixture/.github/workflows/ci.yml"
+cp -a checks/03-ci-config checks/lib "$selected/"
+
+docker run --rm --network=none \
+  --mount "type=bind,src=$selected,dst=/host-checks,readonly" \
+  --mount "type=bind,src=$fixture,dst=/workspace,readonly" \
+  --mount "type=bind,src=$output,dst=/output" \
+  scorecards-runtime:local
+
+jq -e '
+  length == 1
+  and .[0].check_id == "03-ci-config"
+  and .[0].status == "pass"
+  and .[0].exit_code == 0
+  and (.[0].stdout | contains("GitHub Actions"))
+  and .[0].stderr == ""
+' "$output/results.json"
+```
+
+This uses `action/Dockerfile` and the real entrypoint. It verifies the consumer
+JSON rather than only checking that the script starts.
+
+### Run a focused test
+
+Match the existing framework for the implementation language:
+
+```bash
+npm run test:js -- tests/unit/javascript/<file>.test.js
+bats tests/unit/bash/<file>.bats
+pytest tests/unit/python/<file>.py
+```
+
+## Authoring a remediation
+
+First complete the check walkthrough and confirm the reparable fixture exits
+exactly `1`. A recipe receives `SCORECARD_REPO_PATH=/workspace`,
+`SCORECARDS_REPO`, `SERVICE_REPOSITORY`, and
+`SCORECARDS_BRANCH=catalog`. It returns `0` after applying a repair, `3` when
+the fixture is not applicable, and another code on execution failure.
+
+After declaring the descriptor and one executable recipe, run the offline
+authoring harness:
+
+```bash
+action/utils/validate-check.sh checks/09-scorecard-badge
+
+python3 tests/remediation-authoring-smoke.py \
+  --image scorecards-runtime:local \
+  --check 09-scorecard-badge \
+  --failing tests/fixtures/remediation/09-scorecard-badge/failing \
+  --not-applicable tests/fixtures/remediation/09-scorecard-badge/not-applicable
+```
+
+The harness resolves the local image to its immutable Docker digest, creates a
+temporary bare service remote, stubs only GitHub API reads, and invokes the
+production `validate` and `prepare` commands. It requires fail → repair → pass,
+a byte- and mode-identical second application, `not_applicable`, allowed paths,
+and the production network/user/mount sandbox. It never calls `publish`, pushes
+a branch, opens a pull request, dispatches a workflow, or changes the real
+eligibility policy.
+
+Review activation, provenance, policy, and PR-only guarantees separately in the
+[remediation flow](../architecture/flows/remediation-flow.md). Authoring and
+offline preparation do not authorize a target or runtime rollout.
 
 ## Common Patterns
 
@@ -265,13 +336,12 @@ fi
 
 ## Contributing New Checks
 
-1. Create your check directory and files
-2. Test thoroughly on various repositories
-3. Document any assumptions or requirements
-4. Submit a PR with:
-   - Check implementation
-   - Metadata with appropriate weight
-   - Update to README listing the new check
+1. Create one check implementation and its metadata.
+2. Add positive and negative fixtures plus one focused behavioral test.
+3. Run the validator, both direct cases, and the production runner walkthrough.
+4. Document assumptions that a consumer must know.
+5. Submit the implementation, metadata, fixtures, and focused test in one pull
+   request. The generated catalog, not the README, owns the check listing.
 
 ## Questions?
 

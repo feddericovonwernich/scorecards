@@ -82,3 +82,13 @@ Three additional fresh contexts isolated authority, release-deadline, and
 sunk-cost pressure. The first authority run implied but did not state exit `3`;
 the skill's completion gate was tightened and a fresh rerun scored 5/5. The
 other pressure runs preserved every contract without further changes.
+
+## Discovery evidence
+
+- Exercised: fresh stateless OMP contexts received the canonical
+  `.agents/skills/` files; the control and skill arms above verify behavior.
+- Filesystem-verified: both `.claude/skills/` entries resolve to and read the
+  canonical skill frontmatter.
+- Documentary-only: native Claude, Codex, Gemini, and standalone Pi discovery.
+  Those binaries were unavailable in this worktree environment; only `omp` was
+  present. `AGENTS.md` records explicit trigger paths for all project agents.

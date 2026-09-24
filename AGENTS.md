@@ -50,6 +50,14 @@ Primary directories:
 - Apply DRY - reference existing docs rather than duplicating
 - Assume mature technical audience
 
+## Authoring Skills
+
+- Adding or changing a check, its `metadata.json`, fixtures, or focused tests:
+  read `.agents/skills/creating-scorecards-checks/SKILL.md` first.
+- Adding or changing a remediation descriptor, recipe, fixtures, or authoring
+  tests: read `.agents/skills/creating-scorecards-remediations/SKILL.md` first;
+  it requires the checks-authoring skill.
+
 ## Context-Specific Rules
 
 Detailed guidelines auto-load from `.claude/rules/` when working on relevant files:
