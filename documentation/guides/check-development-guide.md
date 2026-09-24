@@ -192,11 +192,15 @@ Checks run in lexicographical order, so lower numbers run first.
 Check the tools used by the focused commands before starting:
 
 ```bash
-command -v node npm python3 jq docker bats shellcheck
+command -v git node npm python3 jq docker bats shellcheck pytest
 ```
 
 CI installs Bats and shellcheck in `.github/workflows/test.yml`; this repository
 does not provide a separate container wrapper for them.
+
+Install the checkout's JavaScript dependencies with `npm ci`. For Python checks
+and their focused tests, install `requirements.txt` and `requirements-dev.txt`
+in a local virtual environment.
 
 ### Validate and exercise the canonical ESM check
 
@@ -297,6 +301,8 @@ classic image store without `RepoDigests`. Its offline Docker adapter maps only
 that pinned identity; production registry-digest validation remains unchanged,
 and no image publication is required. It creates a temporary bare service remote,
 stubs GitHub API reads, and invokes production `validate` and `prepare`.
+Execution limits come from `action/config/remediation.json`; the temporary policy
+overrides only the pinned image, activation, and synthetic target identity.
 
 The harness observes the containers launched by production `prepare` to require
 pre-check `1`, repair `0`, post-check `0`, a byte- and mode-identical second

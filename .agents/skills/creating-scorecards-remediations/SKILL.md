@@ -61,24 +61,24 @@ python3 tests/remediation-authoring-smoke.py \
 
 ## Quick reference
 
-| Contract | Required evidence |
-| --- | --- |
-| Eligibility | Failing fixture exits exactly `1` |
-| Descriptor | Canonical validator succeeds |
-| Lifecycle | `1 → repair → 0`, idempotent, not-applicable `3` |
-| Scope | Every changed path is allowed; bytes and modes stabilize |
-| Sandbox | Immutable image, non-root, no network, read-only except workspace |
-| Boundary | No publication, activation, secrets, dispatch, push, or merge |
+| Contract    | Required evidence                                                 |
+| ----------- | ----------------------------------------------------------------- |
+| Eligibility | Failing fixture exits exactly `1`                                 |
+| Descriptor  | Canonical validator succeeds                                      |
+| Lifecycle   | `1 → repair → 0`, idempotent, not-applicable `3`                  |
+| Scope       | Every changed path is allowed; bytes and modes stabilize          |
+| Sandbox     | Immutable image, non-root, no network, read-only except workspace |
+| Boundary    | No publication, activation, secrets, dispatch, push, or merge     |
 
 ## Common mistakes
 
-| Mistake | Correction |
-| --- | --- |
-| Accept any non-zero pre-check | Require exactly `1`. |
-| Test the recipe directly | Run the production `validate` and `prepare` harness. |
-| Add a broad path because the recipe currently touches it | Remove the edit; narrow the descriptor. |
-| Use publish dry-run as safety evidence | Authoring performs zero publication. |
-| Enable after generic local checks | Activation is a separate policy review. |
+| Mistake                                                  | Correction                                           |
+| -------------------------------------------------------- | ---------------------------------------------------- |
+| Accept any non-zero pre-check                            | Require exactly `1`.                                 |
+| Test the recipe directly                                 | Run the production `validate` and `prepare` harness. |
+| Add a broad path because the recipe currently touches it | Remove the edit; narrow the descriptor.              |
+| Use publish dry-run as safety evidence                   | Authoring performs zero publication.                 |
+| Enable after generic local checks                        | Activation is a separate policy review.              |
 
 ## Red flags
 

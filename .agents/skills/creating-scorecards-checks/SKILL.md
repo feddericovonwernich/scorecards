@@ -73,23 +73,23 @@ The implementation uses `import`, not `require`; the focused test belongs under
 
 ## Quick reference
 
-| Gate | Evidence |
-| --- | --- |
-| Layout and metadata | Validator exits `0` and prints normalized JSON |
-| Behavior | Direct positive and negative fixture results |
-| Regression | One focused existing-framework test |
-| Runtime | Real Docker entrypoint plus inspected result JSON |
-| Integration | Hash command succeeds; no manual README listing |
+| Gate                | Evidence                                          |
+| ------------------- | ------------------------------------------------- |
+| Layout and metadata | Validator exits `0` and prints normalized JSON    |
+| Behavior            | Direct positive and negative fixture results      |
+| Regression          | One focused existing-framework test               |
+| Runtime             | Real Docker entrypoint plus inspected result JSON |
+| Integration         | Hash command succeeds; no manual README listing   |
 
 ## Common mistakes
 
-| Mistake | Correction |
-| --- | --- |
-| Trust copied metadata or inspect a schema manually | Run the canonical validator. |
-| Preserve CommonJS because it already exists | Convert `.js` to ESM. |
-| Add `checks/<id>/test.sh` | Use the existing language test directory. |
-| Update a README check list | The catalog projection is generated. |
-| Substitute a direct run for Docker | Run both; they verify different contracts. |
+| Mistake                                            | Correction                                 |
+| -------------------------------------------------- | ------------------------------------------ |
+| Trust copied metadata or inspect a schema manually | Run the canonical validator.               |
+| Preserve CommonJS because it already exists        | Convert `.js` to ESM.                      |
+| Add `checks/<id>/test.sh`                          | Use the existing language test directory.  |
+| Update a README check list                         | The catalog projection is generated.       |
+| Substitute a direct run for Docker                 | Run both; they verify different contracts. |
 
 ## Red flags
 

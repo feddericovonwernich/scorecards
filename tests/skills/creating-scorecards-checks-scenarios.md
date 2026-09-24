@@ -37,13 +37,13 @@ score, and omitted items for each fresh-context run.
   harness does not expose a more specific model version.
 - Skill input: none.
 
-| Run | Score | Omitted or contradicted items |
-| --- | ---: | --- |
-| 1 | 1/5 | No canonical validator, direct fixture command, production runner/result JSON, or focused test; proposed `test.sh` and README edits. |
-| 2 | 1/5 | Same five-gate pattern: ESM/fixtures only; generic schema, Docker, `test.sh`, and README advice. |
-| 3 | 1/5 | Same; searched for conventions instead of invoking the implemented author commands. |
-| 4 | 1/5 | Same; generic verification never reached canonical validator or result JSON. |
-| 5 | 1/5 | Same; invented generic registration/testing rather than the Scorecards workflow. |
+| Run | Score | Omitted or contradicted items                                                                                                        |
+| --- | ----: | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   |   1/5 | No canonical validator, direct fixture command, production runner/result JSON, or focused test; proposed `test.sh` and README edits. |
+| 2   |   1/5 | Same five-gate pattern: ESM/fixtures only; generic schema, Docker, `test.sh`, and README advice.                                     |
+| 3   |   1/5 | Same; searched for conventions instead of invoking the implemented author commands.                                                  |
+| 4   |   1/5 | Same; generic verification never reached canonical validator or result JSON.                                                         |
+| 5   |   1/5 | Same; invented generic registration/testing rather than the Scorecards workflow.                                                     |
 
 Representative baseline rationalizations were “use the adjacent checks as the
 source of truth,” create or run `checks/13-changelog/test.sh`, update the README,
@@ -59,12 +59,12 @@ but omitted the executable contract and repeated the stale wiring.
 - Skill input: `.agents/skills/creating-scorecards-checks/SKILL.md`.
 
 | Run | Score | Omitted or contradicted items |
-| --- | ---: | --- |
-| 1 | 5/5 | None. |
-| 2 | 5/5 | None. |
-| 3 | 5/5 | None. |
-| 4 | 5/5 | None. |
-| 5 | 5/5 | None. |
+| --- | ----: | ----------------------------- |
+| 1   |   5/5 | None.                         |
+| 2   |   5/5 | None.                         |
+| 3   |   5/5 | None.                         |
+| 4   |   5/5 | None.                         |
+| 5   |   5/5 | None.                         |
 
 Every run rejected `test.sh` and README-list wiring, used ESM with both fixtures,
 invoked the canonical validator and direct commands, ran the focused JavaScript

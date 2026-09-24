@@ -42,13 +42,13 @@ each fresh-context run.
   harness does not expose a more specific model version.
 - Skill input: `.agents/skills/creating-scorecards-checks/SKILL.md` only.
 
-| Run | Score | Omitted or contradicted items |
-| --- | ---: | --- |
-| 1 | 0/5 | Used arbitrary non-zero, invented a generic offline test, omitted the descriptor, exact harness, lifecycle, and sandbox contract, then retained a publish dry run. |
-| 2 | 0/5 | Used arbitrary non-zero and custom fixtures; omitted the exact harness, lifecycle, and sandbox contract, then retained publication and enablement. |
-| 3 | 0/5 | Deferred to a harness it could not name; omitted the descriptor, exact exit codes, lifecycle, and sandbox contract, then allowed publication. |
-| 4 | 0/5 | Proposed custom direct tests; omitted the descriptor, exact harness, lifecycle, and provenance, then allowed enablement. |
-| 5 | 0/5 | Deferred to an unknown harness; omitted the descriptor, exact exit codes, lifecycle, and sandbox contract, then retained publication. |
+| Run | Score | Omitted or contradicted items                                                                                                                                      |
+| --- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   |   0/5 | Used arbitrary non-zero, invented a generic offline test, omitted the descriptor, exact harness, lifecycle, and sandbox contract, then retained a publish dry run. |
+| 2   |   0/5 | Used arbitrary non-zero and custom fixtures; omitted the exact harness, lifecycle, and sandbox contract, then retained publication and enablement.                 |
+| 3   |   0/5 | Deferred to a harness it could not name; omitted the descriptor, exact exit codes, lifecycle, and sandbox contract, then allowed publication.                      |
+| 4   |   0/5 | Proposed custom direct tests; omitted the descriptor, exact harness, lifecycle, and provenance, then allowed enablement.                                           |
+| 5   |   0/5 | Deferred to an unknown harness; omitted the descriptor, exact exit codes, lifecycle, and sandbox contract, then retained publication.                              |
 
 Representative baseline rationalizations were “use the documented harness once
 found,” treat any non-zero as failure, and run publication or enablement after
@@ -65,12 +65,12 @@ contract.
 - Skill input: both Scorecards authoring skills.
 
 | Run | Score | Omitted or contradicted items |
-| --- | ---: | --- |
-| 1 | 5/5 | None. |
-| 2 | 5/5 | None. |
-| 3 | 5/5 | None. |
-| 4 | 5/5 | None. |
-| 5 | 5/5 | None. |
+| --- | ----: | ----------------------------- |
+| 1   |   5/5 | None.                         |
+| 2   |   5/5 | None.                         |
+| 3   |   5/5 | None.                         |
+| 4   |   5/5 | None.                         |
+| 5   |   5/5 | None.                         |
 
 Every run named the exact pre-check code and harness, narrowed the product path,
 reported the complete lifecycle and sandbox evidence, and stopped before

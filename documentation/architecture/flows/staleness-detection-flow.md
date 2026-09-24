@@ -130,27 +130,12 @@ See the [workflow reference](../../reference/workflows.md#update-checks-hashyml)
 
 **Implementation**: `action/utils/update-checks-hash.sh`
 
-**Process**:
-
-```bash
-# For each check directory (sorted):
-for check_dir in $(find checks/ -mindepth 1 -maxdepth 1 -type d | sort); do
-  check_id=$(basename "$check_dir")
-
-  # Hash metadata.json
-  metadata_hash=$(sha256sum "$check_dir/metadata.json" | awk '{print $1}')
-
-  # Hash check implementation (check.sh, check.py, or check.js)
-  impl_hash=$(sha256sum "$check_dir/check.*" | awk '{print $1}')
-
-  # Combine: check_id:metadata_hash:impl_hash
-  echo "$check_id:$metadata_hash:$impl_hash"
-done | \
-  # Hash all combined strings
-  sha256sum | \
-  # Extract hash only
-  awk '{print $1}'
-```
+The script validates every check candidate before producing a hash or publishing
+suite metadata; see the
+[canonical check contract](../../guides/check-development-guide.md#canonical-check-contract).
+Its implementation owns lossless directory discovery and the hash algorithm.
+Validation leaves the established hash bytes and directory-count semantics
+unchanged, including support-directory entries.
 
 **Includes**:
 

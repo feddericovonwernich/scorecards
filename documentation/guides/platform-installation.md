@@ -85,17 +85,8 @@ After installation, you can customize your setup:
 
 ### Add Custom Checks
 
-Create new checks in the `checks/` directory:
-
-```bash
-checks/
-  your-check/
-    check.sh        # Check implementation
-    metadata.json   # Check metadata (name, weight, etc.)
-    test.sh         # Tests for your check
-```
-
-See the [Check Development Guide](check-development-guide.md) for details on creating checks.
+Follow the [Check Development Guide](check-development-guide.md) for check layout,
+metadata validation, fixtures, focused tests, and the production-runner walkthrough.
 
 ### Customize the Catalog UI
 
@@ -107,16 +98,9 @@ Modify the catalog UI in the `docs/` directory:
 
 ### Adjust Check Weights
 
-Modify check weights in `checks/*/metadata.json` to change how checks impact scores:
-
-```json
-{
-  "id": "readme",
-  "name": "README.md Exists",
-  "weight": 10,
-  "category": "documentation"
-}
-```
+Change `weight` in the check's existing `metadata.json`, then validate it using the
+[canonical check contract](check-development-guide.md#canonical-check-contract).
+The contract's configuration owns the supported weight range.
 
 ### Configure Branch Protection
 

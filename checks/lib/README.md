@@ -24,6 +24,7 @@ for (const path of commonPaths.openapi) {
 ```
 
 **Available patterns:**
+
 - `commonPaths.openapi` - OpenAPI/Swagger spec locations
 - `commonPaths.ci` - CI configuration files
 - `commonPaths.readme` - README file variations

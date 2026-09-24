@@ -18,14 +18,11 @@ This document describes how individual quality checks are discovered, executed, 
 │  └────────────────────────────────────────────────────────┘ │
 │                     │                                        │
 │                     ▼                                        │
-│  2. PARSE METADATA                                           │
+│  2. VALIDATE ALL CANDIDATES                                  │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  For each check, read metadata.json:                   │ │
-│  │  {                                                      │ │
-│  │    "weight": 10,                                        │ │
-│  │    "timeout": 30,                                       │ │
-│  │    "category": "documentation"                          │ │
-│  │  }                                                      │ │
+│  │  validate-check.sh owns layout and metadata validation │ │
+│  │  Consume its normalized projection                    │ │
+│  │  Invalid candidate: stop before execution or output    │ │
 │  └────────────────────────────────────────────────────────┘ │
 │                     │                                        │
 │                     ▼                                        │
@@ -103,9 +100,9 @@ This document describes how individual quality checks are discovered, executed, 
 
 **Implementation**: `action/utils/run-checks.sh`
 
-```bash
-check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
-```
+Discovery and candidate selection are implemented in the
+[runner](../../../action/utils/run-checks.sh); directory names are preserved
+losslessly so malformed IDs reach validation.
 
 **Behavior**:
 
@@ -118,33 +115,13 @@ check_dirs=$(find "$CHECKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 - `01-check-name/` - Numeric prefix for ordering
 - `02-another-check/` - Ensures consistent execution order
 
-### 2. Parse Metadata
+### 2. Validate Metadata
 
-**Implementation**: `action/utils/run-checks.sh`
-
-**metadata.json Structure**:
-
-```json
-{
-  "weight": 10,
-  "timeout": 30,
-  "category": "documentation",
-  "description": "Check description for UI"
-}
-```
-
-**Fields**:
-
-- **weight**: Points awarded for passing (determines importance)
-- **timeout**: Max execution time in seconds (default: 30)
-- **category**: Classification (documentation, testing, ci, etc.)
-- **description**: Human-readable explanation
-
-**Validation**:
-
-- Missing metadata.json: Check skipped with warning
-- Invalid JSON: Check skipped with error
-- Missing required fields: Uses defaults
+The [canonical check contract](../../guides/check-development-guide.md#canonical-check-contract)
+owns author-facing validation guidance and points to the executable schema.
+The runner validates all candidates before execution and consumes the validator's
+normalized projection; it does not supply fallback metadata or skip malformed
+checks.
 
 ### 3. Build Docker Image
 
