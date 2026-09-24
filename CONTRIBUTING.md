@@ -13,17 +13,19 @@ Thank you for your interest in contributing to Scorecards!
 
 ## Development Setup
 
-See the [Development Guide](documentation/development/README.md) for development guidelines and setup instructions.
+See the [project documentation](documentation/README.md) for development and operational guides.
 
-## Adding a New Check
+## Adding Checks and Remediations
 
-See the [Check Development Guide](documentation/guides/check-development-guide.md) for a guide on creating new checks.
+Follow the [Check Development Guide](documentation/guides/check-development-guide.md)
+for the complete check and optional remediation workflow. Agent contributors
+must also load the matching versioned skill:
 
-## Using Shared Libraries
+- [creating-scorecards-checks](.agents/skills/creating-scorecards-checks/SKILL.md)
+- [creating-scorecards-remediations](.agents/skills/creating-scorecards-remediations/SKILL.md)
 
-Checks should use shared utilities from `/checks/lib/` and `/action/lib/` to avoid code duplication.
-
-See `/checks/lib/README.md` for documentation on available shared utilities.
+Use shared utilities from `checks/lib/` and `action/lib/`; see
+[`checks/lib/README.md`](checks/lib/README.md).
 
 ## Code Style
 
@@ -33,12 +35,18 @@ See `/checks/lib/README.md` for documentation on available shared utilities.
 
 ## Testing
 
+Run the focused command for the changed surface before the broader suite:
+
 ```bash
-# Run all tests
-npm test           # JavaScript tests (Jest)
-bats tests/        # Bash tests
-pytest             # Python tests
+npm run test:js -- tests/unit/javascript/<file>.test.js
+bats tests/unit/bash/<file>.bats
+pytest tests/unit/python/<file>.py
 ```
+
+The [authoring walkthrough](documentation/guides/check-development-guide.md#testing-your-check-locally)
+owns prerequisites, direct positive/negative fixtures, the production Docker
+runner, and the offline remediation harness. Run `npm test` only when broad
+regression coverage is needed.
 
 ## Pull Request Process
 

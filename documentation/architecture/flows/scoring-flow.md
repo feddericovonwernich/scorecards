@@ -95,44 +95,25 @@ Creates multi-runtime Docker image with all check dependencies.
 
 ### 4. Run Checks
 
-Executes all quality checks against the repository.
+The Action first validates every candidate through
+[`action/utils/validate-check.sh`](../../../action/utils/validate-check.sh).
+Invalid metadata or layout stops the suite before a check executes or partial
+results are written. The
+[`run-checks.sh`](../../../action/utils/run-checks.sh) runner then executes the
+validated checks sequentially against the read-only service workspace and
+writes the canonical result array.
 
-**Implementation**: `action/utils/run-checks.sh`
-
-**Process**:
-
-- Discover all checks in `checks/` directory
-- For each check:
-  - Read metadata.json (weight, timeout, category)
-  - Execute check script in Docker container
-  - Capture exit code (0 = pass, non-zero = fail)
-  - Log output to results file
-- All checks run sequentially (not parallel)
-
-**Check Types**:
-
-- **Bash scripts**: `check.sh`
-- **Python scripts**: `check.py`
-- **JavaScript**: `check.js`
+The [Check Execution Flow](check-execution-flow.md) owns discovery, execution,
+exit-code, and result-field details. Authoring instructions live in the
+[Check Development Guide](../../guides/check-development-guide.md); this flow
+does not duplicate their schema.
 
 ### 5. Calculate Score
 
-Computes weighted score from check results.
-
-**Implementation**: `action/utils/score-calculator.sh`
-
-**Formula**:
-
-```
-score = (passed_weight / total_weight) * 100
-```
-
-**Rank Assignment**:
-
-- **Platinum**: ≥90%
-- **Gold**: ≥75%
-- **Silver**: ≥50%
-- **Bronze**: <50%
+[`action/utils/score-calculator.sh`](../../../action/utils/score-calculator.sh)
+calculates the weighted score and assigns the rank. The
+[Action Reference](../../reference/action-reference.md#score-calculation) owns
+the user-facing formula and rank ranges.
 
 ### 6. Generate Badge
 
@@ -168,14 +149,12 @@ Writes results to catalog branch.
 - `results/{org}/{repo}/results.json` - Detailed check results
 - `badges/{org}/{repo}.json` - Badge endpoint data
 
-**Metadata Stored**:
-
 - Score, rank, timestamp
-- Team name, description (from .scorecard/config.yml)
-- Check results (pass/fail, points awarded)
-- Checks hash (for staleness detection)
-- Recent contributors (from git log)
-- OpenAPI spec location (if detected)
+- Team name and description from `.scorecard/config.yml`
+- Canonical check results
+- Checks hash for staleness detection
+- Recent contributors from Git history
+- OpenAPI specification location when detected
 
 ### 8. Push to Catalog Branch
 

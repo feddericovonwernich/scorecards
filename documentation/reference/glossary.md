@@ -36,19 +36,21 @@ A dedicated Git branch (typically named `catalog`) that stores all scorecard res
 A GitHub Personal Access Token (stored as `SCORECARDS_CATALOG_TOKEN`) that allows the action to write results to the catalog branch. See [Token Requirements](token-requirements.md#operation-matrix) for supported permissions and repository scope.
 
 **Category**
-A grouping of related checks. Default categories include: documentation, testing, architecture, security, and operations.
+A grouping of related checks. The supported values are owned by
+[`action/config/check-metadata.json`](../../action/config/check-metadata.json)
+and enforced by the [canonical validator](../guides/check-development-guide.md#canonical-check-contract).
 
 **Check**
-An individual quality measurement that examines one aspect of a repository. Checks are pass/fail and have an associated weight (point value).
+An individual quality measurement that examines one aspect of a repository. Checks are pass/fail and have an associated weight.
 
 **Check Script**
-The executable file (`check.sh`, `check.py`, or `check.js`) that implements a check's logic. Must exit with 0 for pass, 1 for fail.
+The executable file (`check.sh`, `check.py`, or `check.js`) that implements a check's logic. Exit `0` passes normal scoring; any non-zero code fails. Remediation eligibility separately requires exactly `1`.
 
 **Checks Hash**
-A SHA256 hash of all check implementations, metadata, and weights. Used to detect when checks have been updated and results are stale.
+A SHA256 hash derived by `action/utils/update-checks-hash.sh` from check directory IDs, metadata, and the selected implementation. Its established directory-count semantics include support directories.
 
 **Consolidated Registry**
-A single JSON file (`registry/consolidated-registry.json`) that aggregates data from all individual service registry files for efficient loading by the catalog UI.
+`registry/all-services.json`, generated from individual `registry/{org}/{repo}.json` entries for efficient catalog loading.
 
 **Config File**
 The `.scorecard/config.yml` file in a service repository that customizes which checks run and provides service metadata (team, description, links).
@@ -75,7 +77,7 @@ A check that is active and will run for a service. By default, all checks are en
 ## F
 
 **Failed Check**
-A check that did not meet its quality criteria (exit code 1). Failed checks contribute 0 points to the score.
+A check that returned a non-zero exit code. Failed checks contribute no weight to the score; only exit `1` is remediation-eligible.
 
 ---
 

@@ -5,15 +5,19 @@
 - **[Platform Installation](guides/platform-installation.md)** - Set up for your organization
 - **[Service Installation](guides/service-installation.md)** - Add to your service
 
-## Using Scorecards
+## Authoring Scorecards
 
-- **[Action Reference](reference/action-reference.md)** - Action inputs, outputs, and badges
-- **[Configuration](reference/configuration.md)** - Configure .scorecard/config.yml
-- **[Check Development](guides/check-development-guide.md)** - Create custom checks
+- **[Check and Remediation Development](guides/check-development-guide.md)** -
+  validate metadata, exercise checks, and prepare remediations offline
+- **[Agent Skills](guides/check-development-guide.md#agent-skill-discovery)** -
+  discover the versioned authoring workflows
 
 ## Understanding the System
 
+- **[Action Reference](reference/action-reference.md)** - Runtime inputs, outputs, and build
+- **[Configuration](reference/configuration.md)** - Configure `.scorecard/config.yml`
 - **[Architecture](architecture/)** - System design and flows
-- **[Remediation](architecture/flows/remediation-flow.md)** - PR-only correction architecture, security boundaries, activation and rollback
-- **[Reference](reference/)** - Technical specifications
+- **[Remediation](architecture/flows/remediation-flow.md)** - Security, activation, and rollback
+- **[Installation and Authoring Verification](reference/installation-authoring-verification.md)** -
+  local I01–I10/D01–D06 evidence and outstanding cloud proof
 - **[Contributing](../CONTRIBUTING.md)** - Contribute to Scorecards

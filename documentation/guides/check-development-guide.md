@@ -79,7 +79,7 @@ const repoPath = process.env.SCORECARD_REPO_PATH;
 
 ```bash
 #!/bin/bash
-set -e
+set -euo pipefail
 
 REPO_PATH="${SCORECARD_REPO_PATH}"
 
@@ -317,6 +317,25 @@ unchanged production sandbox before comparing bytes and modes and removing it.
 Review activation, provenance, policy, and PR-only guarantees separately in the
 [remediation flow](../architecture/flows/remediation-flow.md). Authoring and
 offline preparation do not authorize a target or runtime rollout.
+
+## Agent skill discovery
+
+The repository keeps one canonical copy of each authoring skill:
+
+- `.agents/skills/creating-scorecards-checks/SKILL.md`
+- `.agents/skills/creating-scorecards-remediations/SKILL.md`
+
+Codex and Gemini discover the canonical `.agents/skills` paths. Claude uses the
+matching `.claude/skills` symlinks, which resolve to those same files. Pi and
+other harnesses that load `AGENTS.md` follow its explicit triggers. Load the
+checks skill for any check, metadata, fixture, or focused-test change; load the
+remediation skill as well for a descriptor, recipe, allowed path, or remediation
+authoring test.
+
+The checkout version is the skill version. Do not copy skills into a home
+directory or maintain a second command wrapper. The skills invoke this guide and
+the executable validator; they do not define a parallel schema or authorize
+publication, activation, pushes, or merges.
 
 ## Common Patterns
 

@@ -110,26 +110,18 @@ A populated repository is not an installation target or an upgrade target. Prese
 
 ## Customization
 
-After installation, you can customize your setup:
-
-### Add Custom Checks
-
-Follow the [Check Development Guide](check-development-guide.md) for check layout,
-metadata validation, fixtures, focused tests, and the production-runner walkthrough.
+After installation, follow the [Check Development Guide](check-development-guide.md)
+for check layout, canonical metadata validation, direct fixtures, focused tests,
+the production runner, and optional remediation preparation. Agent contributors
+should start at its [skill discovery section](check-development-guide.md#agent-skill-discovery).
+The guide and executable validator own authoring; this installation guide does
+not duplicate their schema, ranges, or commands.
 
 ### Customize the Catalog UI
 
-Modify the catalog UI in the `docs/` directory:
-
-- `docs/index.html` - Main catalog page
-- `docs/styles.css` - Styling
-- `docs/app.js` - JavaScript functionality
-
-### Adjust Check Weights
-
-Change `weight` in the check's existing `metadata.json`, then validate it using the
-[canonical check contract](check-development-guide.md#canonical-check-contract).
-The contract's configuration owns the supported weight range.
+Modify the React application under `docs/`; see the
+[frontend development reference](../../docs/README.md) for build, routing, and
+deployment contracts.
 
 ### Configure Branch Protection
 

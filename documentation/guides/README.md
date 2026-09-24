@@ -5,6 +5,7 @@
 - **Platform teams**: [Platform Installation Guide](platform-installation.md)
 - **Service teams**: [Service Installation Guide](service-installation.md)
 
-## Guides
+## Authoring
 
-- **[Check Development](check-development-guide.md)** - Create custom quality checks
+- **[Check and Remediation Development](check-development-guide.md)** - The
+  executable human and agent workflow, including skill discovery

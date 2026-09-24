@@ -61,37 +61,19 @@ This document describes how individual quality checks are discovered, executed, 
 │  └────────────────────────────────────────────────────────┘ │
 │                     │                                        │
 │                     ▼                                        │
-│  5. PARSE RESULTS                                            │
+│  5. WRITE RESULTS                                            │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Determine pass/fail from exit code                    │ │
-│  │  If exit 0: status="pass", points=weight              │ │
-│  │  If non-zero: status="fail", points=0                 │ │
-│  │  If timeout: status="fail", points=0                  │ │
+│  │  Append one normalized result per validated check      │ │
+│  │  0: status="pass"; any non-zero: status="fail"         │ │
+│  │  Excluded checks retain metadata with status=excluded  │ │
 │  └────────────────────────────────────────────────────────┘ │
-│                     │                                        │
-│                     ▼                                        │
-│  6. AGGREGATE SCORE                                          │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  total_weight = sum(all check weights)                 │ │
-│  │  passed_weight = sum(passed check weights)             │ │
-│  │  score = (passed_weight / total_weight) * 100          │ │
-│  │  rank = assign_rank(score)                             │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                     │                                        │
-└─────────────────────┼────────────────────────────────────────┘
+└─────────────────────┬────────────────────────────────────────┘
                       │
                       ▼
-              ┌───────────────┐
-              │  results.json │
-              │  {            │
-              │    "checks": [│
-              │      {         │
-              │        ...     │
-              │      }         │
-              │    ],          │
-              │    "score": 85 │
-              │  }             │
-              └───────────────┘
+              ┌──────────────────────┐
+              │ /output/results.json │
+              │ JSON result array    │
+              └──────────────────────┘
 ```
 
 ## Step Details
@@ -143,69 +125,45 @@ checks.
 
 The Action passes its resolved service workspace to `run-checks.sh`; that directory is mounted at `/workspace` read-only and exposed as `SCORECARD_REPO_PATH`. The maintained [Action entrypoint](../../../action/entrypoint.sh) and [check runner](../../../action/utils/run-checks.sh) own the Docker invocation, limits and mounts, so this flow does not duplicate them.
 
-### 5. Parse Results
+### 5. Write Results
 
 **Implementation**: `action/utils/run-checks.sh`
 
-**Exit Code Interpretation**:
+Normal scoring treats exit `0` as pass and every non-zero exit as fail. A
+timeout is reported as exit `124` with a timeout message. The separate
+remediation path is stricter: only a pre-check exit of exactly `1` is eligible
+for repair.
 
-- **0**: Check passed → award full weight
-- **1-123**: Check failed → award 0 points
-- **124**: Timeout → award 0 points, log warning
-- **125+**: System error → award 0 points, log error
-
-**Result Structure**:
+The runner writes a JSON array. Every element contains the consumer-facing
+fields below; `remediation` is present only when the validated check declares
+that capability:
 
 ```json
 {
-  "check_id": "01-readme-present",
-  "name": "README Present",
-  "status": "pass",
+  "check_id": "01-readme",
+  "name": "README Documentation",
+  "description": "Checks that the repository has a README file with meaningful content.",
+  "category": "Documentation",
   "weight": 10,
-  "points": 10,
-  "category": "documentation",
-  "output": "README.md found",
-  "duration": 0.5
+  "status": "pass",
+  "exit_code": 0,
+  "duration": 1,
+  "stdout": "README.md found\n",
+  "stderr": ""
 }
 ```
 
-### 6. Aggregate Score
+The [canonical validator](../../../action/utils/validate-check.sh) owns metadata
+and layout validity. The runner owns this result projection; documentation
+must not introduce alternate `points` or `output` fields.
 
-**Implementation**: `action/utils/score-calculator.sh`
+## Score aggregation
 
-**Calculation**:
-
-```bash
-total_weight=$(jq '[.[] | .weight] | add' results.json)
-passed_weight=$(jq '[.[] | select(.status == "pass") | .weight] | add' results.json)
-score=$(echo "scale=0; ($passed_weight * 100) / $total_weight" | bc)
-```
-
-**Rank Assignment**:
-
-```bash
-if [ "$score" -ge 90 ]; then
-  rank="Platinum"
-elif [ "$score" -ge 75 ]; then
-  rank="Gold"
-elif [ "$score" -ge 50 ]; then
-  rank="Silver"
-else
-  rank="Bronze"
-fi
-```
-
-**Weighted Example**:
-
-```
-Check 01: 10 points, passed → 10
-Check 02: 5 points, failed → 0
-Check 03: 15 points, passed → 15
----
-Total: 30 points
-Passed: 25 points
-Score: (25/30) * 100 = 83% (Gold)
-```
+[`action/utils/score-calculator.sh`](../../../action/utils/score-calculator.sh)
+consumes the result array after execution. See the [Scoring Flow](scoring-flow.md)
+for the surrounding lifecycle and the
+[Action Reference](../../reference/action-reference.md#score-calculation) for
+the user-facing formula and ranks.
 
 ## Sequential Execution
 

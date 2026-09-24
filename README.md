@@ -100,24 +100,25 @@ Each check has a weight reflecting its importance. Higher-weighted checks (like 
 
 ## Documentation
 
-### Setup Guides
+Follow one route:
 
-- **[Platform Installation](documentation/guides/platform-installation.md)** - Set up Scorecards for your organization
-- **[Service Installation](documentation/guides/service-installation.md)** - Add Scorecards to your service
-- **[Configuration Guide](documentation/guides/configuration.md)** - Customize your setup
+1. [Install the platform](documentation/guides/platform-installation.md).
+2. [Onboard and verify the first service](documentation/guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
+3. [Author checks and optional remediations](documentation/guides/check-development-guide.md).
+4. Agent contributors use the versioned
+   [`creating-scorecards-checks`](.agents/skills/creating-scorecards-checks/SKILL.md)
+   and
+   [`creating-scorecards-remediations`](.agents/skills/creating-scorecards-remediations/SKILL.md)
+   skills.
 
-### Reference
+The [Action Reference](documentation/reference/action-reference.md) owns runtime
+inputs and outputs. The [architecture documentation](documentation/architecture/overview.md)
+explains system flows and remediation security; it does not replace the
+installation or authoring walkthroughs.
 
-- **[Action Reference](documentation/reference/action-reference.md)** - Action inputs, outputs, badges
-- **[Check Development Guide](documentation/guides/check-development-guide.md)** - Create custom checks
-- **[Comparison Guide](documentation/comparison.md)** - Scorecards vs. Backstage vs. Cortex
-- **[Architecture](documentation/architecture/overview.md)** - System design and flows
-
-### For Service Teams
-
-Copy the maintained [scoring workflow template](documentation/examples/scorecard-workflow-template.yml) and follow the [Service Installation Guide](documentation/guides/service-installation.md). Separate service/platform checkouts preserve the source revisions needed by optional remediation.
-
-For remediation, see the [architecture, explorable diagrams and activation checklist](documentation/architecture/flows/remediation-flow.md). Installation does not enable it; corrections always require a PR and human review.
+See the
+[combined verification record](documentation/reference/installation-authoring-verification.md)
+for local I01–I10/D01–D06 evidence and the cloud scenarios that remain unproven.
 
 ---
 
@@ -129,16 +130,10 @@ See the [Token Requirements Guide](documentation/reference/token-requirements.md
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-To add a new check:
-
-1. Create a script in `checks/your-check/check.sh`
-2. Add metadata in `checks/your-check/metadata.json`
-3. Add tests
-4. Submit a PR
-
-See the [Check Development Guide](documentation/guides/check-development-guide.md) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Check and remediation changes follow the
+[Check Development Guide](documentation/guides/check-development-guide.md) and
+the repository skills linked above; metadata and supported values remain owned
+by the executable validator.
 
 ---
 

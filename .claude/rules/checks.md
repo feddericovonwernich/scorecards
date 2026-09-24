@@ -15,6 +15,7 @@ Check scripts are CLI tools that output to stdout. Add at file top:
 ```
 
 Then use:
+
 - `console.log()` for intended CLI output
 - `console.error()` for error messages
 - `process.exit(0)` for success, `process.exit(1)` for failure
@@ -44,12 +45,15 @@ process.exit(1);
 ## Shared Libraries
 
 Check `checks/lib/` for shared utilities:
+
 - `common-paths.js` - Standard file paths for OpenAPI, CI configs, etc.
 
 ## Exit Codes
 
-- `0` - Check passed
-- `1` - Check failed
+- `0` - Check passed.
+- Any non-zero code - Check failed for normal scoring.
+- Exactly `1` - Required for a failing fixture to be eligible for remediation;
+  other non-zero codes are `check_failed_to_run` in remediation.
 
 ## Environment
 

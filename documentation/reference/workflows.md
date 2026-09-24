@@ -417,7 +417,7 @@ See the [Token Requirements Guide](token-requirements.md) for scoring, installat
 
 ## Related Documentation
 
-- [Architecture Overview](overview.md) - High-level system architecture
-- [Scoring Flow](flows/scoring-flow.md) - End-to-end scoring process
-- [Installation Flow](flows/installation-flow.md) - Service onboarding process
-- [Staleness Detection Flow](flows/staleness-detection-flow.md) - Detecting outdated scores
+- [Architecture Overview](../architecture/overview.md) - High-level system architecture
+- [Scoring Flow](../architecture/flows/scoring-flow.md) - End-to-end scoring process
+- [Installation Flow](../architecture/flows/installation-flow.md) - Service onboarding process
+- [Staleness Detection Flow](../architecture/flows/staleness-detection-flow.md) - Detecting outdated scores

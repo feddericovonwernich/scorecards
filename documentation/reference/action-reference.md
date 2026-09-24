@@ -134,7 +134,7 @@ Replace:
 
 ## Score Calculation
 
-Each check has a weight (1-20) indicating its importance. The score is calculated as:
+Each check has a weight accepted by the [canonical executable contract](../guides/check-development-guide.md#canonical-check-contract). The score is calculated as:
 
 ```
 score = (sum of passed check weights / sum of all check weights) × 100

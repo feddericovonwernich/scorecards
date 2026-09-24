@@ -22,36 +22,24 @@ This document describes how the system detects when service scorecards are outda
 ┌──────────────────────────────────────────────────────────────┐
 │          Update Checks Hash Workflow                         │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  2. Calculate SHA256 hash of entire checks/ directory │ │
-│  │     - Sort files deterministically                     │ │
-│  │     - Hash all check scripts + metadata                │ │
-│  │     - Generate: abc123def456...                        │ │
-│  └────────────────────────────────────────────────────────┘ │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  3. Export check metadata to JSON                      │ │
-│  │     {                                                   │ │
-│  │       "checks_hash": "abc123def456...",                │ │
-│  │       "checks": [                                       │ │
-│  │         { "id": "01", "weight": 10, ... },             │ │
-│  │         { "id": "02", "weight": 5, ... }               │ │
-│  │       ],                                                │ │
-│  │       "total_weight": 100                              │ │
-│  │     }                                                   │ │
+│  │  2. Validate every check candidate before publication │ │
+│  │  3. Hash each immediate directory from its ID,         │ │
+│  │     metadata bytes and selected implementation bytes  │ │
+│  │  4. Combine directory hashes deterministically         │ │
 │  └────────────────────────────────────────────────────────┘ │
 └────────────────┬─────────────────────────────────────────────┘
                  │
-                 │ 4. Commit to catalog branch
-                 │
+                 │ 4. Commit both summary files
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
 │          Catalog Branch                                      │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  current-checks.json (primary)                         │ │
-│  │  { "checks_hash": "abc123...",                         │ │
-│  │    "checks": [...], ... }                              │ │
-│  │                                                         │ │
-│  │  current-checks-hash.txt (legacy)                      │ │
-│  │  abc123def456...                                       │ │
+│  │  current-checks.json                                  │ │
+│  │  { "checks_hash": "abc123...",                        │ │
+│  │    "checks_count": 13, "generated_at": "..." }        │ │
+│  │                                                        │ │
+│  │  current-checks-hash.txt                              │ │
+│  │  abc123def456...                                      │ │
 │  └────────────────────────────────────────────────────────┘ │
 └────────────────┬─────────────────────────────────────────────┘
                  │
@@ -126,42 +114,24 @@ This document describes how the system detects when service scorecards are outda
 
 See the [workflow reference](../../reference/workflows.md#update-checks-hashyml) for triggers and dispatch restrictions.
 
-### 2. Calculate Checks Hash
+### 2–3. Validate and calculate the checks hash
 
 **Implementation**: `action/utils/update-checks-hash.sh`
 
-The script validates every check candidate before producing a hash or publishing
-suite metadata; see the
-[canonical check contract](../../guides/check-development-guide.md#canonical-check-contract).
-Its implementation owns lossless directory discovery and the hash algorithm.
-Validation leaves the established hash bytes and directory-count semantics
-unchanged, including support-directory entries.
+The script validates every candidate through the
+[canonical check contract](../../guides/check-development-guide.md#canonical-check-contract)
+before producing a hash or publishing suite state. It then applies its
+established algorithm to every immediate directory, including support
+directories: combine directory ID, metadata hash when present, and the selected
+implementation hash when present; then hash the ordered combined values.
 
-**Includes**:
+The script owns the exact discovery, byte, and directory-count semantics.
+Validation deliberately does not change the valid suite's digest or count.
 
-- All `check.sh`, `check.py`, `check.js` files
-- All `metadata.json` files
-- Check ID (directory name)
-- Directory structure (adding/removing checks changes hash)
-
-**Deterministic**:
-
-- Check directories sorted alphabetically
-- Each check hashed independently then combined
-- Same input always produces same hash
-- Independent of execution environment
-
-**Example Hash**:
-
-```
-abc123def456789fedcba987654321deadbeef0123456789abcdef0123456789
-```
-
-### 3. Export Check Metadata
-
-The [hash publication script](../../../action/utils/update-checks-hash.sh) owns the
-generated `current-checks.json` format used for staleness detection. It publishes
-suite metadata, not individual check definitions.
+The generated `current-checks.json` contains `checks_hash`, `checks_count`, and
+`generated_at`; `current-checks-hash.txt` contains the same digest. These files
+are the staleness contract. Individual check metadata remains owned by the
+validator and catalog projection.
 
 ### 4. Commit to Catalog Branch
 
