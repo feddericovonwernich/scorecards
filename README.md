@@ -30,7 +30,7 @@ export SCORECARDS_SINGLE_WRITER=true
 )
 ```
 
-The installer supports only a new `scorecards` repository. Before it starts, one operator must exclude every other installation writer for the whole run; `SCORECARDS_SINGLE_WRITER=true` is that acknowledgement for unattended use, not a race-proofing guarantee. It rejects every populated repository and requires `SCORECARDS_ADOPT_EMPTY_REPO=true` for an existing repository with no heads or tags. Success means `main` and `catalog` were published atomically and a fresh workflow-based Pages deployment of the personalized `main` commit completed. Then follow the [first-service gate](documentation/guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
+The installer supports only a new or explicitly adopted empty `scorecards` repository. It requires exclusive installation writing, rejects populated repositories, and publishes `main` and `catalog` atomically without tags before verifying a fresh workflow-based Pages deployment. For the release-provenance, empty-repository, Pages-verification, and forward-only recovery contract, see the [Platform Installation Guide](documentation/guides/platform-installation.md). Then follow the [first-service gate](documentation/guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
 
 ---
 

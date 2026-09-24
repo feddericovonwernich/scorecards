@@ -6,95 +6,41 @@ This document describes how service repositories are onboarded to the scorecards
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│          Scorecards Repository (Main)                        │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Manual Trigger: create-installation-pr.yml            │ │
-│  │  Input: target_org/target_repo                         │ │
-│  └────────────────────────────────────────────────────────┘ │
+│ Service repository                                            │
+│ install.yml (reusable caller)                                │
+│ - evaluates the service                                      │
+│ - dispatches and awaits the central owner                    │
 └────────────────┬─────────────────────────────────────────────┘
-                 │
-                 │ 1. Trigger workflow_dispatch
-                 │
+                 │ correlated workflow_dispatch
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
-│          Installation Workflow (install.yml)                 │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  2. Checkout target repository                         │ │
-│  │  3. Generate workflow file                             │ │
-│  │     .github/workflows/scorecards.yml                   │ │
-│  │  4. Generate config template                           │ │
-│  │     .scorecard/config.yml                              │ │
-│  └────────────────────────────────────────────────────────┘ │
+│ Central Scorecards repository                                 │
+│ create-installation-pr.yml (sole PR owner)                   │
+│ - serializes work by target repository                        │
+│ - creates or returns a labeled installation PR                │
 └────────────────┬─────────────────────────────────────────────┘
-                 │
-                 │ 5. Create branch & push
-                 │
+                 │ new attempt only
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
-│          Target Service Repository                           │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  New Branch: scorecards-installation                   │ │
-│  │  ┌──────────────────────────────────────────────────┐  │ │
-│  │  │  .github/workflows/scorecards.yml                │  │ │
-│  │  │  .scorecard/config.yml                           │  │ │
-│  │  └──────────────────────────────────────────────────┘  │ │
-│  └────────────────────────────────────────────────────────┘ │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 │ 6. Create PR via GitHub API
-                 │
+│ Target service repository                                     │
+│ scorecards-install-${run_id}-${attempt} branch               │
+│ - .github/workflows/scorecards.yml                            │
+│ - .scorecard/config.yml                                      │
+│                    │                                         │
+│                    └──► labeled pull request for review      │
+└──────────────────────────────────────────────────────────────┘
+                 │ after merge: service workflow runs
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
-│          GitHub Pull Request                                 │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Title: "Add scorecards quality tracking"             │ │
-│  │  Body: Setup instructions and explanation             │ │
-│  │  Files: scorecards.yml, config.yml                     │ │
-│  └────────────────────────────────────────────────────────┘ │
+│ Catalog branch                                                │
+│ service action publishes results and a registry entry         │
+│ Consolidate Registry writes registry/all-services.json        │
 └────────────────┬─────────────────────────────────────────────┘
-                 │
-                 │ 7. Track PR in registry
-                 │
+                 │ non-empty consolidated registry, or tree fallback
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
-│          Catalog Branch Registry                             │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  registry/{org}/{repo}.json                            │ │
-│  │  {                                                      │ │
-│  │    "repo": "org/repo",                                 │ │
-│  │    "installed": false,                                 │ │
-│  │    "installation_pr": {                                │ │
-│  │      "number": 123,                                    │ │
-│  │      "state": "open",                                  │ │
-│  │      "url": "https://github.com/org/repo/pull/123"    │ │
-│  │    }                                                    │ │
-│  │  }                                                      │ │
-│  └────────────────────────────────────────────────────────┘ │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 │ 8. Team reviews & merges PR
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│          Service Repository (Main Branch)                    │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  .github/workflows/scorecards.yml ✓                    │ │
-│  │  .scorecard/config.yml ✓                               │ │
-│  └────────────────────────────────────────────────────────┘ │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 │ 9. Workflow runs on schedule or push
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│          First Scorecard Run                                 │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  - Runs all checks                                     │ │
-│  │  - Calculates initial score                            │ │
-│  │  - Updates registry: installed=true                    │ │
-│  │  - Generates badge                                     │ │
-│  │  - Service appears in catalog UI                       │ │
-│  └────────────────────────────────────────────────────────┘ │
+│ Catalog UI                                                    │
+│ Services view reads current catalog data                      │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -117,11 +63,7 @@ This document describes how service repositories are onboarded to the scorecards
 - `scorecards-branch`: Central catalog branch
 - `retry-closed`: `false` by default; only an explicit `true` retries after a closed or merged installation PR
 
-**Permissions Required**:
-
-- Read access to the target repository
-- `SCORECARDS_WORKFLOW_TOKEN` for the central dispatcher to create the installation branch and PR
-- Central Actions read/write for the reusable caller to dispatch the owner and retrieve its completed result; see [Token Requirements](../../reference/token-requirements.md#operation-matrix).
+**Credentials:** The central owner uses `SCORECARDS_WORKFLOW_TOKEN`; reusable callers also use it to dispatch and read the correlated owner run. The exact permission matrix is authoritative in [Token Requirements](../../reference/token-requirements.md#operation-matrix).
 
 ### 2. Checkout Target Repository
 
@@ -159,9 +101,9 @@ service:
 The central owner resolves these states inside its target-keyed native concurrency boundary:
 
 - workflow already present: `installed`;
-- newest labeled PR open: return its number and URL, without creating a branch;
-- newest labeled PR closed or merged: stop by default;
-- no prior PR, or closed/merged plus `retry-closed: true`: create a new attempt.
+- a labeled PR is open: return its number and URL, without creating a branch;
+- a labeled PR is closed or merged: stop by default;
+- no prior PR, or a closed/merged PR plus `retry-closed: true`: create a new attempt.
 
 Each new attempt uses `scorecards-install-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`. It commits the generated workflow and config, then performs a normal push. A push failure stops before PR creation. Old fixed-name or prior-attempt branches remain untouched; the workflows never delete or force-update them.
 
@@ -173,38 +115,9 @@ For an open PR, those outputs identify the existing PR. For a closed or merged P
 
 The reusable path dispatches the central owner and waits for the correlated run to complete successfully before consuming its result. Dispatch acceptance alone is not installation success. Both entrypoints run PR creation in the same central repository; queued attempts recheck PR state and reuse an open PR. Failure, cancellation, missing results or an expired wait is surfaced to the caller. GitHub can replace pending requests; no FIFO guarantee is claimed.
 
-### 7. Track PR in Registry
+### 7. Track a newly created PR in the registry
 
-**Implementation**: `.github/workflows/create-installation-pr.yml`; the reusable caller separately evaluates and publishes service results.
-
-**Creates Registry Entry**:
-
-```json
-{
-  "repo": "myorg/myservice",
-  "org": "myorg",
-  "name": "myservice",
-  "installed": false,
-  "has_workflow": false,
-  "default_branch": "main",
-  "installation_pr": {
-    "number": 123,
-    "state": "open",
-    "url": "https://github.com/myorg/myservice/pull/123",
-    "created_at": "2024-01-15T10:30:00Z"
-  },
-  "team": "MyTeam",
-  "description": "My service description"
-}
-```
-
-**Registry Location**: `registry/{org}/{repo}.json` in catalog branch
-
-**Purpose**:
-
-- Track installation progress
-- Display PR status in catalog UI
-- Monitor which services are pending installation
+Only a newly created installation PR triggers the central registry update. Reused open PRs and closed/merged PRs do not write a replacement entry. The owner writes `registry/{org}/{repo}.json` on `catalog`; the service evaluation later updates that individual entry with score results. See [the workflow reference](../../reference/workflows.md#create-installation-pryml) for the owner outputs and publication conditions.
 
 ### 8. Team Reviews & Merges
 
@@ -217,43 +130,16 @@ The reusable path dispatches the central owner and waits for the correlated run 
 - [ ] Config has accurate description
 - [ ] Comfortable with automatic scoring
 
-**Post-Merge**:
-
-- `installed` flag remains false until first run
-- `has_workflow` still false until detected
+After merge, the installed service workflow is the regular scoring entrypoint. Its first completed catalog publication establishes the service's current registry data.
 
 ### 9. First Scorecard Run
 
 **Trigger**: Workflow runs automatically based on schedule (daily at midnight UTC), on push to main/master, or manual workflow_dispatch
 
-**Actions**:
-
-1. The service workflow runs on its default branch and records the service SHA.
-2. Checks execute and the score, result files and individual `registry/{org}/{repo}.json` entry are published to `catalog`.
-3. The catalog push triggers `Consolidate Registry`, which must complete successfully using the central job-scoped token.
-4. `registry/all-services.json` must contain the service.
-5. A fresh browser context must find the service in the deployed Services view.
-
-An evaluation or individual registry entry can exist before consolidation. Neither alone proves UI visibility.
-
-**Registry Update**:
-
-```json
-{
-  "repo": "myorg/myservice",
-  "installed": true,
-  "has_workflow": true,
-  "score": 85,
-  "rank": "Gold",
-  "last_run": "2024-01-15T11:00:00Z",
-  "checks_hash": "abc123...",
-  "installation_pr": {
-    "number": 123,
-    "state": "merged",
-    "merged_at": "2024-01-15T10:45:00Z"
-  }
-}
-```
+The service action publishes individual results, then central consolidation
+updates the aggregate registry consumed by the UI. Follow the
+[first-service verification](../../guides/service-installation.md#step-4-verify-the-first-service-end-to-end)
+for the authoritative catalog-to-UI gate; evaluation alone does not prove visibility.
 
 ## Bulk Installation
 
@@ -287,21 +173,21 @@ done
 
 **PR Not Created**:
 
-- Check PAT permissions
-- Verify repository exists and is accessible
-- Check workflow logs for errors
+- Check `SCORECARDS_WORKFLOW_TOKEN` access and the central owner run; see [Token Requirements](../../reference/token-requirements.md#operation-matrix).
+- Verify the repository exists and is accessible.
+- Check the owner workflow logs for the returned status.
 
 **Workflow Not Running**:
 
-- Verify workflow file in `.github/workflows/`
-- Check if workflow is disabled
-- Verify trigger conditions (push to correct branch)
+- Verify the workflow file in `.github/workflows/`.
+- Check whether the workflow is disabled.
+- Verify trigger conditions on the service default branch.
 
 **Score Not Updating**:
 
-- Check workflow run logs
-- Verify GITHUB_TOKEN has write access to catalog
-- Check for conflicts in catalog branch
+- Check the service workflow run and catalog publication.
+- Verify `SCORECARDS_CATALOG_TOKEN` can write to the central catalog; it is not the central consolidation credential.
+- Follow the [first-service visibility checks](../../guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
 
 ## Related Documentation
 

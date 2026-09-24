@@ -33,7 +33,7 @@ The web-based user interface that displays scorecard results across all services
 A dedicated Git branch (typically named `catalog`) that stores all scorecard results, badges, registry data, and the generated catalog UI.
 
 **Catalog Token**
-A GitHub Personal Access Token (stored as `SCORECARDS_CATALOG_TOKEN`) that allows the action to write results to the catalog branch. Requires `repo` scope.
+A GitHub Personal Access Token (stored as `SCORECARDS_CATALOG_TOKEN`) that allows the action to write results to the catalog branch. See [Token Requirements](token-requirements.md#operation-matrix) for supported permissions and repository scope.
 
 **Category**
 A grouping of related checks. Default categories include: documentation, testing, architecture, security, and operations.

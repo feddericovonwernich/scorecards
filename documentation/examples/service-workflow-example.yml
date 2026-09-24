@@ -2,7 +2,7 @@
 #
 # This workflow can be added to any service repository to:
 # 1. Automatically run scorecards daily
-# 2. Create an installation PR if not already installed
+# 2. Request central installation PR creation when not already installed
 # 3. Display results in GitHub Actions UI
 # 4. Record score provenance from the trusted Scorecards checkout
 #
@@ -35,25 +35,24 @@ jobs:
       # Optional: Override the default branch for results (default: 'catalog')
       scorecards-branch: 'catalog'
     secrets:
-      # Required: access to the central catalog, also before installation.
+      # Required: service-to-central checkout and catalog publication.
       scorecards-catalog-token: ${{ secrets.SCORECARDS_CATALOG_TOKEN }}
 
+      # Required: dispatch/read the central owner and update a newly created PR.
       scorecards-workflow-token: ${{ secrets.SCORECARDS_WORKFLOW_TOKEN }}
 # What happens when this runs:
 #
 # 1. First Run (not installed):
-#    - Checks if .github/workflows/scorecards.yml exists (not found)
-#    - Checks for existing installation PR (none found)
+#    - Checks whether .github/workflows/scorecards.yml exists
+#    - The central owner finds no labeled installation PR
 #    - Runs scorecards and displays results
 #    - Records the service and Scorecards source revisions
-#    - Creates a PR with scorecards workflow and config
+#    - Creates a uniquely named installation PR with the workflow and config
 #
-# 2. Subsequent Runs (still not installed):
-#    - Checks if .github/workflows/scorecards.yml exists (not found)
-#    - Checks for existing installation PR (found!)
+# 2. Later Run (still not installed):
+#    - The central owner reuses an open labeled PR without creating a branch
+#    - It respects a closed or merged PR unless retry-closed: true is passed
 #    - Runs scorecards and displays results
-#    - Records the service and Scorecards source revisions
-#    - Does NOT create another PR (respects existing PR)
 #
 # 3. After the installation PR is merged:
 #    - The installed scorecards.yml workflow performs regular scoring

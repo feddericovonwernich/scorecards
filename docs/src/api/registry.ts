@@ -201,7 +201,6 @@ export async function loadServices(): Promise<LoadServicesResult> {
       throw new Error(`Failed to fetch repository tree: ${response.status}`);
     }
 
-
     const treeData: GitHubTreeResponse = await response.json();
 
     // Find all registry JSON files, excluding all-services.json
@@ -215,12 +214,11 @@ export async function loadServices(): Promise<LoadServicesResult> {
       )
       .map((item) => item.path);
 
-
     // Fetch all registry files in parallel
     const fetchPromises = registryFiles.map(async (path) => {
       const { response, usedAPI: fetchUsedAPI } = await fetchWithHybridAuth(path);
       if (response.ok) {
-        return { service: await response.json() as ServiceData, usedAPI: fetchUsedAPI };
+        return { service: (await response.json()) as ServiceData, usedAPI: fetchUsedAPI };
       }
       return null;
     });
@@ -231,7 +229,8 @@ export async function loadServices(): Promise<LoadServicesResult> {
     );
     services = loadedServices.map(({ service }) => service);
     usedAPI =
-      loadedServices.length > 0 && loadedServices.every(({ usedAPI: fetchUsedAPI }) => fetchUsedAPI);
+      loadedServices.length > 0 &&
+      loadedServices.every(({ usedAPI: fetchUsedAPI }) => fetchUsedAPI);
 
     console.log(`Loaded ${services.length} services via tree API`);
   }

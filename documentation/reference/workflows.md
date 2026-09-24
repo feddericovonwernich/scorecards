@@ -320,26 +320,23 @@ For `.github/workflows/publish-remediation-runtime.yml`, see the authoritative [
 
 **Triggers:**
 
-- Push to catalog branch affecting `registry/**/*.json` (excluding `all-services.json`)
+- Push to `catalog` affecting individual registry or team JSON (excluding generated aggregate files)
+- Manual workflow dispatch
 
-**Concurrency:** Only one consolidation runs at a time (cancel in-progress runs)
+**Concurrency:** Only one consolidation runs at a time; a newer run cancels an in-progress one.
 
-**Purpose:** Consolidates individual service registry files into a single `all-services.json` file for the catalog UI.
+**Purpose:** Consolidates individual service registry files into `registry/all-services.json` for the catalog UI.
+
+**Credentials:** The central workflow requests `contents: write` and uses its repository-scoped job `github.token`. It does not consume `SCORECARDS_CATALOG_TOKEN` or `SCORECARDS_WORKFLOW_TOKEN`; see [Token Requirements](token-requirements.md#token-overview).
 
 **Jobs:**
 
-1. **consolidate** - Consolidates registry
-   - Checks out catalog branch
-   - Finds all registry files (excludes `all-services.json` and legacy `services.json`)
-   - Counts services
-   - Creates consolidated JSON with:
-     - Array of all service entries
-     - `generated_at` timestamp
-     - `count` of services
-   - Commits if changed (with `[skip ci]` to prevent loops)
-   - Pushes to catalog branch
+1. **consolidate**
+   - Checks out `catalog`.
+   - Excludes `all-services.json` and legacy `services.json` while collecting individual registry files.
+   - Writes the aggregate service list, generation timestamp, and count, then commits and pushes it when changed.
 
-**System Role:** Maintains the consolidated registry file used by the catalog UI. Automatically runs whenever individual service registries are updated by the scorecards action.
+For UI visibility rather than publication only, follow the [first-service gate](../guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
 
 ---
 

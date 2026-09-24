@@ -124,7 +124,7 @@ For the catalog build, catalog-branch publication, and GitHub Pages configuratio
 - **Sorting** - Sort by score, name, team, last updated
 - **Staleness indicators** - Visual warning for outdated scorecards
 
-**Data Source:** Fetches `registry/all-services.json` from catalog branch
+**Data Source:** Loads the catalog registry through [`loadServices()`](../../docs/src/api/registry.ts), including individual-entry fallback when consolidation is unavailable or empty. See the [first-service verification guide](../guides/service-installation.md#step-4-verify-the-first-service-end-to-end).
 
 ### Service Modal
 

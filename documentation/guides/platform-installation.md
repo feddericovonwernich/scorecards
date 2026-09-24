@@ -53,18 +53,18 @@ The installer:
 
 1. accepts only `owner/scorecards`;
 2. rejects any existing head or tag without changing it;
-3. requires `SCORECARDS_ADOPT_EMPTY_REPO=true` to recover an existing repository with zero refs;
+3. requires `SCORECARDS_ADOPT_EMPTY_REPO=true` to use an existing repository with zero heads and tags;
 4. prepares personalized `main` and `catalog` commits locally;
-5. publishes both branches in one normal atomic push;
+5. publishes only those two branches in one `--atomic --no-follow-tags` push;
 6. configures Pages with `build_type=workflow`;
 7. dispatches a fresh `sync-docs.yml` run for the personalized `INSTALLED_MAIN_SHA`; and
-8. verifies that deployed Pages `index.html` references nonempty hashed compiled module and stylesheet assets with their expected content types before reporting success.
+8. verifies that deployed Pages has a compiled application root and nonempty hashed JavaScript and stylesheet assets with expected content types at the Pages origin before reporting success.
 
 ## Prerequisites
 
 - One operator must exclude every other installation writer for the complete run. Set `SCORECARDS_SINGLE_WRITER=true` for unattended installation; the interactive confirmation acknowledges the same full-installation responsibility. This operational exclusion is not a race-proofing guarantee.
 - Bash 3.2 or newer.
-- Git 2.15 or newer with `git push --atomic` support.
+- Git 2.4 or newer with `git push --atomic` support.
 - GitHub CLI commands `api`, `repo view`, `repo create`, `workflow run` and `run list`.
 - A `GITHUB_TOKEN` matching the installer operations in the [credential matrix](../reference/token-requirements.md#operation-matrix).
 - GitHub Actions and workflow-based Pages available for the target repository visibility.
@@ -102,9 +102,9 @@ Remediation needs no additional service workflow and must not be enabled as an i
 
 The installer has three remote checkpoints:
 
-1. **No repository, or an existing empty repository:** retry normally if no repository was created. If a failed attempt created an empty repository, inspect that it still has zero heads and tags, then retry with `SCORECARDS_ADOPT_EMPTY_REPO=true`.
-2. **Both `main` and `catalog` published:** never rerun the installer. The two refs were created together; continue only with Pages recovery.
-3. **Pages configured or dispatched:** preserve refs, workflow logs, artifact and deployment records. Fix forward through a reviewed Scorecards release, or dispatch a fresh `sync-docs.yml` run for the installed `main` commit.
+1. **No refs published:** retry normally if no repository was created. If the repository exists, inspect that it has zero heads and tags, then retry with `SCORECARDS_ADOPT_EMPTY_REPO=true`.
+2. **Both `main` and `catalog` published:** never rerun the installer. The two branches were created together, without tags; continue only with Pages recovery.
+3. **Pages configured or dispatched:** preserve refs, workflow logs, artifact and deployment records. Fix the installed repository's `main` through its normal review process, then dispatch a fresh `sync-docs.yml` run for that new revision.
 
 A populated repository is not an installation target or an upgrade target. Preserve its refs, settings, results and registry. Do not force push, reset, delete refs or recreate `catalog`. Existing legacy Pages installations use the [coordinated transition and rollback](../../docs/README.md#coordinated-transition-from-legacy-pages), not this new-install path.
 
@@ -219,15 +219,16 @@ Set `retry-closed: true` only for a deliberate human retry. A score can be publi
 
 ### Atomic push fails
 
-Both refs remain absent when the server honors atomic push. Inspect repository rules and token permissions, keep the repository, verify it still has zero refs, and retry with the empty-repository opt-in. Do not push either branch separately.
+When the server honors atomic push, neither branch is published. Inspect repository rules and token permissions, keep the repository, verify it still has zero heads and tags, and retry with the empty-repository opt-in. Do not push either branch separately or create a tag.
 
 ### Pages does not deploy
 
-Keep `main` and `catalog`. Record the failed run URL and Pages state. Confirm Pages uses GitHub Actions, then fix forward and dispatch a fresh `sync-docs.yml` run for `INSTALLED_MAIN_SHA`; never rerun the installer or switch a new installation to legacy branch publication.
+Keep `main` and `catalog`. Record the failed run URL and Pages state. Confirm Pages uses GitHub Actions, then fix the installed `main` through review and dispatch a fresh `sync-docs.yml` run for that new revision; never rerun the installer or switch a new installation to legacy branch publication.
 
 ### Service does not appear
 
 Follow every assertion in the [first-service gate](service-installation.md#step-4-verify-the-first-service-end-to-end). An individual registry entry, consolidation run, consolidated entry and fresh-browser UI result are distinct checks.
+
 ## Additional Resources
 
 - [Service Installation Guide](service-installation.md) - For service teams

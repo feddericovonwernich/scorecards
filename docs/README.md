@@ -160,10 +160,12 @@ npm run lint
 ## Deployment
 
 `.github/workflows/sync-docs.yml` builds reviewed `main` with `npm ci` and
-`npm run build`, syncs `docs/dist/` to `catalog:/docs`, and uploads that directory
-for an explicit GitHub Pages deployment. Repository and build-dependency changes
-covered by the workflow's path filter trigger publication; manual dispatch must
-select `main`. The public URL and Vite base path do not change.
+`npm run build`, injecting `github.repository_owner` as `SCORECARD_REPO_OWNER`
+so the catalog targets the installed owner's `scorecards` repository. Vite
+emits relative asset URLs, then the workflow syncs `docs/dist/` to
+`catalog:/docs` and uploads that directory for an explicit GitHub Pages
+deployment. Repository and build-dependency changes covered by the workflow's
+path filter trigger publication; manual dispatch must select `main`.
 
 See [Token Requirements](../documentation/reference/token-requirements.md#token-overview)
 for publication credentials and job-scoped permissions. The Pages deployment
@@ -186,14 +188,12 @@ the Pages artifact.
 
 The installer configures a new site directly with `build_type=workflow`, sets
 `main` as the default branch when needed, and dispatches `sync-docs.yml` after
-the atomic branch publication. Before it begins, one operator must exclude
-every other installation writer for the whole run; unattended installation
-sets `SCORECARDS_SINGLE_WRITER=true`, while the interactive confirmation
-acknowledges the same responsibility. This is an operational exclusion
-contract, not a race-proofing guarantee. It correlates the run with the
+atomically publishing only `main` and `catalog`. It correlates the run with the
 personalized `INSTALLED_MAIN_SHA`, not the upstream `SOURCE_SHA`, and refuses
 zero or multiple fresh candidates rather than selecting an arbitrary recent
-run.
+run. The [Platform Installation Guide](../documentation/guides/platform-installation.md)
+owns the installation provenance, single-writer, empty-repository, and
+recovery contract.
 
 An authorized operator can inspect the same boundary without changing it:
 
@@ -205,18 +205,23 @@ gh api "repos/$SCORECARDS_TARGET_REPO/pages" --jq '{build_type,status,html_url}'
 ```
 
 Installation is complete only after the unique fresh run for
-`INSTALLED_MAIN_SHA` concludes successfully and Pages reports workflow mode
-without an errored state. In a fresh browser context, verify `index.html`
-references hashed compiled JS/CSS assets, those assets load, and Services,
-Teams and API Explorer render. Source HTML containing `src/main.tsx`, a
-successful upload or a historical `status: built` is not deployment proof.
+`INSTALLED_MAIN_SHA` concludes successfully, Pages reports workflow mode
+without an errored state, and the verifier finds a compiled application root
+with nonempty, hashed JavaScript and stylesheet assets of the expected content
+types at the Pages origin. A source HTML reference to `src/main.tsx`, a
+successful upload, or a historical `status: built` is not deployment proof.
+
+Then use a fresh browser context to confirm that the compiled assets load and
+Services, Teams, and API Explorer render; asset delivery alone does not prove
+browser rendering.
 
 For access-restricted Enterprise Pages, use the [browser-session verification path](../documentation/guides/platform-installation.md#restricted-pages-verification). An anonymous login response is not delivery proof, and the repository PAT is not a Pages credential. Preserve the site's visibility and refresh the site-specific session if it expires.
 
 If refs exist but Pages setup or deployment fails, keep both branches and the
-run/artifact logs. Correct forward through a reviewed source change, then
-dispatch a fresh run for the installed `main`; do not rerun installation,
-reset branches, delete results or fall back to legacy branch publication.
+run/artifact logs. Fix the installed repository's `main` through its normal
+review process, then dispatch a fresh run for that new `main` revision; do not
+rerun installation, reset branches, delete results, or fall back to legacy
+branch publication.
 
 ### Coordinated transition from legacy Pages
 

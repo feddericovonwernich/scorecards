@@ -6,12 +6,12 @@ This guide explains the GitHub tokens required for Scorecards and how to create 
 
 Scorecards has three user-managed credential roles and one repository-scoped ephemeral role:
 
-| Credential | Purpose | Required where |
-| --- | --- | --- |
-| Installer `GITHUB_TOKEN` | Create `owner/scorecards`, publish workflows, configure Pages and dispatch/read Actions | Operator environment only |
-| `SCORECARDS_CATALOG_TOKEN` | Service-to-central checkout and normal result writes to `catalog` | Each participating service workflow |
+| Credential                  | Purpose                                                                                                                                                                                                 | Required where                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Installer `GITHUB_TOKEN`    | Create `owner/scorecards`, publish workflows, configure Pages and dispatch/read Actions                                                                                                                 | Operator environment only                               |
+| `SCORECARDS_CATALOG_TOKEN`  | Service-to-central checkout and normal result writes to `catalog`                                                                                                                                       | Each participating service workflow                     |
 | `SCORECARDS_WORKFLOW_TOKEN` | Dispatch/read central onboarding runs; read/write the central catalog registry and create installation branches and PRs containing workflow files in target services; separately authorized remediation | Central onboarding host and reusable onboarding callers |
-| Job `github.token` | Same-repository consolidation, docs sync and checks-hash writes | Issued per central workflow run |
+| Job `github.token`          | Same-repository consolidation, docs sync and checks-hash writes                                                                                                                                         | Issued per central workflow run                         |
 
 The central repository does not receive `SCORECARDS_CATALOG_TOKEN` merely to consolidate its own registry. `.github/workflows/consolidate-registry.yml` requests `contents: write` and uses the job-scoped token. If a `catalog` ruleset blocks that bot, the run fails; resolve the minimum rule explicitly instead of falling back to a broader PAT.
 
@@ -19,18 +19,18 @@ Restricted Enterprise Pages delivery uses the operator's authenticated **Pages b
 
 ## Operation matrix
 
-| Credential | Operation | Fine-grained permission | Classic scope | Observable preflight |
-| --- | --- | --- | --- | --- |
-| Installer `GITHUB_TOKEN` | Identity and metadata | Metadata read | identity implied | `GET /user` |
-| Same | Create `{owner}/scorecards` | Owner/org repository creation policy | `public_repo` or `repo` by visibility | membership/policy only; creation is the capability test |
-| Same | Atomic code and workflow publication | Contents read/write and Workflows read/write | `repo` + `workflow` | visible repository permissions; atomic push is the capability test |
-| Same | Configure workflow Pages | Pages administration/manage | repository admin/maintain | visible role; Pages API is the capability test |
-| Same | Dispatch and inspect Actions | Actions read/write | repository/workflow access | CLI/endpoints, then the fresh dispatch |
-| `SCORECARDS_CATALOG_TOKEN` | Service writes to central `catalog` | Contents read/write on central only | `repo` | service checkout and first publication |
-| `SCORECARDS_WORKFLOW_TOKEN` | Central onboarding registry update | Contents read/write on central Scorecards `catalog` | `repo` | catalog checkout and normal registry push |
-| Same | Installation workflow and PR | Target-service Contents and Pull requests read/write; Workflows read/write when the PR adds a workflow | `repo` + `workflow` | target checkout, branch push and PR creation |
-| Same, passed as `scorecards-workflow-token` | Reusable onboarding dispatch and result retrieval | Actions read/write on central Scorecards; target Pull requests read/write for score updates | `repo` + `workflow` | central dispatch, correlated run completion and result download |
-| Central `github.token` | Consolidate same-repository registry | Job `contents: write` | not applicable | normal bot push |
+| Credential                                  | Operation                                         | Fine-grained permission                                                                                | Classic scope                         | Observable preflight                                               |
+| ------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------- | ------------------------------------------------------------------ |
+| Installer `GITHUB_TOKEN`                    | Identity and metadata                             | Metadata read                                                                                          | identity implied                      | `GET /user`                                                        |
+| Same                                        | Create `{owner}/scorecards`                       | Owner/org repository creation policy                                                                   | `public_repo` or `repo` by visibility | membership/policy only; creation is the capability test            |
+| Same                                        | Atomic code and workflow publication              | Contents read/write and Workflows read/write                                                           | `repo` + `workflow`                   | visible repository permissions; atomic push is the capability test |
+| Same                                        | Configure workflow Pages                          | Pages administration/manage                                                                            | repository admin/maintain             | visible role; Pages API is the capability test                     |
+| Same                                        | Dispatch and inspect Actions                      | Actions read/write                                                                                     | repository/workflow access            | CLI/endpoints, then the fresh dispatch                             |
+| `SCORECARDS_CATALOG_TOKEN`                  | Service writes to central `catalog`               | Contents read/write on central only                                                                    | `repo`                                | service checkout and first publication                             |
+| `SCORECARDS_WORKFLOW_TOKEN`                 | Central onboarding registry update                | Contents read/write on central Scorecards `catalog`                                                    | `repo`                                | catalog checkout and normal registry push                          |
+| Same                                        | Installation workflow and PR                      | Target-service Contents and Pull requests read/write; Workflows read/write when the PR adds a workflow | `repo` + `workflow`                   | target checkout, branch push and PR creation                       |
+| Same, passed as `scorecards-workflow-token` | Reusable onboarding dispatch and result retrieval | Actions read/write on central Scorecards; target Pull requests read/write for score updates            | `repo` + `workflow`                   | central dispatch, correlated run completion and result download    |
+| Central `github.token`                      | Consolidate same-repository registry              | Job `contents: write`                                                                                  | not applicable                        | normal bot push                                                    |
 
 GitHub exposes no read-only endpoint that proves every organization creation policy, fine-grained workflow write or Pages mutation in advance. A preflight result must not be described as proof of those later operations.
 

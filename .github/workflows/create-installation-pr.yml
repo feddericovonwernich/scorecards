@@ -34,7 +34,6 @@ on:
 
 run-name: scorecards-install:${{ inputs.request-id || github.run_id }}
 
-
 concurrency:
   group: scorecards-install-${{ inputs.org }}/${{ inputs.repo }}
   cancel-in-progress: false
