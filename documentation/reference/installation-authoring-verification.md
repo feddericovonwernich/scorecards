@@ -16,7 +16,9 @@ The README and documentation indexes link into this route; they do not define co
 
 ## Local verification run
 
-Executed from the repository root on 2026-09-24, without cloud credentials or GitHub writes.
+Executed from the repository root on 2026-09-24. The checks below used local
+fixtures; the accidental catalog write and its revert are disclosed under
+[Outstanding authorized proof](#outstanding-authorized-proof).
 
 | Surface                              | Command                                                                                                                                                                                                                                                  | Result                                                                                                                                                                                                                                      |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

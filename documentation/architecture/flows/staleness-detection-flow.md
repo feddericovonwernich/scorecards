@@ -149,30 +149,15 @@ concurrent-write recovery.
 
 ### 5. UI Fetches Current Hash
 
-**Implementation**: `docs/src/api/registry.js`
+**Implementation**: [`docs/src/api/registry.ts`](../../../docs/src/api/registry.ts)
 
-**On Page Load**:
-
-```javascript
-// Fetch current checks metadata (includes hash)
-const hashUrl = `${RAW_BASE_URL}/current-checks.json?t=${Date.now()}`;
-const response = await fetch(hashUrl, { cache: 'no-cache' });
-const data = await response.json();
-const currentHash = data.checks_hash;
-
-// Fetch service registry
-const services = await fetch('registry/all-services.json').then((r) => r.json());
-
-// Compare hashes (in staleness.js)
-services.forEach((service) => {
-  service.is_stale = service.checks_hash !== currentHash;
-});
-```
+The registry API owns loading the current hash and service registry. See
+[Validate and calculate the checks hash](#23-validate-and-calculate-the-checks-hash)
+for the published summary contract; it is not a source of individual check definitions.
 
 **Caching**:
 
 - Current hash fetched on page load with cache-busting timestamp
-- `current-checks.json` provides both hash and check metadata
 - Registry re-fetched on user action
 - Staleness recalculated on each render
 

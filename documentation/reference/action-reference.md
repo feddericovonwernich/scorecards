@@ -137,8 +137,12 @@ Replace:
 Each check has a weight accepted by the [canonical executable contract](../guides/check-development-guide.md#canonical-check-contract). The score is calculated as:
 
 ```
-score = (sum of passed check weights / sum of all check weights) × 100
+score = round((sum of passed check weights / sum of non-excluded check weights) × 100)
 ```
+
+Excluded checks contribute to neither sum. If the total non-excluded weight is
+zero, the score is `0`. The [score calculator](../../action/utils/score-calculator.sh)
+owns the calculation.
 
 **Example:**
 
