@@ -13,9 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / 'action/utils/run-remediation.sh'
 VALIDATOR = ROOT / 'action/utils/validate-check.sh'
 REMEDIATION_LIB = ROOT / 'action/lib/remediation.sh'
+POLICY = json.loads((ROOT / 'action/config/remediation.json').read_text())
 
 
-def run(command, *, env=None, expected=0, timeout=180):
+def run(command, *, env=None, expected=0, timeout=2 * POLICY['timeout_max_seconds']):
     result = subprocess.run(
         [str(part) for part in command],
         cwd=ROOT,
@@ -183,15 +184,8 @@ def create_remote(case_dir, fixture):
 
 def write_inputs(case_dir, image, check_id, service_sha):
     suite_sha = run(['git', 'rev-parse', 'HEAD']).stdout.strip()
-    policy = {
-        'version': 1,
+    policy = POLICY | {
         'enabled': True,
-        'timeout_max_seconds': 30,
-        'diff_max_bytes': 1048576,
-        'output_max_bytes': 65536,
-        'memory_max_bytes': 134217728,
-        'pids_max': 64,
-        'cpu_max': '1',
         'runtime_image': image,
         'targets': {
             'acme/service': {
@@ -289,7 +283,10 @@ def prepare(
 ):
     before = len(docker_observations(docker_observation_dir))
     try:
-        run([RUNNER, 'prepare', request_file, policy_file, ROOT, work], env=env)
+        run(
+            [RUNNER, 'prepare', request_file, policy_file, ROOT, work], env=env,
+            timeout=4 * json.loads(policy_file.read_text())['timeout_max_seconds'],
+        )
         observations = docker_observations(docker_observation_dir)[before:]
         assert_prepare_sandbox(observations, work, expected_exits, execution_image)
         return observations
