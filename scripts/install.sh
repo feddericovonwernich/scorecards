@@ -164,7 +164,7 @@ git -C "$INSTALL_REPO" config user.name "Scorecards Bot"
 git -C "$INSTALL_REPO" config user.email "scorecards-bot@users.noreply.github.com"
 
 while IFS= read -r -d '' file; do
-    sed "s|feddericovonwernich/scorecards|$FULL_REPO|g; s|feddericovonwernich\\.github\\.io/scorecards|$REPO_OWNER.github.io/scorecards|g" "$file" > "$file.tmp"
+    sed "s|feddericovonwernich/scorecards|$FULL_REPO|g; s|https://github.com/$FULL_REPO\\.git|$SOURCE_REPOSITORY.git|g; s|feddericovonwernich\\.github\\.io/scorecards|$REPO_OWNER.github.io/scorecards|g" "$file" > "$file.tmp"
     mv "$file.tmp" "$file"
 done < <(find "$INSTALL_REPO" -type f \( -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.html' -o -name '*.js' \) ! -path '*/.git/*' ! -path '*/scripts/install.sh' -print0)
 

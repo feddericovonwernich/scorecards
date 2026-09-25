@@ -13,13 +13,14 @@ setup() {
     export REAL_GIT="$(command -v git)"
     export REAL_JQ="$(command -v jq)"
     export TEST_BIN="$TEST_TEMP_DIR/bin"
-    mkdir -p "$SOURCE_REPO/scripts" "$SOURCE_REPO/docs" "$SOURCE_REPO/.github/workflows" "$GH_STATE_DIR" "$TEST_BIN"
+    mkdir -p "$SOURCE_REPO/scripts" "$SOURCE_REPO/docs" "$SOURCE_REPO/documentation/guides" "$SOURCE_REPO/.github/workflows" "$GH_STATE_DIR" "$TEST_BIN"
 
     cp "$PROJECT_ROOT/scripts/install.sh" "$SOURCE_REPO/scripts/install.sh"
     cp "$PROJECT_ROOT/scripts/verify-pages.py" "$SOURCE_REPO/scripts/verify-pages.py"
     cp "$PROJECT_ROOT/.github/workflows/sync-docs.yml" "$SOURCE_REPO/.github/workflows/sync-docs.yml"
     cp "$PROJECT_ROOT/.github/workflows/consolidate-registry.yml" "$SOURCE_REPO/.github/workflows/consolidate-registry.yml"
-    printf '%s\n' '# Scorecards' 'https://github.com/feddericovonwernich/scorecards' > "$SOURCE_REPO/README.md"
+    cp "$PROJECT_ROOT/README.md" "$SOURCE_REPO/README.md"
+    cp "$PROJECT_ROOT/documentation/guides/platform-installation.md" "$SOURCE_REPO/documentation/guides/platform-installation.md"
     printf '%s\n' '<!doctype html><title>Scorecards</title>' > "$SOURCE_REPO/docs/index.html"
     printf '%s\n' 'node_modules/' > "$SOURCE_REPO/.gitignore"
 
@@ -224,15 +225,15 @@ run_installer() {
         bash "$SOURCE_REPO/scripts/install.sh"
 }
 
-run_documented_bootstrap() {
+run_documented_bootstrap_from() {
+    local document="$1"
     local bootstrap
     bootstrap="$(awk '
-        /^## Quick Start$/ { quick_start=1; next }
-        quick_start && /^```bash$/ { capture=1; next }
+        /^```bash$/ { capture=1; next }
         capture && /^```$/ { exit }
         capture && /^export / { next }
         capture { print }
-    ' "$PROJECT_ROOT/README.md")"
+    ' "$document")"
     env \
         GITHUB_TOKEN='token-value-that-must-stay-secret' \
         SCORECARDS_RELEASE_SHA="$EXPECTED_SOURCE_SHA" \
@@ -251,12 +252,35 @@ run_documented_bootstrap() {
         bash -c "$bootstrap"
 }
 
+run_documented_bootstrap() {
+    run_documented_bootstrap_from "$PROJECT_ROOT/README.md"
+}
+
 @test "documented bootstrap fetches full non-root ancestry and publishes to a default bare remote" {
     run run_documented_bootstrap
 
     [ "$status" -eq 0 ]
     "$REAL_GIT" --git-dir="$TARGET_REMOTE" cat-file -e "$EXPECTED_SOURCE_SHA^"
     [ -z "$($REAL_GIT --git-dir="$TARGET_REMOTE" config --get receive.shallowUpdate || true)" ]
+}
+
+@test "installed bootstrap docs retain canonical release provenance" {
+    run run_installer
+    [ "$status" -eq 0 ]
+
+    local installed_remote="$TARGET_REMOTE"
+    local document
+    for document in README.md documentation/guides/platform-installation.md; do
+        local installed_document="$TEST_TEMP_DIR/${document//\//-}"
+        "$REAL_GIT" --git-dir="$installed_remote" show "refs/heads/main:$document" > "$installed_document"
+        export TARGET_REMOTE="$TEST_TEMP_DIR/reinstall-${document//\//-}.git"
+        rm -f "$GH_STATE_DIR/repo-exists" "$GH_STATE_DIR/pages"
+
+        run run_documented_bootstrap_from "$installed_document"
+
+        [ "$status" -eq 0 ]
+        "$REAL_GIT" --git-dir="$TARGET_REMOTE" cat-file -e "$EXPECTED_SOURCE_SHA^"
+    done
 }
 
 @test "documented bootstrap removes its checkout while preserving a fetch failure" {
