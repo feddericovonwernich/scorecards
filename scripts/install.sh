@@ -267,14 +267,14 @@ deadline=$((SECONDS + INSTALL_DEPLOY_TIMEOUT_SECONDS))
 run_url=
 run_conclusion=
 while [ "$SECONDS" -le "$deadline" ]; do
-    run_rows="$(gh_with_token api --method GET --paginate --slurp \
+    run_rows="$(gh_with_token api --method GET --paginate \
         "repos/$FULL_REPO/actions/workflows/sync-docs.yml/runs" \
         -f event=workflow_dispatch \
         -f branch=main \
         -f head_sha="$INSTALLED_MAIN_SHA" \
         -f "created=>=$DISPATCH_REQUESTED_AT" \
         -F per_page=100 \
-        --jq '.[].workflow_runs[] | [.id,.status,(.conclusion // "pending"),.html_url,.head_sha,.created_at] | @tsv')" || fail "Cannot query the dispatched Pages workflow"
+        --jq '.workflow_runs[] | [.id,.status,(.conclusion // "pending"),.html_url,.head_sha,.created_at] | @tsv')" || fail "Cannot query the dispatched Pages workflow"
 
     candidates=()
     while IFS= read -r row; do

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use ephemeral same-repository credentials for catalog UI/checks-hash publication and explicit pinned Pages artifact deployment; preserve domain files and document the coordinated legacy-source transition and rollback.
 - Restrict installation targets to new or explicitly adopted empty `scorecards` repositories; see the [installation contract](documentation/guides/platform-installation.md) for publication and deployment safeguards.
 - Preserve pending deployment polling, bind the installer payload to its executing checkout, and document protected release pins and source-versus-installed commit provenance.
+- Query paginated Pages workflow runs with the GitHub CLI's supported `--paginate --jq` contract while preserving cross-page uniqueness checks.
 - Fetch full pinned ancestry and preserve bootstrap failures; require single-writer acknowledgement and recheck target refs before atomic publication.
 - Verify restricted Pages through isolated browser sessions without changing visibility, and compile relative assets for both private-origin and project-path hosting.
 - Report registry freshness from returned service data rather than discarded consolidated responses or discovery requests.

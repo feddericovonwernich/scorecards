@@ -74,6 +74,17 @@ STUB
 printf '%q ' "$@" >> "$GH_LOG"
 printf '\n' >> "$GH_LOG"
 
+has_slurp=false
+has_jq=false
+for arg in "$@"; do
+    [ "$arg" != --slurp ] || has_slurp=true
+    [ "$arg" != --jq ] || has_jq=true
+done
+if [ "$has_slurp" = true ] && [ "$has_jq" = true ]; then
+    printf '%s\n' 'the `--slurp` option is not supported with `--jq` or `--template`' >&2
+    exit 2
+fi
+
 case "$*" in
     "--version") printf '%s\n' 'gh version fixture'; exit 0 ;;
     "api --help"|"repo view --help"|"repo create --help"|"workflow run --help"|"run list --help") exit 0 ;;
@@ -133,7 +144,21 @@ case "$*" in
         [ "${RUN_MODE:-success}" != none ] || exit 0
         sha="$($REAL_GIT --git-dir="$TARGET_REMOTE" rev-parse refs/heads/main)"
         created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        if [ "${RUN_MODE:-success}" = ambiguous ]; then
+        query="${@: -1}"
+        emit_runs() {
+            printf '%s' "$1" | "$REAL_JQ" --arg sha "$sha" --arg created "$created_at" \
+                '{workflow_runs: map(. + {html_url: ("https://example.invalid/runs/" + (.id|tostring)), head_sha: $sha, created_at: $created})}' |
+                "$REAL_JQ" -r "$query"
+        }
+        if [ "${RUN_MODE:-success}" = multi-page ]; then
+            emit_runs '[]'
+            emit_runs '[{"id":101,"status":"completed","conclusion":"success"}]'
+            exit 0
+        elif [ "${RUN_MODE:-success}" = multi-page-ambiguous ]; then
+            emit_runs '[{"id":101,"status":"completed","conclusion":"success"}]'
+            emit_runs '[{"id":102,"status":"completed","conclusion":"success"}]'
+            exit 0
+        elif [ "${RUN_MODE:-success}" = ambiguous ]; then
             runs='[{"id":101,"status":"completed","conclusion":"success"},{"id":102,"status":"completed","conclusion":"success"}]'
         elif [ "${RUN_MODE:-success}" = pending ] && [ "$count" -le 2 ]; then
             if [ "$count" -eq 1 ]; then state=queued; else state=in_progress; fi
@@ -143,9 +168,7 @@ case "$*" in
         else
             runs='[{"id":101,"status":"completed","conclusion":"success"}]'
         fi
-        printf '%s' "$runs" | "$REAL_JQ" --arg sha "$sha" --arg created "$created_at" \
-            '[{workflow_runs: map(. + {html_url: ("https://example.invalid/runs/" + (.id|tostring)), head_sha: $sha, created_at: $created})}]' |
-            "$REAL_JQ" -r "${@: -1}"
+        emit_runs "$runs"
         exit 0
         ;;
     "api repos/acme/scorecards"*) printf '%s\n' '{}'; exit 0 ;;
@@ -453,6 +476,24 @@ HOOK
     create_empty_target
 
     ADOPT_EMPTY=true RUN_MODE=ambiguous run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" == *'ambiguous'* || "$output" == *'Ambiguous'* ]]
+}
+
+@test "finds the fresh deployment on a later API page" {
+    create_empty_target
+
+    ADOPT_EMPTY=true RUN_MODE=multi-page run run_installer
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *'runUrl: https://example.invalid/runs/101'* ]]
+}
+
+@test "rejects ambiguous fresh deployment candidates across API pages" {
+    create_empty_target
+
+    ADOPT_EMPTY=true RUN_MODE=multi-page-ambiguous run run_installer
 
     [ "$status" -ne 0 ]
     [[ "$output" == *'ambiguous'* || "$output" == *'Ambiguous'* ]]
