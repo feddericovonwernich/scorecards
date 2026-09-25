@@ -49,6 +49,8 @@ The release SHA remains intentionally unset in source documentation until the sa
 
 `SOURCE_SHA` is the upstream reviewed commit fetched by the bootstrap. `INSTALLED_MAIN_SHA` is the different, personalized `main` commit created locally from that source for the target repository; use the latter—not the upstream SHA—to correlate the deployment.
 
+Personalization preserves the canonical upstream Git fetch URL in the installed README and this guide. Their bootstrap commands fetch the reviewed upstream release, not the installed repository; they are for a separate new or explicitly adopted empty target, never an upgrade of the populated installation.
+
 The installer:
 
 1. accepts only `owner/scorecards`;
