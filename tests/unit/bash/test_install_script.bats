@@ -124,6 +124,25 @@ case "$*" in
             printf '%s\n' '{"message":"Not Found","status":"404"}'
             exit 1
         fi
+        if [ -f "$GH_STATE_DIR/pages" ] && [ -n "${FINAL_PAGES_MODE:-}" ]; then
+            count=0
+            [ ! -f "$GH_STATE_DIR/pages-state-calls" ] || count="$(cat "$GH_STATE_DIR/pages-state-calls")"
+            count=$((count + 1))
+            printf '%s' "$count" > "$GH_STATE_DIR/pages-state-calls"
+            case "$FINAL_PAGES_MODE" in
+                error) exit 1 ;;
+                delayed-url)
+                    if [ "$count" -eq 1 ]; then
+                        printf 'workflow\tbuilt\t\n'
+                        exit 0
+                    fi
+                    ;;
+                empty-url)
+                    printf 'workflow\tbuilt\t\n'
+                    exit 0
+                    ;;
+            esac
+        fi
         if [ -f "$GH_STATE_DIR/pages" ] || [ "${PAGES_MODE:-missing}" != missing ]; then
             if [ "${PAGES_MODE:-workflow}" = legacy ] && [ ! -f "$GH_STATE_DIR/pages" ]; then
                 printf 'legacy\tbuilt\t%s\n' "$TEST_PAGES_URL"
@@ -236,10 +255,11 @@ run_installer() {
         SCORECARDS_REPO_PRIVATE=false \
         SCORECARDS_ADOPT_EMPTY_REPO="${ADOPT_EMPTY:-false}" \
         SCORECARDS_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
-        INSTALL_POLL_INTERVAL_SECONDS=0 \
+        INSTALL_POLL_INTERVAL_SECONDS="${POLL_INTERVAL:-0}" \
         INSTALL_DEPLOY_TIMEOUT_SECONDS="${DEPLOY_TIMEOUT:-2}" \
         RUN_MODE="${RUN_MODE:-success}" \
         PAGES_MODE="${PAGES_MODE:-missing}" \
+        FINAL_PAGES_MODE="${FINAL_PAGES_MODE:-}" \
         GIT_CONFIG_COUNT=2 \
         GIT_CONFIG_KEY_0="url.file://$TARGET_REMOTE.insteadOf" \
         GIT_CONFIG_VALUE_0='https://github.com/acme/scorecards.git' \
@@ -470,6 +490,30 @@ HOOK
     [ "$status" -eq 0 ]
     grep -q -- '--method POST repos/acme/scorecards/pages' "$GH_LOG"
     ! grep -q -- '--method PUT repos/acme/scorecards/pages' "$GH_LOG"
+}
+
+@test "waits for the Pages URL after a successful deployment" {
+    FINAL_PAGES_MODE=delayed-url run run_installer
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "$GH_STATE_DIR/pages-state-calls")" -eq 2 ]
+    [[ "$output" == *"pagesUrl: $TEST_PAGES_URL"* ]]
+}
+
+@test "fails when the final Pages state cannot be read" {
+    FINAL_PAGES_MODE=error run run_installer
+
+    [ "$status" -ne 0 ]
+    [ "$(cat "$GH_STATE_DIR/pages-state-calls")" -eq 1 ]
+    [[ "$output" == *'final Pages state is unreadable'* ]]
+}
+
+@test "times out when the Pages URL remains unavailable" {
+    FINAL_PAGES_MODE=empty-url POLL_INTERVAL=1 DEPLOY_TIMEOUT=0 run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" == *'Timed out waiting for the Pages URL'* ]]
+    [[ "$output" != *'Installation Complete'* ]]
 }
 
 @test "rejects ambiguous fresh deployment candidates" {

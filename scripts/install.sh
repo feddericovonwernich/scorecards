@@ -298,10 +298,16 @@ while [ "$SECONDS" -le "$deadline" ]; do
 done
 [ "$run_conclusion" = success ] || fail "Timed out waiting for the fresh Pages deployment. Preserve refs and retry only the Pages dispatch."
 
-pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv')" || fail "Deployment succeeded, but final Pages state is unreadable"
-IFS=$'\t' read -r build_type pages_status pages_url <<<"$pages"
-[ "$build_type" = workflow ] || fail "Pages is not in workflow build mode"
-[ "$pages_status" != errored ] || fail "Pages reports an errored deployment"
+pages_url=
+while [ "$SECONDS" -le "$deadline" ]; do
+    pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv')" || fail "Deployment succeeded, but final Pages state is unreadable"
+    IFS=$'\t' read -r build_type pages_status pages_url <<<"$pages"
+    [ "$build_type" = workflow ] || fail "Pages is not in workflow build mode"
+    [ "$pages_status" != errored ] || fail "Pages reports an errored deployment"
+    [ -z "$pages_url" ] || break
+    sleep "$INSTALL_POLL_INTERVAL_SECONDS"
+done
+[ -n "$pages_url" ] || fail "Timed out waiting for the Pages URL. Preserve refs and $run_url logs; fix forward on main and dispatch sync-docs.yml again."
 
 print_info "Verifying deployed HTML and compiled assets at $pages_url"
 if ! python3 "$SCRIPT_DIR/verify-pages.py" verify "$pages_url" "$((deadline - SECONDS))" "$INSTALL_POLL_INTERVAL_SECONDS"; then
