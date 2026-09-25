@@ -74,7 +74,7 @@ The installer:
 
 `jq` is not an installer prerequisite. GitHub does not provide non-mutating checks for every repository-creation, workflow-write or Pages policy. The installer checks observable identity, membership and existing-repository permissions; repository creation, atomic push, Pages configuration and dispatch remain the authoritative capability checks.
 
-`INSTALL_DEPLOY_TIMEOUT_SECONDS` bounds both the fresh deployment wait and the subsequent deployed HTML/asset verification; it is not a promise that a site has already propagated.
+`INSTALL_DEPLOY_TIMEOUT_SECONDS` sets one shared deadline for the fresh deployment wait, Pages URL readiness, and subsequent deployed HTML/asset verification. After the correlated workflow succeeds, an empty Pages `html_url` is polled at `INSTALL_POLL_INTERVAL_SECONDS` until that deadline; the timeout is not restarted. An unreadable Pages API response, non-workflow build mode, or `errored` state fails immediately rather than being retried. If the URL remains unavailable at the deadline, installation fails; follow [Pages recovery](#installation-checkpoints-and-recovery), preserving refs and run logs rather than rerunning the installer.
 
 ### Restricted Pages verification
 
