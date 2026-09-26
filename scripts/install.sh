@@ -300,7 +300,7 @@ done
 
 pages_url=
 while [ "$SECONDS" -le "$deadline" ]; do
-    pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,.status,.html_url] | @tsv')" || fail "Deployment succeeded, but final Pages state is unreadable"
+    pages="$(gh_with_token api "repos/$FULL_REPO/pages" --jq '[.build_type,(.status // "pending"),.html_url] | @tsv')" || fail "Deployment succeeded, but final Pages state is unreadable"
     IFS=$'\t' read -r build_type pages_status pages_url <<<"$pages"
     [ "$build_type" = workflow ] || fail "Pages is not in workflow build mode"
     [ "$pages_status" != errored ] || fail "Pages reports an errored deployment"

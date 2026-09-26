@@ -137,10 +137,14 @@ case "$*" in
                         exit 0
                     fi
                     ;;
+                null-status)
+                    "$REAL_JQ" -n --arg url "$TEST_PAGES_URL" '{build_type: "workflow", status: null, html_url: $url}' | "$REAL_JQ" -r "${@: -1}"
+                    exit 0
+                    ;;
+                errored-status) printf 'workflow\terrored\t%s\n' "$TEST_PAGES_URL"; exit 0 ;;
                 empty-url)
                     printf 'workflow\tbuilt\t\n'
                     exit 0
-                    ;;
             esac
         fi
         if [ -f "$GH_STATE_DIR/pages" ] || [ "${PAGES_MODE:-missing}" != missing ]; then
@@ -498,6 +502,21 @@ HOOK
     [ "$status" -eq 0 ]
     [ "$(cat "$GH_STATE_DIR/pages-state-calls")" -eq 2 ]
     [[ "$output" == *"pagesUrl: $TEST_PAGES_URL"* ]]
+}
+
+@test "verifies the exact Pages URL when the Pages status is null" {
+    FINAL_PAGES_MODE=null-status run run_installer
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"pagesUrl: $TEST_PAGES_URL"* ]]
+}
+
+@test "fails an errored Pages deployment before verification" {
+    FINAL_PAGES_MODE=errored-status run run_installer
+
+    [ "$status" -ne 0 ]
+    [[ "$output" == *'Pages reports an errored deployment'* ]]
+    [[ "$output" != *'Verifying deployed HTML'* ]]
 }
 
 @test "fails when the final Pages state cannot be read" {
